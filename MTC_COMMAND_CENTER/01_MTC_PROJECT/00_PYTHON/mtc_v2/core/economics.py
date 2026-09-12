@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from enum import Enum
 import math
 from pathlib import Path
+import re
 from typing import Any, Mapping
 
 from mtc_v2.core.instrument import (
@@ -49,6 +50,10 @@ REFUSED_UNSPECIFIED_ADMITTED_INTERVAL_START = (
     "REFUSED_UNSPECIFIED_ADMITTED_INTERVAL_START"
 )
 REFUSED_BEFORE_ADMITTED_INTERVAL_START = "REFUSED_BEFORE_ADMITTED_INTERVAL_START"
+REFUSED_UNSPECIFIED_ADMITTED_ACCOUNT_PRODUCT = (
+    "REFUSED_UNSPECIFIED_ADMITTED_ACCOUNT_PRODUCT"
+)
+REFUSED_UNAUTHENTICATED_REPORTED_FEE = "REFUSED_UNAUTHENTICATED_REPORTED_FEE"
 
 # --- OD-20260912-P012-PATHD-1 decision B (fees) ---------------------------
 # B1=C: the venue's own reported per-fill fee is the admitted cash amount; the
@@ -70,6 +75,14 @@ ADMITTED_COST_APPLIED = "ADMITTED_COST_APPLIED"
 ESTIMATOR_DEVIATION_SIGNED_RISK_ID = "PATHD-RISK-FEE-ESTIMATOR-DEVIATION-V1"
 REPORTED_FEE_CHARGE = "CHARGE"
 REPORTED_FEE_REBATE = "REBATE"
+# The fixed component's evidence is unresolved: it is one of the cost record's
+# ``refused_missing_fields``, and the admitted amount is read from the venue
+# rather than computed, so no fixed component is applied and none is invented.
+# The admitted path therefore carries *no* fixed-component value and says so
+# with this explicit marker instead of a number a consumer could read as a
+# fact.  ``0.0`` would be exactly such an invented fact.
+FIXED_COMPONENT_UNRESOLVED = "UNRESOLVED_NOT_APPLIED"
+_LOWER_SHA256_HEX = re.compile(r"\A[0-9a-f]{64}\Z")
 
 
 class EconomicsRefusal(ValueError):
@@ -109,6 +122,31 @@ class ReportedFillFee:
 
     ``closed_pnl`` is carried beside the fee exactly as the venue reports it and
     is never merged into the fee amount.
+
+    The last four fields are the *authentication binding*, and every one of
+    them is required for admission:
+
+    ``source_class``
+        must be exactly :data:`ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1`.  A
+        number carrying any other class, or none, is not an admitted cost.
+    ``account_scope`` / ``product``
+        the declared own account and product this fill belongs to.  They must
+        equal the cost record's own ``admitted_account``/``admitted_product``
+        declarations, so a number from some other account or product can never
+        be booked against this one.
+    ``capture_sha256``
+        lower-case SHA-256 over the exact bytes of the authenticated fill
+        capture the amount was read from.  It is the evidence pointer that
+        makes the number attributable.
+
+    They all default to ``None`` on purpose: a bare object still constructs, so
+    the refusal a caller gets is the typed
+    :data:`REFUSED_UNAUTHENTICATED_REPORTED_FEE`, not a ``TypeError``.
+
+    Limitation, stated rather than hidden: this kernel receives the digest, not
+    the capture bytes, so it verifies that the digest is present and
+    well-formed and records it; it cannot re-hash bytes it never sees.  Proving
+    the digest against the capture is the exporter/evidence layer's job.
     """
 
     fill_id: str
@@ -116,6 +154,10 @@ class ReportedFillFee:
     fee_token: str
     fee_class: str = REPORTED_FEE_CHARGE
     closed_pnl: float | None = None
+    source_class: str | None = None
+    account_scope: str | None = None
+    product: str | None = None
+    capture_sha256: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -376,6 +418,77 @@ def _guard_admitted_event_class(cost: Mapping[str, Any] | None, event_class: str
         raise EconomicsRefusal(REFUSED_UNMAPPED_FILL_EVENT_CLASS, event_class)
 
 
+def _declared_account_and_product(cost: Mapping[str, Any]) -> tuple[str, str]:
+    """The record's declared own account and product, or a typed refusal.
+
+    OD-20260912-P012-PATHD-1 leaves the account and product UNSPECIFIED until
+    authenticated evidence exists.  A record that declares neither — by
+    omitting the keys or by carrying an explicit ``null`` — cannot bind a
+    reported fee to anything, so every admitted-cost computation under it
+    refuses.  Nothing is defaulted, inferred or carried over from another
+    record.
+    """
+    declared: list[str] = []
+    for key in ("admitted_account", "admitted_product"):
+        value = cost.get(key)
+        if not isinstance(value, str) or not value.strip():
+            raise EconomicsRefusal(
+                REFUSED_UNSPECIFIED_ADMITTED_ACCOUNT_PRODUCT,
+                f"{key} is UNSPECIFIED on this cost record; the admitted-cost "
+                "path cannot bind a venue-reported fee to an own account and "
+                "product until both are declared explicitly",
+            )
+        declared.append(value)
+    return declared[0], declared[1]
+
+
+def _require_fee_authentication(
+    *,
+    reported: ReportedFillFee,
+    fill_id: str,
+    event_class: str,
+    declared_account: str,
+    declared_product: str,
+) -> None:
+    """Refuse any reported fee that is not a bound own-account fill fee.
+
+    A bare number is not evidence.  Admission needs the source class, the
+    declared account and product this fill belongs to, and the capture digest
+    the amount was read from; anything missing, differently spelled or
+    differently scoped refuses.
+    """
+    if reported.source_class != ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1:
+        raise EconomicsRefusal(
+            REFUSED_UNAUTHENTICATED_REPORTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} carries "
+            f"source_class {reported.source_class!r}, not the admitted "
+            f"{ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1!r}; an unclassed "
+            "number is not an authenticated own-account fill fee",
+        )
+    if reported.account_scope != declared_account:
+        raise EconomicsRefusal(
+            REFUSED_UNAUTHENTICATED_REPORTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} is scoped to "
+            f"account {reported.account_scope!r}, not the declared "
+            f"{declared_account!r}",
+        )
+    if reported.product != declared_product:
+        raise EconomicsRefusal(
+            REFUSED_UNAUTHENTICATED_REPORTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} is scoped to "
+            f"product {reported.product!r}, not the declared "
+            f"{declared_product!r}",
+        )
+    digest = reported.capture_sha256
+    if not isinstance(digest, str) or _LOWER_SHA256_HEX.fullmatch(digest) is None:
+        raise EconomicsRefusal(
+            REFUSED_UNAUTHENTICATED_REPORTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} carries "
+            f"capture_sha256 {digest!r}; a lower-case SHA-256 hex digest of "
+            "the authenticated fill capture bytes is required",
+        )
+
+
 def _admitted_reported_fee(
     *,
     cost: Mapping[str, Any],
@@ -388,6 +501,12 @@ def _admitted_reported_fee(
     Missing, ``None``, non-finite, wrong-token, duplicated or sign-inconsistent
     inputs all refuse.  Nothing here ever falls back to zero, to the schedule or
     to another fill's number.
+
+    This answers "is there exactly one usable number for this fill?".  Whether
+    that number is *attributable* to a declared own account, product and
+    authenticated capture is the separate question
+    :func:`_require_fee_authentication` answers, and the caller asks it second
+    so that "there is no fee at all" keeps its own, more specific refusal.
     """
     matching = [row for row in reported_fees if row is not None and row.fill_id == fill_id]
     if not matching:
@@ -507,10 +626,24 @@ def _admitted_fee_rows(
 ) -> tuple[CashEvent, FeeEvent, tuple[_PendingDecision, ...]]:
     """The ``HL_FEE_REPORTED_PER_FILL_V1`` admitted-cost path.
 
-    The admitted cash amount is the venue's reported number.  The schedule is
-    evaluated *alongside* it purely as a guarded estimator: a deviation beyond
-    the owner-signed tolerance suspends the estimator for pre-trade sizing and
-    raises a signed-risk marker, and never changes the admitted amount.
+    The admitted cash amount is the venue's reported number, and it is
+    admitted only when the reported fee is *attributable*: the record must
+    declare the own account and product, and the fee object must carry the
+    source class, that same account and product, and the capture digest of the
+    authenticated fill it was read from.
+
+    The schedule is evaluated *alongside* it purely as a guarded estimator: a
+    deviation beyond the owner-signed tolerance suspends the estimator for
+    pre-trade sizing and raises a signed-risk marker, and never changes the
+    admitted amount.
+
+    The two arms stay separable end to end.  On the emitted ``FeeEvent``,
+    ``rate`` and ``fee_notional`` are estimator inputs while ``fee_amount`` and
+    ``fee_cash_delta`` are the venue's own number; in the decision details the
+    ``estimator_*``/``tolerance_*`` members and the ``reported_*``/``fee_*``
+    members are named apart for the same reason.  ``fixed_component`` belongs
+    to neither: no fixed component is applied here and none is invented, so it
+    is absent rather than zero.
     """
     refused = cost.get("refused_event_classes")
     if isinstance(refused, Mapping) and event_class in refused:
@@ -550,6 +683,17 @@ def _admitted_fee_rows(
         event_class=event_class,
         reported_fees=reported_fees,
     )
+    # There is exactly one usable number for this fill.  It is admitted only if
+    # it is also attributable: the record must declare the own account and
+    # product, and the fee object must be bound to them and to its capture.
+    declared_account, declared_product = _declared_account_and_product(cost)
+    _require_fee_authentication(
+        reported=reported,
+        fill_id=fill_id,
+        event_class=event_class,
+        declared_account=declared_account,
+        declared_product=declared_product,
+    )
     amount = float(reported.reported_amount)
     notional = abs(fill_price * quantity * contract_multiplier)
     estimate = notional * rate
@@ -558,6 +702,11 @@ def _admitted_fee_rows(
     suspended = deviation > tolerance
     # The admitted amount is the venue's charge; the estimator never overrides it.
     signed = 0.0 if amount == 0.0 else -amount
+    # Two arms, never one.  Everything prefixed ``reported_``/``fee_`` is the
+    # venue's own charged number and its authentication binding; everything
+    # prefixed ``estimator_``/``tolerance_`` is the pinned schedule's guarded
+    # pre-trade estimate.  The admitted cash is the first arm only: the second
+    # never produced, corrected or replaced it.
     shared_details: dict[str, object] = {
         "admitted_cost_source": ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1,
         "estimator_schedule_id": GUARDED_ESTIMATOR_SCHEDULE_ID,
@@ -568,6 +717,11 @@ def _admitted_fee_rows(
         "fee_token": reported.fee_token,
         "fee_class": reported.fee_class,
         "closed_pnl": reported.closed_pnl,
+        "fee_source_class": reported.source_class,
+        "fee_account_scope": reported.account_scope,
+        "fee_product": reported.product,
+        "fee_capture_sha256": reported.capture_sha256,
+        "fixed_component_status": FIXED_COMPONENT_UNRESOLVED,
         "estimator_rate": rate,
         "estimator_notional": notional,
         "estimator_amount": estimate,
@@ -621,12 +775,17 @@ def _admitted_fee_rows(
         liquidity_role=role,
         schedule_id=str(cost["schedule_id"]),
         schedule_digest=records.cost_digest,
-        # ``rate``/``fixed_component`` describe the *estimator* arm only.  The
-        # admitted amount below was read from the venue, not produced from them,
-        # and no fixed component or minimum fee was applied.
+        # Estimator arm: ``rate`` and ``fee_notional`` are the pinned
+        # schedule's guarded pre-trade inputs and nothing else.  They did not
+        # produce ``fee_amount``.
         rate=rate,
-        fixed_component=0.0,
+        # No fixed component exists on this path.  Its evidence is unresolved
+        # and none was applied, so the value is absent — ``None``, never the
+        # invented number ``0.0`` — and its terminal disposition travels as
+        # ``fixed_component_status`` in the decision details above.
+        fixed_component=None,
         fee_notional=notional,
+        # Venue-reported arm: read from the authenticated own-account fill.
         fee_amount=amount,
         fee_cash_delta=signed,
         settlement_currency=str(cost["settlement_currency"]),

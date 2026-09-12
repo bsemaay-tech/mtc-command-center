@@ -11,18 +11,30 @@ allows a fixture to supply. Nothing here is a Hyperliquid capture, a venue
 fact, or a claim about a real account, interval or payment, and a passing run
 is not an acceptance.
 
-RED (pre-fix): ``--mode`` is an unrecognised CLI argument (``SystemExit: 2``)
-and ``export_mtc_funding`` has no ``MODE_PRODUCTION``,
+RED (pre-fix, round 1): ``--mode`` is an unrecognised CLI argument
+(``SystemExit: 2``) and ``export_mtc_funding`` has no ``MODE_PRODUCTION``,
 ``PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN`` or ``declarations`` parameter, so
 every test below fails at import/attribute resolution; the tool's production
 mode is the frozen string ``UNAVAILABLE_PENDING_SOURCE_EVENT_DIGEST_DOMAIN``.
+
+RED (pre-repair, round 2) — behavioural, on the round-1 candidate ``81c3287d``,
+with no new symbol involved:
+
+* the capture-value tests: an adversarial capture claiming ETH, time 0 and
+  ``usdc 999999`` was **accepted** beside an admitted BTC ``-1.25`` settlement,
+  because the capture was bound by digest and identity pointer only;
+* the forward-only tests: a declared interval on 2026-09-11, before the
+  2026-09-12 owner signature, was **accepted**;
+* the duplicate tests: three retained rows carrying one exact duplicate were
+  **accepted** and emitted two settlement events, because ``_fold_unique``
+  collapsed the duplicate before the settlement-key guard could see it.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -42,8 +54,13 @@ from tools import export_mtc_funding as exporter
 
 SYMBOL = "BTC"
 SCHEDULE_ID = "SYNTH-P012-PATHD-PRODUCTION-TARGET-V1"
-START = "2026-09-11T12:00:00Z"
-END = "2026-09-11T13:00:00Z"
+# A1 = A forward-only: the declared interval opens after the owner signature
+# instant 2026-09-12T11:00:00Z, so this fixture is admissible by date.  The
+# round-1 fixture opened on 2026-09-11 and is kept below as a RED control.
+START = "2026-09-12T12:00:00Z"
+END = "2026-09-12T13:00:00Z"
+PRE_SIGNATURE_START = "2026-09-11T12:00:00Z"
+PRE_SIGNATURE_END = "2026-09-11T13:00:00Z"
 DECLARED_ACCOUNT = "SYNTHETIC-DECLARED-ACCOUNT-0001"
 DECLARED_PRODUCT = "SYNTHETIC-DECLARED-BTC-PERP"
 DECLARED_INTERVAL = f"{START}/{END}"
@@ -51,15 +68,16 @@ WITNESS = "SYNTHETIC-DECLARED-WITNESS-0001"
 
 ID_A = "0xsynthetic0002"
 ID_B = "0xsynthetic0001"
-TS_A = "2026-09-11T12:00:00.031527Z"
-TS_B = "2026-09-11T12:30:00Z"
-RECORDED = datetime(2026, 9, 11, 12, 0, tzinfo=UTC)
+TS_A = "2026-09-12T12:00:00.031Z"
+TS_B = "2026-09-12T12:30:00Z"
+RECORDED = datetime(2026, 9, 12, 12, 0, tzinfo=UTC)
+EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 
 EVENT_A = FundingEventRecord(
     event_id=ID_A,
     symbol=SYMBOL,
     amount_usdc=-1.25,
-    effective_ts=datetime(2026, 9, 11, 12, 0, 0, 31527, tzinfo=UTC),
+    effective_ts=datetime(2026, 9, 12, 12, 0, 0, 31000, tzinfo=UTC),
     source="HL_USER_FUNDING",
     attribution=FundingAttribution.ATTRIBUTED,
     funding_rate=0.0000125,
@@ -70,7 +88,7 @@ EVENT_B = FundingEventRecord(
     event_id=ID_B,
     symbol=SYMBOL,
     amount_usdc=-2.5,
-    effective_ts=datetime(2026, 9, 11, 12, 30, tzinfo=UTC),
+    effective_ts=datetime(2026, 9, 12, 12, 30, tzinfo=UTC),
     source="HL_USER_FUNDING",
     attribution=FundingAttribution.ATTRIBUTED,
     funding_rate=0.000025,
@@ -79,27 +97,37 @@ EVENT_B = FundingEventRecord(
 )
 
 
-def capture(event: FundingEventRecord) -> bytes:
-    """One invented own-account capture row. Not a venue response."""
-    return json.dumps(
-        {
-            "delta": {
-                "coin": event.symbol,
-                "fundingRate": repr(event.funding_rate),
-                "szi": repr(event.position_szi),
-                "type": "funding",
-                "usdc": repr(event.amount_usdc),
-            },
-            "hash": event.event_id,
-            "time": int(event.effective_ts.timestamp() * 1000),
-        },
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("utf-8")
+def epoch_ms(moment: datetime) -> int:
+    """Exact whole milliseconds since the epoch (no float rounding)."""
+    return (moment.astimezone(UTC) - EPOCH) // timedelta(milliseconds=1)
 
 
-def capture_digest(event: FundingEventRecord) -> str:
-    return hashlib.sha256(capture(event)).hexdigest()
+def capture(event: FundingEventRecord, **overrides) -> bytes:
+    """One invented own-account capture row. Not a venue response.
+
+    The layout is the ``userFunding`` element the production digest domain
+    names: ``/hash`` is the settlement identity, ``/time`` is epoch
+    milliseconds and ``/delta`` carries the coin, rate, size and settled cash.
+    """
+    delta = {
+        "coin": event.symbol,
+        "fundingRate": repr(event.funding_rate),
+        "szi": repr(event.position_szi),
+        "type": "funding",
+        "usdc": repr(event.amount_usdc),
+    }
+    delta.update(overrides.pop("delta", {}))
+    row = {
+        "delta": delta,
+        "hash": event.event_id,
+        "time": epoch_ms(event.effective_ts),
+    }
+    row.update(overrides)
+    return json.dumps(row, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def capture_digest(event: FundingEventRecord, **overrides) -> str:
+    return hashlib.sha256(capture(event, **overrides)).hexdigest()
 
 
 def retained_row(event: FundingEventRecord, **overrides) -> dict:
@@ -160,6 +188,8 @@ def coverage(
     evidence_kind: str | None = None,
     source_witnesses: dict[str, str] | None = None,
     complete: object = True,
+    start: str = START,
+    end: str = END,
 ) -> dict:
     return {
         "account_scope": declared_account,
@@ -173,8 +203,8 @@ def coverage(
             [ID_A, ID_B] if expected_event_ids is None else expected_event_ids
         ),
         "gap_event_ids": [] if gap_event_ids is None else gap_event_ids,
-        "interval_end_exclusive": END,
-        "interval_start_inclusive": START,
+        "interval_end_exclusive": end,
+        "interval_start_inclusive": start,
         "source_witnesses": (
             {ID_A: capture(EVENT_A).hex(), ID_B: capture(EVENT_B).hex()}
             if source_witnesses is None
@@ -280,7 +310,7 @@ def test_one_missing_declaration_still_refuses(missing: str) -> None:
 
 def test_a_declared_interval_that_is_not_the_requested_interval_refuses() -> None:
     result = build(
-        declarations=declarations(interval="2026-09-11T12:00:00Z/2026-09-11T14:00:00Z")
+        declarations=declarations(interval="2026-09-12T12:00:00Z/2026-09-12T14:00:00Z")
     )
 
     assert result.accepted is False
@@ -297,6 +327,307 @@ def test_a_binding_outside_the_declared_account_refuses() -> None:
 
     assert result.accepted is False
     assert result.reason_code == exporter.CANDIDATE_DECLARATION_MISMATCH
+
+
+# ---------------------------------------------------------------------------
+# A1 = A forward-only: nothing before the owner signature is ever admitted
+# ---------------------------------------------------------------------------
+
+
+def test_the_forward_only_bound_is_the_exact_owner_signature_instant() -> None:
+    assert exporter.PATH_D_SIGNATURE_INSTANT == "2026-09-12T11:00:00Z"
+
+
+def test_a_declared_interval_before_the_owner_signature_refuses() -> None:
+    """The round-1 fixture interval. RED: it was accepted on ``81c3287d``."""
+    early_a = FundingEventRecord(
+        event_id=ID_A,
+        symbol=SYMBOL,
+        amount_usdc=-1.25,
+        effective_ts=datetime(2026, 9, 11, 12, 0, 0, 31000, tzinfo=UTC),
+        source="HL_USER_FUNDING",
+        attribution=FundingAttribution.ATTRIBUTED,
+        funding_rate=0.0000125,
+        position_szi=0.1,
+        n_samples=1,
+    )
+    early_ts = "2026-09-11T12:00:00.031Z"
+    result = build(
+        retained_rows=[retained_row(early_a)],
+        approved_event_bindings=[binding(early_a, event_timestamp=early_ts)],
+        coverage=coverage(
+            expected_event_ids=[ID_A],
+            source_witnesses={ID_A: capture(early_a).hex()},
+            start=PRE_SIGNATURE_START,
+            end=PRE_SIGNATURE_END,
+        ),
+        start_inclusive=PRE_SIGNATURE_START,
+        end_exclusive=PRE_SIGNATURE_END,
+        declarations=declarations(
+            interval=f"{PRE_SIGNATURE_START}/{PRE_SIGNATURE_END}"
+        ),
+    )
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_FORWARD_ONLY_VIOLATION
+    assert result.candidate_bytes is None
+    assert "2026-09-12T11:00:00Z" in result.report["reason_detail"]
+
+
+def test_an_interval_opening_exactly_on_the_signature_instant_is_admissible() -> None:
+    """The bound is inclusive: the signature instant itself is forward-only."""
+    boundary = FundingEventRecord(
+        event_id=ID_A,
+        symbol=SYMBOL,
+        amount_usdc=-1.25,
+        effective_ts=datetime(2026, 9, 12, 11, 30, tzinfo=UTC),
+        source="HL_USER_FUNDING",
+        attribution=FundingAttribution.ATTRIBUTED,
+        funding_rate=0.0000125,
+        position_szi=0.1,
+        n_samples=1,
+    )
+    start = "2026-09-12T11:00:00Z"
+    end = "2026-09-12T12:00:00Z"
+    result = build(
+        retained_rows=[retained_row(boundary)],
+        approved_event_bindings=[
+            binding(boundary, event_timestamp="2026-09-12T11:30:00Z")
+        ],
+        coverage=coverage(
+            expected_event_ids=[ID_A],
+            source_witnesses={ID_A: capture(boundary).hex()},
+            start=start,
+            end=end,
+        ),
+        start_inclusive=start,
+        end_exclusive=end,
+        declarations=declarations(interval=f"{start}/{end}"),
+    )
+
+    assert result.accepted is True, result.report
+
+
+def test_an_authenticated_capture_time_outside_the_interval_refuses() -> None:
+    """The capture's own settlement time must fall inside the declared interval.
+
+    Everything the round-1 candidate checked agrees here: the ledger row's
+    ``effective_ts`` and the binding both say 12:00:00.031, inside the declared
+    interval, and the capture bytes hash to the declared digest and name this
+    settlement.  But the *authenticated* settlement time — the one the retained
+    payload and the capture both carry — is an hour earlier, outside the
+    interval.  A ledger timestamp moved into the interval cannot drag the
+    settlement in with it.
+    """
+    earlier = FundingEventRecord(
+        event_id=ID_A,
+        symbol=SYMBOL,
+        amount_usdc=-1.25,
+        effective_ts=datetime(2026, 9, 12, 11, 0, tzinfo=UTC),
+        source="HL_USER_FUNDING",
+        attribution=FundingAttribution.ATTRIBUTED,
+        funding_rate=0.0000125,
+        position_szi=0.1,
+        n_samples=1,
+    )
+    outside = capture(earlier)
+    digest = hashlib.sha256(outside).hexdigest()
+    result = build(
+        retained_rows=[
+            # The payload (and its digest) are the earlier settlement; only the
+            # ledger's own effective_ts column claims the later instant.
+            retained_row(
+                earlier,
+                ledger_effective_ts=EVENT_A.effective_ts.astimezone(UTC).isoformat(),
+            ),
+            retained_row(EVENT_B),
+        ],
+        approved_event_bindings=[
+            binding(
+                EVENT_A,
+                event_timestamp=TS_A,
+                source_event_digest=digest,
+                provenance_digest=digest,
+            ),
+            binding(EVENT_B, event_timestamp=TS_B),
+        ],
+        coverage=coverage(
+            source_witnesses={
+                ID_A: outside.hex(),
+                ID_B: capture(EVENT_B).hex(),
+            }
+        ),
+    )
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_CAPTURE_TIME_OUT_OF_INTERVAL
+    assert result.candidate_bytes is None
+
+
+# ---------------------------------------------------------------------------
+# The capture bytes must bind the admitted values, not only an identity
+# ---------------------------------------------------------------------------
+
+
+def test_an_adversarial_capture_does_not_bind_the_admitted_settlement() -> None:
+    """RED on ``81c3287d``: this capture was accepted beside BTC ``-1.25``.
+
+    The bytes hash correctly and ``/hash`` names this settlement, so the
+    round-1 digest-plus-identity check passed while the capture claimed a
+    different coin, a different instant and a different amount.
+    """
+    adversarial = json.dumps(
+        {
+            "delta": {
+                "coin": "ETH",
+                "fundingRate": "0.0",
+                "szi": "0.0",
+                "type": "funding",
+                "usdc": "999999",
+            },
+            "hash": ID_A,
+            "time": 0,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    digest = hashlib.sha256(adversarial).hexdigest()
+    result = build(
+        approved_event_bindings=[
+            binding(
+                EVENT_A,
+                event_timestamp=TS_A,
+                source_event_digest=digest,
+                provenance_digest=digest,
+            ),
+            binding(EVENT_B, event_timestamp=TS_B),
+        ],
+        coverage=coverage(
+            source_witnesses={
+                ID_A: adversarial.hex(),
+                ID_B: capture(EVENT_B).hex(),
+            }
+        ),
+    )
+
+    assert result.accepted is False
+    assert result.candidate_bytes is None
+    assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
+    assert "999999" in result.report["reason_detail"]
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("coin", "ETH"),
+        ("fundingRate", "0.0000126"),
+        ("szi", "0.2"),
+        ("usdc", "-1.26"),
+    ],
+)
+def test_one_changed_capture_field_refuses_the_candidate(field: str, value: str) -> None:
+    tampered = capture(EVENT_A, delta={field: value})
+    digest = hashlib.sha256(tampered).hexdigest()
+    result = build(
+        approved_event_bindings=[
+            binding(
+                EVENT_A,
+                event_timestamp=TS_A,
+                source_event_digest=digest,
+                provenance_digest=digest,
+            ),
+            binding(EVENT_B, event_timestamp=TS_B),
+        ],
+        coverage=coverage(
+            source_witnesses={
+                ID_A: tampered.hex(),
+                ID_B: capture(EVENT_B).hex(),
+            }
+        ),
+    )
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
+    assert field in result.report["reason_detail"] or value in result.report[
+        "reason_detail"
+    ]
+
+
+def test_a_capture_that_is_not_a_funding_delta_refuses() -> None:
+    tampered = capture(EVENT_A, delta={"type": "deposit"})
+    digest = hashlib.sha256(tampered).hexdigest()
+    result = build(
+        approved_event_bindings=[
+            binding(
+                EVENT_A,
+                event_timestamp=TS_A,
+                source_event_digest=digest,
+                provenance_digest=digest,
+            ),
+            binding(EVENT_B, event_timestamp=TS_B),
+        ],
+        coverage=coverage(
+            source_witnesses={
+                ID_A: tampered.hex(),
+                ID_B: capture(EVENT_B).hex(),
+            }
+        ),
+    )
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
+
+
+def test_a_capture_time_truncated_below_the_retained_precision_refuses() -> None:
+    """No silent truncation: 31.527 ms retained is not 31 ms captured."""
+    sub_ms = FundingEventRecord(
+        event_id=ID_A,
+        symbol=SYMBOL,
+        amount_usdc=-1.25,
+        effective_ts=datetime(2026, 9, 12, 12, 0, 0, 31527, tzinfo=UTC),
+        source="HL_USER_FUNDING",
+        attribution=FundingAttribution.ATTRIBUTED,
+        funding_rate=0.0000125,
+        position_szi=0.1,
+        n_samples=1,
+    )
+    truncated = capture(sub_ms)  # epoch_ms() floors 31.527 ms to 31 ms
+    digest = hashlib.sha256(truncated).hexdigest()
+    result = build(
+        retained_rows=[retained_row(sub_ms)],
+        approved_event_bindings=[
+            binding(
+                sub_ms,
+                event_timestamp="2026-09-12T12:00:00.031527Z",
+                source_event_digest=digest,
+                provenance_digest=digest,
+            )
+        ],
+        coverage=coverage(
+            expected_event_ids=[ID_A], source_witnesses={ID_A: truncated.hex()}
+        ),
+    )
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
+
+
+def test_the_admitted_values_are_exactly_the_capture_and_the_retained_payload() -> None:
+    candidate = json.loads(build().candidate_bytes)
+    events = {
+        row["binding"]["funding_event_id"]: row
+        for row in candidate["production_candidate"]["settlement_events"]
+    }
+    for event in (EVENT_A, EVENT_B):
+        captured = json.loads(capture(event))
+        payload = events[event.event_id]["bridge_evidence"]["payload"]
+        assert payload["symbol"] == captured["delta"]["coin"]
+        assert float(payload["funding_rate"]) == float(captured["delta"]["fundingRate"])
+        assert float(payload["position_szi"]) == float(captured["delta"]["szi"])
+        assert float(payload["amount_usdc"]) == float(captured["delta"]["usdc"])
+        assert epoch_ms(event.effective_ts) == captured["time"]
+        notes = events[event.event_id]["binding_notes"]
+        assert notes["capture_values_bound_to_retained_payload"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -435,10 +766,58 @@ def test_two_settlements_on_one_account_coin_and_instant_refuse() -> None:
     assert result.reason_code == exporter.CANDIDATE_SETTLEMENT_KEY_CONFLICT
 
 
+def test_an_exact_duplicate_retained_settlement_refuses_instead_of_folding() -> None:
+    """RED on ``81c3287d``: three rows with one exact duplicate were accepted.
+
+    ``_fold_unique`` collapsed the identical pair before the settlement-key
+    guard could see it, and the candidate published two settlement events.
+    A3 whole-interval semantics: a duplicate is a defect in the evidence, so
+    the whole candidate is refused rather than silently deduplicated.
+    """
+    result = build(
+        retained_rows=[
+            retained_row(EVENT_A),
+            retained_row(EVENT_A),
+            retained_row(EVENT_B),
+        ]
+    )
+
+    assert result.accepted is False
+    assert result.candidate_bytes is None
+    assert result.reason_code == exporter.CANDIDATE_DUPLICATE_SETTLEMENT
+    assert ID_A in result.report["reason_detail"]
+
+
+def test_an_exact_duplicate_binding_refuses_instead_of_folding() -> None:
+    result = build(
+        approved_event_bindings=[
+            binding(EVENT_A, event_timestamp=TS_A),
+            binding(EVENT_A, event_timestamp=TS_A),
+            binding(EVENT_B, event_timestamp=TS_B),
+        ]
+    )
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_DUPLICATE_SETTLEMENT
+
+
+def test_a_conflicting_duplicate_still_refuses_as_a_conflict() -> None:
+    result = build(
+        retained_rows=[
+            retained_row(EVENT_A),
+            retained_row(EVENT_A, attribution="UNATTRIBUTED"),
+            retained_row(EVENT_B),
+        ]
+    )
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_EVENT_CONFLICT
+
+
 def test_a_binding_time_that_is_not_the_venue_row_time_refuses() -> None:
     result = build(
         approved_event_bindings=[
-            binding(EVENT_A, event_timestamp="2026-09-11T12:15:00Z"),
+            binding(EVENT_A, event_timestamp="2026-09-12T12:15:00Z"),
             binding(EVENT_B, event_timestamp=TS_B),
         ]
     )
@@ -524,6 +903,29 @@ def test_capture_bytes_not_bound_to_this_settlement_refuse() -> None:
             binding(EVENT_A, event_timestamp=TS_A, pointer="/delta/coin"),
             binding(EVENT_B, event_timestamp=TS_B),
         ]
+    )
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_CAPTURE_IDENTITY_UNBOUND
+
+
+def test_a_capture_whose_identity_names_another_settlement_refuses() -> None:
+    """The canonical ``/hash`` pointer must name *this* settlement."""
+    other = capture(EVENT_B)
+    digest = hashlib.sha256(other).hexdigest()
+    result = build(
+        approved_event_bindings=[
+            binding(
+                EVENT_A,
+                event_timestamp=TS_A,
+                source_event_digest=digest,
+                provenance_digest=digest,
+            ),
+            binding(EVENT_B, event_timestamp=TS_B),
+        ],
+        coverage=coverage(
+            source_witnesses={ID_A: other.hex(), ID_B: capture(EVENT_B).hex()}
+        ),
     )
 
     assert result.accepted is False
@@ -626,6 +1028,29 @@ def test_the_production_evidence_kind_is_not_accepted_in_synthetic_mode() -> Non
         "UNAVAILABLE_PENDING_SOURCE_EVENT_DIGEST_DOMAIN"
     )
     assert exporter.ACCEPTED_EVIDENCE_KINDS == (exporter.SYNTHETIC_EVIDENCE_KIND,)
+
+
+def test_the_forward_only_bound_is_a_production_rule_only() -> None:
+    """D1 synthetic mode is unchanged: it has no signature bound at all."""
+    synthetic_shaped = {
+        key: value
+        for key, value in coverage(
+            start=PRE_SIGNATURE_START, end=PRE_SIGNATURE_END
+        ).items()
+        if key in exporter.COVERAGE_KEYS
+    }
+    result = exporter.build_funding_candidate(
+        [retained_row(EVENT_A)],
+        [],
+        synthetic_shaped,
+        SCHEDULE_ID,
+        PRE_SIGNATURE_START,
+        PRE_SIGNATURE_END,
+    )
+
+    # It refuses for the synthetic evidence-kind reason, never the forward-only
+    # one: the pre-signature interval itself is not a synthetic-mode defect.
+    assert result.reason_code != exporter.CANDIDATE_FORWARD_ONLY_VIOLATION
 
 
 @pytest.mark.parametrize("mode", ["production", "PROD", "", None, True, 1])

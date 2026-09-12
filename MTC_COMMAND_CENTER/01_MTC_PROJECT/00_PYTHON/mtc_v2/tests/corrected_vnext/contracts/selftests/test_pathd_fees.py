@@ -14,14 +14,23 @@ declared rates and the intent's own arithmetic:
 The admitted amount is never one of these: it is whatever the caller's venue
 row reported, and the tests assert exactly that.
 
-RED (pre-fix): every admitted-path case refuses with ``REFUSED_ECONOMIC_INPUT:
-fee rounding rule is not executable`` because the pre-fix branch has only the
-schedule path, and ``ReportedFillFee`` / ``REFUSED_MISSING_ADMITTED_FEE`` /
-``FEE_ESTIMATOR_SUSPENDED`` do not exist.
+RED (pre-fix, round 1): every admitted-path case refuses with
+``REFUSED_ECONOMIC_INPUT: fee rounding rule is not executable`` because the
+pre-fix branch has only the schedule path, and ``ReportedFillFee`` /
+``REFUSED_MISSING_ADMITTED_FEE`` / ``FEE_ESTIMATOR_SUSPENDED`` do not exist.
+
+RED (pre-repair, round 2) — behavioural, on the round-1 candidate ``81c3287d``:
+
+* a bare five-field ``ReportedFillFee`` with no source class, no account or
+  product binding and no capture digest was **admitted** as ``199.99``;
+* the admitted ``FeeEvent`` carried ``fixed_component=0.0`` and serialized it
+  as the number ``0``, inventing a zero for a component whose evidence is
+  unresolved.
 """
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -49,12 +58,45 @@ from mtc_v2.core.economics import (
     ReportedFillFee,
 )
 from mtc_v2.core.instrument import load_verified_json_record
+from mtc_v2.core.results import _fee_surface
 
 
 MTC_V2_ROOT = Path(__file__).resolve().parents[4]
 RECORD_ROOT = MTC_V2_ROOT / "core" / "economic_records"
 COSTS = RECORD_ROOT / "costs"
 INSTRUMENTS = RECORD_ROOT / "instruments"
+
+# The synthetic record that declares the account and the product the admitted
+# fee must be bound to.  ``SYNTH-COST-ADMITTED-01-GREEN-V1`` declares neither
+# and is kept below as the RED control for an UNSPECIFIED declaration.
+BOUND_COST = "SYNTH-COST-ADMITTED-05-BOUND-GREEN-V1"
+UNBOUND_COST = "SYNTH-COST-ADMITTED-01-GREEN-V1"
+NULL_ACCOUNT_COST = "SYNTH-COST-ADMITTED-06-NULLACCOUNT-RED-V1"
+DECLARED_ACCOUNT = "SYNTHETIC-DECLARED-ACCOUNT-0001"
+DECLARED_PRODUCT = "SYNTHETIC-DECLARED-BTC-PERP"
+# A labelled synthetic stand-in for the SHA-256 of the authenticated fill
+# bytes.  It is invented for this fixture and is not a venue capture.
+FILL_CAPTURE_BYTES = b'{"fill":"F0","fee":"199.99","synthetic":true}'
+CAPTURE_SHA256 = hashlib.sha256(FILL_CAPTURE_BYTES).hexdigest()
+
+
+def _authenticated_fee(
+    amount: float = 199.99,
+    *,
+    fill_id: str = "F0",
+    fee_token: str = "TEST-USD",
+    **overrides,
+) -> ReportedFillFee:
+    """A venue-reported fee carrying its synthetic authentication bindings."""
+    fields = {
+        "source_class": ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1,
+        "account_scope": DECLARED_ACCOUNT,
+        "product": DECLARED_PRODUCT,
+        "capture_sha256": CAPTURE_SHA256,
+    }
+    fields.update(overrides)
+    return ReportedFillFee(fill_id, amount, fee_token, **fields)
+
 
 # Hand-derived expectations (see module docstring).
 NOTIONAL = 600000.0
@@ -114,7 +156,7 @@ def _intent(
 def _resolve(
     fees: tuple[ReportedFillFee, ...] = (),
     *,
-    cost_id: str = "SYNTH-COST-ADMITTED-01-GREEN-V1",
+    cost_id: str = BOUND_COST,
     event_class: str = "ENTRY",
     market: MarketEvent = MARKET,
 ):
@@ -139,7 +181,7 @@ def _decision(transition, name: str):
 
 def test_admitted_cost_is_the_reported_amount_not_the_schedule_estimate() -> None:
     reported = 199.99  # deliberately unlike 270.00
-    transition = _resolve((ReportedFillFee("F0", reported, "TEST-USD"),))
+    transition = _resolve((_authenticated_fee(reported),))
 
     assert transition.fee_events[0].fee_amount == reported
     assert transition.fee_events[0].fee_cash_delta == -reported
@@ -151,10 +193,15 @@ def test_admitted_cost_is_the_reported_amount_not_the_schedule_estimate() -> Non
     assert applied["reported_amount"] == reported
     assert applied["estimator_amount"] == pytest.approx(ESTIMATE)
     assert applied["estimator_schedule_id"] == GUARDED_ESTIMATOR_SCHEDULE_ID
+    # The authentication bindings are recorded, never inferred.
+    assert applied["fee_source_class"] == ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1
+    assert applied["fee_account_scope"] == DECLARED_ACCOUNT
+    assert applied["fee_product"] == DECLARED_PRODUCT
+    assert applied["fee_capture_sha256"] == CAPTURE_SHA256
 
 
 def test_estimator_agrees_inside_the_owner_signed_tolerance() -> None:
-    transition = _resolve((ReportedFillFee("F0", INSIDE_TOLERANCE, "TEST-USD"),))
+    transition = _resolve((_authenticated_fee(INSIDE_TOLERANCE),))
 
     agreed = _decision(transition, "FEE_ESTIMATOR_AGREED")
     assert agreed["tolerance_form"] == ESTIMATOR_TOLERANCE_FORM
@@ -165,7 +212,7 @@ def test_estimator_agrees_inside_the_owner_signed_tolerance() -> None:
 
 
 def test_estimator_suspension_never_overrides_the_reported_amount() -> None:
-    transition = _resolve((ReportedFillFee("F0", OUTSIDE_TOLERANCE, "TEST-USD"),))
+    transition = _resolve((_authenticated_fee(OUTSIDE_TOLERANCE),))
 
     suspended = _decision(transition, "FEE_ESTIMATOR_SUSPENDED")
     assert suspended["signed_risk_id"] == ESTIMATOR_DEVIATION_SIGNED_RISK_ID
@@ -181,9 +228,7 @@ def test_estimator_suspension_never_overrides_the_reported_amount() -> None:
 
 
 def test_a_declared_rebate_is_admitted_as_a_credit() -> None:
-    transition = _resolve(
-        (ReportedFillFee("F0", -5.0, "TEST-USD", fee_class="REBATE"),)
-    )
+    transition = _resolve((_authenticated_fee(-5.0, fee_class="REBATE"),))
 
     assert transition.fee_events[0].fee_amount == -5.0
     assert transition.cash_events[0].signed_delta == 5.0
@@ -192,9 +237,7 @@ def test_a_declared_rebate_is_admitted_as_a_credit() -> None:
 
 
 def test_closed_pnl_is_carried_beside_the_fee_never_merged_into_it() -> None:
-    transition = _resolve(
-        (ReportedFillFee("F0", 270.0, "TEST-USD", closed_pnl=-1234.5),)
-    )
+    transition = _resolve((_authenticated_fee(270.0, closed_pnl=-1234.5),))
 
     assert _decision(transition, "ADMITTED_COST_APPLIED")["closed_pnl"] == -1234.5
     assert transition.fee_events[0].fee_amount == 270.0
@@ -301,6 +344,163 @@ def test_a_record_cannot_widen_the_owner_signed_tolerance() -> None:
 
     assert exc_info.value.refusal_code == REFUSED_UNSUPPORTED_ADMITTED_COST_SOURCE
     assert "owner-signed 0.05" in exc_info.value.detail
+
+
+# --------------------------------------------------------------------------
+# The fee object must be an authenticated own-account fill, not a bare number
+# --------------------------------------------------------------------------
+
+
+def test_a_bare_unauthenticated_reported_fee_is_refused() -> None:
+    """RED on ``81c3287d``: this five-field object was admitted as 199.99.
+
+    It carries no source class, no account or product binding and no capture
+    digest, so nothing in it says which authenticated own-account fill the
+    number came from.
+    """
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((ReportedFillFee("F0", 199.99, "TEST-USD"),))
+
+    assert exc_info.value.refusal_code == "REFUSED_UNAUTHENTICATED_REPORTED_FEE"
+    assert "source_class" in exc_info.value.detail
+
+
+@pytest.mark.parametrize(
+    ("overrides", "reason"),
+    [
+        ({"source_class": None}, "source_class"),
+        ({"source_class": "HL_FEE_REPORTED_PER_FILL_V2"}, "source_class"),
+        ({"source_class": "hl_fee_reported_per_fill_v1"}, "source_class"),
+        ({"account_scope": None}, "account"),
+        ({"account_scope": "OTHER-ACCOUNT"}, "account"),
+        ({"product": None}, "product"),
+        ({"product": "OTHER-PRODUCT"}, "product"),
+        ({"capture_sha256": None}, "capture"),
+        ({"capture_sha256": ""}, "capture"),
+        ({"capture_sha256": "not-a-digest"}, "capture"),
+        ({"capture_sha256": "AB" * 32}, "capture"),
+        ({"capture_sha256": "ab" * 31}, "capture"),
+    ],
+)
+def test_an_unbound_or_mismatched_fee_binding_refuses(
+    overrides: dict, reason: str
+) -> None:
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((_authenticated_fee(**overrides),))
+
+    assert exc_info.value.refusal_code == "REFUSED_UNAUTHENTICATED_REPORTED_FEE"
+    assert reason in exc_info.value.detail
+
+
+def test_a_record_that_declares_no_account_or_product_refuses() -> None:
+    """The declaration is UNSPECIFIED until authenticated evidence exists."""
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((_authenticated_fee(),), cost_id=UNBOUND_COST)
+
+    assert exc_info.value.refusal_code == (
+        "REFUSED_UNSPECIFIED_ADMITTED_ACCOUNT_PRODUCT"
+    )
+    assert "UNSPECIFIED" in exc_info.value.detail
+
+
+def test_an_explicitly_null_account_declaration_is_not_a_declaration() -> None:
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((_authenticated_fee(),), cost_id=NULL_ACCOUNT_COST)
+
+    assert exc_info.value.refusal_code == (
+        "REFUSED_UNSPECIFIED_ADMITTED_ACCOUNT_PRODUCT"
+    )
+
+
+# --------------------------------------------------------------------------
+# No invented zero fixed component on the admitted path
+# --------------------------------------------------------------------------
+
+
+def test_the_admitted_path_carries_no_fixed_component_value() -> None:
+    """RED on ``81c3287d``: the admitted FeeEvent hard-coded ``0.0``.
+
+    The fixed component's evidence is unresolved (it is one of the record's
+    ``refused_missing_fields``), so the admitted path carries no value at all
+    and says so with an explicit typed marker.
+    """
+    transition = _resolve((_authenticated_fee(),))
+    fee = transition.fee_events[0]
+
+    assert fee.fixed_component is None
+    assert fee.fixed_component != 0.0
+    applied = _decision(transition, "ADMITTED_COST_APPLIED")
+    assert applied["fixed_component_status"] == "UNRESOLVED_NOT_APPLIED"
+    # The admitted amount is the venue's number, so no fixed component and no
+    # minimum fee was applied to it.
+    assert fee.fee_amount == 199.99
+
+
+def test_the_serialized_fee_surface_never_shows_a_zero_fixed_component() -> None:
+    transition = _resolve((_authenticated_fee(),))
+    rows = _fee_surface(list(transition.fee_events), kernel_semantics_version="2.0.0")
+
+    assert rows[0]["fixed_component"] == "UNRESOLVED_NOT_APPLIED"
+    assert rows[0]["fixed_component"] != 0
+    assert rows[0]["fixed_component"] != 0.0
+    # The member set the protected gate pins is unchanged: the marker replaces
+    # the value in place rather than adding a member.
+    assert set(rows[0]) == {
+        "sequence",
+        "kernel_semantics_version",
+        "event_timestamp",
+        "lifecycle_id",
+        "fill_id",
+        "event_class",
+        "liquidity_role",
+        "schedule_id",
+        "schedule_digest",
+        "rate",
+        "fixed_component",
+        "fee_notional",
+        "fee_amount",
+        "fee_cash_delta",
+        "settlement_currency",
+        "cash_event_id",
+    }
+
+
+def test_the_schedule_path_still_serializes_its_real_fixed_component() -> None:
+    """The legacy arm is untouched: a real value stays a real number."""
+    records = EconomicRecords.from_record_paths(
+        instrument_path=INSTRUMENTS / "SYNTH-INSTRUMENT-QTYGUARD-01-GREEN-V1.json",
+        cost_path=COSTS / "SYNTH-COST-RULE2-01-GREEN-V1.json",
+        funding_path=RECORD_ROOT / "funding" / "SYNTH-FUNDING-PATHD-01-EMPTY-V1.json",
+    )
+    transition = CorrectedEconomicsAdapter().resolve(
+        EconomicState(sizing_equity=1_000_000.0),
+        _intent(event_class="ENTRY"),
+        MARKET,
+        records,
+    )
+    rows = _fee_surface(list(transition.fee_events), kernel_semantics_version="2.0.0")
+
+    assert isinstance(transition.fee_events[0].fixed_component, float)
+    assert isinstance(rows[0]["fixed_component"], (int, float))
+
+
+def test_the_estimator_arm_is_named_apart_from_the_venue_reported_amount() -> None:
+    """Both arms are present; neither is readable as the other."""
+    transition = _resolve((_authenticated_fee(OUTSIDE_TOLERANCE),))
+    fee = transition.fee_events[0]
+    applied = _decision(transition, "ADMITTED_COST_APPLIED")
+
+    # Venue-reported arm.
+    assert applied["reported_amount"] == OUTSIDE_TOLERANCE
+    assert fee.fee_amount == OUTSIDE_TOLERANCE
+    assert fee.fee_cash_delta == -OUTSIDE_TOLERANCE
+    # Estimator arm, under its own names.
+    assert applied["estimator_rate"] == fee.rate
+    assert applied["estimator_notional"] == fee.fee_notional
+    assert applied["estimator_amount"] == pytest.approx(ESTIMATE)
+    assert applied["estimator_amount"] != applied["reported_amount"]
+    # The estimator never produced the admitted number.
+    assert fee.fee_amount != pytest.approx(fee.rate * fee.fee_notional)
 
 
 def test_the_schedule_path_is_unchanged_without_an_admitted_source() -> None:
@@ -427,7 +627,8 @@ def test_no_path_d_record_writes_the_identity_rounding_literal() -> None:
         *sorted(COSTS.glob("SYNTH-COST-ADMITTED-*.json")),
         *sorted(INSTRUMENTS.glob("SYNTH-INSTRUMENT-QTYGUARD-*.json")),
     ]
-    assert len(path_d_records) == 10
+    # 10 round-1 records plus the two round-2 account/product binding fixtures.
+    assert len(path_d_records) == 12
 
     for record_path in path_d_records:
         assert forbidden not in record_path.read_text(encoding="utf-8"), record_path

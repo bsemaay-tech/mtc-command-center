@@ -18,6 +18,7 @@ wrong-marker controls are then indistinguishable from the marked one, and
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -63,7 +64,7 @@ def _instrument(name: str):
 def _records(instrument_name: str) -> EconomicRecords:
     return EconomicRecords.from_record_paths(
         instrument_path=INSTRUMENTS / f"{instrument_name}.json",
-        cost_path=RECORD_ROOT / "costs" / "SYNTH-COST-ADMITTED-01-GREEN-V1.json",
+        cost_path=RECORD_ROOT / "costs" / "SYNTH-COST-ADMITTED-05-BOUND-GREEN-V1.json",
         funding_path=RECORD_ROOT / "funding" / "SYNTH-FUNDING-PATHD-01-EMPTY-V1.json",
     )
 
@@ -91,7 +92,21 @@ def _open(equity: float) -> tuple[EconomicState, EconomicIntent]:
             fallback_size_pct=10.0,
             max_leverage_cap=1.0,
             event_class="ENTRY",
-            reported_fill_fees=(ReportedFillFee("F0", 270.0, "TEST-USD"),),
+            # The admitted-cost path needs an authenticated own-account fill
+            # fee; these bindings are labelled synthetic fixture values.
+            reported_fill_fees=(
+                ReportedFillFee(
+                    "F0",
+                    270.0,
+                    "TEST-USD",
+                    source_class="HL_FEE_REPORTED_PER_FILL_V1",
+                    account_scope="SYNTHETIC-DECLARED-ACCOUNT-0001",
+                    product="SYNTHETIC-DECLARED-BTC-PERP",
+                    capture_sha256=hashlib.sha256(
+                        b'{"fill":"F0","fee":"270.0","synthetic":true}'
+                    ).hexdigest(),
+                ),
+            ),
         ),
     )
 

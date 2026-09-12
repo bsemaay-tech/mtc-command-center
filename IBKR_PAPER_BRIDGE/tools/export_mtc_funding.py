@@ -51,6 +51,11 @@ Evidence boundaries this tool does not cross
 * A ``coverage`` flag alone proves nothing. An explicit inventory of every
   event in the interval, an account scope and a witness identity are required,
   and every retained/bound/inventoried identity must reconcile exactly.
+* In production mode a capture's digest and identity pointer are necessary but
+  not sufficient: the capture must also *state* the coin, settlement time,
+  rate, size and cash the candidate admits, and those must equal the retained
+  eight-field payload. Agreement between the two evidence sources is still not
+  provenance — both are supplied by the caller.
 * Unknown, out-of-interval, uninventoried and out-of-scope identities are
   always named in the report. Nothing disappears silently.
 
@@ -84,7 +89,7 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -146,6 +151,32 @@ PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN = (
     "HL_FUNDING_OWN_ACCOUNT_CAPTURE_BYTES_SHA256_V1"
 )
 PRODUCTION_ADMISSION_STATUS = "REFUSED_PENDING_T0_REVIEW_AND_OWNER_RATIFICATION"
+# A1 = A forward-only.  The owner signed OD-20260912-P012-PATHD-1 in chat on
+# 2026-09-12 at ~11:00Z (`PATH_D_DECISION_SIGNED_20260912.md`), and the
+# decision admits own-account funding from that point forward only.  This is
+# the exact lower bound a declared interval must respect; it is a constant of
+# the decision, never derived from a clock, an input or an environment, so the
+# same inputs always produce the same verdict.
+PATH_D_SIGNATURE_INSTANT = "2026-09-12T11:00:00Z"
+# The capture layout the production digest domain names.  A capture is one
+# ``userFunding`` element: ``/hash`` is the settlement identity, ``/time`` is
+# whole epoch milliseconds and ``/delta`` carries the coin, the payment rate,
+# the position size and the settled cash.  These pointers are fixed, not
+# caller-supplied: a caller who could choose where the values live could point
+# every one of them at a field that happens to match.  A capture whose layout
+# differs is refused rather than reinterpreted.
+PRODUCTION_CAPTURE_IDENTITY_POINTER = "/hash"
+PRODUCTION_CAPTURE_TIME_POINTER = "/time"
+PRODUCTION_CAPTURE_TIME_UNIT = "EPOCH_MILLISECONDS"
+PRODUCTION_CAPTURE_DELTA_TYPE_POINTER = "/delta/type"
+PRODUCTION_CAPTURE_DELTA_TYPE = "funding"
+# retained eight-field payload member -> pointer into the capture bytes.
+PRODUCTION_CAPTURE_VALUE_POINTERS = {
+    "amount_usdc": "/delta/usdc",
+    "funding_rate": "/delta/fundingRate",
+    "position_szi": "/delta/szi",
+    "symbol": "/delta/coin",
+}
 PRODUCTION_SETTLEMENT_SOURCE = "HL_VENUE_REPORTED_OWN_ACCOUNT_SETTLEMENT"
 NOT_AN_ACCEPTED_RECORD = (
     "Prepared under OD-20260912-P012-PATHD-1. This is not an accepted economic "
@@ -206,6 +237,10 @@ CANDIDATE_CONTEXT_RATE_SUBSTITUTION_REFUSED = (
     "CANDIDATE_CONTEXT_RATE_SUBSTITUTION_REFUSED"
 )
 CANDIDATE_CAPTURE_IDENTITY_UNBOUND = "CANDIDATE_CAPTURE_IDENTITY_UNBOUND"
+CANDIDATE_CAPTURE_VALUE_MISMATCH = "CANDIDATE_CAPTURE_VALUE_MISMATCH"
+CANDIDATE_CAPTURE_TIME_OUT_OF_INTERVAL = "CANDIDATE_CAPTURE_TIME_OUT_OF_INTERVAL"
+CANDIDATE_FORWARD_ONLY_VIOLATION = "CANDIDATE_FORWARD_ONLY_VIOLATION"
+CANDIDATE_DUPLICATE_SETTLEMENT = "CANDIDATE_DUPLICATE_SETTLEMENT"
 
 # --- closed input domains --------------------------------------------------
 RETAINED_ROW_KEYS = (
@@ -305,6 +340,21 @@ PRODUCTION_EVIDENCE_LIMITATIONS = (
     "The declared account, product and interval are caller declarations "
     "recorded verbatim. This tool does not authenticate them and this artifact "
     "is not evidence that they are real.",
+    "A1 = A is enforced forward-only from the owner signature instant "
+    + PATH_D_SIGNATURE_INSTANT
+    + ": a declared interval opening earlier is refused whole, never clipped, "
+    "and every admitted settlement's authenticated capture time must fall "
+    "inside the declared interval.",
+    "The capture bytes must state the admitted values: the coin, settlement "
+    "time, payment rate, position size and settled cash read out of the "
+    "capture must equal the Bridge's retained eight-field payload for the same "
+    "settlement, and the capture layout is fixed rather than caller-chosen. "
+    "What this does NOT establish is provenance: the capture is still supplied "
+    "by the caller, so agreement proves the two evidence sources tell one "
+    "story, not that either came from the venue.",
+    "An exact duplicate settlement refuses the whole candidate instead of "
+    "collapsing into one event, so a double-counted row can never disappear "
+    "silently.",
     "This artifact is not an accepted economic record: T0 review, R29 semantic "
     "redo, Section-16 record review and owner human ratification remain "
     "required, and it grants no deploy, live-trading, order or ARM authority.",
@@ -565,6 +615,16 @@ def _strict_json_loads(raw: bytes) -> Any:
 # ---------------------------------------------------------------------------
 
 
+def _instant_milliseconds(instant: _Instant) -> Decimal:
+    """The instant as exact epoch milliseconds, subsecond digits intact."""
+    return Decimal(instant.seconds) * 1000 + instant.fraction * 1000
+
+
+# Parsed once, from the decision constant above, through the same parser every
+# caller instant goes through.  No clock is read here or anywhere else.
+_SIGNATURE_BOUND = _parse_instant(PATH_D_SIGNATURE_INSTANT, "PATH_D_SIGNATURE_INSTANT")
+
+
 def _require_mode(mode: Any) -> str:
     if mode not in EXPORT_MODES:
         raise _Refusal(
@@ -580,6 +640,11 @@ def _validate_declarations(mode: str, declarations: Any, start: _Instant, end: _
     OD-20260912-P012-PATHD-1 leaves account/product/interval UNSPECIFIED until
     authenticated evidence exists, so production mode refuses until a caller
     supplies all three explicitly.  Nothing is defaulted or inferred.
+
+    A1 = A is forward-only, so the declared interval must also open at or after
+    :data:`PATH_D_SIGNATURE_INSTANT`.  An interval reaching back before the
+    owner's signature is refused outright; it is never clipped, shifted or
+    partially admitted.
     """
     if mode != MODE_PRODUCTION:
         if declarations:
@@ -615,6 +680,14 @@ def _validate_declarations(mode: str, declarations: Any, start: _Instant, end: _
             CANDIDATE_DECLARATION_MISMATCH,
             f"declared interval {declared['interval']!r} is not the requested "
             f"interval {expected_interval!r}",
+        )
+    if start.sort_key < _SIGNATURE_BOUND.sort_key:
+        raise _Refusal(
+            CANDIDATE_FORWARD_ONLY_VIOLATION,
+            f"the declared interval opens at {start.text}, before the Path D "
+            f"signature instant {PATH_D_SIGNATURE_INSTANT}; A1 = A admits own "
+            "account funding forward-only from the owner's signature, and a "
+            "pre-signature interval is refused whole rather than clipped",
         )
     return declared
 
@@ -874,12 +947,16 @@ def _validate_production_binding(raw: Any, declared: Mapping[str, str]) -> dict[
         f"binding {event_id} capture_identity_pointer",
         CANDIDATE_BINDING_INVALID,
     )
-    if not pointer.startswith("/"):
+    if pointer != PRODUCTION_CAPTURE_IDENTITY_POINTER:
+        # Fixed for the same reason the value pointers are: a caller free to
+        # choose where the identity lives could aim at any field that happens
+        # to spell this event id.  The binding still states the pointer
+        # explicitly so the artifact records what was read.
         raise _Refusal(
-            CANDIDATE_BINDING_INVALID,
-            f"binding {event_id} capture_identity_pointer must be an RFC 6901 "
-            "JSON pointer naming where the venue's own event identity lives in "
-            "the capture bytes",
+            CANDIDATE_CAPTURE_IDENTITY_UNBOUND,
+            f"binding {event_id} capture_identity_pointer must be the canonical "
+            f"{PRODUCTION_CAPTURE_IDENTITY_POINTER!r} of an own-account funding "
+            f"capture, got {pointer!r}",
         )
     body = {
         "account_scope": account_scope,
@@ -920,13 +997,148 @@ def _resolve_json_pointer(document: Any, pointer: str) -> Any:
     return node
 
 
-def _verify_production_capture(binding: Mapping[str, Any], capture_hex: str) -> int:
+def _capture_number(value: Any, label: str) -> Decimal:
+    """One capture or payload number as an exact decimal, or a refusal.
+
+    Venue captures spell numbers as decimal strings and the Bridge retains
+    them as floats, so both sides are normalized through :class:`Decimal`,
+    which compares by value: ``"1.25e-05"``, ``"0.0000125"`` and
+    ``0.0000125`` are one number, and ``999999`` is not ``-1.25``.
+    """
+    if value is None or isinstance(value, bool):
+        raise _Refusal(
+            CANDIDATE_CAPTURE_VALUE_MISMATCH, f"{label} is not a number: {value!r}"
+        )
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise _Refusal(
+                CANDIDATE_CAPTURE_VALUE_MISMATCH, f"{label} is not a finite number"
+            )
+        text = repr(value)
+    elif isinstance(value, int):
+        text = str(value)
+    elif isinstance(value, str):
+        text = value.strip()
+    else:
+        raise _Refusal(
+            CANDIDATE_CAPTURE_VALUE_MISMATCH, f"{label} is not a number: {value!r}"
+        )
+    try:
+        number = Decimal(text)
+    except InvalidOperation as exc:
+        raise _Refusal(
+            CANDIDATE_CAPTURE_VALUE_MISMATCH,
+            f"{label} is not an exact decimal number: {text!r}",
+        ) from exc
+    if not number.is_finite():
+        raise _Refusal(
+            CANDIDATE_CAPTURE_VALUE_MISMATCH, f"{label} is not a finite number"
+        )
+    return number
+
+
+def _verify_capture_values(
+    event_id: str,
+    decoded: Any,
+    payload: Mapping[str, Any],
+    start: _Instant,
+    end: _Instant,
+) -> Decimal:
+    """Prove the capture states the values this settlement was admitted on.
+
+    A digest proves the bytes were not edited and the identity pointer proves
+    they name this settlement; neither says the bytes *agree* with what is
+    being booked.  Here the capture's own coin, settlement time, payment rate,
+    position size and settled cash must equal the retained eight-field payload
+    for the same event, and the capture's time must fall inside the declared
+    interval (A1 = A).  Any disagreement refuses; nothing is reconciled,
+    rounded or preferred.
+
+    Returns the capture's settlement time in exact epoch milliseconds.
+    """
+    delta_type = _resolve_json_pointer(decoded, PRODUCTION_CAPTURE_DELTA_TYPE_POINTER)
+    if delta_type != PRODUCTION_CAPTURE_DELTA_TYPE:
+        raise _Refusal(
+            CANDIDATE_CAPTURE_VALUE_MISMATCH,
+            f"binding {event_id} capture {PRODUCTION_CAPTURE_DELTA_TYPE_POINTER} is "
+            f"{delta_type!r}, not a {PRODUCTION_CAPTURE_DELTA_TYPE!r} delta; these "
+            "bytes do not describe a funding settlement",
+        )
+    for field, pointer in sorted(PRODUCTION_CAPTURE_VALUE_POINTERS.items()):
+        captured = _resolve_json_pointer(decoded, pointer)
+        retained = payload.get(field)
+        if field == "symbol":
+            if not isinstance(captured, str) or captured != retained:
+                raise _Refusal(
+                    CANDIDATE_CAPTURE_VALUE_MISMATCH,
+                    f"binding {event_id} capture {pointer} is {captured!r} but the "
+                    f"retained payload {field} is {retained!r}",
+                )
+            continue
+        if retained is None:
+            raise _Refusal(
+                CANDIDATE_CAPTURE_VALUE_MISMATCH,
+                f"binding {event_id} cannot be bound to its capture: the retained "
+                f"payload carries no {field}",
+            )
+        captured_number = _capture_number(
+            captured, f"binding {event_id} capture {pointer}"
+        )
+        retained_number = _capture_number(
+            retained, f"binding {event_id} retained payload {field}"
+        )
+        if captured_number != retained_number:
+            raise _Refusal(
+                CANDIDATE_CAPTURE_VALUE_MISMATCH,
+                f"binding {event_id} capture {pointer} is {captured!r} but the "
+                f"retained payload {field} is {retained!r}",
+            )
+    captured_ms = _capture_number(
+        _resolve_json_pointer(decoded, PRODUCTION_CAPTURE_TIME_POINTER),
+        f"binding {event_id} capture {PRODUCTION_CAPTURE_TIME_POINTER}",
+    )
+    settlement = _parse_instant(
+        payload.get("effective_ts"), f"binding {event_id} retained payload effective_ts"
+    )
+    retained_ms = _instant_milliseconds(settlement)
+    if captured_ms != retained_ms:
+        # Exact equality in the millisecond domain: a capture that merely
+        # truncates a finer retained instant is a mismatch, never a rounding.
+        raise _Refusal(
+            CANDIDATE_CAPTURE_VALUE_MISMATCH,
+            f"binding {event_id} capture {PRODUCTION_CAPTURE_TIME_POINTER} is "
+            f"{captured_ms} {PRODUCTION_CAPTURE_TIME_UNIT} but the retained payload "
+            f"settles at {settlement.text} ({retained_ms})",
+        )
+    if not (
+        _instant_milliseconds(start) <= captured_ms < _instant_milliseconds(end)
+    ):
+        raise _Refusal(
+            CANDIDATE_CAPTURE_TIME_OUT_OF_INTERVAL,
+            f"binding {event_id} authenticated capture settles at {settlement.text}, "
+            f"outside the declared interval [{start.text}, {end.text})",
+        )
+    return captured_ms
+
+
+def _verify_production_capture(
+    binding: Mapping[str, Any],
+    capture_hex: str,
+    payload: Mapping[str, Any],
+    start: _Instant,
+    end: _Instant,
+) -> int:
     """Bind one authenticated capture's exact bytes to this event.
 
     ``PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN`` is SHA-256 over these bytes as
     received.  The bytes are not normalized, not re-encoded and not
     canonicalized: the digest domain is the capture, so a Bridge payload digest
     can never be reused as one.
+
+    Three separate questions are answered, and all three must hold: are these
+    the bytes the binding declares (digest), do they name this settlement
+    (identity pointer), and do they *state the admitted values* (value
+    binding)?
     """
     event_id = binding["event_id"]
     try:
@@ -964,6 +1176,7 @@ def _verify_production_capture(binding: Mapping[str, Any], capture_hex: str) -> 
             f"{binding['body']['capture_identity_pointer']!r} resolves to "
             f"{identity!r}, so these bytes are not bound to this settlement",
         )
+    _verify_capture_values(event_id, decoded, payload, start, end)
     return len(capture)
 
 
@@ -1096,8 +1309,23 @@ def _verify_source_witness(binding: Mapping[str, Any], source_hex: str) -> None:
         )
 
 
-def _fold_unique(items: list[dict[str, Any]], key: str, label: str) -> dict[str, dict[str, Any]]:
-    """Duplicate identical entries collapse to one; any conflict refuses."""
+def _fold_unique(
+    items: list[dict[str, Any]],
+    key: str,
+    label: str,
+    *,
+    refuse_duplicates: bool = False,
+) -> dict[str, dict[str, Any]]:
+    """Collapse or refuse repeated identities; any conflict always refuses.
+
+    ``refuse_duplicates`` is the production rule and is off for the frozen D1
+    synthetic behaviour.  Under A3 whole-interval semantics a settlement that
+    appears twice is a defect in the evidence, not a formatting artifact: one
+    of the two rows is unexplained, and which one was double-counted upstream
+    is exactly what a silent fold would hide.  So the whole candidate is
+    refused rather than deduplicated.  Synthetic mode keeps folding identical
+    entries byte for byte as before.
+    """
     folded: dict[str, dict[str, Any]] = {}
     for item in items:
         identity = item[key]
@@ -1111,6 +1339,13 @@ def _fold_unique(items: list[dict[str, Any]], key: str, label: str) -> dict[str,
             raise _Refusal(
                 CANDIDATE_EVENT_CONFLICT,
                 f"conflicting {label} for event {identity}",
+            )
+        if refuse_duplicates:
+            raise _Refusal(
+                CANDIDATE_DUPLICATE_SETTLEMENT,
+                f"{label} {identity} is supplied more than once; an exact "
+                "duplicate settlement is refused, never folded, so a "
+                "double-counted row cannot disappear into a single event",
             )
     return folded
 
@@ -1274,8 +1509,12 @@ def _build(
                 f"witnessed {witness['symbol']} scope",
             )
 
-    folded_rows = _fold_unique(rows, "event_id", "retained row")
-    folded_bindings = _fold_unique(bindings, "event_id", "binding")
+    folded_rows = _fold_unique(
+        rows, "event_id", "retained row", refuse_duplicates=production
+    )
+    folded_bindings = _fold_unique(
+        bindings, "event_id", "binding", refuse_duplicates=production
+    )
 
     inventory = list(witness["expected_event_ids"])
     inventory_set = set(inventory)
@@ -1363,13 +1602,19 @@ def _build(
                     f"binding {event_id} settles at {binding['instant'].text} "
                     f"but the venue's own retained row is {ledger_instant.text}",
                 )
-            _verify_production_capture(binding, witness["source_witnesses"][event_id])
+            _verify_production_capture(
+                binding, witness["source_witnesses"][event_id], payload, start, end
+            )
             _check_payer_sign(binding, payload)
             rate = payload.get("funding_rate")
             if rate is not None:
                 magnitudes.append((abs(float(rate)), event_id))
             notes = {
                 "bridge_effective_ts_equals_binding_event_timestamp": True,
+                "capture_values_bound_to_retained_payload": True,
+                "capture_value_pointers": dict(PRODUCTION_CAPTURE_VALUE_POINTERS),
+                "capture_time_pointer": PRODUCTION_CAPTURE_TIME_POINTER,
+                "capture_time_unit": PRODUCTION_CAPTURE_TIME_UNIT,
                 "settlement_rate_source": PRODUCTION_SETTLEMENT_SOURCE,
                 "settlement_time_source": PRODUCTION_SETTLEMENT_SOURCE,
                 "oracle_value_admitted": False,
