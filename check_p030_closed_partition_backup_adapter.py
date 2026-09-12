@@ -357,6 +357,48 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                         )
                 run_backup.assert_not_called()
 
+    def test_backup_consumes_bound_config_when_original_is_swapped(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            original_backup = subject.backup.run_backup
+            swapped_root = root / "swapped-backups"
+
+            def swap_original_before_p026(bound_config_path, *args, **kwargs):
+                config_path.write_text(
+                    json.dumps(
+                        {
+                            "schema": "mtc.opsa_backup_config/v1",
+                            "backup_root": str(swapped_root),
+                            "stores": [
+                                {
+                                    "id": self.STORE_ID,
+                                    "path": str(stable),
+                                    "class": "protected",
+                                }
+                            ],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                self.assertNotEqual(Path(bound_config_path), config_path)
+                return original_backup(bound_config_path, *args, **kwargs)
+
+            with mock.patch.object(
+                subject.backup,
+                "run_backup",
+                side_effect=swap_original_before_p026,
+            ):
+                run_id = subject.backup_stable_prefix(
+                    config_path,
+                    stable_receipt=receipt,
+                    store_id=self.STORE_ID,
+                    source_root=root / "source-root",
+                )
+            self.assertTrue((root / "backups" / "runs" / run_id).is_dir())
+            self.assertFalse(swapped_root.exists())
+
     def test_restore_checks_first_and_produces_verified_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -459,6 +501,80 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                     )
             self.assertEqual(calls, [True])
             self.assertEqual(list(target.iterdir()), [])
+
+    def test_manifest_swap_immediately_before_restore_never_yields_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            manifest = root / "backups" / "manifest.jsonl"
+            target = root / "restore-target"
+            target.mkdir()
+            unchanged_restore = subject.restore.run_restore
+
+            def swap_before_restore(*args, **kwargs):
+                if not kwargs["check_only"]:
+                    lines = manifest.read_text(encoding="utf-8").splitlines()
+                    lines[0] = lines[0][:-1] + ', "record": "run_start"}'
+                    manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                return unchanged_restore(*args, **kwargs)
+
+            with mock.patch.object(
+                subject.restore, "run_restore", side_effect=swap_before_restore
+            ):
+                with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
+                    subject.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            self.assertFalse(
+                (target / subject.VERIFIED_RESTORE_RECEIPT_NAME).exists()
+            )
+
+    def test_intruder_after_check_only_blocks_actual_restore(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            target = root / "restore-target"
+            target.mkdir()
+            intruder = target / "synthetic-intruder"
+            unchanged_restore = subject.restore.run_restore
+            calls: list[bool] = []
+
+            def intrude_after_check(*args, **kwargs):
+                calls.append(kwargs["check_only"])
+                result = unchanged_restore(*args, **kwargs)
+                if kwargs["check_only"]:
+                    intruder.write_text("fixture", encoding="utf-8")
+                return result
+
+            with mock.patch.object(
+                subject.restore, "run_restore", side_effect=intrude_after_check
+            ):
+                with self.assertRaisesRegex(ValueError, "restore target must be empty"):
+                    subject.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            self.assertEqual(calls, [True])
+            self.assertEqual(intruder.read_text(encoding="utf-8"), "fixture")
 
     def test_partial_run_that_p026_check_only_accepts_never_reaches_restore(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
