@@ -107,10 +107,13 @@ def parse_time(value: str) -> datetime | None:
 
 
 def _normalize_cutoff_utc(value: datetime, message: str) -> datetime:
+    if type(value) is not datetime or type(value.tzinfo) is not timezone:
+        raise ValueError(message)
     try:
-        if value.tzinfo is None or value.utcoffset() is None:
+        offset = value.utcoffset()
+        if offset is None:
             raise ValueError(message)
-        return value.astimezone(timezone.utc)
+        return (value.replace(tzinfo=None) - offset).replace(tzinfo=timezone.utc)
     except Exception as exc:
         raise ValueError(message) from exc
 

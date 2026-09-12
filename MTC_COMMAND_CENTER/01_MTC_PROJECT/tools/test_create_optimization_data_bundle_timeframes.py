@@ -28,6 +28,15 @@ class SemanticNaiveTimezone(tzinfo):
         return None
 
 
+class StateChangingTimezone(tzinfo):
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def utcoffset(self, value):
+        self.calls += 1
+        return timedelta(0) if self.calls == 1 else None
+
+
 def gap_policy_fixture() -> dict:
     policy = {
         "schema": "p021.strategy_type_policy_set/v1",
@@ -296,6 +305,23 @@ class QualityTimeframeTests(unittest.TestCase):
                 gap_policy=gap_policy_fixture(),
             )
 
+    def test_prepare_dataset_evidence_refuses_state_changing_timezone(self) -> None:
+        carrier = StateChangingTimezone()
+        with self.assertRaisesRegex(
+            ValueError,
+            "^closed_candle_cutoff_utc must be timezone-aware$",
+        ):
+            subject.prepare_dataset_evidence(
+                rows_at(-86400, -86100),
+                instrument_id="BINANCE:BTCUSDT",
+                timeframe="5m",
+                closed_candle_cutoff_utc=datetime(
+                    2026, 1, 1, 0, 10, tzinfo=carrier
+                ),
+                gap_policy=gap_policy_fixture(),
+            )
+        self.assertEqual(carrier.calls, 0)
+
     def test_explicit_evidence_inputs_stabilizes_hostile_timezone_refusal(self) -> None:
         class HostileTimezone(tzinfo):
             def utcoffset(self, value):
@@ -312,6 +338,19 @@ class QualityTimeframeTests(unittest.TestCase):
             "^closed_candle_cutoff_utc must be a timezone-aware timestamp$",
         ):
             subject.explicit_evidence_inputs(args)
+
+    def test_explicit_evidence_inputs_preserves_builtin_fixed_offset(self) -> None:
+        args = argparse.Namespace(
+            closed_candle_cutoff_utc=datetime(
+                2026, 1, 1, 3, 10, tzinfo=timezone(timedelta(hours=3))
+            ),
+            gap_policy=gap_policy_fixture(),
+        )
+
+        cutoff, _ = subject.explicit_evidence_inputs(args)
+
+        self.assertEqual(cutoff, datetime(2026, 1, 1, 0, 10, tzinfo=timezone.utc))
+        self.assertIs(cutoff.tzinfo, timezone.utc)
 
     def test_build_refuses_timezone_naive_datetime_before_any_write(self) -> None:
         args = argparse.Namespace(
@@ -365,6 +404,36 @@ class QualityTimeframeTests(unittest.TestCase):
                 "^closed_candle_cutoff_utc must be a timezone-aware timestamp$",
             ):
                 subject.build_bundle(args)
+        mkdir.assert_not_called()
+        rename.assert_not_called()
+        write_csv.assert_not_called()
+
+    def test_build_refuses_state_changing_timezone_before_any_write(self) -> None:
+        carrier = StateChangingTimezone()
+        args = argparse.Namespace(
+            repo_root="unused",
+            bundle_parent="unused",
+            archive_root="unused",
+            datasets_root="unused",
+            date_token="fixture",
+            closed_candle_cutoff_utc=datetime(
+                2026, 1, 1, 0, 10, tzinfo=carrier
+            ),
+            gap_policy=gap_policy_fixture(),
+        )
+        with mock.patch.object(
+            subject.Path,
+            "mkdir",
+            side_effect=AssertionError("write boundary reached"),
+        ) as mkdir, mock.patch.object(subject.Path, "rename") as rename, mock.patch.object(
+            subject, "write_csv"
+        ) as write_csv:
+            with self.assertRaisesRegex(
+                ValueError,
+                "^closed_candle_cutoff_utc must be a timezone-aware timestamp$",
+            ):
+                subject.build_bundle(args)
+        self.assertEqual(carrier.calls, 0)
         mkdir.assert_not_called()
         rename.assert_not_called()
         write_csv.assert_not_called()
