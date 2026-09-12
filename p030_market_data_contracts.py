@@ -313,6 +313,7 @@ def validate_correction_chain(records: Iterable[Mapping[str, Any]]) -> None:
 
 def _validate_dataset_row(row: Mapping[str, Any]) -> None:
     _exact(row, DATASET_ROW_FIELDS, "dataset row")
+    _hash(row["observation_id"], "dataset row.observation_id", prefix="p030obs-v1")
     for field in ("bar_open_time", "bar_close_time", "ingest_time"):
         _integer(row[field], f"dataset row.{field}")
     _integer(row["venue_seq"], "dataset row.venue_seq", nullable=True)
