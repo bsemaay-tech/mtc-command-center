@@ -456,7 +456,6 @@ def prepare_dataset_evidence(
         "closed_rows": output_rows,
         "excluded_forming_candle_count": len(rows) - len(closed_rows),
         "closed_candle_cutoff_utc": cutoff.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "gap_measurement": gap_measurement,
         "quality": quality,
         "dataset_hash": dataset_hash,
     }
@@ -468,6 +467,7 @@ def validate_quality(
     bundle_root: Path,
     *,
     evidence: Mapping[str, Any],
+    emit: bool = True,
 ) -> dict[str, Any]:
     if timeframe not in TIMEFRAME_SECONDS:
         raise ValueError(f"unsupported timeframe: {timeframe}")
@@ -503,37 +503,7 @@ def validate_quality(
     gap_path = bundle_root / "quality" / "gap_reports" / f"{dataset_id}_gaps.csv"
     duplicate_path = bundle_root / "quality" / "duplicate_timestamp_reports" / f"{dataset_id}_duplicates.csv"
     ohlcv_path = bundle_root / "quality" / "ohlcv_validation_reports" / f"{dataset_id}_ohlcv.md"
-    write_csv(
-        gap_path,
-        legacy_gap_rows,
-        [
-            "prev_timestamp_utc",
-            "next_timestamp_utc",
-            "delta_seconds",
-            "missing_bars_estimate",
-        ],
-    )
-    write_csv(duplicate_path, duplicates, ["row", "timestamp_utc"])
-    ohlcv_path.parent.mkdir(parents=True, exist_ok=True)
-    ohlcv_path.write_text(
-        "\n".join(
-            [
-                f"# OHLCV Validation - {dataset_id}",
-                "",
-                f"- Status: `{status}`",
-                f"- Invalid rows: `{len(invalid_rows)}`",
-                f"- Duplicate timestamps: `{len(duplicates)}`",
-                f"- Gaps: `{gap_measurement['gap_event_count']}`",
-                "",
-                "## First Invalid Rows",
-                "",
-                json.dumps(invalid_rows[:50], indent=2, sort_keys=True),
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    return {
+    projection = {
         "gap_measurement": gap_measurement,
         "has_gaps": gap_measurement["gap_event_count"] > 0,
         "gap_count": gap_measurement["gap_event_count"],
@@ -546,6 +516,38 @@ def validate_quality(
         "invalid_ohlcv_reasons": invalid_rows,
         "expected_bars": gap_measurement["expected_bars"],
     }
+    if emit:
+        write_csv(
+            gap_path,
+            legacy_gap_rows,
+            [
+                "prev_timestamp_utc",
+                "next_timestamp_utc",
+                "delta_seconds",
+                "missing_bars_estimate",
+            ],
+        )
+        write_csv(duplicate_path, duplicates, ["row", "timestamp_utc"])
+        ohlcv_path.parent.mkdir(parents=True, exist_ok=True)
+        ohlcv_path.write_text(
+            "\n".join(
+                [
+                    f"# OHLCV Validation - {dataset_id}",
+                    "",
+                    f"- Status: `{status}`",
+                    f"- Invalid rows: `{len(invalid_rows)}`",
+                    f"- Duplicate timestamps: `{len(duplicates)}`",
+                    f"- Gaps: `{gap_measurement['gap_event_count']}`",
+                    "",
+                    "## First Invalid Rows",
+                    "",
+                    json.dumps(invalid_rows[:50], indent=2, sort_keys=True),
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    return projection
 
 
 def regime_lookback(timeframe: str) -> int:
@@ -683,29 +685,8 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
     parent_root = Path(args.bundle_parent)
     bundle_name = f"MTC_V2_OPTIMIZATION_DATA_BUNDLE_{args.date_token}"
     bundle_root = parent_root / bundle_name
-    if bundle_root.exists():
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        bundle_root.rename(parent_root / f"{bundle_name}_previous_{timestamp}")
     zip_path = parent_root / f"{bundle_name}.zip"
-    if zip_path.exists():
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        zip_path.rename(parent_root / f"{bundle_name}_previous_{timestamp}.zip")
     sha_path = parent_root / f"{bundle_name}.zip.sha256"
-    if sha_path.exists():
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        sha_path.rename(parent_root / f"{bundle_name}_previous_{timestamp}.zip.sha256")
-    for sub in [
-        "raw/binance_futures",
-        "normalized/binance_futures",
-        "manifests",
-        "regimes/per_dataset",
-        "quality/gap_reports",
-        "quality/duplicate_timestamp_reports",
-        "quality/ohlcv_validation_reports",
-        "docs",
-    ]:
-        (bundle_root / sub).mkdir(parents=True, exist_ok=True)
-
     discovery_roots = [Path(args.archive_root), Path(args.datasets_root), repo_root / "reports" / "data_downloads"]
     csv_files: list[Path] = []
     for root in discovery_roots:
@@ -730,20 +711,11 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
         }
         for item in source_files
     ]
-    report_root = repo_root / "reports" / "optimization_data_bundle"
-    report_root.mkdir(parents=True, exist_ok=True)
-    write_csv(report_root / "source_file_discovery.csv", discovery_rows)
-
     included = [item for item in source_files if item.include_candidate]
     used_ids: set[str] = set()
-    manifests: list[dict[str, Any]] = []
-    source_index: list[dict[str, Any]] = []
-    quality_summaries: list[dict[str, Any]] = []
-    regime_registry: list[dict[str, Any]] = []
-    total_rows = 0
+    prepared_sources: list[dict[str, Any]] = []
     for source in included:
         dataset_id = dataset_id_for(source, used_ids)
-        raw_dst = bundle_root / "raw" / "binance_futures" / source.symbol / source.timeframe / source.source_path.name
         rows, columns = read_rows(source.source_path)
         normalized_rows, normalize_notes = normalize_rows(rows, columns)
         evidence = prepare_dataset_evidence(
@@ -756,6 +728,58 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
         if evidence["dataset_hash"] is None:
             raise ValueError("semantically invalid closed OHLCV refuses bundle emission")
         normalized_rows = evidence["closed_rows"]
+        validate_quality(
+            dataset_id,
+            source.timeframe,
+            bundle_root,
+            evidence=evidence,
+            emit=False,
+        )
+        prepared_sources.append(
+            {
+                "source": source,
+                "dataset_id": dataset_id,
+                "normalized_rows": normalized_rows,
+                "normalize_notes": normalize_notes,
+                "evidence": evidence,
+            }
+        )
+
+    for path, archived_name in (
+        (bundle_root, f"{bundle_name}_previous_{{timestamp}}"),
+        (zip_path, f"{bundle_name}_previous_{{timestamp}}.zip"),
+        (sha_path, f"{bundle_name}_previous_{{timestamp}}.zip.sha256"),
+    ):
+        if path.exists():
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            path.rename(parent_root / archived_name.format(timestamp=timestamp))
+    for sub in [
+        "raw/binance_futures",
+        "normalized/binance_futures",
+        "manifests",
+        "regimes/per_dataset",
+        "quality/gap_reports",
+        "quality/duplicate_timestamp_reports",
+        "quality/ohlcv_validation_reports",
+        "docs",
+    ]:
+        (bundle_root / sub).mkdir(parents=True, exist_ok=True)
+    report_root = repo_root / "reports" / "optimization_data_bundle"
+    report_root.mkdir(parents=True, exist_ok=True)
+    write_csv(report_root / "source_file_discovery.csv", discovery_rows)
+
+    manifests: list[dict[str, Any]] = []
+    source_index: list[dict[str, Any]] = []
+    quality_summaries: list[dict[str, Any]] = []
+    regime_registry: list[dict[str, Any]] = []
+    total_rows = 0
+    for prepared in prepared_sources:
+        source = prepared["source"]
+        dataset_id = prepared["dataset_id"]
+        raw_dst = bundle_root / "raw" / "binance_futures" / source.symbol / source.timeframe / source.source_path.name
+        normalized_rows = prepared["normalized_rows"]
+        normalize_notes = prepared["normalize_notes"]
+        evidence = prepared["evidence"]
         safe_copy(source.source_path, raw_dst)
         normalized_dst = bundle_root / "normalized" / "binance_futures" / source.symbol / source.timeframe / f"{dataset_id}.csv"
         normalized_fields = ["timestamp_utc", "open", "high", "low", "close", "volume"]
@@ -765,6 +789,7 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
             source.timeframe,
             bundle_root,
             evidence=evidence,
+            emit=True,
         )
         regime_rel = Path("regimes") / "per_dataset" / f"{dataset_id}_regimes.csv"
         regime = classify_regimes(dataset_id, source.symbol, source.timeframe, normalized_rows, bundle_root / regime_rel)
@@ -788,7 +813,7 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
             "dataset_hash": evidence["dataset_hash"],
             "closed_candle_cutoff_utc": evidence["closed_candle_cutoff_utc"],
             "excluded_forming_candle_count": evidence["excluded_forming_candle_count"],
-            "gap_measurement": evidence["gap_measurement"],
+            "gap_measurement": quality["gap_measurement"],
             "has_gaps": quality["has_gaps"],
             "gap_report_path": quality["gap_report_path"],
             "duplicate_timestamp_count": quality["duplicate_timestamp_count"],
