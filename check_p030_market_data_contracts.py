@@ -7,6 +7,7 @@ import hashlib
 import inspect
 import json
 import socket
+from collections.abc import Mapping
 from typing import Any, Callable
 
 
@@ -56,6 +57,38 @@ PARTITION_FIELDS = (
     "path", "file_sha256", "size_bytes", "partition_state", "high_water_bytes",
     "record_count", "last_observation_id",
 )
+
+
+class EvilProducer(str):
+    def __new__(cls):
+        return super().__new__(cls, "EVIL_PRODUCER")
+
+    def __hash__(self) -> int:
+        return hash("WS_LIVE")
+
+    def __eq__(self, other: object) -> bool:
+        return type(other) is str and other == "WS_LIVE"
+
+
+class StatefulEventMapping(Mapping):
+    def __init__(self, record: dict[str, Any]):
+        self.record = record
+        self.producer_reads = 0
+
+    def __getitem__(self, key: str) -> Any:
+        if key == "producer":
+            self.producer_reads += 1
+            return "WS_LIVE" if self.producer_reads == 1 else "EVIL_AFTER_VALIDATION"
+        return self.record[key]
+
+    def __iter__(self):
+        return iter(self.record)
+
+    def __len__(self) -> int:
+        return len(self.record)
+
+    def __contains__(self, key: object) -> bool:
+        return key in self.record
 
 # Frozen output of this checker's independent oracle; never computed by the subject.
 GOLDEN_PAYLOAD = "p030payload-v1:8653c7ea1416f6cc2a7f170966c9be31da58780d3db30d6c679fdbd106868c28"
@@ -262,6 +295,50 @@ def prove_event_producer_guard_load_bearing(subject: Any, record: dict) -> None:
     namespace["event_id"](record)
 
 
+def prove_scalar_and_carrier_guards_load_bearing(
+    subject: Any, evil_record: dict, stateful_record: StatefulEventMapping,
+) -> None:
+    """Restore each rejected pre-fix seam in memory and prove it accepts the deviant."""
+    original_string = subject._string
+
+    def permissive_string(value: object, label: str, *, nullable: bool = False) -> str | None:
+        if value is None and nullable:
+            return None
+        if not isinstance(value, str) or not value:
+            raise subject.ContractRefused(f"{label} must be a non-empty string")
+        return value
+
+    subject._string = permissive_string
+    try:
+        mutant_evil_id = subject.event_id(evil_record)
+    finally:
+        subject._string = original_string
+    expected_evil_id = oracle_record_id(
+        "p030evt-v1", "p030-event-v1", evil_record, EVENT_FIELDS,
+    )
+    assert mutant_evil_id == expected_evil_id
+
+    original_mapping = subject._mapping
+
+    def permissive_mapping(value: object, label: str) -> Mapping:
+        if not isinstance(value, Mapping):
+            raise subject.ContractRefused(f"{label} must be an object")
+        return value
+
+    subject._mapping = permissive_mapping
+    try:
+        mutant_stateful_id = subject.event_id(stateful_record)
+    finally:
+        subject._mapping = original_mapping
+    expected_stateful = event("GAP", ["p030obs-v1:" + "a" * 64])
+    expected_stateful["producer"] = "EVIL_AFTER_VALIDATION"
+    expected_stateful_id = oracle_record_id(
+        "p030evt-v1", "p030-event-v1", expected_stateful, EVENT_FIELDS,
+    )
+    assert stateful_record.producer_reads == 2
+    assert mutant_stateful_id == expected_stateful_id
+
+
 def meaningful_correction_red() -> None:
     """Pre-implementation deviant: correction identity ignores its predecessor link."""
     payload_hash = oracle_record_id("p030payload-v1", "p030-payload-v1", payload(), PAYLOAD_FIELDS)
@@ -418,6 +495,24 @@ def meaningful_event_producer_red() -> None:
     raise AssertionError(("unknown_event_producer_accepted", observed))
 
 
+def meaningful_scalar_carrier_red() -> None:
+    """Equivalent deviant accepts a spoofed scalar and a value-flipping mapping."""
+    evil_record = event("GAP", ["p030obs-v1:" + "a" * 64])
+    evil_record["producer"] = EvilProducer()
+    evil_id = oracle_record_id(
+        "p030evt-v1", "p030-event-v1", evil_record, EVENT_FIELDS
+    )
+    stateful = StatefulEventMapping(event("GAP", ["p030obs-v1:" + "a" * 64]))
+    validated_producer = stateful["producer"]
+    drifted_id = oracle_record_id(
+        "p030evt-v1", "p030-event-v1", stateful, EVENT_FIELDS
+    )
+    raise AssertionError((
+        "spoofed_scalar_or_stateful_mapping_accepted",
+        (str(evil_record["producer"]), evil_id, validated_producer, drifted_id),
+    ))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -425,6 +520,7 @@ def main() -> None:
         choices=(
             "correction-link", "dataset-row-integrity", "provenance-path", "event-detail",
             "producer-track", "iterable-mutation", "event-producer",
+            "scalar-carrier",
         ),
     )
     args = parser.parse_args()
@@ -448,6 +544,9 @@ def main() -> None:
         return
     if args.red == "event-producer":
         meaningful_event_producer_red()
+        return
+    if args.red == "scalar-carrier":
+        meaningful_scalar_carrier_red()
         return
 
     import p030_market_data_contracts as subject
@@ -598,6 +697,23 @@ def main() -> None:
         unknown_event_producer["producer"] = "p030-fixture"
         prove_event_producer_guard_load_bearing(subject, unknown_event_producer)
         print("EVENT PRODUCER ALLOWLIST MUTATION: DETECTED")
+        evil_event_producer = event("GAP", [initial_id])
+        evil_event_producer["producer"] = EvilProducer()
+        expect_refused(
+            lambda: subject.event_id(evil_event_producer),
+            "evil_event_producer_subclass", subject.ContractRefused,
+        )
+        stateful_event = StatefulEventMapping(event("GAP", [initial_id]))
+        expect_refused(
+            lambda: subject.event_id(stateful_event),
+            "stateful_event_mapping", subject.ContractRefused,
+        )
+        prove_scalar_and_carrier_guards_load_bearing(
+            subject,
+            evil_event_producer,
+            StatefulEventMapping(event("GAP", ["p030obs-v1:" + "a" * 64])),
+        )
+        print("EXACT SCALAR/CARRIER GUARD MUTANTS: DETECTED")
         unhashable_id = event("GAP", [initial_id])
         unhashable_id["observation_ids"] = [[initial_id]]
         expect_refused(

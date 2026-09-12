@@ -69,10 +69,10 @@ PARTITION_FIELDS = (
 
 _HASH = re.compile(r"^[0-9a-f]{64}$")
 _WINDOWS_DRIVE = re.compile(r"^[A-Za-z]:")
-def _mapping(value: object, label: str) -> Mapping[str, Any]:
-    if not isinstance(value, Mapping):
-        raise ContractRefused(f"{label} must be an object")
-    return value
+def _mapping(value: object, label: str) -> dict[str, Any]:
+    if type(value) is not dict:
+        raise ContractRefused(f"{label} must be an exact object")
+    return dict(value)
 
 
 def _exact(record: Mapping[str, Any], fields: Sequence[str], label: str) -> None:
@@ -87,7 +87,7 @@ def _exact(record: Mapping[str, Any], fields: Sequence[str], label: str) -> None
 def _string(value: object, label: str, *, nullable: bool = False) -> str | None:
     if value is None and nullable:
         return None
-    if not isinstance(value, str) or not value:
+    if type(value) is not str or not value:
         raise ContractRefused(f"{label} must be a non-empty string")
     return value
 
@@ -125,7 +125,7 @@ def _integer(value: object, label: str, *, nullable: bool = False) -> int | None
 
 
 def _decimal_string(value: object, label: str) -> str:
-    if not isinstance(value, str) or not value:
+    if type(value) is not str or not value:
         raise ContractRefused(f"{label} must be a decimal string")
     try:
         number = Decimal(value)
@@ -206,7 +206,7 @@ def _validate_observation(record: Mapping[str, Any]) -> None:
     _integer(record["bar_open_time"], "observation.bar_open_time")
     _hash(record["producer_payload_hash"], "observation.producer_payload_hash",
           prefix="p030payload-v1")
-    kind = record["observation_type"]
+    kind = _string(record["observation_type"], "observation.observation_type")
     if kind not in {"INITIAL", "CORRECTION"}:
         raise ContractRefused("observation.observation_type is invalid")
     predecessor = record["supersedes_observation_id"]
@@ -225,9 +225,11 @@ def observation_id(record: Mapping[str, Any]) -> str:
 def event_id(record: Mapping[str, Any]) -> str:
     record = _mapping(record, "event")
     _exact(record, EVENT_FIELDS, "event")
-    if record["schema_version"] != EVENT_SCHEMA_VERSION:
+    schema_version = _string(record["schema_version"], "event.schema_version")
+    if schema_version != EVENT_SCHEMA_VERSION:
         raise ContractRefused("event schema_version is unknown")
-    if record["record_type"] not in EVENT_FAMILIES:
+    record_type = _string(record["record_type"], "event.record_type")
+    if record_type not in EVENT_FAMILIES:
         raise ContractRefused("event record_type is unknown")
     _source_producer(record["producer"], "event.producer")
     for field in ("symbol", "interval", "slot_id", "env_lineage_id"):
@@ -239,7 +241,7 @@ def event_id(record: Mapping[str, Any]) -> str:
         _hash(value, "event.observation_ids[]", prefix="p030obs-v1")
     if len(ids) != len(set(ids)):
         raise ContractRefused("event.observation_ids must be a non-empty unique list")
-    if record["record_type"] == "CORRECTION" and len(ids) != 2:
+    if record_type == "CORRECTION" and len(ids) != 2:
         raise ContractRefused("CORRECTION event requires predecessor and successor ids")
     for field in ("window_start", "window_end", "detected_at"):
         _integer(record[field], f"event.{field}")
@@ -336,9 +338,15 @@ def dataset_content_hash(
         _integer(descriptor[field], f"dataset descriptor.{field}")
     if descriptor["window_start"] >= descriptor["window_end"]:
         raise ContractRefused("dataset window must be non-empty and increasing")
-    if descriptor["content_hash_algorithm"] != ALGORITHM:
+    algorithm = _string(
+        descriptor["content_hash_algorithm"], "dataset content_hash_algorithm"
+    )
+    if algorithm != ALGORITHM:
         raise ContractRefused("dataset content_hash_algorithm is unknown")
-    if descriptor["canonicalization_version"] != CANONICALIZATION_VERSION:
+    canonicalization = _string(
+        descriptor["canonicalization_version"], "dataset canonicalization_version"
+    )
+    if canonicalization != CANONICALIZATION_VERSION:
         raise ContractRefused("dataset canonicalization_version is unknown")
 
     rows = []
@@ -378,7 +386,8 @@ def _fraction(value: object, label: str) -> Decimal:
 def venue_provenance_manifest_hash(manifest: Mapping[str, Any]) -> str:
     manifest = _mapping(manifest, "provenance manifest")
     _exact(manifest, MANIFEST_FIELDS, "provenance manifest")
-    if manifest["schema_version"] != PROVENANCE_SCHEMA_VERSION:
+    schema_version = _string(manifest["schema_version"], "provenance.schema_version")
+    if schema_version != PROVENANCE_SCHEMA_VERSION:
         raise ContractRefused("provenance schema_version is unknown")
     for field in ("venue", "archive_schema_version", "env_lineage_id"):
         _string(manifest[field], f"provenance.{field}")
@@ -392,9 +401,15 @@ def venue_provenance_manifest_hash(manifest: Mapping[str, Any]) -> str:
     ) != 1:
         raise ContractRefused("provenance fractions must sum to one")
     _hash(manifest["dataset_content_hash"], "provenance.dataset_content_hash", prefix="p030ds-v1")
-    if manifest["content_hash_algorithm"] != ALGORITHM:
+    algorithm = _string(
+        manifest["content_hash_algorithm"], "provenance.content_hash_algorithm"
+    )
+    if algorithm != ALGORITHM:
         raise ContractRefused("provenance content_hash_algorithm is unknown")
-    if manifest["canonicalization_version"] != CANONICALIZATION_VERSION:
+    canonicalization = _string(
+        manifest["canonicalization_version"], "provenance.canonicalization_version"
+    )
+    if canonicalization != CANONICALIZATION_VERSION:
         raise ContractRefused("provenance canonicalization_version is unknown")
 
     raw_partitions = manifest["partitions"]
@@ -428,9 +443,12 @@ def venue_provenance_manifest_hash(manifest: Mapping[str, Any]) -> str:
         assert size is not None and high_water is not None and count is not None
         if size < 0 or high_water < 0 or high_water > size or count < 0:
             raise ContractRefused("provenance partition counts are invalid")
-        if part["partition_state"] not in {"closed", "live"}:
+        partition_state = _string(
+            part["partition_state"], "provenance partition.partition_state"
+        )
+        if partition_state not in {"closed", "live"}:
             raise ContractRefused("provenance partition_state is unknown")
-        if part["partition_state"] == "closed" and high_water != size:
+        if partition_state == "closed" and high_water != size:
             raise ContractRefused("closed partition high-water must equal its byte size")
         if part["last_observation_id"] is not None:
             _hash(part["last_observation_id"], "provenance partition.last_observation_id",
