@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from decimal import Decimal, InvalidOperation
 from typing import Any, Iterable, Mapping, Sequence
@@ -16,6 +17,8 @@ ALGORITHM = "sha256"
 CANONICALIZATION_VERSION = "p030-json-array-v1"
 EVENT_SCHEMA_VERSION = "mtc.p030_event/v1"
 PROVENANCE_SCHEMA_VERSION = "mtc.p030_provenance/v1"
+SOURCE_PRODUCERS = frozenset({"WS_LIVE", "CANDLE_SNAPSHOT", "PROXY_DOWNLOAD"})
+TRACKS = frozenset({"NATIVE", "PROXY"})
 
 EVENT_FAMILIES = frozenset({
     "GAP",
@@ -73,6 +76,8 @@ def _mapping(value: object, label: str) -> Mapping[str, Any]:
 
 
 def _exact(record: Mapping[str, Any], fields: Sequence[str], label: str) -> None:
+    if any(type(key) is not str for key in record):
+        raise ContractRefused(f"{label} keys must be strings")
     missing = [field for field in fields if field not in record]
     extra = sorted(set(record) - set(fields))
     if missing or extra:
@@ -85,6 +90,22 @@ def _string(value: object, label: str, *, nullable: bool = False) -> str | None:
     if not isinstance(value, str) or not value:
         raise ContractRefused(f"{label} must be a non-empty string")
     return value
+
+
+def _source_producer(value: object, label: str) -> None:
+    if _string(value, label) not in SOURCE_PRODUCERS:
+        raise ContractRefused(f"{label} is unknown")
+
+
+def _track_proxy(record: Mapping[str, Any], label: str) -> None:
+    track = _string(record["track"], f"{label}.track")
+    proxy = _string(record["proxy_source"], f"{label}.proxy_source", nullable=True)
+    if track not in TRACKS:
+        raise ContractRefused(f"{label}.track is unknown")
+    if track == "NATIVE" and proxy is not None:
+        raise ContractRefused(f"{label}.proxy_source must be null for NATIVE track")
+    if track == "PROXY" and proxy is None:
+        raise ContractRefused(f"{label}.proxy_source is required for PROXY track")
 
 
 def _integer(value: object, label: str, *, nullable: bool = False) -> int | None:
@@ -105,6 +126,27 @@ def _decimal_string(value: object, label: str) -> str:
     if not number.is_finite():
         raise ContractRefused(f"{label} must be finite")
     return value
+
+
+def _json_native(value: object, label: str) -> None:
+    value_type = type(value)
+    if value is None or value_type in {str, bool, int}:
+        return
+    if value_type is float:
+        if not math.isfinite(value):
+            raise ContractRefused(f"{label} must contain only finite numbers")
+        return
+    if value_type is list:
+        for index, item in enumerate(value):
+            _json_native(item, f"{label}[{index}]")
+        return
+    if value_type is dict:
+        for key, item in value.items():
+            if type(key) is not str:
+                raise ContractRefused(f"{label} object keys must be strings")
+            _json_native(item, f"{label}.{key}")
+        return
+    raise ContractRefused(f"{label} contains an unsupported JSON value")
 
 
 def _hash(value: object, label: str, *, prefix: str | None = None) -> str:
@@ -137,8 +179,9 @@ def _record_id(prefix: str, domain: str, record: Mapping[str, Any], fields: Sequ
 def producer_payload_hash(record: Mapping[str, Any]) -> str:
     record = _mapping(record, "producer payload")
     _exact(record, PAYLOAD_FIELDS, "producer payload")
-    for field in ("venue", "source_producer", "symbol", "interval"):
+    for field in ("venue", "symbol", "interval"):
         _string(record[field], f"producer payload.{field}")
+    _source_producer(record["source_producer"], "producer payload.source_producer")
     for field in ("bar_open_time", "bar_close_time"):
         _integer(record[field], f"producer payload.{field}")
     for field in ("open", "high", "low", "close", "volume"):
@@ -149,9 +192,10 @@ def producer_payload_hash(record: Mapping[str, Any]) -> str:
 
 def _validate_observation(record: Mapping[str, Any]) -> None:
     _exact(record, OBSERVATION_FIELDS, "observation")
-    for field in ("venue", "track", "source_producer", "symbol", "interval"):
+    for field in ("venue", "symbol", "interval"):
         _string(record[field], f"observation.{field}")
-    _string(record["proxy_source"], "observation.proxy_source", nullable=True)
+    _source_producer(record["source_producer"], "observation.source_producer")
+    _track_proxy(record, "observation")
     _integer(record["bar_open_time"], "observation.bar_open_time")
     _hash(record["producer_payload_hash"], "observation.producer_payload_hash",
           prefix="p030payload-v1")
@@ -181,10 +225,12 @@ def event_id(record: Mapping[str, Any]) -> str:
     for field in ("producer", "symbol", "interval", "slot_id", "env_lineage_id"):
         _string(record[field], f"event.{field}")
     ids = record["observation_ids"]
-    if not isinstance(ids, list) or not ids or len(ids) != len(set(ids)):
+    if not isinstance(ids, list) or not ids:
         raise ContractRefused("event.observation_ids must be a non-empty unique list")
     for value in ids:
         _hash(value, "event.observation_ids[]", prefix="p030obs-v1")
+    if len(ids) != len(set(ids)):
+        raise ContractRefused("event.observation_ids must be a non-empty unique list")
     if record["record_type"] == "CORRECTION" and len(ids) != 2:
         raise ContractRefused("CORRECTION event requires predecessor and successor ids")
     for field in ("window_start", "window_end", "detected_at"):
@@ -193,7 +239,9 @@ def event_id(record: Mapping[str, Any]) -> str:
         raise ContractRefused("event window must be non-empty and increasing")
     if not isinstance(record["detail"], dict):
         raise ContractRefused("event.detail must be an object")
-    _string(record["deployment_identity_hash"], "event.deployment_identity_hash", nullable=True)
+    _json_native(record["detail"], "event.detail")
+    if record["deployment_identity_hash"] is not None:
+        _hash(record["deployment_identity_hash"], "event.deployment_identity_hash")
     return _record_id("p030evt-v1", "p030-event-v1", record, EVENT_FIELDS)
 
 
@@ -272,9 +320,8 @@ def dataset_content_hash(
 ) -> str:
     descriptor = _mapping(slice_descriptor, "dataset descriptor")
     _exact(descriptor, DATASET_DESCRIPTOR_FIELDS, "dataset descriptor")
-    for field in ("venue", "track"):
-        _string(descriptor[field], f"dataset descriptor.{field}")
-    _string(descriptor["proxy_source"], "dataset descriptor.proxy_source", nullable=True)
+    _string(descriptor["venue"], "dataset descriptor.venue")
+    _track_proxy(descriptor, "dataset descriptor")
     for field in ("window_start", "window_end"):
         _integer(descriptor[field], f"dataset descriptor.{field}")
     if descriptor["window_start"] >= descriptor["window_end"]:
@@ -354,6 +401,7 @@ def venue_provenance_manifest_hash(manifest: Mapping[str, Any]) -> str:
         if (
             path.startswith("/")
             or "\\" in path
+            or "\0" in path
             or _WINDOWS_DRIVE.match(path)
             or any(segment in {"", ".", ".."} for segment in segments)
         ):
