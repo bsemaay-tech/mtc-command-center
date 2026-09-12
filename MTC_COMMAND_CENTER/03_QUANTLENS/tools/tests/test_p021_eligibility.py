@@ -4,7 +4,7 @@ import unittest
 from collections import UserString, namedtuple
 from collections.abc import Mapping
 from dataclasses import replace
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 from unittest.mock import patch
 
 from mtc_contracts.admission import EligibilityState
@@ -735,6 +735,73 @@ class IntentIdentityTests(P021ContractTestCase):
                     reason_id, intent_evidence_sha256, mutation
                 )
 
+    def test_refuses_dataset_identity_subclasses(self) -> None:
+        class DatasetIdentitySubclass(DatasetIdentity):
+            pass
+
+        intent = IntentEvidence(
+            candidate_id="cand-1",
+            package_hash="a" * 64,
+            deployment_identity_hash="b" * 64,
+            dataset_identity=DatasetIdentitySubclass("ds-v1", "c" * 64),
+            instrument_id="BINANCE:BTCUSDT",
+            decision_bar_timestamp_utc=datetime(
+                2026, 1, 1, tzinfo=timezone.utc
+            ),
+            intent_id="intent-1",
+            p012_intent_contract="p012.intent-stream/v1",
+            p012_semantic_payload_sha256="d" * 64,
+        )
+
+        self.assert_refused_reason(
+            "DS_V1_INVALID_IDENTITY",
+            intent_evidence_sha256,
+            intent,
+        )
+
+    def test_refuses_untrusted_utc_offset_carriers(self) -> None:
+        class ZeroEqualTimedelta(timedelta):
+            def __eq__(self, other: object) -> bool:
+                return other == timedelta(0)
+
+            def __ne__(self, other: object) -> bool:
+                return not self == other
+
+        class SpoofedUtc(tzinfo):
+            def utcoffset(self, value: datetime | None) -> timedelta:
+                return ZeroEqualTimedelta(hours=1)
+
+            def dst(self, value: datetime | None) -> timedelta:
+                return timedelta(0)
+
+        class HostileUtc(tzinfo):
+            def utcoffset(self, value: datetime | None) -> timedelta:
+                raise RuntimeError("hostile offset")
+
+            def dst(self, value: datetime | None) -> timedelta:
+                return timedelta(0)
+
+        for unsafe_zone in (SpoofedUtc(), HostileUtc()):
+            intent = IntentEvidence(
+                candidate_id="cand-1",
+                package_hash="a" * 64,
+                deployment_identity_hash="b" * 64,
+                dataset_identity=DatasetIdentity("ds-v1", "c" * 64),
+                instrument_id="BINANCE:BTCUSDT",
+                decision_bar_timestamp_utc=datetime(
+                    2026, 1, 1, tzinfo=unsafe_zone
+                ),
+                intent_id="intent-1",
+                p012_intent_contract="p012.intent-stream/v1",
+                p012_semantic_payload_sha256="d" * 64,
+            )
+            with self.subTest(zone_type=type(unsafe_zone).__name__):
+                self.assert_refused_reason(
+                    "INVALID_UTC_DATETIME:decision_bar_timestamp_utc",
+                    intent_evidence_sha256,
+                    intent,
+                )
+
 
 class LookaheadDomainTests(P021ContractTestCase):
     @staticmethod
@@ -895,6 +962,22 @@ class LookaheadDomainTests(P021ContractTestCase):
             closed_decision_keys=(key,),
             full_intents={key: full},
             prefix_intents={key: prefix},
+        )
+
+    def test_refuses_decision_key_subclasses(self) -> None:
+        class DecisionKeySubclass(DecisionKey):
+            pass
+
+        timestamp = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        key = DecisionKeySubclass("BINANCE:BTCUSDT", timestamp)
+        intent = self._intent(timestamp, "intent")
+
+        self.assert_refused_reason(
+            "LOOKAHEAD_INVALID_DECISION_KEY",
+            compare_lookahead,
+            closed_decision_keys=(key,),
+            full_intents={key: intent},
+            prefix_intents={key: intent},
         )
 
     def test_refuses_malformed_closed_decision_key_carriers(self) -> None:
@@ -1119,6 +1202,47 @@ class ClosedBarReceiptTests(P021ContractTestCase):
                     self._validate,
                     mutation,
                 )
+
+    def test_refuses_stateful_timezone_before_chronology(self) -> None:
+        class StatefulTimezone(tzinfo):
+            def __init__(self, later_offset: timedelta) -> None:
+                self.later_offset = later_offset
+                self.calls = 0
+
+            def utcoffset(self, value: datetime | None) -> timedelta:
+                self.calls += 1
+                if self.calls == 1:
+                    return timedelta(0)
+                return self.later_offset
+
+            def dst(self, value: datetime | None) -> timedelta:
+                return timedelta(0)
+
+        open_zone = StatefulTimezone(timedelta(hours=10))
+        close_zone = StatefulTimezone(timedelta(0))
+        decision_zone = StatefulTimezone(timedelta(hours=-10))
+        receipt = replace(
+            self._receipt(),
+            bar_open_timestamp_utc=datetime(
+                2026, 1, 1, minute=10, tzinfo=open_zone
+            ),
+            bar_close_timestamp_utc=datetime(
+                2026, 1, 1, minute=5, tzinfo=close_zone
+            ),
+            decision_timestamp_utc=datetime(
+                2026, 1, 1, minute=4, tzinfo=decision_zone
+            ),
+        )
+
+        self.assert_refused_reason(
+            "INVALID_UTC_DATETIME:bar_open_timestamp_utc",
+            self._validate,
+            receipt,
+        )
+        self.assertEqual(
+            (open_zone.calls, close_zone.calls, decision_zone.calls),
+            (0, 0, 0),
+        )
 
     def test_refuses_each_wrong_runtime_identity(self) -> None:
         receipt = self._receipt()

@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 
 from mtc_contracts.admission import EligibilityState
@@ -108,12 +108,15 @@ def _canonical_sha256(value: object) -> str:
 
 
 def _require_utc(value: object, field_name: str) -> datetime:
-    if (
-        type(value) is not datetime
-        or value.tzinfo is None
-        or value.utcoffset() != timedelta(0)
-    ):
-        raise EvidenceContractRefused(f"INVALID_UTC_DATETIME:{field_name}")
+    reason_id = f"INVALID_UTC_DATETIME:{field_name}"
+    if type(value) is not datetime or type(value.tzinfo) is not timezone:
+        raise EvidenceContractRefused(reason_id)
+    try:
+        offset = value.utcoffset()
+    except Exception:
+        raise EvidenceContractRefused(reason_id) from None
+    if type(offset) is not timedelta or offset != timedelta(0):
+        raise EvidenceContractRefused(reason_id)
     return value
 
 
