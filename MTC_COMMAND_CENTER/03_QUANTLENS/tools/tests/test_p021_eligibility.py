@@ -3,11 +3,13 @@ from __future__ import annotations
 import unittest
 from dataclasses import replace
 from datetime import datetime, timezone
+from unittest.mock import patch
 
 from mtc_contracts.admission import EligibilityState
 from mtc_contracts.lineage import UnsimulatedControl
 from pydantic import ValidationError
 
+import p021_evidence_contracts
 import p021_readiness_rules
 from p021_evidence_contracts import (
     ControlInventoryItem,
@@ -468,6 +470,29 @@ class LookaheadDomainTests(P021ContractTestCase):
             full_intents={key: causal},
             prefix_intents={key: causal},
         )
+
+    def test_digest_collision_cannot_hide_structural_intent_difference(self) -> None:
+        timestamp = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        key = DecisionKey("BINANCE:BTCUSDT", timestamp)
+        full = self._intent(timestamp, "intent", "e" * 64)
+        prefix = self._intent(timestamp, "intent", "d" * 64)
+        collided_digest = "f" * 64
+
+        with patch.object(
+            p021_evidence_contracts,
+            "intent_evidence_sha256",
+            return_value=collided_digest,
+        ):
+            evidence = compare_lookahead(
+                closed_decision_keys=(key,),
+                full_intents={key: full},
+                prefix_intents={key: prefix},
+            )
+
+        self.assertEqual(evidence.intent_mismatch_count, 1)
+        self.assertEqual(evidence.first_mismatch_key, key)
+        self.assertEqual(evidence.first_full_intent_sha256, collided_digest)
+        self.assertEqual(evidence.first_prefix_intent_sha256, collided_digest)
 
 
 class ClosedBarReceiptTests(P021ContractTestCase):

@@ -18,6 +18,7 @@ from mtc_contracts.lineage import UnsimulatedControl
 
 
 _SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
+_MISSING_INTENT = object()
 
 
 class EvidenceContractRefused(ValueError):
@@ -318,10 +319,10 @@ def _validated_decision_key(key: object) -> DecisionKey:
 
 def _validated_intents(
     intents: Mapping[DecisionKey, IntentEvidence], field_name: str
-) -> dict[DecisionKey, str]:
+) -> dict[DecisionKey, tuple[IntentEvidence, str]]:
     if not isinstance(intents, Mapping):
         raise EvidenceContractRefused(f"LOOKAHEAD_INVALID_MAPPING:{field_name}")
-    validated: dict[DecisionKey, str] = {}
+    validated: dict[DecisionKey, tuple[IntentEvidence, str]] = {}
     for key, intent in intents.items():
         decision_key = _validated_decision_key(key)
         if (
@@ -331,7 +332,7 @@ def _validated_intents(
             != decision_key.decision_bar_timestamp_utc
         ):
             raise EvidenceContractRefused(f"LOOKAHEAD_KEY_INTENT_MISMATCH:{field_name}")
-        validated[decision_key] = intent_evidence_sha256(intent)
+        validated[decision_key] = (intent, intent_evidence_sha256(intent))
     return validated
 
 
@@ -358,16 +359,29 @@ def compare_lookahead(
         union,
         key=lambda key: (key.decision_bar_timestamp_utc, key.instrument_id),
     )
-    mismatches = [key for key in ordered_union if full.get(key) != prefix.get(key)]
+    mismatches = []
+    for key in ordered_union:
+        full_intent = full[key][0] if key in full else _MISSING_INTENT
+        prefix_intent = prefix[key][0] if key in prefix else _MISSING_INTENT
+        if (
+            full_intent is _MISSING_INTENT
+            or prefix_intent is _MISSING_INTENT
+            or full_intent != prefix_intent
+        ):
+            mismatches.append(key)
     first = mismatches[0] if mismatches else None
+    first_full = full.get(first) if first is not None else None
+    first_prefix = prefix.get(first) if first is not None else None
     return LookaheadEvidence(
         full_series_decision_count=len(full),
         prefix_decision_count=len(prefix),
         tested_decision_count=len(union),
         intent_mismatch_count=len(mismatches),
         first_mismatch_key=first,
-        first_full_intent_sha256=full.get(first) if first is not None else None,
-        first_prefix_intent_sha256=prefix.get(first) if first is not None else None,
+        first_full_intent_sha256=first_full[1] if first_full is not None else None,
+        first_prefix_intent_sha256=(
+            first_prefix[1] if first_prefix is not None else None
+        ),
     )
 
 
