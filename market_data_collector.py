@@ -367,20 +367,20 @@ class MarketDataCollector:
             env_lineage_id=self.env_lineage_id,
             identities=self.identities,
         )
-        if bar is None:
-            return None
         if source_producer == "WS_LIVE":
-            key = (bar.symbol, bar.interval)
+            symbol = bar.symbol if bar is not None else str(raw["s"])
+            interval = bar.interval if bar is not None else str(raw["i"])
+            key = (symbol, interval)
             if key not in self._last_live_open:
-                step = INTERVAL_MS[bar.interval]
+                step = INTERVAL_MS[interval]
                 persisted_live_opens = []
-                for record in self.archive.bars(bar.symbol, bar.interval):
-                    if (
-                        record.get("symbol") != bar.symbol
-                        or record.get("interval") != bar.interval
-                        or record.get("source_producer") != "WS_LIVE"
-                    ):
+                for record in self.archive.bars(symbol, interval):
+                    if record.get("source_producer") != "WS_LIVE":
                         continue
+                    if record.get("symbol") != symbol or record.get("interval") != interval:
+                        raise CollectionRefused(
+                            "persisted WS_LIVE identity does not match selected archive"
+                        )
                     persisted_open = record.get("bar_open_time")
                     if type(persisted_open) is not int:
                         raise CollectionRefused(
@@ -393,14 +393,20 @@ class MarketDataCollector:
                     persisted_live_opens.append(persisted_open)
                 for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):
                     gap = self.gap_detector(
-                        previous_open, next_open, bar.symbol, bar.interval
+                        previous_open, next_open, symbol, interval
                     )
                     if gap is not None:
-                        raise CollectionRefused(
-                            f"persisted WS_LIVE sequence has a gap at {_iso_utc(gap.window_start)}"
-                        )
+                        try:
+                            gap_at = _iso_utc(gap.window_start)
+                        except (OSError, OverflowError, ValueError) as error:
+                            raise CollectionRefused(
+                                "persisted WS_LIVE sequence has an invalid timestamp"
+                            ) from error
+                        raise CollectionRefused(f"persisted WS_LIVE sequence has a gap at {gap_at}")
                 if persisted_live_opens:
                     self._last_live_open[key] = persisted_live_opens[-1]
+        if bar is None:
+            return None
         if self.archive.classify_bar(bar) == "IDENTICAL_REPLAY_NOOP":
             if source_producer == "WS_LIVE":
                 # A restarted collector can meet an identical replay of the stored last bar as its
