@@ -42,6 +42,8 @@ Registration reads and hashes every referenced file before opening a write trans
 
 `disclose` resolves exactly one registered report reference, opens and reads that path once into one byte buffer, verifies the registered digest, commits a new append-only disclosure-attempt event, and only then writes that same buffer to stdout. Validation or database/logging failure emits zero report bytes. Duplicate valid attempts create separate events. If output fails or the process crashes after commit, the committed attempt remains and the whole declared experiment period is conservatively exposed in this tracker.
 
+The module keeps one narrow test seam: `disclose_report(db_path, experiment_id, revision, report_id, emit_bytes)`. `emit_bytes` is invoked once and only after the SQLite transaction commits. The CLI passes `sys.stdout.buffer.write`; tests may pass a raising callable to prove crash ordering. CLI errors go to stderr with a nonzero exit and never contaminate report stdout.
+
 `status` re-hashes current referenced paths and emits compact JSON or Markdown. Every output states both `LOCAL_LOG_ONLY` and `ACCESS_COMPLETENESS_UNVERIFIED`. It lists revisions, disclosure attempts, reference `MATCH`/`MISMATCH`/`MISSING` state, whole-period local exposure, overlapping declared periods, known parent/related/family links, lineage conflicts across revisions, and unresolved lineage/access-history warnings. It emits no untouched duration, clean-window certificate, P0-22 acceptance/admission receipt, or `LIVE_CANDIDATE` eligibility. An empty disclosure log, a new name, or a new local ID never becomes evidence of independence. Already-used or unmonitored history remains development data.
 
 ## Explicit limitations retained for the full package
