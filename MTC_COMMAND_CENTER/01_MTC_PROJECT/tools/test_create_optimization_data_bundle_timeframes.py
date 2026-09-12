@@ -2,16 +2,71 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
+import hashlib
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest import mock
+
+QUANTLENS_TOOLS = Path(__file__).resolve().parents[2] / "03_QUANTLENS" / "tools"
+sys.path.insert(0, str(QUANTLENS_TOOLS))
 
 import create_optimization_data_bundle as subject
+from strategy_type_policy_set import compute_policy_version
 
 
 BASE_TIME = datetime(2026, 1, 1, tzinfo=timezone.utc)
+
+
+def gap_policy_fixture() -> dict:
+    policy = {
+        "schema": "p021.strategy_type_policy_set/v1",
+        "policy_id": "p021-evidence-policy",
+        "profile": "balanced",
+        "taxonomy": {
+            "day_max_hours": 24.0,
+            "swing_max_hours": 720.0,
+            "dominance_min": 0.8,
+            "sample_min": 10,
+            "unmeasurable_hold_median_hours": 0.0,
+            "classified_unit": "strategy_id|asset|timeframe|variant|parameter_set",
+        },
+        "types": {
+            name: {
+                "trade_count_min": None,
+                "forward_trade_count_min": None,
+                "forward_period_days": None,
+            }
+            for name in ("day", "swing", "position")
+        },
+        "shared": {
+            name: None
+            for name in (
+                "single_trade_loss_risk_unit_multiple_max",
+                "stop_loss_ceiling_equity_fraction",
+                "normal_market_condition_count_min",
+                "occupancy_min",
+                "trades_per_condition_min",
+                "gap_ratio_max",
+                "divergence_tolerance",
+                "divergence_window_length_days",
+                "divergence_min_paired_observations",
+            )
+        },
+        "methods": {
+            "regime_method_version": "rule_based_market_regime_v2",
+            "gap_method_version": "data_gap_ratio_m2_v1",
+            "divergence_method_version": "p021_divergence_v1",
+        },
+        "provenance": {"fixture": "synthetic-only"},
+        "version": "",
+    }
+    policy["version"] = compute_policy_version(policy)
+    return policy
 
 
 def rows_at(*offsets: int) -> list[dict[str, object]]:
@@ -29,11 +84,293 @@ def rows_at(*offsets: int) -> list[dict[str, object]]:
 
 
 class QualityTimeframeTests(unittest.TestCase):
+    def test_public_evidence_seam_returns_exact_h1_m2_shape(self) -> None:
+        evidence = subject.prepare_dataset_evidence(
+            rows_at(0, 900, 2700, 3600),
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="15m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=4500),
+            gap_policy=gap_policy_fixture(),
+        )
+
+        measurement = evidence["gap_measurement"]
+        self.assertEqual(
+            set(measurement),
+            {
+                "result_kind",
+                "timeframe",
+                "step_seconds",
+                "observation_count",
+                "interval_count",
+                "coverage_seconds",
+                "coverage_days",
+                "expected_bars",
+                "gap_event_count",
+                "missing_bar_count",
+                "m1_gap_event_ratio",
+                "m2_missing_bar_ratio",
+                "m3_missing_time_ratio",
+                "max_gap_bars",
+                "max_gap_seconds",
+                "duplicate_timestamp_count",
+                "out_of_order_interval_count",
+                "early_interval_count",
+                "irregular_interval_count",
+                "series_clean",
+                "policy_version",
+            },
+        )
+        self.assertEqual(measurement["result_kind"], "P021_DATA_GAP_MEASUREMENT_ONLY")
+        self.assertEqual(measurement["observation_count"], 4)
+        self.assertEqual(measurement["interval_count"], 3)
+        self.assertEqual(measurement["coverage_seconds"], 3600.0)
+        self.assertEqual(measurement["expected_bars"], 5)
+        self.assertEqual(measurement["gap_event_count"], 1)
+        self.assertEqual(measurement["missing_bar_count"], 1)
+        self.assertAlmostEqual(measurement["m1_gap_event_ratio"], 1 / 3)
+        self.assertAlmostEqual(measurement["m2_missing_bar_ratio"], 1 / 5)
+        self.assertAlmostEqual(measurement["m3_missing_time_ratio"], 1 / 4)
+        self.assertEqual(measurement["policy_version"], gap_policy_fixture()["version"])
+        self.assertNotIn("ready", measurement)
+
+    def test_public_evidence_seam_calls_h1_once_in_source_order(self) -> None:
+        with mock.patch.object(
+            subject, "measure_data_gaps", wraps=subject.measure_data_gaps
+        ) as h1_measure:
+            evidence = subject.prepare_dataset_evidence(
+                rows_at(300, 0, 600),
+                instrument_id="BINANCE:BTCUSDT",
+                timeframe="5m",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+                gap_policy=gap_policy_fixture(),
+            )
+
+        self.assertEqual(h1_measure.call_count, 1)
+        observed_timestamps = list(h1_measure.call_args.args[0])
+        self.assertEqual(
+            [timestamp - BASE_TIME.timestamp() for timestamp in observed_timestamps],
+            [300.0, 0.0, 600.0],
+        )
+        self.assertEqual(evidence["gap_measurement"]["out_of_order_interval_count"], 1)
+        self.assertFalse(evidence["gap_measurement"]["series_clean"])
+
+    def test_public_evidence_seam_refuses_only_structurally_invalid_ohlcv(self) -> None:
+        cases = []
+        for label, value, message in (
+            ("missing", None, "row 1 volume is required"),
+            ("blank", "", "row 1 volume must be a finite number"),
+            ("text", "bad", "row 1 volume must be a finite number"),
+            ("boolean", True, "row 1 volume must be a finite number"),
+            ("nan", float("nan"), "row 1 volume must be a finite number"),
+            ("infinity", float("inf"), "row 1 volume must be a finite number"),
+        ):
+            rows = rows_at(0, 300)
+            if value is None:
+                rows[0].pop("volume")
+            else:
+                rows[0]["volume"] = value
+            cases.append((label, rows, message))
+        for label, rows, message in cases:
+            with self.subTest(label=label), self.assertRaisesRegex(ValueError, f"^{message}$"):
+                subject.prepare_dataset_evidence(
+                    rows,
+                    instrument_id="BINANCE:BTCUSDT",
+                    timeframe="5m",
+                    closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=600),
+                    gap_policy=gap_policy_fixture(),
+                )
+
+    def test_finite_semantic_ohlcv_failures_withhold_dataset_identity(self) -> None:
+        cases = []
+        negative_volume = rows_at(0, 300)
+        negative_volume[0]["volume"] = -1
+        cases.append(("negative volume", negative_volume, "negative_volume"))
+        inconsistent = rows_at(0, 300)
+        inconsistent[0].update({"high": 8, "low": 9})
+        cases.append(("inconsistent OHLC", inconsistent, "high_below_low"))
+
+        for label, rows, reason in cases:
+            with self.subTest(label=label):
+                evidence = subject.prepare_dataset_evidence(
+                    rows,
+                    instrument_id="BINANCE:BTCUSDT",
+                    timeframe="5m",
+                    closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=600),
+                    gap_policy=gap_policy_fixture(),
+                )
+                self.assertEqual(evidence["quality"]["ohlcv_validation_status"], "FAIL")
+                self.assertGreater(evidence["quality"]["invalid_ohlcv_count"], 0)
+                self.assertIn(
+                    reason,
+                    [finding["reason"] for finding in evidence["quality"]["invalid_ohlcv_reasons"]],
+                )
+                self.assertIsNone(evidence["dataset_hash"])
+                self.assertEqual(len(evidence["closed_rows"]), 2)
+
+    def test_valid_evidence_exposes_pass_and_dataset_identity(self) -> None:
+        evidence = subject.prepare_dataset_evidence(
+            rows_at(0, 300),
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=600),
+            gap_policy=gap_policy_fixture(),
+        )
+        self.assertEqual(evidence["quality"]["ohlcv_validation_status"], "PASS")
+        self.assertEqual(evidence["quality"]["invalid_ohlcv_count"], 0)
+        self.assertEqual(set(evidence["dataset_hash"]), {"contract", "digest"})
+        self.assertEqual(evidence["dataset_hash"]["contract"], "ds-v1")
+        self.assertRegex(evidence["dataset_hash"]["digest"], "^[0-9a-f]{64}$")
+
+    def test_closed_candle_cutoff_precedes_measurement(self) -> None:
+        rows = rows_at(0, 300, 600, 900)
+        rows[-1]["volume"] = "forming-row-is-not-consumed"
+        evidence = subject.prepare_dataset_evidence(
+            rows,
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+            gap_policy=gap_policy_fixture(),
+        )
+
+        self.assertEqual(evidence["excluded_forming_candle_count"], 1)
+        self.assertEqual(evidence["closed_candle_cutoff_utc"], "2026-01-01T00:15:00Z")
+        self.assertEqual(len(evidence["closed_rows"]), 3)
+        self.assertEqual(
+            [row["timestamp_utc"] for row in evidence["closed_rows"]],
+            [
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:05:00Z",
+                "2026-01-01T00:10:00Z",
+            ],
+        )
+        self.assertEqual(evidence["gap_measurement"]["observation_count"], 3)
+        self.assertTrue(evidence["gap_measurement"]["series_clean"])
+
+        with self.assertRaisesRegex(ValueError, "^closed_candle_cutoff_utc must be timezone-aware$"):
+            subject.prepare_dataset_evidence(
+                rows_at(0, 300),
+                instrument_id="BINANCE:BTCUSDT",
+                timeframe="5m",
+                closed_candle_cutoff_utc=datetime(2026, 1, 1, 0, 10),
+                gap_policy=gap_policy_fixture(),
+            )
+
+    def test_ds_v1_identity_matches_independent_literal_and_binds_volume(self) -> None:
+        rows = rows_at(300, 0, 600, 900)
+        evidence = subject.prepare_dataset_evidence(
+            rows,
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+            gap_policy=gap_policy_fixture(),
+        )
+        canonical_bytes = (
+            "p021.dataset/v1\n"
+            "BINANCE:BTCUSDT\n"
+            "5m\n"
+            "2026-01-01T00:00:00Z\n"
+            "2026-01-01T00:10:00Z\n"
+            "3\n"
+            "2026-01-01T00:00:00Z,0x1.4000000000000p+3,0x1.8000000000000p+3,"
+            "0x1.2000000000000p+3,0x1.6000000000000p+3,0x1.0000000000000p+0\n"
+            "2026-01-01T00:05:00Z,0x1.4000000000000p+3,0x1.8000000000000p+3,"
+            "0x1.2000000000000p+3,0x1.6000000000000p+3,0x1.0000000000000p+0\n"
+            "2026-01-01T00:10:00Z,0x1.4000000000000p+3,0x1.8000000000000p+3,"
+            "0x1.2000000000000p+3,0x1.6000000000000p+3,0x1.0000000000000p+0\n"
+        ).encode("utf-8")
+        expected = {
+            "contract": "ds-v1",
+            "digest": hashlib.sha256(canonical_bytes).hexdigest(),
+        }
+        self.assertEqual(evidence["dataset_hash"], expected)
+
+        reordered = subject.prepare_dataset_evidence(
+            rows_at(0, 300, 600, 900),
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+            gap_policy=gap_policy_fixture(),
+        )
+        self.assertEqual(reordered["dataset_hash"], expected)
+
+        changed_volume_rows = rows_at(0, 300, 600, 900)
+        changed_volume_rows[1]["volume"] = 2
+        changed_volume = subject.prepare_dataset_evidence(
+            changed_volume_rows,
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+            gap_policy=gap_policy_fixture(),
+        )
+        self.assertNotEqual(changed_volume["dataset_hash"], expected)
+
+        for field, value in {
+            "open": 10.5,
+            "high": 12.5,
+            "low": 8.5,
+            "close": 10.5,
+            "volume": 2,
+        }.items():
+            mutated_rows = rows_at(0, 300, 600, 900)
+            mutated_rows[1][field] = value
+            mutated = subject.prepare_dataset_evidence(
+                mutated_rows,
+                instrument_id="BINANCE:BTCUSDT",
+                timeframe="5m",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+                gap_policy=gap_policy_fixture(),
+            )
+            with self.subTest(field=field):
+                self.assertNotEqual(mutated["dataset_hash"], expected)
+
+        changed_instrument = subject.prepare_dataset_evidence(
+            rows_at(0, 300, 600, 900),
+            instrument_id="BINANCE:ETHUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+            gap_policy=gap_policy_fixture(),
+        )
+        self.assertNotEqual(changed_instrument["dataset_hash"], expected)
+
+        changed_timeframe = subject.prepare_dataset_evidence(
+            rows_at(0, 300, 600),
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="15m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=1800),
+            gap_policy=gap_policy_fixture(),
+        )
+        self.assertNotEqual(changed_timeframe["dataset_hash"], expected)
+
+        changed_forming_rows = rows_at(0, 300, 600, 900)
+        changed_forming_rows[-1]["close"] = 10
+        changed_forming = subject.prepare_dataset_evidence(
+            changed_forming_rows,
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+            gap_policy=gap_policy_fixture(),
+        )
+        self.assertEqual(changed_forming["dataset_hash"], expected)
+
     def validate(self, offsets: tuple[int, ...], timeframe: str):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name) / "synthetic_bundle"
-        result = subject.validate_quality("SYNTHETIC", rows_at(*offsets), timeframe, root)
+        step = subject.TIMEFRAME_SECONDS[timeframe]
+        evidence = subject.prepare_dataset_evidence(
+            rows_at(*offsets),
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe=timeframe,
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=max(offsets) + step),
+            gap_policy=gap_policy_fixture(),
+        )
+        result = subject.validate_quality(
+            "SYNTHETIC",
+            evidence["closed_rows"],
+            timeframe,
+            root,
+            quality=evidence["quality"],
+        )
         gap_path = root / result["gap_report_path"]
         with gap_path.open("r", encoding="utf-8", newline="") as handle:
             gaps = list(csv.DictReader(handle))
@@ -48,6 +385,17 @@ class QualityTimeframeTests(unittest.TestCase):
         self.assertTrue(gapped["has_gaps"])
         self.assertEqual(gapped["gap_count"], 1)
         self.assertEqual(len(gaps), 1)
+        self.assertEqual(
+            set(gaps[0]),
+            {
+                "prev_timestamp_utc",
+                "next_timestamp_utc",
+                "delta_seconds",
+                "missing_bars_estimate",
+            },
+        )
+        self.assertEqual(gaps[0]["prev_timestamp_utc"], "2026-01-01T00:05:00+00:00")
+        self.assertEqual(gaps[0]["next_timestamp_utc"], "2026-01-01T00:15:00+00:00")
         self.assertEqual(gaps[0]["delta_seconds"], "600")
         self.assertEqual(gaps[0]["missing_bars_estimate"], "1")
 
@@ -68,7 +416,7 @@ class QualityTimeframeTests(unittest.TestCase):
             with self.subTest(row_count=len(rows)), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary) / "synthetic_bundle"
                 with self.assertRaisesRegex(ValueError, "^unsupported timeframe: bogus$"):
-                    subject.validate_quality("SYNTHETIC", rows, "bogus", root)
+                    subject.validate_quality("SYNTHETIC", rows, "bogus", root, quality={})
                 self.assertFalse(root.exists())
 
     def test_gap_threshold_remains_strictly_above_one_point_five_steps(self) -> None:
@@ -99,15 +447,242 @@ class QualityTimeframeTests(unittest.TestCase):
                 self.assertEqual(gaps[0]["missing_bars_estimate"], "1")
 
     def test_sorting_duplicate_and_ohlc_meanings_remain(self) -> None:
-        rows = rows_at(600, 0, 300, 300)
+        rows = rows_at(0, 300, 600, 300)
         rows[-1].update({"high": 8, "low": 9})
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "synthetic_bundle"
-            result = subject.validate_quality("SYNTHETIC", rows, "5m", root)
+            evidence = subject.prepare_dataset_evidence(
+                rows,
+                instrument_id="BINANCE:BTCUSDT",
+                timeframe="5m",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+                gap_policy=gap_policy_fixture(),
+            )
+            result = subject.validate_quality(
+                "SYNTHETIC",
+                evidence["closed_rows"],
+                "5m",
+                root,
+                quality=evidence["quality"],
+            )
         self.assertFalse(result["has_gaps"])
         self.assertEqual(result["duplicate_timestamp_count"], 1)
         self.assertEqual(result["ohlcv_validation_status"], "FAIL")
         self.assertEqual(result["invalid_ohlcv_count"], 3)
+
+    def test_validate_quality_projects_exact_h1_result_without_remeasurement(self) -> None:
+        evidence = subject.prepare_dataset_evidence(
+            rows_at(0, 300, 900),
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=1200),
+            gap_policy=gap_policy_fixture(),
+        )
+        with tempfile.TemporaryDirectory() as temporary, mock.patch.object(
+            subject, "measure_data_gaps", side_effect=AssertionError("must not remeasure")
+        ):
+            result = subject.validate_quality(
+                "SYNTHETIC",
+                evidence["closed_rows"],
+                "5m",
+                Path(temporary),
+                quality=evidence["quality"],
+            )
+        self.assertIs(result["gap_measurement"], evidence["quality"]["gap_measurement"])
+        self.assertEqual(result["has_gaps"], True)
+        self.assertEqual(result["gap_count"], 1)
+        self.assertEqual(result["expected_bars"], 4)
+
+    def test_build_refuses_missing_explicit_evidence_inputs_before_any_write(self) -> None:
+        args = argparse.Namespace(
+            repo_root="unused",
+            bundle_parent="unused",
+            archive_root="unused",
+            datasets_root="unused",
+            date_token="fixture",
+        )
+        with mock.patch.object(subject.Path, "mkdir") as mkdir, mock.patch.object(
+            subject.Path, "rename"
+        ) as rename, mock.patch.object(subject, "write_csv") as write_csv:
+            with self.assertRaisesRegex(ValueError, "closed_candle_cutoff_utc is required"):
+                subject.build_bundle(args)
+        mkdir.assert_not_called()
+        rename.assert_not_called()
+        write_csv.assert_not_called()
+
+    def test_build_uses_prepared_closed_rows_and_quality_before_normalized_output(self) -> None:
+        class StopAfterProjection(Exception):
+            pass
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "archive"
+            archive.mkdir()
+            source_path = archive / "BINANCE_BTCUSDT,5m_fixture.csv"
+            with source_path.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(
+                    handle, fieldnames=["time", "open", "high", "low", "close", "volume"]
+                )
+                writer.writeheader()
+                writer.writerows(
+                    [
+                        {"time": row["timestamp_utc"], **{key: row[key] for key in ("open", "high", "low", "close", "volume")}}
+                        for row in rows_at(0, 300, 600)
+                    ]
+                )
+            args = argparse.Namespace(
+                repo_root=root / "repo",
+                bundle_parent=root / "bundle-parent",
+                archive_root=archive,
+                datasets_root=root / "absent",
+                date_token="fixture",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=600),
+                gap_policy=gap_policy_fixture(),
+            )
+            prepared = {
+                "closed_rows": rows_at(0, 300),
+                "excluded_forming_candle_count": 1,
+                "closed_candle_cutoff_utc": "2026-01-01T00:10:00Z",
+                "quality": {
+                    "gap_measurement": {"result_kind": "P021_DATA_GAP_MEASUREMENT_ONLY"},
+                    "ohlcv_validation_status": "PASS",
+                    "invalid_ohlcv_count": 0,
+                    "invalid_ohlcv_reasons": [],
+                },
+                "dataset_hash": {"contract": "ds-v1", "digest": "f" * 64},
+            }
+            writes: list[tuple[Path, list[dict]]] = []
+
+            def record_csv(path, rows, fieldnames=None):
+                writes.append((Path(path), rows))
+
+            with mock.patch.object(subject.Path, "mkdir"), mock.patch.object(
+                subject, "write_csv", side_effect=record_csv
+            ), mock.patch.object(subject, "safe_copy"), mock.patch.object(
+                subject, "prepare_dataset_evidence", return_value=prepared
+            ) as prepare, mock.patch.object(
+                subject, "validate_quality", side_effect=StopAfterProjection
+            ) as validate:
+                with self.assertRaises(StopAfterProjection):
+                    subject.build_bundle(args)
+
+            prepare.assert_called_once()
+            self.assertEqual(prepare.call_args.kwargs["instrument_id"], "BINANCE:BTCUSDT")
+            normalized_write = next(rows for path, rows in writes if "normalized" in path.parts)
+            self.assertIs(normalized_write, prepared["closed_rows"])
+            self.assertIs(validate.call_args.kwargs["quality"], prepared["quality"])
+
+    def test_build_projects_evidence_into_manifest_and_quality_records(self) -> None:
+        class StopAfterQualityRecord(Exception):
+            pass
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "archive"
+            archive.mkdir()
+            source_path = archive / "BINANCE_BTCUSDT,5m_fixture.csv"
+            with source_path.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(
+                    handle, fieldnames=["time", "open", "high", "low", "close", "volume"]
+                )
+                writer.writeheader()
+                for row in rows_at(0, 300, 600):
+                    writer.writerow(
+                        {"time": row["timestamp_utc"], **{key: row[key] for key in ("open", "high", "low", "close", "volume")}}
+                    )
+            args = argparse.Namespace(
+                repo_root=root / "repo",
+                bundle_parent=root / "bundle-parent",
+                archive_root=archive,
+                datasets_root=root / "absent",
+                date_token="fixture",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=600),
+                gap_policy=gap_policy_fixture(),
+            )
+            measurement = {
+                "result_kind": "P021_DATA_GAP_MEASUREMENT_ONLY",
+                "timeframe": "5m",
+                "gap_event_count": 0,
+                "duplicate_timestamp_count": 0,
+                "expected_bars": 1,
+            }
+            prepared = {
+                "closed_rows": rows_at(0, 300),
+                "excluded_forming_candle_count": 1,
+                "closed_candle_cutoff_utc": "2026-01-01T00:10:00Z",
+                "quality": {
+                    "gap_measurement": measurement,
+                    "ohlcv_validation_status": "PASS",
+                    "invalid_ohlcv_count": 0,
+                    "invalid_ohlcv_reasons": [],
+                },
+                "gap_measurement": measurement,
+                "dataset_hash": {"contract": "ds-v1", "digest": "f" * 64},
+            }
+            projected_quality = {
+                "gap_measurement": measurement,
+                "has_gaps": False,
+                "gap_count": 0,
+                "gap_report_path": "quality/gaps.csv",
+                "duplicate_timestamp_count": 0,
+                "duplicate_report_path": "quality/duplicates.csv",
+                "ohlcv_validation_status": "PASS",
+                "ohlcv_report_path": "quality/ohlcv.md",
+                "invalid_ohlcv_count": 0,
+                "invalid_ohlcv_reasons": [],
+                "expected_bars": 1,
+            }
+            records: dict[str, dict] = {}
+
+            def record_json(path, payload):
+                records[Path(path).name] = payload
+                if Path(path).name == "DATA_QUALITY_SUMMARY.json":
+                    raise StopAfterQualityRecord
+
+            fake_stat = mock.Mock(st_size=123)
+            original_stat = subject.Path.stat
+
+            def stat_existing_or_generated(path, *args, **kwargs):
+                try:
+                    return original_stat(path, *args, **kwargs)
+                except FileNotFoundError:
+                    if "raw" in path.parts or "normalized" in path.parts:
+                        return fake_stat
+                    raise
+
+            with mock.patch.object(subject.Path, "mkdir"), mock.patch.object(
+                subject.Path, "write_text"
+            ), mock.patch.object(
+                subject.Path, "stat", autospec=True, side_effect=stat_existing_or_generated
+            ), mock.patch.object(
+                subject, "write_csv"
+            ), mock.patch.object(subject, "write_simple_yaml"), mock.patch.object(
+                subject, "write_json", side_effect=record_json
+            ), mock.patch.object(subject, "safe_copy"), mock.patch.object(
+                subject, "sha256_file", return_value="fixture-sha"
+            ), mock.patch.object(
+                subject, "prepare_dataset_evidence", return_value=prepared
+            ), mock.patch.object(
+                subject, "validate_quality", return_value=projected_quality
+            ), mock.patch.object(
+                subject, "classify_regimes", return_value={"counts": {}, "rows": 1}
+            ):
+                with self.assertRaises(StopAfterQualityRecord):
+                    subject.build_bundle(args)
+
+            manifest = records["DATA_BUNDLE_MANIFEST.json"]["datasets"][0]
+            quality_record = records["DATA_QUALITY_SUMMARY.json"]["datasets"][0]
+            for record in (manifest, quality_record):
+                self.assertEqual(
+                    record["dataset_hash"],
+                    {"contract": "ds-v1", "digest": "f" * 64},
+                )
+                self.assertEqual(record["closed_candle_cutoff_utc"], "2026-01-01T00:10:00Z")
+                self.assertEqual(record["excluded_forming_candle_count"], 1)
+            self.assertIs(manifest["gap_measurement"], measurement)
+            self.assertIs(quality_record["gap_measurement"], measurement)
+            self.assertEqual(manifest["start"], "2026-01-01T00:00:00+00:00")
+            self.assertEqual(manifest["end"], "2026-01-01T00:05:00+00:00")
 
 
 if __name__ == "__main__":
