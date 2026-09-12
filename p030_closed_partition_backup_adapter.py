@@ -6,6 +6,8 @@ import hashlib
 import json
 import re
 import sys
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from urllib.parse import unquote
 
@@ -59,24 +61,32 @@ def _reject_duplicate_json_keys(pairs: list[tuple[str, object]]) -> dict:
     return result
 
 
-def _read_json_object(path: Path, description: str) -> dict:
+def _decode_json_object(raw: bytes, description: str) -> dict:
     try:
         payload = json.loads(
-            Path(path).read_text(encoding="utf-8"),
+            raw.decode("utf-8"),
             parse_constant=_reject_nonfinite_json,
             object_pairs_hook=_reject_duplicate_json_keys,
         )
-    except (OSError, json.JSONDecodeError) as exc:
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError(f"invalid {description}") from exc
     if not isinstance(payload, dict):
         raise ValueError(f"invalid {description}")
     return payload
 
 
-def _read_strict_jsonl(path: Path, description: str) -> list[dict]:
+def _read_json_object(path: Path, description: str) -> dict:
     try:
-        lines = Path(path).read_text(encoding="utf-8").splitlines()
+        raw = Path(path).read_bytes()
     except OSError as exc:
+        raise ValueError(f"invalid {description}") from exc
+    return _decode_json_object(raw, description)
+
+
+def _decode_strict_jsonl(raw: bytes, description: str) -> list[dict]:
+    try:
+        lines = raw.decode("utf-8").splitlines()
+    except UnicodeDecodeError as exc:
         raise ValueError(f"invalid {description}") from exc
     records = []
     for line_number, line in enumerate(lines, start=1):
@@ -94,6 +104,14 @@ def _read_strict_jsonl(path: Path, description: str) -> list[dict]:
             raise ValueError(f"invalid {description} line {line_number}")
         records.append(record)
     return records
+
+
+def _read_strict_jsonl(path: Path, description: str) -> list[dict]:
+    try:
+        raw = Path(path).read_bytes()
+    except OSError as exc:
+        raise ValueError(f"invalid {description}") from exc
+    return _decode_strict_jsonl(raw, description)
 
 
 def _utc_z(value: str, field: str) -> None:
@@ -345,18 +363,54 @@ def _load_strict_config(
         config = load_backup_config(Path(config_path))
     except (OSError, TypeError, ValueError) as exc:
         raise ValueError("backup config is not runnable") from exc
-    if store_id is not None:
-        matches = [store for store in config["stores"] if store["id"] == store_id]
-        if len(matches) != 1:
-            raise ValueError("backup config must contain the explicit P030 store id")
-        store = matches[0]
-        if store["class"] != "protected":
-            raise ValueError("P030 backup store class must be protected")
-        if stable_prefix is not None and Path(store["path"]).resolve() != Path(
-            stable_prefix
-        ).resolve():
-            raise ValueError("P030 backup store path must equal the stable prefix")
+    _validate_config_scope(config, stable_prefix=stable_prefix, store_id=store_id)
     return config
+
+
+def _validate_config_scope(
+    config: dict, *, stable_prefix: Path | None, store_id: str | None
+) -> None:
+    if store_id is None:
+        return
+    matches = [store for store in config["stores"] if store["id"] == store_id]
+    if len(matches) != 1:
+        raise ValueError("backup config must contain the explicit P030 store id")
+    store = matches[0]
+    if store["class"] != "protected":
+        raise ValueError("P030 backup store class must be protected")
+    if stable_prefix is not None and Path(store["path"]).resolve() != Path(
+        stable_prefix
+    ).resolve():
+        raise ValueError("P030 backup store path must equal the stable prefix")
+
+
+@contextmanager
+def _bound_strict_config(
+    config_path: Path,
+    *,
+    stable_prefix: Path | None = None,
+    store_id: str | None = None,
+):
+    try:
+        raw = Path(config_path).read_bytes()
+    except OSError as exc:
+        raise ValueError("backup config is not runnable") from exc
+    strict_object = _decode_json_object(raw, "backup config")
+    with tempfile.TemporaryDirectory(prefix="p030-bound-config-") as temporary:
+        bound_path = Path(temporary) / "config.json"
+        bound_path.write_bytes(raw)
+        if bound_path.read_bytes() != raw:
+            raise ValueError("bound backup config bytes do not match validated input")
+        try:
+            config = load_backup_config(bound_path)
+        except (OSError, TypeError, ValueError) as exc:
+            raise ValueError("backup config is not runnable") from exc
+        if config != strict_object:
+            raise ValueError("bound backup config object does not match validated input")
+        _validate_config_scope(
+            config, stable_prefix=stable_prefix, store_id=store_id
+        )
+        yield bound_path, config
 
 
 def _complete_p026_run(
@@ -413,74 +467,131 @@ def _complete_p026_run(
     return stable
 
 
-def _restore_preflight(config_path: Path, *, run_id: str, store_id: str) -> dict:
-    config = _load_strict_config(config_path, store_id=store_id)
+def _restore_manifest_snapshot(
+    config: dict, *, run_id: str, store_id: str
+) -> tuple[Path, bytes]:
     manifest_path = Path(config["backup_root"]) / "manifest.jsonl"
-    records = _read_strict_jsonl(manifest_path, "P026 manifest")
+    try:
+        raw = manifest_path.read_bytes()
+    except OSError as exc:
+        raise ValueError("invalid P026 manifest") from exc
+    records = _decode_strict_jsonl(raw, "P026 manifest")
     _complete_p026_run(config, records, run_id=run_id, store_id=store_id)
-    return config
+    return manifest_path, raw
+
+
+def _verify_manifest_snapshot(
+    manifest_path: Path,
+    expected: bytes,
+    config: dict,
+    *,
+    run_id: str,
+    store_id: str,
+) -> None:
+    try:
+        actual = manifest_path.read_bytes()
+    except OSError as exc:
+        raise ValueError("invalid P026 manifest") from exc
+    records = _decode_strict_jsonl(actual, "P026 manifest")
+    if actual != expected:
+        raise ValueError("P026 manifest bytes changed during P026 call")
+    _complete_p026_run(config, records, run_id=run_id, store_id=store_id)
 
 
 def backup_stable_prefix(
     config_path: Path, *, stable_receipt: Path, store_id: str, source_root: Path
 ) -> str:
     stable_prefix = Path(stable_receipt).resolve().parent
-    config = load_runnable_config(
+    with _bound_strict_config(
         Path(config_path), stable_prefix=stable_prefix, store_id=store_id
-    )
-    _verify_stable_receipt(
-        stable_prefix,
-        stable_receipt,
-        verify_source=True,
-        source_root=source_root,
-    )
-    manifest_path = Path(config["backup_root"]) / "manifest.jsonl"
-    before_count = (
-        len(_read_strict_jsonl(manifest_path, "P026 manifest"))
-        if manifest_path.exists()
-        else 0
-    )
-    _load_strict_config(
-        Path(config_path), stable_prefix=stable_prefix, store_id=store_id
-    )
-    result = backup.run_backup(Path(config_path), dry_run=False, store_filter={store_id})
-    if result != RC_OK:
-        raise ValueError("P026 backup failed")
-    _verify_stable_receipt(
-        stable_prefix,
-        stable_receipt,
-        verify_source=True,
-        source_root=source_root,
-    )
-    records = _read_strict_jsonl(manifest_path, "P026 manifest")
-    starts = [
-        record
-        for record in records[before_count:]
-        if record.get("record") == "run_start" and isinstance(record.get("run_id"), str)
-    ]
-    if len(starts) != 1:
-        raise ValueError("P026 backup did not produce one identifiable run")
-    run_id = starts[0]["run_id"]
-    _complete_p026_run(config, records, run_id=run_id, store_id=store_id)
-    return run_id
+    ) as (bound_config_path, config):
+        _verify_stable_receipt(
+            stable_prefix,
+            stable_receipt,
+            verify_source=True,
+            source_root=source_root,
+        )
+        manifest_path = Path(config["backup_root"]) / "manifest.jsonl"
+        before_count = (
+            len(_read_strict_jsonl(manifest_path, "P026 manifest"))
+            if manifest_path.exists()
+            else 0
+        )
+        result = backup.run_backup(
+            bound_config_path, dry_run=False, store_filter={store_id}
+        )
+        if result != RC_OK:
+            raise ValueError("P026 backup failed")
+        _verify_stable_receipt(
+            stable_prefix,
+            stable_receipt,
+            verify_source=True,
+            source_root=source_root,
+        )
+        records = _read_strict_jsonl(manifest_path, "P026 manifest")
+        starts = [
+            record
+            for record in records[before_count:]
+            if record.get("record") == "run_start"
+            and isinstance(record.get("run_id"), str)
+        ]
+        if len(starts) != 1:
+            raise ValueError("P026 backup did not produce one identifiable run")
+        run_id = starts[0]["run_id"]
+        _complete_p026_run(config, records, run_id=run_id, store_id=store_id)
+        return run_id
 
 
 def restore_verified_prefix(
     config_path: Path, *, run_id: str, store_id: str, target: Path
 ) -> Path:
-    _restore_preflight(Path(config_path), run_id=run_id, store_id=store_id)
-    target = Path(target).resolve()
-    if not target.is_dir() or any(target.iterdir()):
-        raise ValueError("restore target must be empty")
-    if restore.run_restore(
-        Path(config_path), run_id, None, check_only=True, store_filter={store_id}
-    ) != RC_OK:
-        raise ValueError("P026 check-only failed; restore withheld")
-    _restore_preflight(Path(config_path), run_id=run_id, store_id=store_id)
-    if restore.run_restore(
-        Path(config_path), run_id, target, check_only=False, store_filter={store_id}
-    ) != RC_OK:
-        raise ValueError("P026 restore failed")
+    with _bound_strict_config(Path(config_path), store_id=store_id) as (
+        bound_config_path,
+        config,
+    ):
+        target = Path(target).resolve()
+        if not target.is_dir() or any(target.iterdir()):
+            raise ValueError("restore target must be empty")
+        manifest_path, manifest_before = _restore_manifest_snapshot(
+            config, run_id=run_id, store_id=store_id
+        )
+        check_result = restore.run_restore(
+            bound_config_path,
+            run_id,
+            None,
+            check_only=True,
+            store_filter={store_id},
+        )
+        _verify_manifest_snapshot(
+            manifest_path,
+            manifest_before,
+            config,
+            run_id=run_id,
+            store_id=store_id,
+        )
+        if check_result != RC_OK:
+            raise ValueError("P026 check-only failed; restore withheld")
+        manifest_path, manifest_before = _restore_manifest_snapshot(
+            config, run_id=run_id, store_id=store_id
+        )
+        if not target.is_dir() or any(target.iterdir()):
+            raise ValueError("restore target must be empty")
+        restore_result = restore.run_restore(
+            bound_config_path,
+            run_id,
+            target,
+            check_only=False,
+            store_filter={store_id},
+        )
+        _verify_manifest_snapshot(
+            manifest_path,
+            manifest_before,
+            config,
+            run_id=run_id,
+            store_id=store_id,
+        )
+        if restore_result != RC_OK:
+            raise ValueError("P026 restore failed")
     restored_prefix = resolve_confined_path(target, store_id)
     stable = _verify_stable_receipt(
         restored_prefix, restored_prefix / STABLE_RECEIPT_NAME, verify_source=False
