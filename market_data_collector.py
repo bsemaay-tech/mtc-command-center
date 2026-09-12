@@ -369,6 +369,26 @@ class MarketDataCollector:
         )
         if bar is None:
             return None
+        if source_producer == "WS_LIVE":
+            key = (bar.symbol, bar.interval)
+            if key not in self._last_live_open:
+                persisted_live_opens = sorted(
+                    int(record["bar_open_time"])
+                    for record in self.archive.bars(bar.symbol, bar.interval)
+                    if record.get("symbol") == bar.symbol
+                    and record.get("interval") == bar.interval
+                    and record.get("source_producer") == "WS_LIVE"
+                )
+                for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):
+                    gap = self.gap_detector(
+                        previous_open, next_open, bar.symbol, bar.interval
+                    )
+                    if gap is not None:
+                        raise CollectionRefused(
+                            f"persisted WS_LIVE sequence has a gap at {_iso_utc(gap.window_start)}"
+                        )
+                if persisted_live_opens:
+                    self._last_live_open[key] = persisted_live_opens[-1]
         if self.archive.classify_bar(bar) == "IDENTICAL_REPLAY_NOOP":
             if source_producer == "WS_LIVE":
                 # A restarted collector can meet an identical replay of the stored last bar as its

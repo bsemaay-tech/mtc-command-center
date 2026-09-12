@@ -357,6 +357,114 @@ def restart_replay_seeds_live_cursor_check(module: types.ModuleType = subject) -
     print("RESTART REPLAY SEEDS LIVE CURSOR: PASS")
 
 
+def restart_persisted_latest_cursor_check(module: types.ModuleType = subject) -> None:
+    """A fresh collector must use the newest persisted live bar, not the first frame it sees."""
+    now = JANUARY_LAST_BAR + 10 * STEP
+
+    def build(archive, source):
+        return module.MarketDataCollector(
+            source=source,
+            archive=archive,
+            identities=identities_for(module),
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: now,
+        )
+
+    with tempfile.TemporaryDirectory() as temporary:
+        archive = module.MonthlyArchive(Path(temporary))
+        seed = build(archive, FakePublicSource([]))
+        for offset in (0, 1, 2):
+            assert seed.ingest(raw_bar(JANUARY_LAST_BAR + offset * STEP), "WS_LIVE") is not None
+
+        source = FakePublicSource([])
+        restarted = build(archive, source)
+        try:
+            restarted.ingest(raw_bar(JANUARY_LAST_BAR + 5 * STEP), "WS_LIVE")
+            refusal = None
+        except module.CollectionRefused as error:
+            refusal = str(error)
+        observed = (
+            refusal,
+            [int(bar["bar_open_time"]) for bar in archive.bars("BTC", "15m")],
+            len(source.snapshot_calls),
+        )
+        assert observed == (
+            f"snapshot did not fill gap starting at {JANUARY_LAST_BAR + 3 * STEP}",
+            [JANUARY_LAST_BAR, JANUARY_LAST_BAR + STEP, JANUARY_LAST_BAR + 2 * STEP],
+            1,
+        ), ("restart_persisted_latest_gap", observed)
+
+    with tempfile.TemporaryDirectory() as temporary:
+        archive = module.MonthlyArchive(Path(temporary))
+        seed = build(archive, FakePublicSource([]))
+        for offset in (0, 1, 2):
+            assert seed.ingest(raw_bar(JANUARY_LAST_BAR + offset * STEP), "WS_LIVE") is not None
+
+        source = FakePublicSource([])
+        restarted = build(archive, source)
+        assert restarted.ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE") is not None
+        assert restarted.ingest(raw_bar(JANUARY_LAST_BAR + 3 * STEP), "WS_LIVE") is not None
+        observed = (
+            [int(bar["bar_open_time"]) for bar in archive.bars("BTC", "15m")],
+            len(source.snapshot_calls),
+        )
+        assert observed == (
+            [
+                JANUARY_LAST_BAR,
+                JANUARY_LAST_BAR + STEP,
+                JANUARY_LAST_BAR + 2 * STEP,
+                JANUARY_LAST_BAR + 3 * STEP,
+            ],
+            0,
+        ), ("restart_persisted_latest_replay", observed)
+    print("RESTART PERSISTED LATEST CURSOR: PASS")
+
+
+def restart_persisted_gap_refusal_check(module: types.ModuleType = subject) -> None:
+    """A persisted WS_LIVE hole must be refused, even when a snapshot row fills one timestamp."""
+    now = JANUARY_LAST_BAR + 10 * STEP
+
+    with tempfile.TemporaryDirectory() as temporary:
+        archive = module.MonthlyArchive(Path(temporary))
+        for offset, producer in ((0, "WS_LIVE"), (1, "CANDLE_SNAPSHOT"), (5, "WS_LIVE")):
+            bar = module.normalize_bar(
+                raw_bar(JANUARY_LAST_BAR + offset * STEP),
+                source_producer=producer,
+                ingest_time=now,
+                env_lineage_id="fixture-lineage",
+                identities=identities_for(module),
+            )
+            assert bar is not None
+            assert archive.append_bar(bar) == "APPENDED"
+
+        source = FakePublicSource([])
+        restarted = module.MarketDataCollector(
+            source=source,
+            archive=archive,
+            identities=identities_for(module),
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: now,
+        )
+        try:
+            restarted.ingest(raw_bar(JANUARY_LAST_BAR + 6 * STEP), "WS_LIVE")
+            refusal = None
+        except module.CollectionRefused as error:
+            refusal = str(error)
+        observed = (
+            refusal,
+            [int(bar["bar_open_time"]) for bar in archive.bars("BTC", "15m")],
+            len(source.snapshot_calls),
+        )
+        assert observed == (
+            "persisted WS_LIVE sequence has a gap at 2026-02-01T00:00:00Z",
+            [JANUARY_LAST_BAR, JANUARY_LAST_BAR + STEP, JANUARY_LAST_BAR + 5 * STEP],
+            0,
+        ), ("restart_persisted_gap", observed)
+    print("RESTART PERSISTED GAP REFUSED: PASS")
+
+
 def synthetic_same_id_conflict_check(module: types.ModuleType = subject) -> None:
     """A fixture-only observation contract forces changed producer bytes onto one ID."""
     identities = module.IdentityPolicy(
@@ -1050,15 +1158,18 @@ def mutant_text(label: str) -> str:
     if label == "append before gap":
         return _splice(
             fixed,
-            '        if source_producer == "WS_LIVE":\n            key = (bar.symbol, bar.interval)\n',
+            '        if source_producer == "WS_LIVE":\n'
+            '            key = (bar.symbol, bar.interval)\n'
+            '            previous = self._last_live_open.get(key)\n',
             '        if source_producer == "WS_LIVE":\n'
             '            self.archive.append_bar(bar)  # mutant: incoming bar persisted before gap validation\n'
-            '            key = (bar.symbol, bar.interval)\n',
+            '            key = (bar.symbol, bar.interval)\n'
+            '            previous = self._last_live_open.get(key)\n',
         )
     if label == "replay does not seed cursor":
-        # Deviant: restores the pre-fix early return, so a restart's first identical replay
-        # leaves the live cursor unset and the next live bar is admitted with no gap check.
-        return _splice(
+        # Deviant: restores the complete pre-fix restart path, with no archive rehydration and no
+        # replay seeding, so the next live bar is admitted with no gap check.
+        text = _splice(
             fixed,
             '        if self.archive.classify_bar(bar) == "IDENTICAL_REPLAY_NOOP":\n'
             '            if source_producer == "WS_LIVE":\n'
@@ -1072,6 +1183,68 @@ def mutant_text(label: str) -> str:
             '            return bar\n',
             '        if self.archive.classify_bar(bar) == "IDENTICAL_REPLAY_NOOP":\n'
             '            return bar  # mutant: identical replay never seeds the live cursor\n',
+        )
+        return _splice(
+            text,
+            '        if source_producer == "WS_LIVE":\n'
+            '            key = (bar.symbol, bar.interval)\n'
+            '            if key not in self._last_live_open:\n'
+            '                persisted_live_opens = sorted(\n'
+            '                    int(record["bar_open_time"])\n'
+            '                    for record in self.archive.bars(bar.symbol, bar.interval)\n'
+            '                    if record.get("symbol") == bar.symbol\n'
+            '                    and record.get("interval") == bar.interval\n'
+            '                    and record.get("source_producer") == "WS_LIVE"\n'
+            '                )\n'
+            '                for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):\n'
+            '                    gap = self.gap_detector(\n'
+            '                        previous_open, next_open, bar.symbol, bar.interval\n'
+            '                    )\n'
+            '                    if gap is not None:\n'
+            '                        raise CollectionRefused(\n'
+            '                            f"persisted WS_LIVE sequence has a gap at {_iso_utc(gap.window_start)}"\n'
+            '                        )\n'
+            '                if persisted_live_opens:\n'
+            '                    self._last_live_open[key] = persisted_live_opens[-1]\n',
+            '',
+        )
+    if label == "restart does not rehydrate cursor":
+        return _splice(
+            fixed,
+            '        if source_producer == "WS_LIVE":\n'
+            '            key = (bar.symbol, bar.interval)\n'
+            '            if key not in self._last_live_open:\n'
+            '                persisted_live_opens = sorted(\n'
+            '                    int(record["bar_open_time"])\n'
+            '                    for record in self.archive.bars(bar.symbol, bar.interval)\n'
+            '                    if record.get("symbol") == bar.symbol\n'
+            '                    and record.get("interval") == bar.interval\n'
+            '                    and record.get("source_producer") == "WS_LIVE"\n'
+            '                )\n'
+            '                for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):\n'
+            '                    gap = self.gap_detector(\n'
+            '                        previous_open, next_open, bar.symbol, bar.interval\n'
+            '                    )\n'
+            '                    if gap is not None:\n'
+            '                        raise CollectionRefused(\n'
+            '                            f"persisted WS_LIVE sequence has a gap at {_iso_utc(gap.window_start)}"\n'
+            '                        )\n'
+            '                if persisted_live_opens:\n'
+            '                    self._last_live_open[key] = persisted_live_opens[-1]\n',
+            '',
+        )
+    if label == "persisted gap validation removed":
+        return _splice(
+            fixed,
+            '                for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):\n'
+            '                    gap = self.gap_detector(\n'
+            '                        previous_open, next_open, bar.symbol, bar.interval\n'
+            '                    )\n'
+            '                    if gap is not None:\n'
+            '                        raise CollectionRefused(\n'
+            '                            f"persisted WS_LIVE sequence has a gap at {_iso_utc(gap.window_start)}"\n'
+            '                        )\n',
+            '',
         )
     if label in TOKEN_MUTANTS:
         # Text-only mutants for the speculative guard rules (no such token exists at aa602e9c);
@@ -1206,6 +1379,16 @@ def mutation_checks(socket_attempts: list[object]) -> None:
         ("replay does not seed cursor", True,
          lambda module, _text: restart_replay_seeds_live_cursor_check(module=module),
          ("restart_replay_cursor", (None, [JANUARY_LAST_BAR, JANUARY_LAST_BAR + 3 * STEP], 0))),
+        ("restart does not rehydrate cursor", True,
+         lambda module, _text: restart_persisted_latest_cursor_check(module=module),
+         ("restart_persisted_latest_gap", (None,
+          [JANUARY_LAST_BAR, JANUARY_LAST_BAR + STEP, JANUARY_LAST_BAR + 2 * STEP,
+          JANUARY_LAST_BAR + 5 * STEP], 0))),
+        ("persisted gap validation removed", True,
+         lambda module, _text: restart_persisted_gap_refusal_check(module=module),
+         ("restart_persisted_gap", (None,
+          [JANUARY_LAST_BAR, JANUARY_LAST_BAR + STEP, JANUARY_LAST_BAR + 5 * STEP,
+           JANUARY_LAST_BAR + 6 * STEP], 0))),
         ("eth_account import", False,
          lambda _module, text: static_boundary_check(module=subject, source_text=text),
          ("boundary_violations", ["import:eth_account"])),
@@ -1256,6 +1439,8 @@ def main() -> None:
         archive_check()
         replay_and_gap_atomicity_check()
         restart_replay_seeds_live_cursor_check()
+        restart_persisted_latest_cursor_check()
+        restart_persisted_gap_refusal_check()
         synthetic_same_id_conflict_check()
         append_failure_cursor_check()
         persisted_record_check()
