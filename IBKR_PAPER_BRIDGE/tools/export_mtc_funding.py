@@ -121,6 +121,47 @@ NOT_A_PRODUCTION_RECORD = (
 )
 APPROVED_PAYER = "LONG"
 
+# --- OD-20260912-P012-PATHD-1 decision A: production mode ------------------
+# Two disjoint modes.  ``SYNTHETIC`` is the frozen D1 behaviour and is the
+# default everywhere; ``PRODUCTION`` is the owner-signed
+# ``HL_FUNDING_VENUE_REPORTED_CASH_V1`` class.  Neither mode is an acceptance,
+# and no literal, flag or evidence kind moves a run from one mode into the
+# other: the mode is an explicit caller argument and each mode has its own
+# closed key sets, its own evidence kinds and its own digest domain.
+MODE_SYNTHETIC = "SYNTHETIC"
+MODE_PRODUCTION = "PRODUCTION"
+EXPORT_MODES = (MODE_SYNTHETIC, MODE_PRODUCTION)
+
+PRODUCTION_SOURCE_CLASS = "HL_FUNDING_VENUE_REPORTED_CASH_V1"
+PRODUCTION_EVIDENCE_KIND = PRODUCTION_SOURCE_CLASS
+PRODUCTION_ACCEPTED_EVIDENCE_KINDS = (PRODUCTION_EVIDENCE_KIND,)
+PRODUCTION_PACKET_VERSION = "HL_FUNDING_VENUE_REPORTED_CASH_BINDING_PACKET_V1"
+PRODUCTION_ARTIFACT_KIND = "HL_FUNDING_VENUE_REPORTED_CASH_CANDIDATE_V1"
+PRODUCTION_REPORT_KIND = "HL_FUNDING_VENUE_REPORTED_CASH_CANDIDATE_REPORT_V1"
+# The real byte domain that replaces UNAVAILABLE_PENDING_SOURCE_EVENT_DIGEST_DOMAIN:
+# lower-case hex SHA-256 over the exact, unmodified bytes of one authenticated
+# own-account funding-history capture.  It is deliberately distinct from
+# BRIDGE_PAYLOAD_DIGEST_DOMAIN, which hashes the Bridge's *normalized* payload.
+PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN = (
+    "HL_FUNDING_OWN_ACCOUNT_CAPTURE_BYTES_SHA256_V1"
+)
+PRODUCTION_ADMISSION_STATUS = "REFUSED_PENDING_T0_REVIEW_AND_OWNER_RATIFICATION"
+PRODUCTION_SETTLEMENT_SOURCE = "HL_VENUE_REPORTED_OWN_ACCOUNT_SETTLEMENT"
+NOT_AN_ACCEPTED_RECORD = (
+    "Prepared under OD-20260912-P012-PATHD-1. This is not an accepted economic "
+    "record: T0 review, R29 semantic redo, Section-16 record review, owner "
+    "human ratification, current-head protected CI and protected merge all "
+    "remain required, and no deploy, live-trading, order or ARM authority "
+    "arises from it."
+)
+# A2 = B with M PENDING: the magnitude guard logs and raises a signed risk; it
+# never refuses until the owner sets M after N observations.
+MAGNITUDE_GUARD_SIGNED_RISK_ID = "PATHD-RISK-FUNDING-MAGNITUDE-M-PENDING-V1"
+ORACLE_BINDING_SIGNED_RISK_ID = "PATHD-RISK-FUNDING-ORACLE-BINDING-OPEN-V1"
+NO_INDEPENDENT_REVALUATION_SIGNED_RISK_ID = (
+    "PATHD-RISK-FUNDING-NO-INDEPENDENT-REVALUATION-V1"
+)
+
 # --- outcome and refusal codes --------------------------------------------
 SYNTHETIC_CANDIDATE_BUILT = "SYNTHETIC_CANDIDATE_BUILT"
 PAYLOAD_RETAINED = "FUNDING_PAYLOAD_RETAINED"
@@ -153,6 +194,18 @@ CANDIDATE_SNAPSHOT_DRIFTED = "CANDIDATE_SNAPSHOT_DRIFTED"
 CANDIDATE_STAGING_NOT_EMPTY = "CANDIDATE_STAGING_NOT_EMPTY"
 CANDIDATE_STAGING_FAILED = "CANDIDATE_STAGING_FAILED"
 CANDIDATE_STAGING_UNSAFE = "CANDIDATE_STAGING_UNSAFE"
+CANDIDATE_MODE_INVALID = "CANDIDATE_MODE_INVALID"
+CANDIDATE_DECLARATION_UNSPECIFIED = "CANDIDATE_DECLARATION_UNSPECIFIED"
+CANDIDATE_DECLARATION_MISMATCH = "CANDIDATE_DECLARATION_MISMATCH"
+CANDIDATE_INTERVAL_COVERAGE_GAP = "CANDIDATE_INTERVAL_COVERAGE_GAP"
+CANDIDATE_SETTLEMENT_KEY_CONFLICT = "CANDIDATE_SETTLEMENT_KEY_CONFLICT"
+CANDIDATE_SETTLEMENT_TIME_CONFLICT = "CANDIDATE_SETTLEMENT_TIME_CONFLICT"
+CANDIDATE_PAYER_SIGN_CONFLICT = "CANDIDATE_PAYER_SIGN_CONFLICT"
+CANDIDATE_ORACLE_VALUE_REFUSED = "CANDIDATE_ORACLE_VALUE_REFUSED"
+CANDIDATE_CONTEXT_RATE_SUBSTITUTION_REFUSED = (
+    "CANDIDATE_CONTEXT_RATE_SUBSTITUTION_REFUSED"
+)
+CANDIDATE_CAPTURE_IDENTITY_UNBOUND = "CANDIDATE_CAPTURE_IDENTITY_UNBOUND"
 
 # --- closed input domains --------------------------------------------------
 RETAINED_ROW_KEYS = (
@@ -202,6 +255,60 @@ COVERAGE_KEYS = (
     "witness_identity",
 )
 PACKET_KEYS = ("bindings", "coverage", "packet_version")
+
+# --- production-mode closed domains ---------------------------------------
+# No oracle value and no substitute rate may enter a production binding: the
+# admitted inputs are exactly the eight authoritative FundingEventRecord fields
+# already retained by schema v10, read back from the Bridge ledger.
+PRODUCTION_BINDING_KEYS = (
+    "account_scope",
+    "capture_identity_pointer",
+    "event_timestamp",
+    "funding_event_id",
+    "positive_rate_payer",
+    "provenance",
+    "source_event_digest",
+)
+FORBIDDEN_ORACLE_BINDING_KEYS = (
+    "mark_price",
+    "markPx",
+    "oracle_price",
+    "oracle_price_source",
+    "oracle_px",
+    "oraclePx",
+)
+FORBIDDEN_RATE_BINDING_KEYS = (
+    "context_funding_rate",
+    "funding_rate",
+    "fundingRate",
+    "premium",
+    "raw_rate",
+)
+PRODUCTION_COVERAGE_KEYS = COVERAGE_KEYS + (
+    "declared_account",
+    "declared_product",
+    "gap_event_ids",
+)
+DECLARATION_KEYS = ("account", "interval", "product")
+
+PRODUCTION_EVIDENCE_LIMITATIONS = (
+    "Source class HL_FUNDING_VENUE_REPORTED_CASH_V1: the venue's own reported "
+    "funding cash is booked as read. The Bridge never recomputes it from "
+    "price x size and performs no independent revaluation, so a venue-side or "
+    "capture-side error in an amount is undetectable by design.",
+    "F-19/F-20 stay OPEN: no oracle value is admitted, derived or "
+    "back-calculated, and the minute asset-context funding rate never "
+    "substitutes for a payment rate. OPEN05 and OPEN07 stay OPEN.",
+    "The magnitude guard A2 = B has M PENDING: rate magnitude is logged and "
+    "carried as a signed risk, and never refuses, until the owner sets M after "
+    "the declared observations.",
+    "The declared account, product and interval are caller declarations "
+    "recorded verbatim. This tool does not authenticate them and this artifact "
+    "is not evidence that they are real.",
+    "This artifact is not an accepted economic record: T0 review, R29 semantic "
+    "redo, Section-16 record review and owner human ratification remain "
+    "required, and it grants no deploy, live-trading, order or ARM authority.",
+)
 
 EVIDENCE_LIMITATIONS = (
     "SYNTHETIC_ONLY: every caller fact in this run is a synthetic fixture.",
@@ -458,18 +565,82 @@ def _strict_json_loads(raw: bytes) -> Any:
 # ---------------------------------------------------------------------------
 
 
+def _require_mode(mode: Any) -> str:
+    if mode not in EXPORT_MODES:
+        raise _Refusal(
+            CANDIDATE_MODE_INVALID,
+            f"mode must be one of {list(EXPORT_MODES)}, got {mode!r}",
+        )
+    return str(mode)
+
+
+def _validate_declarations(mode: str, declarations: Any, start: _Instant, end: _Instant) -> dict[str, str]:
+    """The DECLARED account/product/interval, or a typed refusal.
+
+    OD-20260912-P012-PATHD-1 leaves account/product/interval UNSPECIFIED until
+    authenticated evidence exists, so production mode refuses until a caller
+    supplies all three explicitly.  Nothing is defaulted or inferred.
+    """
+    if mode != MODE_PRODUCTION:
+        if declarations:
+            raise _Refusal(
+                CANDIDATE_DECLARATION_MISMATCH,
+                "declarations are a production-mode input; synthetic mode takes none",
+            )
+        return {}
+    if declarations is None:
+        raise _Refusal(
+            CANDIDATE_DECLARATION_UNSPECIFIED,
+            "the declared account, product and interval are UNSPECIFIED under "
+            "OD-20260912-P012-PATHD-1; production mode refuses until all three "
+            "are supplied explicitly",
+        )
+    supplied = _require_closed_mapping(
+        declarations, DECLARATION_KEYS, "declarations", CANDIDATE_DECLARATION_UNSPECIFIED
+    )
+    declared: dict[str, str] = {}
+    for key in DECLARATION_KEYS:
+        value = supplied[key]
+        if not isinstance(value, str) or not value.strip():
+            raise _Refusal(
+                CANDIDATE_DECLARATION_UNSPECIFIED,
+                f"declared {key} is UNSPECIFIED; production mode refuses until "
+                "--declared-account, --declared-product and --declared-interval "
+                "are all supplied",
+            )
+        declared[key] = value
+    expected_interval = f"{start.text}/{end.text}"
+    if declared["interval"] != expected_interval:
+        raise _Refusal(
+            CANDIDATE_DECLARATION_MISMATCH,
+            f"declared interval {declared['interval']!r} is not the requested "
+            f"interval {expected_interval!r}",
+        )
+    return declared
+
+
 def _validate_coverage(
-    coverage: Any, start: _Instant, end: _Instant
+    coverage: Any,
+    start: _Instant,
+    end: _Instant,
+    *,
+    mode: str = MODE_SYNTHETIC,
+    declared: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
+    production = mode == MODE_PRODUCTION
+    keys = PRODUCTION_COVERAGE_KEYS if production else COVERAGE_KEYS
+    accepted_kinds = (
+        PRODUCTION_ACCEPTED_EVIDENCE_KINDS if production else ACCEPTED_EVIDENCE_KINDS
+    )
     witness = _require_closed_mapping(
-        coverage, COVERAGE_KEYS, "coverage", CANDIDATE_COVERAGE_INVALID
+        coverage, keys, "coverage", CANDIDATE_COVERAGE_INVALID
     )
     kind = witness["evidence_kind"]
-    if kind not in ACCEPTED_EVIDENCE_KINDS:
+    if kind not in accepted_kinds:
         raise _Refusal(
             CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE,
             "the production completion-evidence contract is not approved or "
-            f"implemented; only {list(ACCEPTED_EVIDENCE_KINDS)} is accepted, got {kind!r}",
+            f"implemented; only {list(accepted_kinds)} is accepted, got {kind!r}",
         )
     if witness["complete"] is not True:
         raise _Refusal(
@@ -488,7 +659,50 @@ def _validate_coverage(
             CANDIDATE_COVERAGE_INVALID,
             "the witnessed interval is not the requested interval",
         )
+    extra: dict[str, Any] = {}
+    if production:
+        declared = dict(declared or {})
+        gaps = _require_id_list(witness["gap_event_ids"], "coverage.gap_event_ids")
+        if gaps:
+            # A3 = A: any gap refuses the WHOLE interval; nothing is interpolated
+            # and no partial interval is ever published.
+            raise _Refusal(
+                CANDIDATE_INTERVAL_COVERAGE_GAP,
+                "the declared interval carries settlement gaps "
+                f"{sorted(gaps)}; the whole interval is refused and no "
+                "settlement is interpolated or defaulted",
+            )
+        declared_account = _require_text(
+            witness["declared_account"],
+            "coverage.declared_account",
+            CANDIDATE_DECLARATION_UNSPECIFIED,
+        )
+        declared_product = _require_text(
+            witness["declared_product"],
+            "coverage.declared_product",
+            CANDIDATE_DECLARATION_UNSPECIFIED,
+        )
+        if declared_account != declared.get("account") or declared_product != declared.get(
+            "product"
+        ):
+            raise _Refusal(
+                CANDIDATE_DECLARATION_MISMATCH,
+                "the completion witness declares account/product "
+                f"{declared_account!r}/{declared_product!r}, which is not the "
+                f"declared {declared.get('account')!r}/{declared.get('product')!r}",
+            )
+        if witness["account_scope"] != declared_account:
+            raise _Refusal(
+                CANDIDATE_DECLARATION_MISMATCH,
+                "coverage.account_scope must be the declared account",
+            )
+        extra = {
+            "declared_account": declared_account,
+            "declared_product": declared_product,
+            "gap_event_ids": [],
+        }
     return {
+        **extra,
         "account_scope": _require_text(
             witness["account_scope"], "coverage.account_scope", CANDIDATE_COVERAGE_INVALID
         ),
@@ -562,12 +776,19 @@ def _validate_retained_row(raw: Any) -> dict[str, Any]:
     }
 
 
-def _validate_provenance(raw: Any, event_id: str) -> dict[str, str]:
+def _validate_provenance(
+    raw: Any, event_id: str, *, mode: str = MODE_SYNTHETIC
+) -> dict[str, str]:
     provenance = _require_closed_mapping(
         raw, PROVENANCE_KEYS, f"binding {event_id} provenance", CANDIDATE_BINDING_INVALID
     )
     kind = provenance["evidence_kind"]
-    if kind not in ACCEPTED_EVIDENCE_KINDS:
+    accepted_kinds = (
+        PRODUCTION_ACCEPTED_EVIDENCE_KINDS
+        if mode == MODE_PRODUCTION
+        else ACCEPTED_EVIDENCE_KINDS
+    )
+    if kind not in accepted_kinds:
         raise _Refusal(
             CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE,
             f"binding {event_id} provenance.evidence_kind {kind!r} is not an "
@@ -596,6 +817,186 @@ def _validate_provenance(raw: Any, event_id: str) -> dict[str, str]:
             CANDIDATE_BINDING_INVALID,
         ),
     }
+
+
+def _validate_production_binding(raw: Any, declared: Mapping[str, str]) -> dict[str, Any]:
+    """One production binding: identity, settlement time, payer, capture digest.
+
+    A production binding carries *no* price and *no* rate.  The payment rate and
+    the settled amount are the venue's own retained ``userFunding`` fields; the
+    consumed oracle value (F-19/F-20) is not admitted, not derived and not
+    back-calculated, and the minute asset-context funding rate can never enter
+    here because the key is refused outright.
+    """
+    if isinstance(raw, Mapping):
+        oracle_keys = sorted(set(raw) & set(FORBIDDEN_ORACLE_BINDING_KEYS))
+        if oracle_keys:
+            raise _Refusal(
+                CANDIDATE_ORACLE_VALUE_REFUSED,
+                f"production binding carries oracle fields {oracle_keys}; no "
+                "oracle value is admitted, derived or back-calculated",
+            )
+        rate_keys = sorted(set(raw) & set(FORBIDDEN_RATE_BINDING_KEYS))
+        if rate_keys:
+            raise _Refusal(
+                CANDIDATE_CONTEXT_RATE_SUBSTITUTION_REFUSED,
+                f"production binding carries rate fields {rate_keys}; a context "
+                "or caller-supplied rate never substitutes for the venue's own "
+                "retained payment rate",
+            )
+    fields = _require_closed_mapping(
+        raw, PRODUCTION_BINDING_KEYS, "production binding", CANDIDATE_BINDING_INVALID
+    )
+    event_id = _require_text(
+        fields["funding_event_id"],
+        "binding funding_event_id",
+        CANDIDATE_BINDING_INVALID,
+    )
+    instant = _parse_instant(fields["event_timestamp"], f"binding {event_id} event_timestamp")
+    payer = fields["positive_rate_payer"]
+    if payer != APPROVED_PAYER:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"binding {event_id} positive_rate_payer must be the approved "
+            f"{APPROVED_PAYER} convention, got {payer!r}",
+        )
+    account_scope = _require_text(
+        fields["account_scope"], f"binding {event_id} account_scope", CANDIDATE_BINDING_INVALID
+    )
+    if account_scope != declared.get("account"):
+        raise _Refusal(
+            CANDIDATE_DECLARATION_MISMATCH,
+            f"binding {event_id} is scoped to {account_scope!r}, not the "
+            f"declared account {declared.get('account')!r}",
+        )
+    pointer = _require_text(
+        fields["capture_identity_pointer"],
+        f"binding {event_id} capture_identity_pointer",
+        CANDIDATE_BINDING_INVALID,
+    )
+    if not pointer.startswith("/"):
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"binding {event_id} capture_identity_pointer must be an RFC 6901 "
+            "JSON pointer naming where the venue's own event identity lives in "
+            "the capture bytes",
+        )
+    body = {
+        "account_scope": account_scope,
+        "capture_identity_pointer": pointer,
+        "event_timestamp": instant.text,
+        "funding_event_id": event_id,
+        "positive_rate_payer": payer,
+        "provenance": _validate_provenance(
+            fields["provenance"], event_id, mode=MODE_PRODUCTION
+        ),
+        "source_event_digest": _require_digest(
+            fields["source_event_digest"],
+            f"binding {event_id} source_event_digest",
+            CANDIDATE_BINDING_INVALID,
+        ),
+    }
+    return {"event_id": event_id, "instant": instant, "source_fields": {}, "body": body}
+
+
+def _resolve_json_pointer(document: Any, pointer: str) -> Any:
+    node = document
+    for raw_token in pointer.split("/")[1:]:
+        token = raw_token.replace("~1", "/").replace("~0", "~")
+        if isinstance(node, Mapping):
+            if token not in node:
+                return None
+            node = node[token]
+            continue
+        if isinstance(node, list):
+            if not token.isdigit():
+                return None
+            index = int(token)
+            if index >= len(node):
+                return None
+            node = node[index]
+            continue
+        return None
+    return node
+
+
+def _verify_production_capture(binding: Mapping[str, Any], capture_hex: str) -> int:
+    """Bind one authenticated capture's exact bytes to this event.
+
+    ``PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN`` is SHA-256 over these bytes as
+    received.  The bytes are not normalized, not re-encoded and not
+    canonicalized: the digest domain is the capture, so a Bridge payload digest
+    can never be reused as one.
+    """
+    event_id = binding["event_id"]
+    try:
+        capture = bytes.fromhex(capture_hex)
+    except ValueError as exc:  # pragma: no cover - _require_source_witnesses screens this
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID,
+            f"coverage.source_witnesses[{event_id!r}] is not hex",
+        ) from exc
+    digest = hashlib.sha256(capture).hexdigest()
+    if binding["body"]["provenance"]["source_sha256"] != digest:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"binding {event_id} provenance.source_sha256 does not hash its "
+            "captured bytes",
+        )
+    if binding["body"]["source_event_digest"] != digest:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"binding {event_id} source_event_digest does not hash its captured "
+            f"bytes under {PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN}",
+        )
+    try:
+        decoded = _strict_json_loads(capture)
+    except (UnicodeDecodeError, TypeError, ValueError) as exc:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"binding {event_id} captured bytes are not strict UTF-8 JSON: {exc}",
+        ) from exc
+    identity = _resolve_json_pointer(decoded, binding["body"]["capture_identity_pointer"])
+    if identity != event_id:
+        raise _Refusal(
+            CANDIDATE_CAPTURE_IDENTITY_UNBOUND,
+            f"binding {event_id} capture_identity_pointer "
+            f"{binding['body']['capture_identity_pointer']!r} resolves to "
+            f"{identity!r}, so these bytes are not bound to this settlement",
+        )
+    return len(capture)
+
+
+def _check_payer_sign(binding: Mapping[str, Any], payload: Mapping[str, Any]) -> None:
+    """The settled cash sign must agree with the payer convention and the side.
+
+    Under ``positive_rate_payer = LONG`` a long position with a positive rate
+    pays, so ``amount_usdc`` must be non-positive; every other combination is
+    mirrored.  A disagreeing row is refused rather than re-signed.
+    """
+    event_id = binding["event_id"]
+    rate = payload.get("funding_rate")
+    szi = payload.get("position_szi")
+    amount = payload.get("amount_usdc")
+    if rate is None or szi is None or amount is None:
+        raise _Refusal(
+            CANDIDATE_PAYER_SIGN_CONFLICT,
+            f"event {event_id} cannot be sign-checked: the retained payload is "
+            "missing funding_rate, position_szi or amount_usdc",
+        )
+    payer_factor = 1.0 if binding["body"]["positive_rate_payer"] == APPROVED_PAYER else -1.0
+    side = 1.0 if float(szi) > 0 else -1.0 if float(szi) < 0 else 0.0
+    rate_sign = 1.0 if float(rate) > 0 else -1.0 if float(rate) < 0 else 0.0
+    expected = -payer_factor * side * rate_sign
+    observed = 1.0 if float(amount) > 0 else -1.0 if float(amount) < 0 else 0.0
+    if observed != expected:
+        raise _Refusal(
+            CANDIDATE_PAYER_SIGN_CONFLICT,
+            f"event {event_id} settled {float(amount)} with rate {float(rate)} "
+            f"and position_szi {float(szi)}; the "
+            f"{binding['body']['positive_rate_payer']}-payer convention requires "
+            f"sign {expected}, observed {observed}",
+        )
 
 
 def _validate_binding(raw: Any) -> dict[str, Any]:
@@ -773,15 +1174,25 @@ def build_funding_candidate(
     schedule_id: Any,
     start_inclusive: Any,
     end_exclusive: Any,
+    *,
+    mode: str = MODE_SYNTHETIC,
+    declarations: Any = None,
 ) -> CandidateResult:
-    """Build one synthetic funding candidate for a whole interval, or refuse.
+    """Build one funding candidate for a whole interval, or refuse.
 
     The result is atomic in meaning: either every inventoried event in
     ``[start_inclusive, end_exclusive)`` carries a verified retained payload
     and an explicit approved binding, or no candidate is produced at all.
+
+    ``mode`` defaults to :data:`MODE_SYNTHETIC`, which is the frozen D1
+    behaviour, byte for byte.  :data:`MODE_PRODUCTION` is the owner-signed
+    ``HL_FUNDING_VENUE_REPORTED_CASH_V1`` class and additionally requires the
+    DECLARED account/product/interval; it is still not an acceptance.
     """
     facts: dict[str, Any] = {}
     try:
+        selected = _require_mode(mode)
+        facts["mode"] = selected
         return _build(
             retained_rows,
             approved_event_bindings,
@@ -790,6 +1201,8 @@ def build_funding_candidate(
             start_inclusive,
             end_exclusive,
             facts,
+            selected,
+            declarations,
         )
     except _Refusal as refusal:
         facts.update(refusal.facts)
@@ -801,6 +1214,7 @@ def build_funding_candidate(
                 reason_code=refusal.code,
                 reason_detail=refusal.detail,
                 facts=facts,
+                mode=facts.get("mode", MODE_SYNTHETIC),
             ),
         )
 
@@ -813,7 +1227,10 @@ def _build(
     start_inclusive: Any,
     end_exclusive: Any,
     facts: dict[str, Any],
+    mode: str = MODE_SYNTHETIC,
+    declarations: Any = None,
 ) -> CandidateResult:
+    production = mode == MODE_PRODUCTION
     schedule = _require_text(schedule_id, "schedule_id", CANDIDATE_INPUT_INVALID)
     if not isinstance(start_inclusive, str) or not isinstance(end_exclusive, str):
         raise _Refusal(
@@ -829,14 +1246,21 @@ def _build(
     facts["interval"] = {"start_inclusive": start.text, "end_exclusive": end.text}
     facts["synthetic_schedule_id"] = schedule
 
-    witness = _validate_coverage(coverage, start, end)
+    declared = _validate_declarations(mode, declarations, start, end)
+    if production:
+        facts["declarations"] = dict(declared)
+    witness = _validate_coverage(coverage, start, end, mode=mode, declared=declared)
     facts["symbol_scope"] = witness["symbol"]
     facts["account_scope"] = witness["account_scope"]
     facts["witness_identity"] = witness["witness_identity"]
 
     rows = [_validate_retained_row(raw) for raw in _require_sequence(retained_rows, "retained_rows")]
     bindings = [
-        _validate_binding(raw)
+        (
+            _validate_production_binding(raw, declared)
+            if production
+            else _validate_binding(raw)
+        )
         for raw in _require_sequence(approved_event_bindings, "approved_event_bindings")
     ]
     facts["retained_row_count"] = len(rows)
@@ -900,6 +1324,8 @@ def _build(
 
     events: list[dict[str, Any]] = []
     out_of_interval: list[str] = []
+    settlement_keys: dict[tuple[str, str, tuple[int, Decimal]], str] = {}
+    magnitudes: list[tuple[float, str]] = []
     for event_id in sorted(inventory_set):
         row = folded_rows[event_id]
         binding = folded_bindings[event_id]
@@ -913,19 +1339,57 @@ def _build(
                 f"binding {event_id} reuses the normalized Bridge payload digest "
                 "as a source_event_digest; the two byte domains are distinct",
             )
-        _verify_source_witness(binding, witness["source_witnesses"][event_id])
         ledger_instant = row["ledger_instant"]
+        if production:
+            # F-16 exact-once: one settlement per (account, coin, event time).
+            settlement_key = (
+                binding["body"]["account_scope"],
+                row["symbol"],
+                binding["instant"].sort_key,
+            )
+            duplicate = settlement_keys.get(settlement_key)
+            if duplicate is not None:
+                raise _Refusal(
+                    CANDIDATE_SETTLEMENT_KEY_CONFLICT,
+                    f"events {duplicate} and {event_id} claim the same "
+                    f"(account, coin, event time) settlement "
+                    f"({settlement_key[0]}, {settlement_key[1]}, "
+                    f"{binding['instant'].text})",
+                )
+            settlement_keys[settlement_key] = event_id
+            if ledger_instant.sort_key != binding["instant"].sort_key:
+                raise _Refusal(
+                    CANDIDATE_SETTLEMENT_TIME_CONFLICT,
+                    f"binding {event_id} settles at {binding['instant'].text} "
+                    f"but the venue's own retained row is {ledger_instant.text}",
+                )
+            _verify_production_capture(binding, witness["source_witnesses"][event_id])
+            _check_payer_sign(binding, payload)
+            rate = payload.get("funding_rate")
+            if rate is not None:
+                magnitudes.append((abs(float(rate)), event_id))
+            notes = {
+                "bridge_effective_ts_equals_binding_event_timestamp": True,
+                "settlement_rate_source": PRODUCTION_SETTLEMENT_SOURCE,
+                "settlement_time_source": PRODUCTION_SETTLEMENT_SOURCE,
+                "oracle_value_admitted": False,
+                "oracle_value_back_calculated": False,
+                "source_event_digest_domain": PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN,
+            }
+        else:
+            _verify_source_witness(binding, witness["source_witnesses"][event_id])
+            notes = {
+                "bridge_effective_ts_equals_binding_event_timestamp": (
+                    ledger_instant.sort_key == binding["instant"].sort_key
+                ),
+                "settlement_rate_source": SETTLEMENT_SOURCE,
+                "settlement_time_source": SETTLEMENT_SOURCE,
+            }
         events.append({
             "sort_key": (binding["instant"].sort_key, event_id.encode("utf-8")),
             "body": {
                 "binding": binding["body"],
-                "binding_notes": {
-                    "bridge_effective_ts_equals_binding_event_timestamp": (
-                        ledger_instant.sort_key == binding["instant"].sort_key
-                    ),
-                    "settlement_rate_source": SETTLEMENT_SOURCE,
-                    "settlement_time_source": SETTLEMENT_SOURCE,
-                },
+                "binding_notes": notes,
                 "bridge_evidence": {
                     "attribution": row["attribution"],
                     "event_id": event_id,
@@ -958,31 +1422,94 @@ def _build(
         )
 
     events.sort(key=lambda event: event["sort_key"])
-    candidate = {
-        "admission_status": ADMISSION_STATUS,
-        "artifact_kind": ARTIFACT_KIND,
-        "bridge_payload_digest_domain": BRIDGE_PAYLOAD_DIGEST_DOMAIN,
-        "not_a_production_record": NOT_A_PRODUCTION_RECORD,
-        "numeric_representation": NUMERIC_REPRESENTATION,
-        "source_event_digest_domain": SOURCE_EVENT_DIGEST_DOMAIN,
-        "synthetic_candidate": {
-            "account_scope": witness["account_scope"],
-            "coverage_witness": {
-                **witness,
-                "expected_event_ids": sorted(inventory),
-                "unattributed_event_ids": sorted(witness["unattributed_event_ids"]),
-            },
-            "effective_interval": {
-                "end_exclusive": end.text,
-                "start_inclusive": start.text,
-            },
-            "event_count": len(events),
-            "symbol_scope": witness["symbol"],
-            "synthetic_events": [event["body"] for event in events],
-            "synthetic_schedule_id": schedule,
+    inner = {
+        "account_scope": witness["account_scope"],
+        "coverage_witness": {
+            **witness,
+            "expected_event_ids": sorted(inventory),
+            "unattributed_event_ids": sorted(witness["unattributed_event_ids"]),
         },
-        "synthetic_only": True,
+        "effective_interval": {
+            "end_exclusive": end.text,
+            "start_inclusive": start.text,
+        },
+        "event_count": len(events),
+        "symbol_scope": witness["symbol"],
     }
+    if production:
+        # A2 = B with M PENDING: log the observed magnitudes and raise the
+        # signed risk; never refuse on magnitude.
+        magnitudes.sort()
+        facts["signed_risk_markers"] = [
+            {
+                "signed_risk_id": MAGNITUDE_GUARD_SIGNED_RISK_ID,
+                "state": "M_PENDING",
+                "statement": (
+                    "The A2 magnitude cap M is not set. Observed |funding_rate| "
+                    "values are logged and never refused until the owner sets M "
+                    "after the declared observations."
+                ),
+                "observed_absolute_rates": [repr(value) for value, _event in magnitudes],
+                "largest_observed_event_id": magnitudes[-1][1] if magnitudes else None,
+            },
+            {
+                "signed_risk_id": ORACLE_BINDING_SIGNED_RISK_ID,
+                "state": "OPEN",
+                "statement": (
+                    "F-19/F-20 are unanswered. No oracle value is admitted, "
+                    "derived or back-calculated here; OPEN05 and OPEN07 stay OPEN."
+                ),
+            },
+            {
+                "signed_risk_id": NO_INDEPENDENT_REVALUATION_SIGNED_RISK_ID,
+                "state": "ACCEPTED",
+                "statement": (
+                    "The venue's own reported funding cash is booked without "
+                    "independent revaluation."
+                ),
+            },
+        ]
+        candidate = {
+            "admission_status": PRODUCTION_ADMISSION_STATUS,
+            "artifact_kind": PRODUCTION_ARTIFACT_KIND,
+            "bridge_payload_digest_domain": BRIDGE_PAYLOAD_DIGEST_DOMAIN,
+            "declarations": dict(declared),
+            "not_an_accepted_record": NOT_AN_ACCEPTED_RECORD,
+            "numeric_representation": NUMERIC_REPRESENTATION,
+            "production_candidate": {
+                **inner,
+                "settlement_events": [event["body"] for event in events],
+                "target_schedule_id": schedule,
+            },
+            "signed_risk_markers": facts["signed_risk_markers"],
+            "source_class": PRODUCTION_SOURCE_CLASS,
+            "source_event_digest_domain": PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN,
+            "synthetic_only": False,
+        }
+        outcome_detail = (
+            "production candidate built for the declared account/product/"
+            "interval under " + PRODUCTION_SOURCE_CLASS + "; it is not an "
+            "accepted economic record"
+        )
+    else:
+        candidate = {
+            "admission_status": ADMISSION_STATUS,
+            "artifact_kind": ARTIFACT_KIND,
+            "bridge_payload_digest_domain": BRIDGE_PAYLOAD_DIGEST_DOMAIN,
+            "not_a_production_record": NOT_A_PRODUCTION_RECORD,
+            "numeric_representation": NUMERIC_REPRESENTATION,
+            "source_event_digest_domain": SOURCE_EVENT_DIGEST_DOMAIN,
+            "synthetic_candidate": {
+                **inner,
+                "synthetic_events": [event["body"] for event in events],
+                "synthetic_schedule_id": schedule,
+            },
+            "synthetic_only": True,
+        }
+        outcome_detail = (
+            "synthetic candidate built from synthetic caller facts; it is "
+            "not evidence of real-world completeness"
+        )
     body = canonical_reconcile_json(candidate).encode("utf-8") + b"\n"
     digest = hashlib.sha256(body).hexdigest()
     facts["event_count"] = len(events)
@@ -993,11 +1520,9 @@ def _build(
         report=_report(
             accepted=True,
             reason_code=SYNTHETIC_CANDIDATE_BUILT,
-            reason_detail=(
-                "synthetic candidate built from synthetic caller facts; it is "
-                "not evidence of real-world completeness"
-            ),
+            reason_detail=outcome_detail,
             facts=facts,
+            mode=mode,
         ),
         candidate_bytes=body,
         candidate_sha256=digest,
@@ -1005,9 +1530,56 @@ def _build(
 
 
 def _report(
-    *, accepted: bool, reason_code: str, reason_detail: str, facts: Mapping[str, Any]
+    *,
+    accepted: bool,
+    reason_code: str,
+    reason_detail: str,
+    facts: Mapping[str, Any],
+    mode: str = MODE_SYNTHETIC,
 ) -> dict[str, Any]:
     """One fully labelled, fully deterministic report. No clock is read."""
+    if mode == MODE_PRODUCTION:
+        return {
+            "accepted": accepted,
+            "candidate_sha256": facts.get("candidate_sha256"),
+            "declarations": facts.get("declarations"),
+            "event_count": facts.get("event_count"),
+            "evidence_limitations": list(PRODUCTION_EVIDENCE_LIMITATIONS),
+            "inputs": {
+                "account_scope": facts.get("account_scope"),
+                "binding_count": facts.get("binding_count"),
+                "interval": facts.get("interval"),
+                "retained_row_count": facts.get("retained_row_count"),
+                "symbol_scope": facts.get("symbol_scope"),
+                "target_schedule_id": facts.get("synthetic_schedule_id"),
+                "witness_identity": facts.get("witness_identity"),
+            },
+            "inventory_missing_event_ids": facts.get("inventory_missing_event_ids", []),
+            "inventory_unmatched_event_ids": facts.get("inventory_unmatched_event_ids", []),
+            "mode": MODE_PRODUCTION,
+            "non_admission": {
+                "admission_status": PRODUCTION_ADMISSION_STATUS,
+                "production_selection_keys_absent": [
+                    "events",
+                    "schedule_id",
+                    "settlement_currency",
+                ],
+                "statement": NOT_AN_ACCEPTED_RECORD,
+            },
+            "out_of_interval_bindings": facts.get("out_of_interval_bindings", []),
+            "out_of_scope_event_ids": facts.get("out_of_scope_event_ids", []),
+            "production_mode": PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN,
+            "reason_code": reason_code,
+            "reason_detail": reason_detail,
+            "report_kind": PRODUCTION_REPORT_KIND,
+            "signed_risk_markers": facts.get("signed_risk_markers", []),
+            "source_class": PRODUCTION_SOURCE_CLASS,
+            "store_reason_codes": facts.get("store_reason_codes", {}),
+            "synthetic_only": False,
+            "unbound_events": facts.get("unbound_events", []),
+            "uninventoried_event_ids": facts.get("uninventoried_event_ids", []),
+            "unknown_binding_event_ids": facts.get("unknown_binding_event_ids", []),
+        }
     return {
         "accepted": accepted,
         "candidate_sha256": facts.get("candidate_sha256"),
@@ -1156,7 +1728,10 @@ def _read_snapshot_rows(snapshot: Path, symbol: str) -> list[dict[str, Any]]:
         conn.close()
 
 
-def _load_packet(path: Path) -> tuple[list[Any], Any]:
+def _load_packet(path: Path, mode: str = MODE_SYNTHETIC) -> tuple[list[Any], Any]:
+    expected_version = (
+        PRODUCTION_PACKET_VERSION if mode == MODE_PRODUCTION else PACKET_VERSION
+    )
     try:
         raw = path.read_bytes()
     except OSError as exc:
@@ -1172,11 +1747,11 @@ def _load_packet(path: Path) -> tuple[list[Any], Any]:
     packet = _require_closed_mapping(
         parsed, PACKET_KEYS, "binding packet", CANDIDATE_PACKET_INVALID
     )
-    if packet["packet_version"] != PACKET_VERSION:
+    if packet["packet_version"] != expected_version:
         raise _Refusal(
             CANDIDATE_PACKET_INVALID,
-            f"unsupported packet_version {packet['packet_version']!r}; this tool "
-            f"reads only {PACKET_VERSION}",
+            f"unsupported packet_version {packet['packet_version']!r}; this mode "
+            f"reads only {expected_version}",
         )
     if isinstance(packet["bindings"], Mapping) or not isinstance(
         packet["bindings"], list
@@ -1370,7 +1945,26 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--end", required=True)
     parser.add_argument("--schedule-id", required=True, dest="schedule_id")
     parser.add_argument("--staging", required=True)
+    parser.add_argument("--mode", choices=list(EXPORT_MODES), default=MODE_SYNTHETIC)
+    parser.add_argument("--declared-account", dest="declared_account", default=None)
+    parser.add_argument("--declared-product", dest="declared_product", default=None)
+    parser.add_argument("--declared-interval", dest="declared_interval", default=None)
     return parser.parse_args(argv)
+
+
+def _cli_declarations(args: argparse.Namespace) -> dict[str, Any] | None:
+    if args.mode != MODE_PRODUCTION:
+        return None
+    supplied = {
+        "account": args.declared_account,
+        "interval": args.declared_interval,
+        "product": args.declared_product,
+    }
+    if all(value is None for value in supplied.values()):
+        # Every declaration is UNSPECIFIED: let the pure function raise the one
+        # typed refusal rather than inventing a partial declaration here.
+        return None
+    return supplied
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -1378,6 +1972,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     staging = Path(args.staging)
     snapshot = Path(args.snapshot)
     bindings_path = Path(args.bindings)
+    mode = args.mode
+    declarations = _cli_declarations(args)
     try:
         _prepare_staging(staging, snapshot, bindings_path)
     except _Refusal as refusal:
@@ -1387,7 +1983,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         _assert_quiescent(snapshot)
         before = _sha256_file(snapshot)
-        bindings, coverage = _load_packet(bindings_path)
+        bindings, coverage = _load_packet(bindings_path, mode)
         if not isinstance(coverage, Mapping) or coverage.get("symbol") != args.symbol:
             raise _Refusal(
                 CANDIDATE_SYMBOL_MISMATCH,
@@ -1421,11 +2017,19 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "synthetic_schedule_id": args.schedule_id,
                     **refusal.facts,
                 },
+                mode=mode,
             ),
         )
     else:
         result = build_funding_candidate(
-            rows, bindings, coverage, args.schedule_id, args.start, args.end
+            rows,
+            bindings,
+            coverage,
+            args.schedule_id,
+            args.start,
+            args.end,
+            mode=mode,
+            declarations=declarations,
         )
 
     try:
@@ -1436,8 +2040,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not result.accepted:
         print(f"{TOOL_NAME}: refused ({result.reason_code})", file=sys.stderr)
         return 1
+    label = MODE_PRODUCTION if mode == MODE_PRODUCTION else "SYNTHETIC_ONLY"
     print(
-        f"{TOOL_NAME}: staged SYNTHETIC_ONLY candidate "
+        f"{TOOL_NAME}: staged {label} candidate "
         f"{result.candidate_sha256} under {staging.name}; it is not an accepted "
         "economic record"
     )

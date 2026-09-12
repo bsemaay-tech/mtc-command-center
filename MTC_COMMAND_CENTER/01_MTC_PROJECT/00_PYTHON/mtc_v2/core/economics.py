@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import math
 from pathlib import Path
@@ -43,6 +43,33 @@ REFUSED_UNSUPPORTED_COLLISION_POLICY = "REFUSED_UNSUPPORTED_COLLISION_POLICY"
 REFUSED_AMBIGUOUS_SAME_BAR = "REFUSED_AMBIGUOUS_SAME_BAR"
 REFUSED_DUPLICATE_FUNDING_EVENT = "REFUSED_DUPLICATE_FUNDING_EVENT"
 REFUSED_UNMAPPED_FILL_EVENT_CLASS = "REFUSED_UNMAPPED_FILL_EVENT_CLASS"
+REFUSED_MISSING_ADMITTED_FEE = "REFUSED_MISSING_ADMITTED_FEE"
+REFUSED_UNSUPPORTED_ADMITTED_COST_SOURCE = "REFUSED_UNSUPPORTED_ADMITTED_COST_SOURCE"
+REFUSED_UNSPECIFIED_ADMITTED_INTERVAL_START = (
+    "REFUSED_UNSPECIFIED_ADMITTED_INTERVAL_START"
+)
+REFUSED_BEFORE_ADMITTED_INTERVAL_START = "REFUSED_BEFORE_ADMITTED_INTERVAL_START"
+
+# --- OD-20260912-P012-PATHD-1 decision B (fees) ---------------------------
+# B1=C: the venue's own reported per-fill fee is the admitted cash amount; the
+# pinned schedule survives only as a guarded pre-trade estimator.
+ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1 = "HL_FEE_REPORTED_PER_FILL_V1"
+ADMITTED_COST_SOURCES = (ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1,)
+GUARDED_ESTIMATOR_SCHEDULE_ID = "HL_FEE_SCHEDULE_ESTIMATOR_GUARDED_V1"
+# B2=C, owner-signed: 5% of the estimate, relative only.  The `max(5%, 1e-6
+# USDC)` variant offered by the packet was NOT adopted: it strictly weakens
+# detection near zero (estimate 1e-6, reported 1.9e-6 deviates by 90% of the
+# estimate yet 9e-7 <= 1e-6, so the floor form would admit it silently), and the
+# owner decision allows the floor only on a showing that it never weakens
+# detection.  See test_pathd_fees.py::test_absolute_tolerance_floor_would_weaken_detection.
+ESTIMATOR_TOLERANCE_RELATIVE = 0.05
+ESTIMATOR_TOLERANCE_FORM = "RELATIVE_FRACTION_OF_ESTIMATE_V1"
+FEE_ESTIMATOR_SUSPENDED = "FEE_ESTIMATOR_SUSPENDED"
+FEE_ESTIMATOR_AGREED = "FEE_ESTIMATOR_AGREED"
+ADMITTED_COST_APPLIED = "ADMITTED_COST_APPLIED"
+ESTIMATOR_DEVIATION_SIGNED_RISK_ID = "PATHD-RISK-FEE-ESTIMATOR-DEVIATION-V1"
+REPORTED_FEE_CHARGE = "CHARGE"
+REPORTED_FEE_REBATE = "REBATE"
 
 
 class EconomicsRefusal(ValueError):
@@ -71,6 +98,27 @@ class ExitCandidate:
 
 
 @dataclass(frozen=True, slots=True)
+class ReportedFillFee:
+    """One venue-reported fee on one authenticated own-account fill.
+
+    This is the *only* admitted cost input under
+    :data:`ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1`.  ``reported_amount`` is
+    the venue's own charged number in ``fee_token``: it is read, never
+    recomputed, never rounded and never replaced by an estimate.  There is no
+    default: a fill with no reported fee is refused, never treated as zero.
+
+    ``closed_pnl`` is carried beside the fee exactly as the venue reports it and
+    is never merged into the fee amount.
+    """
+
+    fill_id: str
+    reported_amount: float
+    fee_token: str
+    fee_class: str = REPORTED_FEE_CHARGE
+    closed_pnl: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class EconomicIntent:
     kind: IntentKind
     action_side: str | None = None
@@ -90,6 +138,10 @@ class EconomicIntent:
     same_bar_collision_policy_id: str | None = "STOP_FIRST"
     funding_event_id: str | None = None
     funding_event_in_window: bool = True
+    # Venue-reported fees keyed by the fill they belong to.  Consumed only by
+    # the admitted-cost path; ignored by records without an admitted cost
+    # source, whose behaviour is unchanged.
+    reported_fill_fees: tuple[ReportedFillFee, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -280,6 +332,309 @@ def _fill_price(
     raise EconomicsRefusal(REFUSED_ECONOMIC_INPUT, f"unknown action side {action_side!r}")
 
 
+@dataclass(frozen=True, slots=True)
+class _PendingDecision:
+    """A decision the fee path produced before its sequence number is known."""
+
+    decision: str
+    details: tuple[tuple[str, object], ...]
+    refusal_code: str | None = None
+
+
+def _parse_z_timestamp(value: object, field_name: str) -> datetime:
+    if not isinstance(value, str) or not value.endswith("Z"):
+        raise EconomicsRefusal(
+            REFUSED_ECONOMIC_INPUT, f"{field_name} must be an explicit Z timestamp"
+        )
+    try:
+        parsed = datetime.fromisoformat(value[:-1] + "+00:00")
+    except ValueError as exc:
+        raise EconomicsRefusal(
+            REFUSED_ECONOMIC_INPUT, f"{field_name} is not an ISO-8601 timestamp"
+        ) from exc
+    return parsed.astimezone(timezone.utc)
+
+
+def _guard_admitted_event_class(cost: Mapping[str, Any] | None, event_class: str) -> None:
+    """Refuse an unmapped/refused fill class *before* any row is built.
+
+    Applies only to records declaring an admitted cost source, so the frozen
+    schedule path keeps its exact behaviour.  ``MARGIN_CALL_LIQUIDATION`` stays
+    refused with the record's own ``CANNOT_MAP...`` disposition: admitting a
+    reported fee never turns the liquidation class into a mapped one.
+    """
+    if cost is None or cost.get("admitted_cost_source") is None:
+        return
+    refused = cost.get("refused_event_classes")
+    if isinstance(refused, Mapping) and event_class in refused:
+        raise EconomicsRefusal(
+            REFUSED_UNMAPPED_FILL_EVENT_CLASS,
+            f"{event_class} is refused by this schedule: {refused[event_class]}",
+        )
+    roles = cost.get("liquidity_roles")
+    if not isinstance(roles, Mapping) or event_class not in roles:
+        raise EconomicsRefusal(REFUSED_UNMAPPED_FILL_EVENT_CLASS, event_class)
+
+
+def _admitted_reported_fee(
+    *,
+    cost: Mapping[str, Any],
+    fill_id: str,
+    event_class: str,
+    reported_fees: tuple[ReportedFillFee, ...],
+) -> ReportedFillFee:
+    """Select and validate the one venue-reported fee for ``fill_id``.
+
+    Missing, ``None``, non-finite, wrong-token, duplicated or sign-inconsistent
+    inputs all refuse.  Nothing here ever falls back to zero, to the schedule or
+    to another fill's number.
+    """
+    matching = [row for row in reported_fees if row is not None and row.fill_id == fill_id]
+    if not matching:
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: no venue-reported fee for fill {fill_id}; an "
+            "admitted cost is never defaulted, estimated or zeroed",
+        )
+    if len(matching) != 1:
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: {len(matching)} venue-reported fees for fill {fill_id}",
+        )
+    reported = matching[0]
+    if not isinstance(reported, ReportedFillFee):
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} is not a typed ReportedFillFee",
+        )
+    amount = reported.reported_amount
+    if amount is None or isinstance(amount, bool) or not isinstance(amount, (int, float)):
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} is not a number",
+        )
+    if not math.isfinite(float(amount)):
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} is not finite",
+        )
+    settlement_currency = str(cost["settlement_currency"])
+    if reported.fee_token != settlement_currency:
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} is denominated in "
+            f"{reported.fee_token!r}, not the settlement currency "
+            f"{settlement_currency!r}",
+        )
+    if reported.fee_class not in (REPORTED_FEE_CHARGE, REPORTED_FEE_REBATE):
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} carries unknown "
+            f"fee_class {reported.fee_class!r}",
+        )
+    if reported.fee_class == REPORTED_FEE_CHARGE and float(amount) < 0.0:
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} is negative but is "
+            "not declared a rebate",
+        )
+    if reported.fee_class == REPORTED_FEE_REBATE and float(amount) > 0.0:
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} is declared a "
+            "rebate but is positive",
+        )
+    if reported.closed_pnl is not None and not math.isfinite(float(reported.closed_pnl)):
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: closed_pnl for fill {fill_id} is not finite",
+        )
+    return reported
+
+
+def _estimator_parameters(cost: Mapping[str, Any]) -> float:
+    """The owner-signed guarded-estimator parameters, or a refusal."""
+    if cost.get("estimator_schedule_id") != GUARDED_ESTIMATOR_SCHEDULE_ID:
+        raise EconomicsRefusal(
+            REFUSED_UNSUPPORTED_ADMITTED_COST_SOURCE,
+            "the admitted-cost path requires estimator_schedule_id "
+            f"{GUARDED_ESTIMATOR_SCHEDULE_ID!r}, got "
+            f"{cost.get('estimator_schedule_id')!r}",
+        )
+    estimator = cost.get("estimator")
+    if not isinstance(estimator, Mapping):
+        raise EconomicsRefusal(
+            REFUSED_UNSUPPORTED_ADMITTED_COST_SOURCE,
+            "the admitted-cost path requires an estimator object",
+        )
+    if estimator.get("tolerance_form") != ESTIMATOR_TOLERANCE_FORM:
+        raise EconomicsRefusal(
+            REFUSED_UNSUPPORTED_ADMITTED_COST_SOURCE,
+            f"estimator.tolerance_form must be {ESTIMATOR_TOLERANCE_FORM!r}",
+        )
+    tolerance = estimator.get("tolerance_relative")
+    if (
+        isinstance(tolerance, bool)
+        or not isinstance(tolerance, (int, float))
+        or float(tolerance) != ESTIMATOR_TOLERANCE_RELATIVE
+    ):
+        # A record may not widen (or narrow) the owner-signed B2=C tolerance.
+        raise EconomicsRefusal(
+            REFUSED_UNSUPPORTED_ADMITTED_COST_SOURCE,
+            "estimator.tolerance_relative must be the owner-signed "
+            f"{ESTIMATOR_TOLERANCE_RELATIVE}, got {tolerance!r}",
+        )
+    return float(tolerance)
+
+
+def _admitted_fee_rows(
+    *,
+    records: EconomicRecords,
+    cost: Mapping[str, Any],
+    event_timestamp: datetime,
+    lifecycle_id: int,
+    fill_id: str,
+    fill_sequence: int,
+    event_class: str,
+    role: str,
+    rate: float,
+    fill_price: float,
+    quantity: float,
+    contract_multiplier: float,
+    cash_sequence: int,
+    fee_sequence: int,
+    reported_fees: tuple[ReportedFillFee, ...],
+) -> tuple[CashEvent, FeeEvent, tuple[_PendingDecision, ...]]:
+    """The ``HL_FEE_REPORTED_PER_FILL_V1`` admitted-cost path.
+
+    The admitted cash amount is the venue's reported number.  The schedule is
+    evaluated *alongside* it purely as a guarded estimator: a deviation beyond
+    the owner-signed tolerance suspends the estimator for pre-trade sizing and
+    raises a signed-risk marker, and never changes the admitted amount.
+    """
+    refused = cost.get("refused_event_classes")
+    if isinstance(refused, Mapping) and event_class in refused:
+        raise EconomicsRefusal(
+            REFUSED_UNMAPPED_FILL_EVENT_CLASS,
+            f"{event_class} is refused by this schedule: {refused[event_class]}",
+        )
+    if "admitted_interval_start" not in cost:
+        raise EconomicsRefusal(
+            REFUSED_UNSPECIFIED_ADMITTED_INTERVAL_START,
+            "the admitted-cost path requires an explicit admitted_interval_start field",
+        )
+    raw_start = cost["admitted_interval_start"]
+    if raw_start is None:
+        raise EconomicsRefusal(
+            REFUSED_UNSPECIFIED_ADMITTED_INTERVAL_START,
+            "admitted_interval_start is UNSPECIFIED (the first authenticated "
+            "own-account fill is not established); no admitted cost can be "
+            "computed before it",
+        )
+    start = _parse_z_timestamp(raw_start, "admitted_interval_start")
+    if event_timestamp.tzinfo is None:
+        raise EconomicsRefusal(
+            REFUSED_ECONOMIC_INPUT, "admitted cost requires a timezone-aware event timestamp"
+        )
+    if event_timestamp.astimezone(timezone.utc) < start:
+        raise EconomicsRefusal(
+            REFUSED_BEFORE_ADMITTED_INTERVAL_START,
+            f"{event_class} at {event_timestamp.isoformat()} precedes the "
+            f"admitted interval start {raw_start}",
+        )
+
+    tolerance_relative = _estimator_parameters(cost)
+    reported = _admitted_reported_fee(
+        cost=cost,
+        fill_id=fill_id,
+        event_class=event_class,
+        reported_fees=reported_fees,
+    )
+    amount = float(reported.reported_amount)
+    notional = abs(fill_price * quantity * contract_multiplier)
+    estimate = notional * rate
+    deviation = abs(amount - estimate)
+    tolerance = tolerance_relative * abs(estimate)
+    suspended = deviation > tolerance
+    # The admitted amount is the venue's charge; the estimator never overrides it.
+    signed = 0.0 if amount == 0.0 else -amount
+    shared_details: dict[str, object] = {
+        "admitted_cost_source": ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1,
+        "estimator_schedule_id": GUARDED_ESTIMATOR_SCHEDULE_ID,
+        "event_class": event_class,
+        "fill_id": fill_id,
+        "liquidity_role": role,
+        "reported_amount": amount,
+        "fee_token": reported.fee_token,
+        "fee_class": reported.fee_class,
+        "closed_pnl": reported.closed_pnl,
+        "estimator_rate": rate,
+        "estimator_notional": notional,
+        "estimator_amount": estimate,
+        "absolute_deviation": deviation,
+        "tolerance_form": ESTIMATOR_TOLERANCE_FORM,
+        "tolerance_relative": tolerance_relative,
+        "tolerance_absolute": tolerance,
+    }
+    pending = [
+        _PendingDecision(
+            decision=ADMITTED_COST_APPLIED,
+            details=_details(**shared_details),
+        )
+    ]
+    if suspended:
+        pending.append(
+            _PendingDecision(
+                decision=FEE_ESTIMATOR_SUSPENDED,
+                details=_details(
+                    estimator_suspended_for="PRE_TRADE_SIZING",
+                    signed_risk_id=ESTIMATOR_DEVIATION_SIGNED_RISK_ID,
+                    admitted_amount_overridden=False,
+                    **shared_details,
+                ),
+            )
+        )
+    else:
+        pending.append(
+            _PendingDecision(
+                decision=FEE_ESTIMATOR_AGREED,
+                details=_details(**shared_details),
+            )
+        )
+    cash_event_id = f"CE-FEE-{fill_sequence}"
+    cash = CashEvent(
+        sequence=cash_sequence,
+        cash_event_id=cash_event_id,
+        event_timestamp=event_timestamp,
+        lifecycle_id=lifecycle_id,
+        kind=CashEventKind.FEE,
+        signed_delta=signed,
+        settlement_currency=str(cost["settlement_currency"]),
+        fill_id=fill_id,
+    )
+    fee = FeeEvent(
+        sequence=fee_sequence,
+        event_timestamp=event_timestamp,
+        lifecycle_id=lifecycle_id,
+        fill_id=fill_id,
+        event_class=event_class,
+        liquidity_role=role,
+        schedule_id=str(cost["schedule_id"]),
+        schedule_digest=records.cost_digest,
+        # ``rate``/``fixed_component`` describe the *estimator* arm only.  The
+        # admitted amount below was read from the venue, not produced from them,
+        # and no fixed component or minimum fee was applied.
+        rate=rate,
+        fixed_component=0.0,
+        fee_notional=notional,
+        fee_amount=amount,
+        fee_cash_delta=signed,
+        settlement_currency=str(cost["settlement_currency"]),
+        cash_event_id=cash_event_id,
+    )
+    return cash, fee, tuple(pending)
+
+
 def _fee_rows(
     *,
     records: EconomicRecords,
@@ -293,7 +648,8 @@ def _fee_rows(
     contract_multiplier: float,
     cash_sequence: int,
     fee_sequence: int,
-) -> tuple[CashEvent, FeeEvent]:
+    reported_fees: tuple[ReportedFillFee, ...] = (),
+) -> tuple[CashEvent, FeeEvent, tuple[_PendingDecision, ...]]:
     if records.cost is None or records.cost_digest is None:
         raise EconomicsRefusal(REFUSED_MISSING_COST_SCHEDULE, event_class)
     roles = records.cost.get("liquidity_roles")
@@ -304,6 +660,30 @@ def _fee_rows(
     if rate_key is None:
         raise EconomicsRefusal(REFUSED_ECONOMIC_INPUT, f"unknown liquidity role {role!r}")
     rate = float(records.cost[rate_key])
+    admitted_source = records.cost.get("admitted_cost_source")
+    if admitted_source is not None:
+        if admitted_source not in ADMITTED_COST_SOURCES:
+            raise EconomicsRefusal(
+                REFUSED_UNSUPPORTED_ADMITTED_COST_SOURCE,
+                f"unknown admitted cost source {admitted_source!r}",
+            )
+        return _admitted_fee_rows(
+            records=records,
+            cost=records.cost,
+            event_timestamp=event_timestamp,
+            lifecycle_id=lifecycle_id,
+            fill_id=fill_id,
+            fill_sequence=fill_sequence,
+            event_class=event_class,
+            role=role,
+            rate=rate,
+            fill_price=fill_price,
+            quantity=quantity,
+            contract_multiplier=contract_multiplier,
+            cash_sequence=cash_sequence,
+            fee_sequence=fee_sequence,
+            reported_fees=reported_fees,
+        )
     fixed = float(records.cost.get("fixed_component", 0.0))
     minimum = float(records.cost.get("minimum_fee", 0.0))
     if records.cost.get("fee_rounding_rule") != "EXACT_IDENTITY_V1":
@@ -339,7 +719,26 @@ def _fee_rows(
         settlement_currency=str(records.cost["settlement_currency"]),
         cash_event_id=cash_event_id,
     )
-    return cash, fee
+    return cash, fee, ()
+
+
+def _appended_decisions(
+    *,
+    decisions: list[DecisionEvent],
+    pending: tuple[_PendingDecision, ...],
+    base_sequence: int,
+    event_timestamp: datetime,
+) -> None:
+    for item in pending:
+        decisions.append(
+            DecisionEvent(
+                sequence=base_sequence + len(decisions),
+                event_timestamp=event_timestamp,
+                decision=item.decision,
+                refusal_code=item.refusal_code,
+                details=item.details,
+            )
+        )
 
 
 class LegacyEconomicsAdapter(ExecutionEconomics):
@@ -633,7 +1032,11 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             cost=records.cost,
         )
         resolved_stop = _entry_stop(intent, final_fill, instrument)
-        candidate_quantity = _size_quantity(
+        # C3=A: floor to the quantity step first, then refuse below the
+        # minimum quantity, then refuse below the minimum notional.  With the
+        # historical ``min_qty == 0`` records the floored size is admitted
+        # exactly as before, so no existing decision stream changes.
+        floored_quantity = _size_quantity(
             corrected=True,
             entry=final_fill,
             stop=resolved_stop,
@@ -641,8 +1044,10 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             risk_pct=intent.risk_pct,
             fallback_size_pct=intent.fallback_size_pct,
             max_leverage_cap=intent.max_leverage_cap,
-            instrument=replace(instrument, min_notional=0.0),
+            instrument=replace(instrument, min_notional=0.0, min_qty=0.0),
         )
+        refused_min_quantity = floored_quantity < instrument.min_qty
+        candidate_quantity = 0.0 if refused_min_quantity else floored_quantity
         order_notional = (
             candidate_quantity * final_fill * instrument.contract_multiplier
         )
@@ -664,6 +1069,38 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             )
         )
         next_sequence += 1
+        if instrument.min_qty > 0.0:
+            # Only a positive owner-guard floor produces this pair; the
+            # historical zero-floor records keep their exact decision stream.
+            decisions.append(
+                DecisionEvent(
+                    sequence=next_sequence,
+                    event_timestamp=market.timestamp,
+                    decision=(
+                        "REFUSED_MINIMUM_QUANTITY"
+                        if refused_min_quantity
+                        else "MINIMUM_QUANTITY_ADMITTED"
+                    ),
+                    refusal_code=(
+                        "REFUSED_MINIMUM_QUANTITY" if refused_min_quantity else None
+                    ),
+                    details=_details(
+                        floored_quantity=floored_quantity,
+                        quantity_step=instrument.qty_step,
+                        required_minimum_quantity=instrument.min_qty,
+                        minimum_quantity_provenance=instrument.min_qty_provenance,
+                        minimum_quantity_is_owner_guard=instrument.min_qty_is_owner_guard,
+                    ),
+                )
+            )
+            next_sequence += 1
+            if refused_min_quantity:
+                return _empty_transition(
+                    semantics_id=self.semantics_id,
+                    state=state,
+                    records=records,
+                    decisions=tuple(decisions),
+                )
         decisions.append(
             DecisionEvent(
                 sequence=next_sequence,
@@ -691,6 +1128,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             )
         lifecycle_id = state.lifecycle_id or state.next_lifecycle_id
         event_class = intent.event_class or "ENTRY"
+        _guard_admitted_event_class(records.cost, event_class)
         fill_sequence = state.next_fill_sequence
         fill = FillDecision(
             sequence=fill_sequence,
@@ -712,7 +1150,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 reference + impact if action_side == "BUY" else reference - impact
             ),
         )
-        fee_cash, fee = _fee_rows(
+        fee_cash, fee, pending = _fee_rows(
             records=records,
             event_timestamp=market.timestamp,
             lifecycle_id=lifecycle_id,
@@ -724,6 +1162,13 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             contract_multiplier=instrument.contract_multiplier,
             cash_sequence=state.next_cash_sequence,
             fee_sequence=state.next_fee_sequence,
+            reported_fees=intent.reported_fill_fees,
+        )
+        _appended_decisions(
+            decisions=decisions,
+            pending=pending,
+            base_sequence=state.next_decision_sequence,
+            event_timestamp=market.timestamp,
         )
         return EconomicTransition(
             semantics_id=self.semantics_id,
@@ -921,6 +1366,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             action_side = "SELL" if state.position_side == "LONG" else "BUY"
             if records.cost is None:
                 raise EconomicsRefusal(REFUSED_MISSING_COST_SCHEDULE, event_class)
+            _guard_admitted_event_class(records.cost, event_class)
             final_fill, bps, impact, alignment = _fill_price(
                 reference=reference,
                 action_side=action_side,
@@ -952,7 +1398,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                     ),
                 )
             )
-            fee_cash, fee = _fee_rows(
+            fee_cash, fee, pending = _fee_rows(
                 records=records,
                 event_timestamp=market.timestamp,
                 lifecycle_id=state.lifecycle_id,
@@ -964,6 +1410,13 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 contract_multiplier=instrument.contract_multiplier,
                 cash_sequence=state.next_cash_sequence + len(cash),
                 fee_sequence=state.next_fee_sequence + len(fees),
+                reported_fees=intent.reported_fill_fees,
+            )
+            _appended_decisions(
+                decisions=decisions,
+                pending=pending,
+                base_sequence=state.next_decision_sequence,
+                event_timestamp=market.timestamp,
             )
             cash.append(fee_cash)
             fees.append(fee)
@@ -1039,6 +1492,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             cost=records.cost,
         )
         event_class = intent.event_class or "MARKET_EXIT"
+        _guard_admitted_event_class(records.cost, event_class)
         fill_sequence = state.next_fill_sequence
         fill = FillDecision(
             sequence=fill_sequence,
@@ -1061,7 +1515,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 reference + impact if action_side == "BUY" else reference - impact
             ),
         )
-        fee_cash, fee = _fee_rows(
+        fee_cash, fee, pending = _fee_rows(
             records=records,
             event_timestamp=market.timestamp,
             lifecycle_id=int(state.lifecycle_id),
@@ -1073,6 +1527,14 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             contract_multiplier=instrument.contract_multiplier,
             cash_sequence=state.next_cash_sequence,
             fee_sequence=state.next_fee_sequence,
+            reported_fees=intent.reported_fill_fees,
+        )
+        market_exit_decisions = list(prefix)
+        _appended_decisions(
+            decisions=market_exit_decisions,
+            pending=pending,
+            base_sequence=state.next_decision_sequence,
+            event_timestamp=market.timestamp,
         )
         gross = CashEvent(
             sequence=state.next_cash_sequence + 1,
@@ -1111,7 +1573,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             funding_schedule_id=records.funding_schedule_id,
             funding_schedule_digest=records.funding_digest,
             next_position_facts=next_facts,
-            decision_events=prefix,
+            decision_events=tuple(market_exit_decisions),
             fill_decisions=(fill,),
             cash_events=(fee_cash, gross),
             fee_events=(fee,),
