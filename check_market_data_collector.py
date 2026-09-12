@@ -39,6 +39,7 @@ assert subject.INTERVAL_MS == EXPECTED_INTERVAL_MS
 assert subject.INITIAL_INTERVALS == EXPECTED_INTERVALS
 FEBRUARY_START = 1769904000000  # Fixture-only: 2026-02-01 00:00 UTC.
 JANUARY_LAST_BAR = 1769903100000  # Fixture-only: 2026-01-31 23:45 UTC.
+PERSISTED_ORDER_BASE = FEBRUARY_START + 2 * STEP  # Keep physical order fixtures in one file.
 EXPECTED_OPEN_QUESTIONS = {
     "OPEN-F3",
     "OPEN-F4",
@@ -478,7 +479,7 @@ def restart_persisted_order_refusal_check(module: types.ModuleType = subject) ->
             archive = module.MonthlyArchive(root)
             for offset in offsets:
                 bar = module.normalize_bar(
-                    raw_bar(JANUARY_LAST_BAR + offset * STEP),
+                    raw_bar(PERSISTED_ORDER_BASE + offset * STEP),
                     source_producer="WS_LIVE",
                     ingest_time=now,
                     env_lineage_id="fixture-lineage",
@@ -498,7 +499,7 @@ def restart_persisted_order_refusal_check(module: types.ModuleType = subject) ->
                 clock_ms=lambda: now,
             )
             try:
-                restarted.ingest(raw_bar(JANUARY_LAST_BAR + 3 * STEP), "WS_LIVE")
+                restarted.ingest(raw_bar(PERSISTED_ORDER_BASE + 3 * STEP), "WS_LIVE")
             except module.CollectionRefused:
                 pass
             else:
@@ -516,7 +517,7 @@ def restart_persisted_sorting_counterexample_check(module: types.ModuleType = su
         archive = module.MonthlyArchive(root)
         for offset in (0, 2, 1):
             bar = module.normalize_bar(
-                raw_bar(JANUARY_LAST_BAR + offset * STEP),
+                raw_bar(PERSISTED_ORDER_BASE + offset * STEP),
                 source_producer="WS_LIVE",
                 ingest_time=now,
                 env_lineage_id="fixture-lineage",
@@ -534,7 +535,7 @@ def restart_persisted_sorting_counterexample_check(module: types.ModuleType = su
             clock_ms=lambda: now,
         )
         try:
-            restarted.ingest(raw_bar(JANUARY_LAST_BAR + 3 * STEP), "WS_LIVE")
+            restarted.ingest(raw_bar(PERSISTED_ORDER_BASE + 3 * STEP), "WS_LIVE")
         except module.CollectionRefused:
             pass
         else:
@@ -695,6 +696,52 @@ def persisted_huge_timestamp_gap_refusal_check(module: types.ModuleType = subjec
         assert durable_bytes(root) == before, ("persisted_huge_timestamp", "archive_changed")
         assert source.snapshot_calls == [], ("persisted_huge_timestamp", "snapshot_called")
     print("PERSISTED HUGE TIMESTAMP GAP DIAGNOSTIC FAILS CLOSED: PASS")
+
+
+def persisted_huge_timestamp_public_ingest_check(module: types.ModuleType = subject) -> None:
+    """Every enormous persisted WS_LIVE timestamp must fail before cursor reconstruction."""
+    now = JANUARY_LAST_BAR + 10 * STEP
+    huge = (10**1000 // STEP) * STEP
+    for label, persisted_opens in (("single", (huge,)), ("contiguous", (huge, huge + STEP))):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = module.MonthlyArchive(root)
+            for persisted_open in persisted_opens:
+                bar = module.normalize_bar(
+                    raw_bar(JANUARY_LAST_BAR),
+                    source_producer="WS_LIVE",
+                    ingest_time=now,
+                    env_lineage_id="fixture-lineage",
+                    identities=identities_for(module),
+                )
+                assert bar is not None
+                record = dataclasses.asdict(bar)
+                record["bar_open_time"] = persisted_open
+                archive._append(archive.bar_path(bar), record)
+            source = FakePublicSource([])
+            restarted = module.MarketDataCollector(
+                source=source,
+                archive=archive,
+                identities=identities_for(module),
+                env_lineage_id="fixture-lineage",
+                backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+                clock_ms=lambda: now,
+            )
+            before = durable_bytes(root)
+            try:
+                restarted.ingest(raw_bar(JANUARY_LAST_BAR + STEP), "WS_LIVE")
+            except module.CollectionRefused as error:
+                assert str(error) == "persisted WS_LIVE bar_open_time is not UTC-renderable", (
+                    label,
+                    str(error),
+                )
+            except BaseException as error:
+                raise AssertionError(("persisted_huge_timestamp_public", label, type(error).__name__)) from error
+            else:
+                raise AssertionError(("persisted_huge_timestamp_public", label, "accepted"))
+            assert durable_bytes(root) == before, (label, "archive_changed")
+            assert source.snapshot_calls == [], (label, "snapshot_called")
+    print("PERSISTED HUGE TIMESTAMP PUBLIC INGEST (single/contiguous) REFUSED: PASS")
 
 
 def durable_bytes(root: Path) -> list[tuple[str, bytes]]:
@@ -1577,8 +1624,18 @@ def mutant_text(label: str) -> str:
             '            symbol = bar.symbol if bar is not None else str(raw["s"])\n',
         )
     if label == "persisted timestamp diagnostic leaked":
-        return _splice(
+        text = _splice(
             fixed,
+            "                    try:\n"
+            "                        _iso_utc(persisted_open)\n"
+            "                    except (OSError, OverflowError, ValueError) as error:\n"
+            "                        raise CollectionRefused(\n"
+            "                            \"persisted WS_LIVE bar_open_time is not UTC-renderable\"\n"
+            "                        ) from error\n",
+            "",
+        )
+        return _splice(
+            text,
             '                        try:\n'
             '                            gap_at = _iso_utc(gap.window_start)\n'
             '                        except (OSError, OverflowError, ValueError) as error:\n'
@@ -1588,6 +1645,17 @@ def mutant_text(label: str) -> str:
             '                        raise CollectionRefused(f"persisted WS_LIVE sequence has a gap at {gap_at}")\n',
             '                        gap_at = _iso_utc(gap.window_start)\n'
             '                        raise CollectionRefused(f"persisted WS_LIVE sequence has a gap at {gap_at}")\n',
+        )
+    if label == "persisted timestamp representability removed":
+        return _splice(
+            fixed,
+            "                    try:\n"
+            "                        _iso_utc(persisted_open)\n"
+            "                    except (OSError, OverflowError, ValueError) as error:\n"
+            "                        raise CollectionRefused(\n"
+            "                            \"persisted WS_LIVE bar_open_time is not UTC-renderable\"\n"
+            "                        ) from error\n",
+            "",
         )
     if label == "persisted timestamp coerced":
         return _splice(
@@ -1784,6 +1852,9 @@ def mutation_checks(socket_attempts: list[object]) -> None:
         ("persisted timestamp diagnostic leaked", True,
          lambda module, _text: persisted_huge_timestamp_gap_refusal_check(module=module),
          ("persisted_huge_timestamp", "OverflowError")),
+        ("persisted timestamp representability removed", True,
+         lambda module, _text: persisted_huge_timestamp_public_ingest_check(module=module),
+         ("single", "bar sequence is non-increasing or off interval")),
         ("persisted timestamp coerced", True,
          lambda module, _text: persisted_timestamp_case_check(
              "numeric string", str(JANUARY_LAST_BAR), module=module
@@ -1849,6 +1920,7 @@ def main() -> None:
         persisted_interval_identity_refusal_check()
         forming_first_frame_reconstructs_history_check()
         persisted_huge_timestamp_gap_refusal_check()
+        persisted_huge_timestamp_public_ingest_check()
         persisted_timestamp_type_refusal_check()
         persisted_off_grid_refusal_check()
         synthetic_same_id_conflict_check()

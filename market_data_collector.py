@@ -390,6 +390,12 @@ class MarketDataCollector:
                         raise CollectionRefused(
                             "persisted WS_LIVE bar_open_time is off interval"
                         )
+                    try:
+                        _iso_utc(persisted_open)
+                    except (OSError, OverflowError, ValueError) as error:
+                        raise CollectionRefused(
+                            "persisted WS_LIVE bar_open_time is not UTC-renderable"
+                        ) from error
                     persisted_live_opens.append(persisted_open)
                 for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):
                     gap = self.gap_detector(
