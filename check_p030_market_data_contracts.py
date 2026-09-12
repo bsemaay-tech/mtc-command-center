@@ -218,6 +218,30 @@ def prove_cycle_guard_load_bearing(subject: Any, payload_hash: str) -> None:
     namespace["validate_correction_chain"](cycle)
 
 
+def prove_second_initial_guard_load_bearing(subject: Any, records: list[dict]) -> None:
+    """Verify the same-slot INITIAL refusal, then remove only that guard in memory."""
+    try:
+        subject.validate_correction_chain(records)
+    except subject.ContractRefused as error:
+        assert str(error) == "second INITIAL observation for one producer slot"
+    else:
+        raise AssertionError(("second_initial_guard", "accepted"))
+
+    source = inspect.getsource(subject.validate_correction_chain)
+    guard = (
+        "            if slot in slots:\n"
+        "                raise ContractRefused("
+        "\"second INITIAL observation for one producer slot\")\n"
+    )
+    assert source.count(guard) == 1
+    namespace: dict[str, Any] = {}
+    exec(
+        compile(source.replace(guard, "", 1), "<second-initial-guard-removed>", "exec"),
+        dict(vars(subject)), namespace,
+    )
+    namespace["validate_correction_chain"](records)
+
+
 def meaningful_correction_red() -> None:
     """Pre-implementation deviant: correction identity ignores its predecessor link."""
     payload_hash = oracle_record_id("p030payload-v1", "p030-payload-v1", payload(), PAYLOAD_FIELDS)
@@ -278,12 +302,99 @@ def meaningful_event_detail_red() -> None:
     assert observed[0] != observed[1], ("event_detail_key_collision", observed)
 
 
+def meaningful_producer_track_red() -> None:
+    """Equivalent deviant identities omit the producer-to-track invariant."""
+    payload_record = dict(payload(), source_producer="PROXY_DOWNLOAD")
+    payload_hash = oracle_record_id(
+        "p030payload-v1", "p030-payload-v1", payload_record, PAYLOAD_FIELDS
+    )
+    observation = dict(
+        initial_observation(payload_hash), source_producer="PROXY_DOWNLOAD"
+    )
+    provenance = manifest("p030ds-v1:" + "c" * 64)
+    provenance["track"] = "UNKNOWN"
+    provenance_values = [provenance[field] for field in MANIFEST_FIELDS[:-1]]
+    provenance_values.append([
+        [provenance["partitions"][0][field] for field in PARTITION_FIELDS]
+    ])
+    observed = (
+        oracle_record_id(
+            "p030obs-v1", "p030-observation-v1", observation, OBSERVATION_FIELDS
+        ),
+        oracle_id("p030prov-v1", "p030-provenance-v1", provenance_values),
+    )
+    raise AssertionError(("producer_track_mapping_not_enforced", observed))
+
+
+def meaningful_iterable_mutation_red() -> None:
+    """Equivalent mutants remove only the one-time iterable materialization."""
+    import p030_market_data_contracts as subject
+
+    payload_record = payload()
+    payload_hash = subject.producer_payload_hash(payload_record)
+    initial = initial_observation(payload_hash)
+    initial_id = subject.observation_id(initial)
+    first_row = dataset_row(initial, initial_id, payload_record)
+    second_payload = dict(
+        payload_record, bar_open_time=1769904000000, bar_close_time=1769904900000
+    )
+    second_observation = dict(
+        initial, bar_open_time=1769904000000,
+        producer_payload_hash=subject.producer_payload_hash(second_payload),
+    )
+    second_id = subject.observation_id(second_observation)
+    second_row = dataset_row(second_observation, second_id, second_payload)
+
+    def mutating_rows():
+        yield first_row
+        first_row["close"] = "999"
+        yield second_row
+
+    dataset_source = inspect.getsource(subject.dataset_content_hash)
+    materialization = "    observations = list(observations)\n"
+    assert dataset_source.count(materialization) == 1
+    namespace: dict[str, Any] = {}
+    exec(
+        compile(dataset_source.replace(materialization, "", 1),
+                "<dataset-materialization-removed>", "exec"),
+        dict(vars(subject)), namespace,
+    )
+    dataset_id = namespace["dataset_content_hash"](descriptor(), mutating_rows())
+
+    first_chain_record = dict(initial, observation_id=initial_id)
+    candle_payload = dict(payload_record, source_producer="CANDLE_SNAPSHOT", close="101")
+    candle_hash = subject.producer_payload_hash(candle_payload)
+    candle_correction = dict(
+        correction_observation(candle_hash, initial_id),
+        source_producer="CANDLE_SNAPSHOT",
+    )
+    candle_id = subject.observation_id(candle_correction)
+
+    def mutating_chain():
+        yield first_chain_record
+        first_chain_record["source_producer"] = "CANDLE_SNAPSHOT"
+        yield dict(candle_correction, observation_id=candle_id)
+
+    chain_source = inspect.getsource(subject.validate_correction_chain)
+    materialization = "    records = list(records)\n"
+    assert chain_source.count(materialization) == 1
+    namespace = {}
+    exec(
+        compile(chain_source.replace(materialization, "", 1),
+                "<chain-materialization-removed>", "exec"),
+        dict(vars(subject)), namespace,
+    )
+    namespace["validate_correction_chain"](mutating_chain())
+    raise AssertionError(("iterable_mutation_after_validation_accepted", dataset_id))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--red",
         choices=(
             "correction-link", "dataset-row-integrity", "provenance-path", "event-detail",
+            "producer-track", "iterable-mutation",
         ),
     )
     args = parser.parse_args()
@@ -298,6 +409,12 @@ def main() -> None:
         return
     if args.red == "event-detail":
         meaningful_event_detail_red()
+        return
+    if args.red == "producer-track":
+        meaningful_producer_track_red()
+        return
+    if args.red == "iterable-mutation":
+        meaningful_iterable_mutation_red()
         return
 
     import p030_market_data_contracts as subject
@@ -359,6 +476,12 @@ def main() -> None:
             proxy_source="FIXTURE_PROXY", source_producer="PROXY_DOWNLOAD",
         )
         proxy_observation_id = subject.observation_id(proxy_observation)
+        candle_payload = dict(payload_record, source_producer="CANDLE_SNAPSHOT")
+        candle_payload_hash = subject.producer_payload_hash(candle_payload)
+        candle_observation = dict(
+            initial_observation(candle_payload_hash), source_producer="CANDLE_SNAPSHOT"
+        )
+        subject.observation_id(candle_observation)
         for label, changes in (
             ("unknown_observation_source", {"source_producer": "REST_BACKFILL"}),
             ("unknown_observation_track", {"track": "ARCHIVE"}),
@@ -370,12 +493,55 @@ def main() -> None:
                 lambda value=changed_observation: subject.observation_id(value),
                 label, subject.ContractRefused,
             )
+        for label, source_producer, track, proxy_source, producer_hash in (
+            ("proxy_producer_on_native", "PROXY_DOWNLOAD", "NATIVE", None,
+             proxy_payload_hash),
+            ("ws_producer_on_proxy", "WS_LIVE", "PROXY", "FIXTURE_PROXY",
+             payload_hash),
+            ("candle_producer_on_proxy", "CANDLE_SNAPSHOT", "PROXY", "FIXTURE_PROXY",
+             candle_payload_hash),
+        ):
+            mismatched_observation = dict(
+                initial_observation(producer_hash), source_producer=source_producer,
+                track=track, proxy_source=proxy_source,
+            )
+            expect_refused(
+                lambda value=mismatched_observation: subject.observation_id(value),
+                label, subject.ContractRefused,
+            )
         print("MAPPING KEY/SOURCE/TRACK/PROXY REFUSALS: PASS")
         print("OBSERVATION/CORRECTION GOLDENS: PASS")
 
         chain = [dict(initial, observation_id=initial_id),
                  dict(correction, observation_id=correction_id)]
         subject.validate_correction_chain(chain)
+        second_initial = initial_observation(correction_hash)
+        second_initial_id = subject.observation_id(second_initial)
+        prove_second_initial_guard_load_bearing(
+            subject,
+            [dict(initial, observation_id=initial_id),
+             dict(second_initial, observation_id=second_initial_id)],
+        )
+        print("SECOND INITIAL GUARD MUTATION: DETECTED")
+        mutated_initial = copy.deepcopy(chain[0])
+        candle_correction_payload = dict(candle_payload, close="101")
+        candle_correction_hash = subject.producer_payload_hash(candle_correction_payload)
+        candle_correction = dict(
+            correction_observation(candle_correction_hash, initial_id),
+            source_producer="CANDLE_SNAPSHOT",
+        )
+        candle_correction_id = subject.observation_id(candle_correction)
+
+        def mutating_chain():
+            yield mutated_initial
+            mutated_initial["source_producer"] = "CANDLE_SNAPSHOT"
+            yield dict(candle_correction, observation_id=candle_correction_id)
+
+        expect_refused(
+            lambda: subject.validate_correction_chain(mutating_chain()),
+            "correction_generator_mutated_after_identity_pass", subject.ContractRefused,
+        )
+        print("CORRECTION GENERATOR MUTATION: DETECTED")
         expect_refused(lambda: subject.validate_correction_chain([]),
                        "empty_chain", subject.ContractRefused)
         missing = copy.deepcopy(chain); missing[1]["supersedes_observation_id"] = other_predecessor
@@ -448,6 +614,18 @@ def main() -> None:
         dataset_hash = subject.dataset_content_hash(descriptor(), [second_row, row])
         assert dataset_hash == GOLDEN_DATASET
         assert dataset_hash == subject.dataset_content_hash(descriptor(), [row, second_row])
+        mutated_row = copy.deepcopy(row)
+
+        def mutating_rows():
+            yield mutated_row
+            mutated_row["close"] = "999"
+            yield second_row
+
+        expect_refused(
+            lambda: subject.dataset_content_hash(descriptor(), mutating_rows()),
+            "dataset_generator_mutated_after_validation", subject.ContractRefused,
+        )
+        print("DATASET GENERATOR MUTATION: DETECTED")
         ordered_rows = sorted(
             [second_row, row],
             key=lambda item: (
@@ -482,6 +660,31 @@ def main() -> None:
         )
         proxy_row = dataset_row(proxy_observation, proxy_observation_id, proxy_payload)
         subject.dataset_content_hash(proxy_descriptor, [proxy_row])
+        for label, payload_value, observation_value, descriptor_value in (
+            (
+                "dataset_proxy_producer_on_native", proxy_payload,
+                dict(initial_observation(proxy_payload_hash),
+                     source_producer="PROXY_DOWNLOAD"), descriptor(),
+            ),
+            (
+                "dataset_ws_producer_on_proxy", payload_record,
+                dict(initial, track="PROXY", proxy_source="FIXTURE_PROXY"),
+                proxy_descriptor,
+            ),
+        ):
+            mismatched_row = dataset_row(
+                observation_value,
+                oracle_record_id(
+                    "p030obs-v1", "p030-observation-v1",
+                    observation_value, OBSERVATION_FIELDS,
+                ),
+                payload_value,
+            )
+            expect_refused(
+                lambda row_value=mismatched_row, desc_value=descriptor_value:
+                    subject.dataset_content_hash(desc_value, [row_value]),
+                label, subject.ContractRefused,
+            )
         for label, changes in (
             ("dataset_row_unknown_source", {"source_producer": "REST_BACKFILL"}),
             ("dataset_row_unknown_track", {"track": "ARCHIVE"}),
@@ -574,6 +777,23 @@ def main() -> None:
         ])
         assert manifest_hash == oracle_id(
             "p030prov-v1", "p030-provenance-v1", manifest_oracle_values)
+        for label, changes in (
+            ("provenance_unknown_track", {"track": "UNKNOWN"}),
+            ("provenance_native_with_proxy", {"proxy_source": "FIXTURE_PROXY"}),
+            ("provenance_proxy_without_source", {"track": "PROXY", "proxy_source": None}),
+        ):
+            changed_provenance = dict(provenance, **changes)
+            expect_refused(
+                lambda value=changed_provenance:
+                    subject.venue_provenance_manifest_hash(value),
+                label, subject.ContractRefused,
+            )
+        proxy_provenance = dict(
+            provenance, track="PROXY", proxy_source="FIXTURE_PROXY",
+            native_fraction="0", proxy_fraction="1",
+        )
+        subject.venue_provenance_manifest_hash(proxy_provenance)
+        print("PRODUCER/TRACK/PROXY MAPPING MUTANTS: DETECTED")
         unsafe_paths = (
             "", "/archive/part.jsonl", "C:/archive/part.jsonl", "C:part.jsonl",
             r"archive\part.jsonl", "./archive/part.jsonl", "archive/../part.jsonl",
