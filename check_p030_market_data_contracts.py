@@ -62,15 +62,15 @@ GOLDEN_PAYLOAD = "p030payload-v1:8653c7ea1416f6cc2a7f170966c9be31da58780d3db30d6
 GOLDEN_INITIAL = "p030obs-v1:ba4ee258065990a144aabdcebb416cabcde617d57dc7bc7f793449f344cbe115"
 GOLDEN_CORRECTION = "p030obs-v1:df1e71d5dc81db01b17e444c38c1ad3babfa6d2664757c5d09ef782fcd0ccaf6"
 GOLDEN_EVENTS = {
-    "GAP": "p030evt-v1:16fc2676b6b583822d8baf6242fc5ebff708dca68b82ed03dc1d654126bab08f",
-    "FEED_DIVERGENCE": "p030evt-v1:7ae50edc9bf853f915739fe8f3900c88b69909df1744f9b41b96c36205f2d9f1",
-    "RECONNECT": "p030evt-v1:dc20645344012f79abf27285105e0fdd94fa9982d1495c2a30c8d9f07fe03b94",
-    "FRESHNESS_TRANSITION": "p030evt-v1:4d64f9cfce23e97a06588799903ff3703c139002c1f9e363da448473aaa3335e",
-    "BACKFILL_RUN": "p030evt-v1:84bba77ee772be8a6bedabd97aff770edd21d0d07295660a8daceb71031d0e45",
-    "PROXY_NATIVE_DIVERGENCE": "p030evt-v1:f87f5c1ae4be6bd3ca2f68753536a837e21e5ca8624e82ef079600f378deaf57",
-    "RECONCILIATION_STATUS": "p030evt-v1:c84e3764ee465afa10dc2eabefd417e2af2d1d3ee0ff4be1ae40dfcd28894e00",
-    "CORRECTION": "p030evt-v1:c01deb137afe9c81f8d67250ff3ae8c67518eb1686a8a8a54324ae617a6e1385",
-    "ARCHIVE_DISPOSITION": "p030evt-v1:84625a778e28269a4cee72eb18859c1cfc0ed8d6f8299503276e42d1f223c5dd",
+    "GAP": "p030evt-v1:baa891227c18d4b0b8b867ab33f89303c79eb4cd2a6a813d30739833f475412c",
+    "FEED_DIVERGENCE": "p030evt-v1:bfa4577c0db35cfa053fb1b285db99dfb25d8e03639ebece5054d87d77f349e3",
+    "RECONNECT": "p030evt-v1:af62d5f74e32e93c33d24dd782b9eb620a991ffe1675356cee9c33138a4a3f67",
+    "FRESHNESS_TRANSITION": "p030evt-v1:72ec4a3d8373cbf0a68f31dafe889363f9c434124756c65af1b574272f19b184",
+    "BACKFILL_RUN": "p030evt-v1:50bc030c1e79bff75f4dd26dd28c7b87c2458035cad2cf1f359494e5d75defc3",
+    "PROXY_NATIVE_DIVERGENCE": "p030evt-v1:6ddafc346661c14fc7da4d531120f1b47023397fb23e7fd479d8eeed1cace141",
+    "RECONCILIATION_STATUS": "p030evt-v1:e47ba26dba1d005c685064a02f21eadcf5bf30ce3855b09bceb1cff0cff5128f",
+    "CORRECTION": "p030evt-v1:a7f6a1a433a95295e809824af1373f6428646915403e5df247e594eebefffe7d",
+    "ARCHIVE_DISPOSITION": "p030evt-v1:4a6e10a7b75e01587f4d61693ea5c80b82be5a4e9462e53f57e713bfa88531d2",
 }
 GOLDEN_DATASET = "p030ds-v1:6588c17b996d3b4ea7e7a7cdfd5341ea0a6a967c88568df412aedab504438630"
 GOLDEN_MANIFEST = "p030prov-v1:2ac2b33da292e4cee1c74e4e94511a10691bf4c25a44614731b9d050a71b1f03"
@@ -115,7 +115,7 @@ def correction_observation(payload_hash: str, predecessor: str) -> dict[str, Any
 def event(family: str, observation_ids: list[str]) -> dict[str, Any]:
     return {
         "schema_version": "mtc.p030_event/v1", "record_type": family,
-        "producer": "p030-fixture", "symbol": "BTC", "interval": "15m",
+        "producer": "WS_LIVE", "symbol": "BTC", "interval": "15m",
         "slot_id": "HYPERLIQUID.BTC.15m.1769903100000",
         "observation_ids": observation_ids, "window_start": 1769903100000,
         "window_end": 1769904000000, "detected_at": 1769904001000,
@@ -240,6 +240,26 @@ def prove_second_initial_guard_load_bearing(subject: Any, records: list[dict]) -
         dict(vars(subject)), namespace,
     )
     namespace["validate_correction_chain"](records)
+
+
+def prove_event_producer_guard_load_bearing(subject: Any, record: dict) -> None:
+    """Verify the producer refusal, then remove only that allowlist call in memory."""
+    try:
+        subject.event_id(record)
+    except subject.ContractRefused as error:
+        assert str(error) == "event.producer is unknown"
+    else:
+        raise AssertionError(("event_producer_guard", "accepted"))
+
+    source = inspect.getsource(subject.event_id)
+    guard = '    _source_producer(record["producer"], "event.producer")\n'
+    assert source.count(guard) == 1
+    namespace: dict[str, Any] = {}
+    exec(
+        compile(source.replace(guard, "", 1), "<event-producer-guard-removed>", "exec"),
+        dict(vars(subject)), namespace,
+    )
+    namespace["event_id"](record)
 
 
 def meaningful_correction_red() -> None:
@@ -388,13 +408,23 @@ def meaningful_iterable_mutation_red() -> None:
     raise AssertionError(("iterable_mutation_after_validation_accepted", dataset_id))
 
 
+def meaningful_event_producer_red() -> None:
+    """Equivalent deviant binds an event identity without enforcing its producer allowlist."""
+    record = event("GAP", ["p030obs-v1:" + "a" * 64])
+    record["producer"] = "p030-fixture"
+    observed = oracle_record_id(
+        "p030evt-v1", "p030-event-v1", record, EVENT_FIELDS
+    )
+    raise AssertionError(("unknown_event_producer_accepted", observed))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--red",
         choices=(
             "correction-link", "dataset-row-integrity", "provenance-path", "event-detail",
-            "producer-track", "iterable-mutation",
+            "producer-track", "iterable-mutation", "event-producer",
         ),
     )
     args = parser.parse_args()
@@ -415,6 +445,9 @@ def main() -> None:
         return
     if args.red == "iterable-mutation":
         meaningful_iterable_mutation_red()
+        return
+    if args.red == "event-producer":
+        meaningful_event_producer_red()
         return
 
     import p030_market_data_contracts as subject
@@ -561,6 +594,10 @@ def main() -> None:
         print("CORRECTION GRAPH CYCLE GUARD MUTATION: DETECTED")
 
         assert subject.EVENT_FAMILIES == frozenset(EVENT_FAMILIES)
+        unknown_event_producer = event("GAP", [initial_id])
+        unknown_event_producer["producer"] = "p030-fixture"
+        prove_event_producer_guard_load_bearing(subject, unknown_event_producer)
+        print("EVENT PRODUCER ALLOWLIST MUTATION: DETECTED")
         unhashable_id = event("GAP", [initial_id])
         unhashable_id["observation_ids"] = [[initial_id]]
         expect_refused(
