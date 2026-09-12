@@ -465,6 +465,165 @@ def restart_persisted_gap_refusal_check(module: types.ModuleType = subject) -> N
     print("RESTART PERSISTED GAP REFUSED: PASS")
 
 
+def restart_persisted_order_refusal_check(module: types.ModuleType = subject) -> None:
+    """A persisted reverse order must not be repaired by sorting during restart."""
+    now = JANUARY_LAST_BAR + 10 * STEP
+
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        archive = module.MonthlyArchive(root)
+        for open_time in (
+            JANUARY_LAST_BAR,
+            JANUARY_LAST_BAR + 2 * STEP,
+            JANUARY_LAST_BAR + STEP,
+        ):
+            bar = module.normalize_bar(
+                raw_bar(open_time),
+                source_producer="WS_LIVE",
+                ingest_time=now,
+                env_lineage_id="fixture-lineage",
+                identities=identities_for(module),
+            )
+            assert bar is not None
+            assert archive.append_bar(bar) == "APPENDED"
+
+        source = FakePublicSource([])
+        before = durable_bytes(root)
+        restarted = module.MarketDataCollector(
+            source=source,
+            archive=archive,
+            identities=identities_for(module),
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: now,
+        )
+        try:
+            restarted.ingest(raw_bar(JANUARY_LAST_BAR + 3 * STEP), "WS_LIVE")
+        except module.CollectionRefused:
+            pass
+        else:
+            raise AssertionError(("persisted_reverse_order", "accepted"))
+        assert durable_bytes(root) == before, ("persisted_reverse_order", "archive_changed")
+        assert source.snapshot_calls == [], ("persisted_reverse_order", "snapshot_called")
+    print("RESTART PERSISTED REVERSE ORDER REFUSED: PASS")
+
+
+def durable_bytes(root: Path) -> list[tuple[str, bytes]]:
+    return sorted(
+        (path.relative_to(root).as_posix(), path.read_bytes())
+        for path in root.rglob("*")
+        if path.is_file()
+    )
+
+
+def persisted_timestamp_case_check(
+    label: str, persisted_value: object, *, missing: bool = False, module: types.ModuleType = subject
+) -> None:
+    now = JANUARY_LAST_BAR + 10 * STEP
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        archive = module.MonthlyArchive(root)
+        valid = module.normalize_bar(
+            raw_bar(JANUARY_LAST_BAR),
+            source_producer="WS_LIVE",
+            ingest_time=now,
+            env_lineage_id="fixture-lineage",
+            identities=identities_for(module),
+        )
+        assert valid is not None
+        record = dataclasses.asdict(valid)
+        if missing:
+            record.pop("bar_open_time")
+        else:
+            record["bar_open_time"] = persisted_value
+        archive._append(archive.bar_path(valid), record)
+        before = durable_bytes(root)
+        source = FakePublicSource([])
+        restarted = module.MarketDataCollector(
+            source=source,
+            archive=archive,
+            identities=identities_for(module),
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: now,
+        )
+        try:
+            restarted.ingest(raw_bar(JANUARY_LAST_BAR + STEP), "WS_LIVE")
+        except module.CollectionRefused:
+            outcome = "refused"
+        except BaseException as error:
+            outcome = type(error).__name__
+        else:
+            outcome = "accepted"
+        changed = durable_bytes(root) != before
+        snapshots = len(source.snapshot_calls)
+        assert (outcome, changed, snapshots) == ("refused", False, 0), (
+            "persisted_timestamp",
+            label,
+            outcome,
+            changed,
+            snapshots,
+        )
+
+
+def persisted_timestamp_type_refusal_check(module: types.ModuleType = subject) -> None:
+    cases = (
+        ("numeric string", str(JANUARY_LAST_BAR), False),
+        ("fractional float", JANUARY_LAST_BAR + 0.5, False),
+        ("bool", True, False),
+        ("null", None, False),
+        ("missing", None, True),
+    )
+    failures: list[object] = []
+    for label, value, missing in cases:
+        try:
+            persisted_timestamp_case_check(label, value, missing=missing, module=module)
+        except AssertionError as error:
+            failures.append(error.args[0] if error.args else None)
+    assert failures == [], ("persisted_timestamp_fences", failures)
+    print("PERSISTED TIMESTAMP TYPE FENCES (string/float/bool/null/missing): PASS")
+
+
+def persisted_off_grid_refusal_check(module: types.ModuleType = subject) -> None:
+    """Consistently shifted integer live opens must still fail absolute-grid validation."""
+    now = JANUARY_LAST_BAR + 10 * STEP
+    shifted = (JANUARY_LAST_BAR + 1, JANUARY_LAST_BAR + STEP + 1)
+
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        archive = module.MonthlyArchive(root)
+        for open_time in shifted:
+            bar = module.normalize_bar(
+                raw_bar(open_time),
+                source_producer="WS_LIVE",
+                ingest_time=now,
+                env_lineage_id="fixture-lineage",
+                identities=identities_for(module),
+            )
+            assert bar is not None
+            assert archive.append_bar(bar) == "APPENDED"
+
+        source = FakePublicSource([])
+        before = durable_bytes(root)
+        restarted = module.MarketDataCollector(
+            source=source,
+            archive=archive,
+            identities=identities_for(module),
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: now,
+        )
+        try:
+            restarted.ingest(raw_bar(JANUARY_LAST_BAR + 2 * STEP + 1), "WS_LIVE")
+        except module.CollectionRefused:
+            pass
+        else:
+            raise AssertionError(("persisted_off_grid", "accepted"))
+        assert durable_bytes(root) == before, ("persisted_off_grid", "archive_changed")
+        assert source.snapshot_calls == [], ("persisted_off_grid", "snapshot_called")
+    print("PERSISTED INTEGER OFF-GRID OPENS REFUSED: PASS")
+
+
 def synthetic_same_id_conflict_check(module: types.ModuleType = subject) -> None:
     """A fixture-only observation contract forces changed producer bytes onto one ID."""
     identities = module.IdentityPolicy(
@@ -1186,52 +1345,44 @@ def mutant_text(label: str) -> str:
         )
         return _splice(
             text,
-            '        if source_producer == "WS_LIVE":\n'
-            '            key = (bar.symbol, bar.interval)\n'
-            '            if key not in self._last_live_open:\n'
-            '                persisted_live_opens = sorted(\n'
-            '                    int(record["bar_open_time"])\n'
-            '                    for record in self.archive.bars(bar.symbol, bar.interval)\n'
-            '                    if record.get("symbol") == bar.symbol\n'
-            '                    and record.get("interval") == bar.interval\n'
-            '                    and record.get("source_producer") == "WS_LIVE"\n'
-            '                )\n'
-            '                for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):\n'
-            '                    gap = self.gap_detector(\n'
-            '                        previous_open, next_open, bar.symbol, bar.interval\n'
-            '                    )\n'
-            '                    if gap is not None:\n'
-            '                        raise CollectionRefused(\n'
-            '                            f"persisted WS_LIVE sequence has a gap at {_iso_utc(gap.window_start)}"\n'
-            '                        )\n'
-            '                if persisted_live_opens:\n'
-            '                    self._last_live_open[key] = persisted_live_opens[-1]\n',
-            '',
+            '            if key not in self._last_live_open:\n',
+            '            if False:  # mutant: restart does not rehydrate the live cursor\n',
         )
     if label == "restart does not rehydrate cursor":
         return _splice(
             fixed,
-            '        if source_producer == "WS_LIVE":\n'
-            '            key = (bar.symbol, bar.interval)\n'
-            '            if key not in self._last_live_open:\n'
-            '                persisted_live_opens = sorted(\n'
-            '                    int(record["bar_open_time"])\n'
-            '                    for record in self.archive.bars(bar.symbol, bar.interval)\n'
-            '                    if record.get("symbol") == bar.symbol\n'
-            '                    and record.get("interval") == bar.interval\n'
-            '                    and record.get("source_producer") == "WS_LIVE"\n'
-            '                )\n'
-            '                for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):\n'
-            '                    gap = self.gap_detector(\n'
-            '                        previous_open, next_open, bar.symbol, bar.interval\n'
-            '                    )\n'
-            '                    if gap is not None:\n'
-            '                        raise CollectionRefused(\n'
-            '                            f"persisted WS_LIVE sequence has a gap at {_iso_utc(gap.window_start)}"\n'
-            '                        )\n'
-            '                if persisted_live_opens:\n'
-            '                    self._last_live_open[key] = persisted_live_opens[-1]\n',
-            '',
+            '            if key not in self._last_live_open:\n',
+            '            if False:  # mutant: restart does not rehydrate the live cursor\n',
+        )
+    if label == "persisted order sorted":
+        return _splice(
+            fixed,
+            "                for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):\n",
+            "                persisted_live_opens = sorted(persisted_live_opens)  # mutant\n"
+            "                for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):\n",
+        )
+    if label == "persisted timestamp coerced":
+        return _splice(
+            fixed,
+            "                    persisted_open = record.get(\"bar_open_time\")\n"
+            "                    if type(persisted_open) is not int:\n"
+            "                        raise CollectionRefused(\n"
+            "                            \"persisted WS_LIVE bar_open_time must be an integer\"\n"
+            "                        )\n"
+            "                    if persisted_open % step:\n"
+            "                        raise CollectionRefused(\n"
+            "                            \"persisted WS_LIVE bar_open_time is off interval\"\n"
+            "                        )\n",
+            "                    persisted_open = int(record[\"bar_open_time\"])  # mutant\n",
+        )
+    if label == "persisted grid validation removed":
+        return _splice(
+            fixed,
+            "                    if persisted_open % step:\n"
+            "                        raise CollectionRefused(\n"
+            "                            \"persisted WS_LIVE bar_open_time is off interval\"\n"
+            "                        )\n",
+            "",
         )
     if label == "persisted gap validation removed":
         return _splice(
@@ -1388,7 +1539,18 @@ def mutation_checks(socket_attempts: list[object]) -> None:
          lambda module, _text: restart_persisted_gap_refusal_check(module=module),
          ("restart_persisted_gap", (None,
           [JANUARY_LAST_BAR, JANUARY_LAST_BAR + STEP, JANUARY_LAST_BAR + 5 * STEP,
-           JANUARY_LAST_BAR + 6 * STEP], 0))),
+          JANUARY_LAST_BAR + 6 * STEP], 0))),
+        ("persisted order sorted", True,
+         lambda module, _text: restart_persisted_order_refusal_check(module=module),
+         ("persisted_reverse_order", "accepted")),
+        ("persisted timestamp coerced", True,
+         lambda module, _text: persisted_timestamp_case_check(
+             "numeric string", str(JANUARY_LAST_BAR), module=module
+         ),
+         ("persisted_timestamp", "numeric string", "accepted", True, 0)),
+        ("persisted grid validation removed", True,
+         lambda module, _text: persisted_off_grid_refusal_check(module=module),
+         ("persisted_off_grid", "accepted")),
         ("eth_account import", False,
          lambda _module, text: static_boundary_check(module=subject, source_text=text),
          ("boundary_violations", ["import:eth_account"])),
@@ -1441,6 +1603,9 @@ def main() -> None:
         restart_replay_seeds_live_cursor_check()
         restart_persisted_latest_cursor_check()
         restart_persisted_gap_refusal_check()
+        restart_persisted_order_refusal_check()
+        persisted_timestamp_type_refusal_check()
+        persisted_off_grid_refusal_check()
         synthetic_same_id_conflict_check()
         append_failure_cursor_check()
         persisted_record_check()

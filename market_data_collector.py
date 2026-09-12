@@ -372,13 +372,25 @@ class MarketDataCollector:
         if source_producer == "WS_LIVE":
             key = (bar.symbol, bar.interval)
             if key not in self._last_live_open:
-                persisted_live_opens = sorted(
-                    int(record["bar_open_time"])
-                    for record in self.archive.bars(bar.symbol, bar.interval)
-                    if record.get("symbol") == bar.symbol
-                    and record.get("interval") == bar.interval
-                    and record.get("source_producer") == "WS_LIVE"
-                )
+                step = INTERVAL_MS[bar.interval]
+                persisted_live_opens = []
+                for record in self.archive.bars(bar.symbol, bar.interval):
+                    if (
+                        record.get("symbol") != bar.symbol
+                        or record.get("interval") != bar.interval
+                        or record.get("source_producer") != "WS_LIVE"
+                    ):
+                        continue
+                    persisted_open = record.get("bar_open_time")
+                    if type(persisted_open) is not int:
+                        raise CollectionRefused(
+                            "persisted WS_LIVE bar_open_time must be an integer"
+                        )
+                    if persisted_open % step:
+                        raise CollectionRefused(
+                            "persisted WS_LIVE bar_open_time is off interval"
+                        )
+                    persisted_live_opens.append(persisted_open)
                 for previous_open, next_open in zip(persisted_live_opens, persisted_live_opens[1:]):
                     gap = self.gap_detector(
                         previous_open, next_open, bar.symbol, bar.interval
