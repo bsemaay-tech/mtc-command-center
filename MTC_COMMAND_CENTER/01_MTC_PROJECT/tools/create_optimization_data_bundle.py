@@ -299,6 +299,24 @@ def dataset_id_for(source: SourceFile, used_ids: set[str]) -> str:
     return dataset_id
 
 
+def _quality_evidence_sha256(
+    rows: list[dict[str, Any]], timeframe: str, quality: Mapping[str, Any]
+) -> str:
+    payload = {
+        "closed_rows": rows,
+        "timeframe": timeframe,
+        "quality": {
+            key: value
+            for key, value in quality.items()
+            if key != "evidence_binding_sha256"
+        },
+    }
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), default=str
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
 def prepare_dataset_evidence(
     rows: list[dict[str, Any]],
     *,
@@ -431,6 +449,9 @@ def prepare_dataset_evidence(
         "invalid_ohlcv_count": len(invalid_ohlcv_reasons),
         "invalid_ohlcv_reasons": invalid_ohlcv_reasons,
     }
+    quality["evidence_binding_sha256"] = _quality_evidence_sha256(
+        output_rows, timeframe, quality
+    )
     return {
         "closed_rows": output_rows,
         "excluded_forming_candle_count": len(rows) - len(closed_rows),
@@ -468,6 +489,10 @@ def validate_quality(
     invalid_rows = quality.get("invalid_ohlcv_reasons")
     if status not in {"PASS", "FAIL"} or not isinstance(invalid_rows, list):
         raise ValueError("quality must contain OHLCV validation results")
+    if quality.get("evidence_binding_sha256") != _quality_evidence_sha256(
+        rows, timeframe, quality
+    ):
+        raise ValueError("evidence quality does not match closed rows and timeframe")
     duplicates: list[dict[str, Any]] = []
     seen: set[str] = set()
     for index, row in enumerate(rows, start=1):

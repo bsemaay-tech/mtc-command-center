@@ -238,26 +238,36 @@ class QualityTimeframeTests(unittest.TestCase):
             subject.explicit_evidence_inputs(args)
 
     def test_validate_quality_consumes_one_bound_evidence_record(self) -> None:
-        rows = rows_at(0, 300, 300)
-        rows[-1].update({"high": 8, "low": 9})
-        evidence = subject.prepare_dataset_evidence(
-            rows,
-            instrument_id="BINANCE:BTCUSDT",
-            timeframe="5m",
-            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
-            gap_policy=gap_policy_fixture(),
-        )
-        foreign = subject.prepare_dataset_evidence(
+        clean_evidence = subject.prepare_dataset_evidence(
             rows_at(0, 300, 600),
             instrument_id="BINANCE:BTCUSDT",
             timeframe="5m",
             closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
             gap_policy=gap_policy_fixture(),
         )
+        foreign_rows = rows_at(0, 900)
+        foreign_rows[-1].update({"high": 8, "low": 9})
+        foreign_evidence = subject.prepare_dataset_evidence(
+            foreign_rows,
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=1200),
+            gap_policy=gap_policy_fixture(),
+        )
+        self.assertEqual(
+            foreign_evidence["quality"]["gap_measurement"]["gap_event_count"], 1
+        )
+        self.assertEqual(
+            foreign_evidence["quality"]["ohlcv_validation_status"], "FAIL"
+        )
+        spliced_evidence = {
+            **clean_evidence,
+            "quality": foreign_evidence["quality"],
+        }
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             result = subject.validate_quality(
-                "SYNTHETIC", "5m", root, evidence=evidence
+                "SYNTHETIC", "5m", root, evidence=clean_evidence
             )
             with (root / result["duplicate_report_path"]).open(
                 "r", encoding="utf-8", newline=""
@@ -267,16 +277,19 @@ class QualityTimeframeTests(unittest.TestCase):
             self.assertEqual(result["duplicate_timestamp_count"], len(duplicate_detail))
             self.assertEqual(
                 result["invalid_ohlcv_count"],
-                len(evidence["quality"]["invalid_ohlcv_reasons"]),
+                len(clean_evidence["quality"]["invalid_ohlcv_reasons"]),
             )
-            with self.assertRaises(TypeError):
+            with self.assertRaisesRegex(
+                ValueError,
+                "^evidence quality does not match closed rows and timeframe$",
+            ):
                 subject.validate_quality(
-                    "MIXED",
-                    evidence["closed_rows"],
+                    "SPLICED",
                     "5m",
-                    root,
-                    quality=foreign["quality"],
+                    root / "spliced",
+                    evidence=spliced_evidence,
                 )
+            self.assertFalse((root / "spliced").exists())
 
     def test_public_evidence_seam_returns_exact_h1_m2_shape(self) -> None:
         evidence = subject.prepare_dataset_evidence(
