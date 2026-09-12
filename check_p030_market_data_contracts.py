@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import inspect
 import json
 import socket
 from typing import Any, Callable
@@ -180,6 +181,43 @@ def expect_refused(call: Callable[[], Any], label: str, error_type: type[Excepti
     raise AssertionError((label, "accepted"))
 
 
+def prove_cycle_guard_load_bearing(subject: Any, payload_hash: str) -> None:
+    """Reach graph validation in memory, then remove only its cycle refusal."""
+    first_id = "p030obs-v1:" + "a" * 64
+    second_id = "p030obs-v1:" + "b" * 64
+    cycle = [
+        dict(correction_observation(payload_hash, second_id), observation_id=first_id),
+        dict(correction_observation(payload_hash, first_id), observation_id=second_id),
+    ]
+    source = inspect.getsource(subject.validate_correction_chain)
+    identity_guard = (
+        "        if observation_id(body) != identity:\n"
+        "            raise ContractRefused(\"observation_id does not match observation bytes\")\n"
+    )
+    assert source.count(identity_guard) == 1
+    graph_reachable_source = source.replace(
+        identity_guard, "        observation_id(body)\n", 1
+    )
+
+    namespace: dict[str, Any] = {}
+    exec(compile(graph_reachable_source, "<cycle-graph-reachable>", "exec"),
+         dict(vars(subject)), namespace)
+    try:
+        namespace["validate_correction_chain"](cycle)
+    except subject.ContractRefused as error:
+        assert str(error) == "correction chain cycles"
+    else:
+        raise AssertionError(("graph_cycle_guard", "accepted"))
+
+    cycle_guard = '                raise ContractRefused("correction chain cycles")\n'
+    assert graph_reachable_source.count(cycle_guard) == 1
+    guard_removed_source = graph_reachable_source.replace(cycle_guard, "                return\n", 1)
+    namespace = {}
+    exec(compile(guard_removed_source, "<cycle-guard-removed>", "exec"),
+         dict(vars(subject)), namespace)
+    namespace["validate_correction_chain"](cycle)
+
+
 def meaningful_correction_red() -> None:
     """Pre-implementation deviant: correction identity ignores its predecessor link."""
     payload_hash = oracle_record_id("p030payload-v1", "p030-payload-v1", payload(), PAYLOAD_FIELDS)
@@ -198,35 +236,55 @@ def meaningful_correction_red() -> None:
 
 
 def meaningful_dataset_red() -> None:
-    """Pre-repair subject accepts a row whose OHLCV no longer matches its payload hash."""
-    import p030_market_data_contracts as subject
-
+    """Equivalent deviant hashes a row without binding its producer payload fields."""
     payload_record = payload()
-    payload_hash = subject.producer_payload_hash(payload_record)
+    payload_hash = oracle_record_id(
+        "p030payload-v1", "p030-payload-v1", payload_record, PAYLOAD_FIELDS
+    )
     observation = initial_observation(payload_hash)
-    identity = subject.observation_id(observation)
+    identity = oracle_record_id(
+        "p030obs-v1", "p030-observation-v1", observation, OBSERVATION_FIELDS
+    )
     row = dataset_row(observation, identity, payload_record)
     row["close"] = "999"
-    observed = subject.dataset_content_hash(descriptor(), [row])
+    values = [descriptor()[field] for field in DATASET_DESCRIPTOR_FIELDS]
+    values.append([[row[field] for field in DATASET_ROW_FIELDS]])
+    observed = oracle_id("p030ds-v1", "p030-dataset-v1", values)
     raise AssertionError(("dataset_payload_mismatch_accepted", observed))
 
 
 def meaningful_path_red() -> None:
-    """Pre-repair subject accepts an absolute provenance partition path."""
-    import p030_market_data_contracts as subject
-
+    """Equivalent deviant hashes an absolute partition path without validation."""
     dataset_hash = "p030ds-v1:" + "c" * 64
     provenance = manifest(dataset_hash)
     provenance["partitions"][0]["path"] = "C:/archive/2026-01.jsonl"
-    observed = subject.venue_provenance_manifest_hash(provenance)
+    values = [provenance[field] for field in MANIFEST_FIELDS[:-1]]
+    values.append([[provenance["partitions"][0][field] for field in PARTITION_FIELDS]])
+    observed = oracle_id("p030prov-v1", "p030-provenance-v1", values)
     raise AssertionError(("absolute_provenance_path_accepted", observed))
+
+
+def meaningful_event_detail_red() -> None:
+    """Pre-repair deviant aliases an integer object key with its string spelling."""
+    observation_id = "p030obs-v1:" + "a" * 64
+    integer_key = event("GAP", [observation_id])
+    integer_key["detail"] = {1: "same"}
+    string_key = event("GAP", [observation_id])
+    string_key["detail"] = {"1": "same"}
+    observed = (
+        oracle_record_id("p030evt-v1", "p030-event-v1", integer_key, EVENT_FIELDS),
+        oracle_record_id("p030evt-v1", "p030-event-v1", string_key, EVENT_FIELDS),
+    )
+    assert observed[0] != observed[1], ("event_detail_key_collision", observed)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--red",
-        choices=("correction-link", "dataset-row-integrity", "provenance-path"),
+        choices=(
+            "correction-link", "dataset-row-integrity", "provenance-path", "event-detail",
+        ),
     )
     args = parser.parse_args()
     if args.red == "correction-link":
@@ -237,6 +295,9 @@ def main() -> None:
         return
     if args.red == "provenance-path":
         meaningful_path_red()
+        return
+    if args.red == "event-detail":
+        meaningful_event_detail_red()
         return
 
     import p030_market_data_contracts as subject
@@ -276,6 +337,40 @@ def main() -> None:
         )
         assert payload_omitted != payload_hash and payload_reordered != payload_hash
         print("PAYLOAD MUTANTS (omitted/reordered member): DETECTED")
+        mixed_key_payload = dict(payload_record)
+        mixed_key_payload[1] = "integer-key"
+        mixed_key_payload["extra"] = "string-key"
+        expect_refused(
+            lambda: subject.producer_payload_hash(mixed_key_payload),
+            "mixed_non_string_mapping_keys", subject.ContractRefused,
+        )
+        invalid_source_payload = dict(payload_record, source_producer="REST_BACKFILL")
+        expect_refused(
+            lambda: subject.producer_payload_hash(invalid_source_payload),
+            "unknown_payload_source_producer", subject.ContractRefused,
+        )
+        subject.producer_payload_hash(
+            dict(payload_record, source_producer="CANDLE_SNAPSHOT")
+        )
+        proxy_payload = dict(payload_record, source_producer="PROXY_DOWNLOAD")
+        proxy_payload_hash = subject.producer_payload_hash(proxy_payload)
+        proxy_observation = dict(
+            initial_observation(proxy_payload_hash), track="PROXY",
+            proxy_source="FIXTURE_PROXY", source_producer="PROXY_DOWNLOAD",
+        )
+        proxy_observation_id = subject.observation_id(proxy_observation)
+        for label, changes in (
+            ("unknown_observation_source", {"source_producer": "REST_BACKFILL"}),
+            ("unknown_observation_track", {"track": "ARCHIVE"}),
+            ("native_with_proxy", {"proxy_source": "FIXTURE_PROXY"}),
+            ("proxy_without_source", {"track": "PROXY", "proxy_source": None}),
+        ):
+            changed_observation = dict(initial, **changes)
+            expect_refused(
+                lambda value=changed_observation: subject.observation_id(value),
+                label, subject.ContractRefused,
+            )
+        print("MAPPING KEY/SOURCE/TRACK/PROXY REFUSALS: PASS")
         print("OBSERVATION/CORRECTION GOLDENS: PASS")
 
         chain = [dict(initial, observation_id=initial_id),
@@ -289,16 +384,34 @@ def main() -> None:
         cross_slot = copy.deepcopy(chain); cross_slot[1]["bar_open_time"] += 900000
         cross_slot[1]["observation_id"] = subject.observation_id(
             {field: cross_slot[1][field] for field in OBSERVATION_FIELDS})
-        cycle = copy.deepcopy(chain); cycle[0]["observation_type"] = "CORRECTION"; cycle[0]["supersedes_observation_id"] = correction_id
         fork = copy.deepcopy(chain); fork.append(copy.deepcopy(chain[1]))
         fork[2]["producer_payload_hash"] = subject.producer_payload_hash(dict(payload_record, close="100"))
         fork[2]["observation_id"] = subject.observation_id({field: fork[2][field] for field in OBSERVATION_FIELDS})
         for label, deviant in (("missing_predecessor", missing), ("cross_slot", cross_slot),
-                               ("cycle", cycle), ("fork", fork)):
+                               ("fork", fork)):
             expect_refused(lambda d=deviant: subject.validate_correction_chain(d), label, subject.ContractRefused)
             print(f"CORRECTION MUTANT ({label}): DETECTED")
+        prove_cycle_guard_load_bearing(subject, payload_hash)
+        print("CORRECTION GRAPH CYCLE GUARD MUTATION: DETECTED")
 
         assert subject.EVENT_FAMILIES == frozenset(EVENT_FAMILIES)
+        unhashable_id = event("GAP", [initial_id])
+        unhashable_id["observation_ids"] = [[initial_id]]
+        expect_refused(
+            lambda: subject.event_id(unhashable_id),
+            "unhashable_observation_id", subject.ContractRefused,
+        )
+        for malformed_deployment_hash in ("not-a-sha256", "A" * 64):
+            malformed_deployment = event("GAP", [initial_id])
+            malformed_deployment["deployment_identity_hash"] = malformed_deployment_hash
+            expect_refused(
+                lambda value=malformed_deployment: subject.event_id(value),
+                "malformed_deployment_identity_hash", subject.ContractRefused,
+            )
+        valid_deployment = event("GAP", [initial_id])
+        valid_deployment["deployment_identity_hash"] = "a" * 64
+        subject.event_id(valid_deployment)
+        print("EVENT MEMBER/DEPLOYMENT HASH REFUSALS: PASS")
         event_ids = {}
         for family in EVENT_FAMILIES:
             record = event(family, [initial_id, correction_id] if family == "CORRECTION" else [initial_id])
@@ -354,12 +467,38 @@ def main() -> None:
         ])
         assert oracle_id("p030ds-v1", "p030-dataset-v1", input_order_mutant) != dataset_hash
         print("DATASET MUTANT (input-order hash): DETECTED")
+        for label, changes in (
+            ("unknown_descriptor_track", {"track": "ARCHIVE"}),
+            ("native_descriptor_with_proxy", {"proxy_source": "FIXTURE_PROXY"}),
+            ("proxy_descriptor_without_source", {"track": "PROXY", "proxy_source": None}),
+        ):
+            changed_descriptor = dict(descriptor(), **changes)
+            expect_refused(
+                lambda value=changed_descriptor: subject.dataset_content_hash(value, [row]),
+                label, subject.ContractRefused,
+            )
+        proxy_descriptor = dict(
+            descriptor(), track="PROXY", proxy_source="FIXTURE_PROXY"
+        )
+        proxy_row = dataset_row(proxy_observation, proxy_observation_id, proxy_payload)
+        subject.dataset_content_hash(proxy_descriptor, [proxy_row])
+        for label, changes in (
+            ("dataset_row_unknown_source", {"source_producer": "REST_BACKFILL"}),
+            ("dataset_row_unknown_track", {"track": "ARCHIVE"}),
+            ("dataset_native_with_proxy", {"proxy_source": "FIXTURE_PROXY"}),
+            ("dataset_proxy_without_source", {"track": "PROXY", "proxy_source": None}),
+        ):
+            changed_row = dict(row, **changes)
+            expect_refused(
+                lambda value=changed_row: subject.dataset_content_hash(descriptor(), [value]),
+                label, subject.ContractRefused,
+            )
         expect_refused(lambda: subject.dataset_content_hash(descriptor(), [row, row]),
                        "duplicate_observation", subject.ContractRefused)
         expect_refused(lambda: subject.dataset_content_hash(descriptor(), []),
                        "empty_dataset", subject.ContractRefused)
         payload_field_mutants = {
-            "venue": "OTHER_VENUE", "source_producer": "REST_BACKFILL",
+            "venue": "OTHER_VENUE", "source_producer": "CANDLE_SNAPSHOT",
             "symbol": "ETH", "interval": "5m", "bar_open_time": 1769903100001,
             "bar_close_time": 1769904000001, "open": "101", "high": "104",
             "low": "98", "close": "999", "volume": "13.5", "venue_seq": 7,
@@ -397,23 +536,28 @@ def main() -> None:
         )
         other_venue_observation["venue"] = "OTHER_VENUE"
         descriptor_mismatch_rows = []
-        descriptor_mismatch_rows.append(dataset_row(
+        descriptor_mismatch_rows.append((descriptor(), dataset_row(
             other_venue_observation,
             subject.observation_id(other_venue_observation),
             other_venue_payload,
+        )))
+        other_proxy_observation = dict(
+            proxy_observation, proxy_source="OTHER_PROXY"
+        )
+        descriptor_mismatch_rows.extend((
+            (descriptor(), proxy_row),
+            (proxy_descriptor, dataset_row(
+                other_proxy_observation,
+                subject.observation_id(other_proxy_observation),
+                proxy_payload,
+            )),
         ))
-        for field, replacement in (("track", "PROXY"), ("proxy_source", "OTHER_PROXY")):
-            changed_observation = dict(initial, **{field: replacement})
-            descriptor_mismatch_rows.append(dataset_row(
-                changed_observation,
-                subject.observation_id(changed_observation),
-                payload_record,
-            ))
-        for field, changed in zip(
+        for field, (expected_descriptor, changed) in zip(
             ("venue", "track", "proxy_source"), descriptor_mismatch_rows, strict=True
         ):
             expect_refused(
-                lambda value=changed: subject.dataset_content_hash(descriptor(), [value]),
+                lambda row_value=changed, descriptor_value=expected_descriptor:
+                    subject.dataset_content_hash(descriptor_value, [row_value]),
                 f"dataset_descriptor_{field}", subject.ContractRefused,
             )
         print("DATASET PAYLOAD/SLOT/DESCRIPTOR MUTANTS: DETECTED")
@@ -434,6 +578,7 @@ def main() -> None:
             "", "/archive/part.jsonl", "C:/archive/part.jsonl", "C:part.jsonl",
             r"archive\part.jsonl", "./archive/part.jsonl", "archive/../part.jsonl",
             "archive//part.jsonl", "archive/./part.jsonl", "archive/",
+            "archive/\0part.jsonl",
         )
         for unsafe_path in unsafe_paths:
             changed = copy.deepcopy(provenance)
@@ -491,6 +636,37 @@ def main() -> None:
         expect_refused(lambda: subject.event_id(bad_event), "bool_timestamp", subject.ContractRefused)
         bad_event = event("GAP", [initial_id]); bad_event["detail"] = {"value": float("nan")}
         expect_refused(lambda: subject.event_id(bad_event), "nan_detail", subject.ContractRefused)
+        integer_key = event("GAP", [initial_id]); integer_key["detail"] = {1: "same"}
+        string_key = event("GAP", [initial_id]); string_key["detail"] = {"1": "same"}
+        assert oracle_record_id(
+            "p030evt-v1", "p030-event-v1", integer_key, EVENT_FIELDS
+        ) == oracle_record_id("p030evt-v1", "p030-event-v1", string_key, EVENT_FIELDS)
+        expect_refused(
+            lambda: subject.event_id(integer_key), "integer_detail_key", subject.ContractRefused
+        )
+        nested_integer_key = event("GAP", [initial_id])
+        nested_integer_key["detail"] = {"nested": [{2: "same"}]}
+        expect_refused(
+            lambda: subject.event_id(nested_integer_key),
+            "nested_integer_detail_key", subject.ContractRefused,
+        )
+        tuple_detail = event("GAP", [initial_id]); tuple_detail["detail"] = {"values": (1,)}
+        list_detail = event("GAP", [initial_id]); list_detail["detail"] = {"values": [1]}
+        assert oracle_record_id(
+            "p030evt-v1", "p030-event-v1", tuple_detail, EVENT_FIELDS
+        ) == oracle_record_id("p030evt-v1", "p030-event-v1", list_detail, EVENT_FIELDS)
+        expect_refused(
+            lambda: subject.event_id(tuple_detail), "tuple_detail", subject.ContractRefused
+        )
+        supported_detail = event("GAP", [initial_id])
+        supported_detail["detail"] = {
+            "values": [None, True, 1, 1.5, "text", {"nested": False}]
+        }
+        subject.event_id(supported_detail)
+        bool_detail = event("GAP", [initial_id]); bool_detail["detail"] = {"value": True}
+        int_detail = event("GAP", [initial_id]); int_detail["detail"] = {"value": 1}
+        assert subject.event_id(bool_detail) != subject.event_id(int_detail)
+        print("EVENT DETAIL COLLISION/TYPE MUTANTS: DETECTED")
         print("TYPE/CANONICALIZATION REFUSALS: PASS")
     finally:
         socket.socket.connect = original_connect  # type: ignore[method-assign]
