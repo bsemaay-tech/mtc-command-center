@@ -98,7 +98,7 @@ class ClosedBarRuntimeReceipt:
 
 
 def _require_nonempty(value: object, field_name: str) -> str:
-    if not isinstance(value, str) or not value.strip():
+    if type(value) is not str or not value.strip():
         raise EvidenceContractRefused(f"INVALID_TEXT:{field_name}")
     return value
 
@@ -118,7 +118,7 @@ def _require_utc(value: object, field_name: str) -> datetime:
 
 
 def _validated_dataset_identity(identity: object) -> DatasetIdentity:
-    if not isinstance(identity, DatasetIdentity):
+    if type(identity) is not DatasetIdentity:
         raise EvidenceContractRefused("DS_V1_INVALID_IDENTITY")
     digest = require_ds_v1_digest(
         {"contract": identity.contract, "digest": identity.digest}
@@ -126,37 +126,53 @@ def _validated_dataset_identity(identity: object) -> DatasetIdentity:
     return DatasetIdentity("ds-v1", digest)
 
 
-def _unique_inventory(
-    items: tuple[ControlInventoryItem, ...],
-) -> tuple[ControlInventoryItem, ...]:
-    if any(not isinstance(item, ControlInventoryItem) for item in items):
+def _materialize_once(value: object, reason_id: str) -> tuple[object, ...]:
+    if isinstance(value, (str, bytes, bytearray, Mapping)):
+        raise EvidenceContractRefused(reason_id)
+    try:
+        return tuple(value)  # type: ignore[arg-type]
+    except Exception:
+        raise EvidenceContractRefused(reason_id) from None
+
+
+def _unique_inventory(items: object) -> tuple[ControlInventoryItem, ...]:
+    materialized = _materialize_once(items, "CONTROL_INVENTORY_INVALID_CARRIER")
+    if any(not isinstance(item, ControlInventoryItem) for item in materialized):
         raise EvidenceContractRefused("CONTROL_INVENTORY_INVALID_ITEM")
-    if any(not isinstance(item.required_for_promotion, bool) for item in items):
+    typed_items = tuple(materialized)
+    if any(not isinstance(item.required_for_promotion, bool) for item in typed_items):
         raise EvidenceContractRefused("CONTROL_INVENTORY_INVALID_REQUIRED_FLAG")
-    for item in items:
+    for item in typed_items:
         _require_nonempty(item.control_id, "control_id")
-    if len({item.control_id for item in items}) != len(items):
+    if len({item.control_id for item in typed_items}) != len(typed_items):
         raise EvidenceContractRefused("CONTROL_INVENTORY_DUPLICATE_ID")
-    return tuple(sorted(items, key=lambda item: item.control_id))
+    return tuple(sorted(typed_items, key=lambda item: item.control_id))
 
 
-def _unique_manifest(
-    items: tuple[UnsimulatedControl, ...],
-) -> tuple[UnsimulatedControl, ...]:
-    if any(not isinstance(item, UnsimulatedControl) for item in items):
+def _unique_manifest(items: object) -> tuple[UnsimulatedControl, ...]:
+    materialized = _materialize_once(
+        items, "UNSIMULATED_CONTROLS_INVALID_CARRIER"
+    )
+    if any(not isinstance(item, UnsimulatedControl) for item in materialized):
         raise EvidenceContractRefused("UNSIMULATED_CONTROLS_INVALID_ITEM")
-    if any(not isinstance(item.required_for_promotion, bool) for item in items):
+    typed_items = tuple(materialized)
+    if any(not isinstance(item.required_for_promotion, bool) for item in typed_items):
         raise EvidenceContractRefused("UNSIMULATED_CONTROLS_INVALID_REQUIRED_FLAG")
-    if any(not isinstance(item.control_id, str) or not item.control_id.strip() for item in items):
+    if any(type(item.control_id) is not str or not item.control_id.strip() for item in typed_items):
         raise EvidenceContractRefused("UNSIMULATED_CONTROLS_INVALID_CONTROL_ID")
-    if any(not isinstance(item.reason, str) or not item.reason.strip() for item in items):
+    if any(type(item.reason) is not str or not item.reason.strip() for item in typed_items):
         raise EvidenceContractRefused("UNSIMULATED_CONTROLS_INVALID_REASON")
-    if len({item.control_id for item in items}) != len(items):
+    if any(
+        type(item.contract_version) is not str or not item.contract_version.strip()
+        for item in typed_items
+    ):
+        raise EvidenceContractRefused("UNSIMULATED_CONTROLS_INVALID_CONTRACT_VERSION")
+    if len({item.control_id for item in typed_items}) != len(typed_items):
         raise EvidenceContractRefused("UNSIMULATED_CONTROLS_DUPLICATE_ID")
-    return tuple(sorted(items, key=lambda item: item.control_id))
+    return tuple(sorted(typed_items, key=lambda item: item.control_id))
 
 
-def control_inventory_sha256(items: tuple[ControlInventoryItem, ...]) -> str:
+def control_inventory_sha256(items: object) -> str:
     ordered = _unique_inventory(items)
     return _canonical_sha256(
         {
@@ -172,13 +188,14 @@ def control_inventory_sha256(items: tuple[ControlInventoryItem, ...]) -> str:
     )
 
 
-def unsimulated_controls_sha256(items: tuple[UnsimulatedControl, ...]) -> str:
+def unsimulated_controls_sha256(items: object) -> str:
     ordered = _unique_manifest(items)
     return _canonical_sha256(
         {
             "schema": "p021.unsimulated-controls/v1",
             "controls": [
                 {
+                    "contract_version": item.contract_version,
                     "control_id": item.control_id,
                     "required_for_promotion": item.required_for_promotion,
                     "reason": item.reason,
@@ -226,8 +243,8 @@ def evaluate_control_evidence(
     ):
         raise EvidenceContractRefused("CONTROL_REQUIRED_FLAG_MISMATCH")
 
-    actual_inventory_hash = control_inventory_sha256(inventory)
-    actual_manifest_hash = unsimulated_controls_sha256(manifest)
+    actual_inventory_hash = control_inventory_sha256(ordered_inventory)
+    actual_manifest_hash = unsimulated_controls_sha256(ordered_manifest)
     if (
         _require_sha256(
             expected_control_inventory_hash,
@@ -272,12 +289,15 @@ def evaluate_control_evidence(
 def intent_evidence_sha256(intent: IntentEvidence) -> str:
     """Hash the exact P021 binding to accepted P012 semantic intent fields."""
 
-    if not isinstance(intent, IntentEvidence):
+    if type(intent) is not IntentEvidence:
         raise EvidenceContractRefused("INTENT_INVALID_EVIDENCE")
     dataset = _validated_dataset_identity(intent.dataset_identity)
     for field_name in ("candidate_id", "instrument_id", "intent_id"):
         _require_nonempty(getattr(intent, field_name), field_name)
-    if intent.p012_intent_contract != "p012.intent-stream/v1":
+    if (
+        type(intent.p012_intent_contract) is not str
+        or intent.p012_intent_contract != "p012.intent-stream/v1"
+    ):
         raise EvidenceContractRefused("INTENT_UNSUPPORTED_P012_CONTRACT")
     decision_time = _require_utc(
         intent.decision_bar_timestamp_utc, "decision_bar_timestamp_utc"
@@ -309,7 +329,7 @@ def intent_evidence_sha256(intent: IntentEvidence) -> str:
 
 
 def _validated_decision_key(key: object) -> DecisionKey:
-    if not isinstance(key, DecisionKey):
+    if type(key) is not DecisionKey:
         raise EvidenceContractRefused("LOOKAHEAD_INVALID_DECISION_KEY")
     _require_nonempty(key.instrument_id, "decision_key.instrument_id")
     _require_utc(
@@ -327,9 +347,10 @@ def _validated_intents(
     validated: dict[DecisionKey, tuple[IntentEvidence, str]] = {}
     for key, intent in intents.items():
         decision_key = _validated_decision_key(key)
+        if type(intent) is not IntentEvidence:
+            raise EvidenceContractRefused("INTENT_INVALID_EVIDENCE")
         if (
-            not isinstance(intent, IntentEvidence)
-            or intent.instrument_id != decision_key.instrument_id
+            intent.instrument_id != decision_key.instrument_id
             or intent.decision_bar_timestamp_utc
             != decision_key.decision_bar_timestamp_utc
         ):
@@ -346,7 +367,10 @@ def compare_lookahead(
 ) -> LookaheadEvidence:
     """Compare full and prefix intents over their fixed CLOSED-bar union."""
 
-    closed = tuple(_validated_decision_key(key) for key in closed_decision_keys)
+    closed_items = _materialize_once(
+        closed_decision_keys, "LOOKAHEAD_INVALID_CLOSED_KEYS_CARRIER"
+    )
+    closed = tuple(_validated_decision_key(key) for key in closed_items)
     if len(set(closed)) != len(closed):
         raise EvidenceContractRefused("LOOKAHEAD_DUPLICATE_CLOSED_KEY")
     full = _validated_intents(full_intents, "full_intents")
@@ -401,7 +425,7 @@ def validate_closed_bar_runtime_receipt(
 
     if not isinstance(receipt, ClosedBarRuntimeReceipt):
         raise EvidenceContractRefused("CLOSED_BAR_INVALID_RECEIPT")
-    if receipt.source != "RUNTIME_DECISION_LOOP":
+    if type(receipt.source) is not str or receipt.source != "RUNTIME_DECISION_LOOP":
         raise EvidenceContractRefused("CLOSED_BAR_INVALID_RUNTIME_SOURCE")
     for field_name in (
         "candidate_id",
@@ -459,7 +483,7 @@ def validate_closed_bar_runtime_receipt(
 
 
 def _require_sha256(value: object, field_name: str) -> str:
-    if not isinstance(value, str) or _SHA256_PATTERN.fullmatch(value) is None:
+    if type(value) is not str or _SHA256_PATTERN.fullmatch(value) is None:
         raise EvidenceContractRefused(f"INVALID_SHA256:{field_name}")
     return value
 
@@ -475,6 +499,6 @@ def require_ds_v1_digest(envelope: Mapping[str, object]) -> str:
         "digest",
     }:
         raise EvidenceContractRefused("DS_V1_INVALID_ENVELOPE")
-    if envelope["contract"] != "ds-v1":
+    if type(envelope["contract"]) is not str or envelope["contract"] != "ds-v1":
         raise EvidenceContractRefused("DS_V1_UNSUPPORTED_CONTRACT")
     return _require_sha256(envelope["digest"], "dataset.digest")
