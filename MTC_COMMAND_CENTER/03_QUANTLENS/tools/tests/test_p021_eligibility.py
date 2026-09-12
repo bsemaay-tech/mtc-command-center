@@ -65,6 +65,7 @@ class P021ContractTestCase(unittest.TestCase):
         self.assertTrue(
             all(check["status"] == "REFUSED" for check in record["checks"])
         )
+        self.assertEqual(len(record["open_numbers"]), 4)
         self.assertEqual(
             {item["name"] for item in record["open_numbers"]},
             _EXPECTED_OPEN_NUMBERS,
@@ -78,6 +79,18 @@ class P021ContractTestCase(unittest.TestCase):
 
 
 class ReadinessFenceTests(P021ContractTestCase):
+    def test_refuses_duplicate_open_number_record(self) -> None:
+        changed = p021_readiness_rules.readiness_record()
+        changed["open_numbers"].append(dict(changed["open_numbers"][0]))
+
+        with patch.object(
+            p021_readiness_rules,
+            "readiness_record",
+            return_value=changed,
+        ):
+            with self.assertRaises(AssertionError):
+                self.assert_readiness_fence()
+
     def test_refuses_replaced_check_id(self) -> None:
         changed = p021_readiness_rules.readiness_record()
         changed["checks"][0]["check_id"] = "P021.REPLACED_BY_MUTANT"
