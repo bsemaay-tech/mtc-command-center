@@ -30,7 +30,11 @@ RED (pre-repair, round 2) — behavioural, on the round-1 candidate ``81c3287d``
 
 from __future__ import annotations
 
+import base64
+from dataclasses import fields, replace
+from decimal import Decimal
 import hashlib
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -46,8 +50,10 @@ from mtc_v2.core.economics import (
     REFUSED_ECONOMIC_INPUT,
     REFUSED_MISSING_ADMITTED_FEE,
     REFUSED_UNMAPPED_FILL_EVENT_CLASS,
+    REFUSED_UNAUTHENTICATED_REPORTED_FEE,
     REFUSED_UNSPECIFIED_ADMITTED_INTERVAL_START,
     REFUSED_UNSUPPORTED_ADMITTED_COST_SOURCE,
+    REPORTED_FEE_CHARGE,
     CorrectedEconomicsAdapter,
     EconomicIntent,
     EconomicRecords,
@@ -61,7 +67,9 @@ from mtc_v2.core.instrument import load_verified_json_record
 from mtc_v2.core.results import _fee_surface
 
 
-MTC_V2_ROOT = Path(__file__).resolve().parents[4]
+# Resolve records from the package under test even when this exact patched
+# file is staged outside the source tree for a sandboxed RED/GREEN run.
+MTC_V2_ROOT = Path(load_verified_json_record.__code__.co_filename).resolve().parents[1]
 RECORD_ROOT = MTC_V2_ROOT / "core" / "economic_records"
 COSTS = RECORD_ROOT / "costs"
 INSTRUMENTS = RECORD_ROOT / "instruments"
@@ -74,28 +82,151 @@ UNBOUND_COST = "SYNTH-COST-ADMITTED-01-GREEN-V1"
 NULL_ACCOUNT_COST = "SYNTH-COST-ADMITTED-06-NULLACCOUNT-RED-V1"
 DECLARED_ACCOUNT = "SYNTHETIC-DECLARED-ACCOUNT-0001"
 DECLARED_PRODUCT = "SYNTHETIC-DECLARED-BTC-PERP"
-# A labelled synthetic stand-in for the SHA-256 of the authenticated fill
-# bytes.  It is invented for this fixture and is not a venue capture.
+# Historical e2fd counterexample.  This small synthetic object is not the
+# supported local capture profile and is not evidence of a venue format.
 FILL_CAPTURE_BYTES = b'{"fill":"F0","fee":"199.99","synthetic":true}'
-CAPTURE_SHA256 = hashlib.sha256(FILL_CAPTURE_BYTES).hexdigest()
+CAPTURE_SHA256 = "f902c99d6b37dd73b322e360d3998169c6a31707f30fb10bb99aedc70588f2de"
+
+# A retained single-fill JSON-object fixture using only fields grounded in the
+# signed fee source or existing Bridge normalization.  Extra native fields are
+# deliberate: the bounded local profile interprets selected fields but must
+# preserve every original byte.  This is synthetic local evidence, not proof
+# of venue origin or a claim about a complete native API envelope.
+MATCHED_CAPTURE_BYTES = (
+    b'{"coin":"BTC","px":"60000.0","sz":"10","side":"B",'
+    b'"time":1789174800000,"startPosition":"0","dir":"Open Long",'
+    b'"closedPnl":"-12.3400","hash":"0xfee19999","oid":7001,'
+    b'"crossed":true,"fee":"199.99","feeToken":"TEST-USD",'
+    b'"extraNative":{"retained":true}}'
+)
+MATCHED_CAPTURE_SHA256 = (
+    "f4065b514625300ebc09a776bbdc9e2def153c716ab90c6534fb90efe57acb9f"
+)
+MATCHED_NATIVE_FILL_ID = "0xfee19999:7001:1789174800000"
+_REPORTED_FEE_FIELDS = {field.name for field in fields(ReportedFillFee)}
+_AUTO_CAPTURE = object()
+
+
+def _capture(
+    fee: str,
+    *,
+    fee_token: str = "TEST-USD",
+    closed_pnl: str | None = "0",
+    time_ms: int = 1789174800000,
+    coin: str = "BTC",
+    hash_value: str = "0xsynthetic",
+    oid: int = 7001,
+    tid: int | None = None,
+    extra: dict | None = None,
+) -> bytes:
+    row: dict[str, object] = {
+        "coin": coin,
+        "time": time_ms,
+        "hash": hash_value,
+        "oid": oid,
+        "fee": fee,
+        "feeToken": fee_token,
+    }
+    if closed_pnl is not None:
+        row["closedPnl"] = closed_pnl
+    if tid is not None:
+        row["tid"] = tid
+    if extra:
+        row.update(extra)
+    return json.dumps(row, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def _native_fill_id(capture_bytes: bytes) -> str:
+    row = json.loads(capture_bytes.decode("utf-8"))
+    return (
+        str(row["tid"])
+        if "tid" in row
+        else f'{row["hash"]}:{row["oid"]}:{row["time"]}'
+    )
 
 
 def _authenticated_fee(
-    amount: float = 199.99,
+    amount: str | float = "199.99",
     *,
     fill_id: str = "F0",
     fee_token: str = "TEST-USD",
+    closed_pnl: str | float | None | object = _AUTO_CAPTURE,
+    capture_bytes: bytes | bytearray | None | object = _AUTO_CAPTURE,
+    native_fill_id: str | None = None,
+    native_instrument: str | None = None,
     **overrides,
 ) -> ReportedFillFee:
-    """A venue-reported fee carrying its synthetic authentication bindings."""
+    """A synthetic local-evidence fee, adaptable to the exact e2fd API.
+
+    On e2fd the constructor receives the lossless float form and only the
+    digest, reproducing the detached-value bug.  The repaired API receives the
+    exact source string and the same original capture bytes.
+    """
+    raw_amount = str(amount)
+    requested_closed_pnl = (
+        "0" if closed_pnl is _AUTO_CAPTURE else closed_pnl
+    )
+    if capture_bytes is _AUTO_CAPTURE:
+        capture_bytes = _capture(
+            raw_amount,
+            fee_token=fee_token,
+            closed_pnl=(
+                None
+                if requested_closed_pnl is None
+                else str(requested_closed_pnl)
+            ),
+        )
+    digest = (
+        hashlib.sha256(capture_bytes).hexdigest()
+        if isinstance(capture_bytes, bytes)
+        else None
+    )
     fields = {
         "source_class": ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1,
         "account_scope": DECLARED_ACCOUNT,
         "product": DECLARED_PRODUCT,
-        "capture_sha256": CAPTURE_SHA256,
+        "capture_sha256": digest,
     }
+    constructor_amount: str | float = raw_amount
+    if "capture_bytes" in _REPORTED_FEE_FIELDS:
+        fields.update(
+            {
+                "capture_bytes": capture_bytes,
+                "native_fill_id": (
+                    native_fill_id
+                    if native_fill_id is not None
+                    else (
+                        _native_fill_id(capture_bytes)
+                        if isinstance(capture_bytes, bytes)
+                        else None
+                    )
+                ),
+                "native_instrument": (
+                    native_instrument
+                    if native_instrument is not None
+                    else (
+                        str(json.loads(capture_bytes.decode("utf-8")).get("coin"))
+                        if isinstance(capture_bytes, bytes)
+                        and capture_bytes.startswith(b"{")
+                        else None
+                    )
+                ),
+                "closed_pnl": (
+                    None
+                    if requested_closed_pnl is None
+                    else str(requested_closed_pnl)
+                ),
+            }
+        )
+    else:
+        constructor_amount = float(Decimal(raw_amount))
+        fields["closed_pnl"] = (
+            None
+            if requested_closed_pnl is None
+            else float(Decimal(str(requested_closed_pnl)))
+        )
     fields.update(overrides)
-    return ReportedFillFee(fill_id, amount, fee_token, **fields)
+    return ReportedFillFee(fill_id, constructor_amount, fee_token, **fields)
 
 
 # Hand-derived expectations (see module docstring).
@@ -197,7 +328,9 @@ def test_admitted_cost_is_the_reported_amount_not_the_schedule_estimate() -> Non
     assert applied["fee_source_class"] == ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1
     assert applied["fee_account_scope"] == DECLARED_ACCOUNT
     assert applied["fee_product"] == DECLARED_PRODUCT
-    assert applied["fee_capture_sha256"] == CAPTURE_SHA256
+    assert applied["fee_capture_sha256"] == hashlib.sha256(
+        _capture("199.99")
+    ).hexdigest()
 
 
 def test_estimator_agrees_inside_the_owner_signed_tolerance() -> None:
@@ -347,7 +480,7 @@ def test_a_record_cannot_widen_the_owner_signed_tolerance() -> None:
 
 
 # --------------------------------------------------------------------------
-# The fee object must be an authenticated own-account fill, not a bare number
+# The fee object must carry rechecked local evidence, not a bare number
 # --------------------------------------------------------------------------
 
 
@@ -355,14 +488,347 @@ def test_a_bare_unauthenticated_reported_fee_is_refused() -> None:
     """RED on ``81c3287d``: this five-field object was admitted as 199.99.
 
     It carries no source class, no account or product binding and no capture
-    digest, so nothing in it says which authenticated own-account fill the
-    number came from.
+    digest, so it cannot establish even local capture consistency.
     """
     with pytest.raises(EconomicsRefusal) as exc_info:
         _resolve((ReportedFillFee("F0", 199.99, "TEST-USD"),))
 
     assert exc_info.value.refusal_code == "REFUSED_UNAUTHENTICATED_REPORTED_FEE"
     assert "source_class" in exc_info.value.detail
+
+
+def test_d026_same_valid_capture_rejects_a_different_asserted_fee() -> None:
+    """RED on exact e2fd: this admits 123.45 beside captured 199.99.
+
+    The helper passes the lossless numeric API form on e2fd and the exact
+    source string on the repaired API.  The capture bytes and digest are
+    identical in both runs and the capture satisfies the repaired local
+    interpretation profile, so GREEN must be a content refusal rather than an
+    unsupported-fixture refusal.
+    """
+    assert hashlib.sha256(MATCHED_CAPTURE_BYTES).hexdigest() == MATCHED_CAPTURE_SHA256
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve(
+            (
+                _authenticated_fee(
+                    "123.45",
+                    closed_pnl="-12.3400",
+                    capture_bytes=MATCHED_CAPTURE_BYTES,
+                ),
+            )
+        )
+
+    assert exc_info.value.refusal_code == REFUSED_UNAUTHENTICATED_REPORTED_FEE
+    assert "123.45" in exc_info.value.detail
+    assert "199.99" in exc_info.value.detail
+
+
+def test_exact_e2fd_probe_capture_is_preserved_as_unsupported_history() -> None:
+    assert hashlib.sha256(FILL_CAPTURE_BYTES).hexdigest() == CAPTURE_SHA256
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve(
+            (
+                _authenticated_fee(
+                    "123.45",
+                    closed_pnl=None,
+                    capture_bytes=FILL_CAPTURE_BYTES,
+                    native_fill_id="F0",
+                    native_instrument="BTC",
+                ),
+            )
+        )
+
+    assert exc_info.value.refusal_code == REFUSED_UNAUTHENTICATED_REPORTED_FEE
+    assert "capture time" in exc_info.value.detail
+
+
+def test_matching_capture_is_admitted_and_retained_losslessly() -> None:
+    assert hashlib.sha256(MATCHED_CAPTURE_BYTES).hexdigest() == MATCHED_CAPTURE_SHA256
+    transition = _resolve(
+        (
+            _authenticated_fee(
+                "199.99",
+                closed_pnl="-12.3400",
+                capture_bytes=MATCHED_CAPTURE_BYTES,
+            ),
+        )
+    )
+
+    assert transition.fee_events[0].fee_amount == 199.99
+    assert transition.cash_events[0].signed_delta == -199.99
+    applied = _decision(transition, "ADMITTED_COST_APPLIED")
+    assert applied["reported_amount_raw"] == "199.99"
+    assert applied["closed_pnl_raw"] == "-12.3400"
+    assert applied["closed_pnl"] == -12.34
+    assert applied["closed_pnl_status"] == "CAPTURED_RAW_STRING"
+    assert applied["fee_native_fill_id"] == MATCHED_NATIVE_FILL_ID
+    assert applied["fee_native_instrument"] == "BTC"
+    assert applied["fee_native_time_ms"] == 1789174800000
+    assert applied["fee_evidence_limit"] == (
+        "INTERNALLY_CONSISTENT_CAPTURE_MAY_BE_FORGED_ORIGIN_NOT_ESTABLISHED"
+    )
+    assert base64.b64decode(applied["fee_capture_bytes_base64"]) == (
+        MATCHED_CAPTURE_BYTES
+    )
+    # Extra original members are not interpreted, reconstructed or dropped.
+    assert b'"extraNative":{"retained":true}' in base64.b64decode(
+        applied["fee_capture_bytes_base64"]
+    )
+
+
+def test_changed_capture_bytes_with_the_old_digest_refuse() -> None:
+    changed = MATCHED_CAPTURE_BYTES.replace(b'"fee":"199.99"', b'"fee":"123.45"')
+    assert changed != MATCHED_CAPTURE_BYTES
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve(
+            (
+                _authenticated_fee(
+                    "123.45",
+                    closed_pnl="-12.3400",
+                    capture_bytes=changed,
+                    capture_sha256=MATCHED_CAPTURE_SHA256,
+                ),
+            )
+        )
+
+    assert exc_info.value.refusal_code == REFUSED_UNAUTHENTICATED_REPORTED_FEE
+    assert "do not hash" in exc_info.value.detail
+
+
+def test_a_direct_fully_declared_object_cannot_bypass_missing_proof() -> None:
+    fee = ReportedFillFee(
+        "F0",
+        "199.99",
+        "TEST-USD",
+        closed_pnl="0",
+        source_class=ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1,
+        account_scope=DECLARED_ACCOUNT,
+        product=DECLARED_PRODUCT,
+        capture_sha256=MATCHED_CAPTURE_SHA256,
+    )
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((fee,))
+
+    assert exc_info.value.refusal_code == REFUSED_UNAUTHENTICATED_REPORTED_FEE
+    assert "capture bytes" in exc_info.value.detail
+
+
+def test_malformed_local_capture_material_refuses_fail_closed() -> None:
+    malformed_cases: tuple[tuple[bytes | bytearray, str], ...] = (
+        (bytearray(MATCHED_CAPTURE_BYTES), "immutable capture bytes"),
+        (b"", "JSON"),
+        (b"\xff", "UTF-8"),
+        (b"{", "JSON"),
+        (b'{"fee":"1","fee":"2"}', "duplicate"),
+        (
+            b'{"coin":"BTC","time":1789174800000,"tid":7,'
+            b'"fee":"1","feeToken":"TEST-USD","extra":{"x":1,"x":2}}',
+            "duplicate",
+        ),
+        (
+            b'{"coin":"BTC","time":1789174800000,"tid":7,'
+            b'"fee":"1","feeToken":"TEST-USD","extra":NaN}',
+            "non-finite JSON constant",
+        ),
+        (
+            b'{"coin":"BTC","time":1789174800000,"tid":7,'
+            b'"feeToken":"TEST-USD"}',
+            "fee",
+        ),
+        (
+            b'{"coin":"BTC","time":1789174800000,"tid":7,'
+            b'"fee":1,"feeToken":"TEST-USD"}',
+            "string",
+        ),
+        (
+            b'{"coin":"BTC","time":1789174800000,'
+            b'"fee":"1","feeToken":"TEST-USD"}',
+            "identity",
+        ),
+    )
+
+    for capture, reason in malformed_cases:
+        digest = hashlib.sha256(bytes(capture)).hexdigest()
+        with pytest.raises(EconomicsRefusal) as exc_info:
+            _resolve(
+                (
+                    _authenticated_fee(
+                        "1",
+                        closed_pnl=None,
+                        capture_bytes=capture,
+                        native_fill_id="7",
+                        native_instrument="BTC",
+                        capture_sha256=digest,
+                    ),
+                )
+            )
+        assert exc_info.value.refusal_code == REFUSED_UNAUTHENTICATED_REPORTED_FEE
+        assert reason in exc_info.value.detail
+
+
+def test_native_and_declared_associations_are_rechecked_on_every_admission() -> None:
+    wrong_time = _capture("199.99", time_ms=1789174800001)
+    wrong_token = _capture("199.99", fee_token="USDC")
+    cases = (
+        (
+            _authenticated_fee(
+                "199.99",
+                capture_bytes=MATCHED_CAPTURE_BYTES,
+                closed_pnl="-12.3400",
+                native_fill_id="other-native-fill",
+            ),
+            "native fill",
+        ),
+        (
+            _authenticated_fee(
+                "199.99",
+                capture_bytes=MATCHED_CAPTURE_BYTES,
+                closed_pnl="-12.3400",
+                native_instrument="ETH",
+            ),
+            "native instrument",
+        ),
+        (
+            _authenticated_fee(
+                "199.99",
+                capture_bytes=wrong_token,
+                fee_token="TEST-USD",
+            ),
+            "feeToken",
+        ),
+        (_authenticated_fee("199.99", account_scope="OTHER-ACCOUNT"), "account"),
+        (_authenticated_fee("199.99", product="OTHER-PRODUCT"), "product"),
+        (_authenticated_fee("199.99", capture_bytes=wrong_time), "time"),
+    )
+
+    for fee, reason in cases:
+        with pytest.raises(EconomicsRefusal) as exc_info:
+            _resolve((fee,))
+        assert exc_info.value.refusal_code == REFUSED_UNAUTHENTICATED_REPORTED_FEE
+        assert reason in exc_info.value.detail
+
+
+def test_wrong_internal_fill_association_keeps_the_existing_missing_fee_refusal() -> None:
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((_authenticated_fee("199.99", fill_id="F9"),))
+
+    assert exc_info.value.refusal_code == REFUSED_MISSING_ADMITTED_FEE
+
+
+def test_absent_closed_pnl_is_retained_as_unknown_never_defaulted() -> None:
+    capture = _capture("7.5", closed_pnl=None)
+    transition = _resolve(
+        (_authenticated_fee("7.5", closed_pnl=None, capture_bytes=capture),)
+    )
+    applied = _decision(transition, "ADMITTED_COST_APPLIED")
+
+    assert applied["reported_amount_raw"] == "7.5"
+    assert applied["closed_pnl"] is None
+    assert applied["closed_pnl_raw"] is None
+    assert applied["closed_pnl_status"] == "NOT_PRESENT_UNKNOWN"
+    assert transition.fee_events[0].fee_amount == 7.5
+
+
+def test_present_closed_pnl_must_be_a_finite_matching_raw_string() -> None:
+    captured = _capture("8", closed_pnl="12.300")
+    invalid = (
+        _authenticated_fee("8", closed_pnl="12.3", capture_bytes=captured),
+        _authenticated_fee(
+            "8",
+            closed_pnl=None,
+            capture_bytes=_capture("8", closed_pnl="NaN"),
+        ),
+        _authenticated_fee(
+            "8",
+            closed_pnl=None,
+            capture_bytes=(
+                b'{"coin":"BTC","time":1789174800000,"tid":7,'
+                b'"fee":"8","feeToken":"TEST-USD","closedPnl":0}'
+            ),
+            native_fill_id="7",
+        ),
+        _authenticated_fee(
+            "8",
+            closed_pnl=None,
+            capture_bytes=(
+                b'{"coin":"BTC","time":1789174800000,"tid":7,'
+                b'"fee":"8","feeToken":"TEST-USD","closedPnl":null}'
+            ),
+            native_fill_id="7",
+        ),
+    )
+
+    for fee in invalid:
+        with pytest.raises(EconomicsRefusal):
+            _resolve((fee,))
+
+
+def test_fee_source_string_boundaries_keep_exact_text_and_existing_semantics() -> None:
+    cases = (
+        ("0", REPORTED_FEE_CHARGE, 0.0, 0.0),
+        ("-5", "REBATE", -5.0, 5.0),
+        ("1e2", REPORTED_FEE_CHARGE, 100.0, -100.0),
+        ("0.1", REPORTED_FEE_CHARGE, 0.1, -0.1),
+    )
+
+    for raw, fee_class, expected_amount, expected_cash in cases:
+        capture = _capture(raw)
+        transition = _resolve(
+            (_authenticated_fee(raw, capture_bytes=capture, fee_class=fee_class),)
+        )
+        applied = _decision(transition, "ADMITTED_COST_APPLIED")
+        assert transition.fee_events[0].fee_amount == expected_amount
+        assert transition.cash_events[0].signed_delta == expected_cash
+        assert applied["reported_amount_raw"] == raw
+        assert base64.b64decode(applied["fee_capture_bytes_base64"]) == capture
+
+
+def test_tid_is_the_supported_native_identity_when_present() -> None:
+    capture = _capture("2.5", tid=4242, extra={"nativeExtra": [1, 2, 3]})
+    transition = _resolve((_authenticated_fee("2.5", capture_bytes=capture),))
+    applied = _decision(transition, "ADMITTED_COST_APPLIED")
+
+    assert applied["fee_native_fill_id"] == "4242"
+    assert applied["fee_native_tid"] == 4242
+    assert applied["fee_native_hash"] is None
+    assert applied["fee_native_oid"] is None
+    assert base64.b64decode(applied["fee_capture_bytes_base64"]) == capture
+
+
+def test_a_caller_float_conversion_cannot_replace_the_source_text() -> None:
+    fee = replace(_authenticated_fee("0.1"), reported_amount=0.1)
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((fee,))
+
+    assert exc_info.value.refusal_code == REFUSED_UNAUTHENTICATED_REPORTED_FEE
+    assert "exact source string" in exc_info.value.detail
+
+
+@pytest.mark.parametrize("raw", ["NaN", "Infinity", "-Infinity"])
+def test_nonfinite_fee_source_strings_refuse(raw: str) -> None:
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((_authenticated_fee(raw),))
+
+    assert exc_info.value.refusal_code == REFUSED_UNAUTHENTICATED_REPORTED_FEE
+    assert "not finite" in exc_info.value.detail
+
+
+def test_unrepresentable_exact_fee_refuses_without_estimator_fallback() -> None:
+    raw = "0.10000000000000001"
+    capture = _capture(raw)
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((_authenticated_fee(raw, capture_bytes=capture),))
+
+    assert exc_info.value.refusal_code == (
+        "REFUSED_UNSUPPORTED_REPORTED_FEE_REPRESENTATION"
+    )
+    assert raw in exc_info.value.detail
 
 
 @pytest.mark.parametrize(

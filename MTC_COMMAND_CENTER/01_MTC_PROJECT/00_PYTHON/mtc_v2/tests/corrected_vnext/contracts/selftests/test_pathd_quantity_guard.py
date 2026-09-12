@@ -80,6 +80,10 @@ MARKET = MarketEvent(
 
 
 def _open(equity: float) -> tuple[EconomicState, EconomicIntent]:
+    fee_capture_bytes = (
+        b'{"fill":"F0","fee":"270.0","synthetic":true,"coin":"BTC",'
+        b'"time":1789174800000,"tid":7001,"feeToken":"TEST-USD"}'
+    )
     return (
         EconomicState(sizing_equity=equity),
         EconomicIntent(
@@ -97,14 +101,15 @@ def _open(equity: float) -> tuple[EconomicState, EconomicIntent]:
             reported_fill_fees=(
                 ReportedFillFee(
                     "F0",
-                    270.0,
+                    "270.0",
                     "TEST-USD",
                     source_class="HL_FEE_REPORTED_PER_FILL_V1",
                     account_scope="SYNTHETIC-DECLARED-ACCOUNT-0001",
                     product="SYNTHETIC-DECLARED-BTC-PERP",
-                    capture_sha256=hashlib.sha256(
-                        b'{"fill":"F0","fee":"270.0","synthetic":true}'
-                    ).hexdigest(),
+                    capture_sha256=hashlib.sha256(fee_capture_bytes).hexdigest(),
+                    capture_bytes=fee_capture_bytes,
+                    native_fill_id="7001",
+                    native_instrument="BTC",
                 ),
             ),
         ),

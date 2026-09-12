@@ -1,4 +1,4 @@
-"""Offline, synthetic-only MTC funding candidate materializer (P0-12 D1).
+"""Offline MTC funding candidate materializer (P0-12 D1).
 
 What this tool is
 -----------------
@@ -6,26 +6,27 @@ One offline CLI plus one pure function. Given
 
 * a named, quiescent, owner-supplied **offline snapshot** of a Bridge database
   that already carries retained funding payloads (schema v10), and
-* a separately source-verified **binding packet** carrying, per funding event,
-  the eight current MTC input fields plus an explicit whole-interval
-  completion witness,
+* a **binding packet** carrying, per funding event, the eight current MTC input
+  fields plus an explicit whole-interval completion witness,
 
-it stages a *synthetic candidate* under an external directory, or it refuses.
+it stages a ``SYNTHETIC_ONLY`` candidate by default. Explicit ``PRODUCTION``
+mode stages a production-class candidate using captured event bytes and
+caller-declared account, product and interval scope. The modes have disjoint
+validation contracts; neither output is an accepted economic record.
 
 What this tool is NOT
 ---------------------
-It is **not** a production record producer. Everything it emits is labelled
-``SYNTHETIC_ONLY`` and is wrapped in a shape that current MTC record selection
-physically cannot consume: the candidate root carries no ``schedule_id``, no
-``events`` and no ``settlement_currency``, so
+It is **not** an accepted production record producer and grants no production
+permission. The default ``SYNTHETIC`` mode emits ``SYNTHETIC_ONLY``. Explicit
+``PRODUCTION`` mode emits only a production-class candidate with
+``REFUSED_PENDING_T0_REVIEW_AND_OWNER_RATIFICATION`` status. Candidate roots
+are wrapped in a shape that current MTC record selection physically cannot
+consume: they carry no ``schedule_id``, no ``events`` and no
+``settlement_currency``, so
 ``EconomicRecords.funding_schedule_id`` raises and
 ``ExecutionEconomics._resolve_funding`` refuses with its own
-``REFUSED_MISSING_FUNDING_EVENT``. There is no mode switch, callback, boolean
-gate or magic literal that turns a synthetic candidate into a production
-record: the only accepted completion-evidence kind is
-:data:`SYNTHETIC_EVIDENCE_KIND`, and production mode stays
-:data:`PRODUCTION_MODE_UNAVAILABLE` until the real binding-packet schema and the
-``source_event_digest`` byte domain are approved and implemented elsewhere.
+``REFUSED_MISSING_FUNDING_EVENT``. ``--mode PRODUCTION`` selects the separate
+candidate contract; it does not accept a record or authorize production use.
 
 It also activates nothing. It never calls ``Store.initialize()``, never
 migrates, checkpoints or backfills, never writes to a database, and never
@@ -39,8 +40,9 @@ than re-implemented.
 
 Evidence boundaries this tool does not cross
 --------------------------------------------
-* Caller facts are synthetic fixtures. A successful candidate says nothing
-  about real-world completeness, a real account, or a real payment.
+* In default ``SYNTHETIC`` mode, caller facts are synthetic fixtures. A
+  successful candidate says nothing about real-world completeness, a real
+  account, or a real payment.
 * ``payload_digest`` stays the normalized Bridge integrity digest. It is never
   renamed to, reused as, or compared equal to a ``source_event_digest``; a
   binding that reuses it is refused.
@@ -51,11 +53,11 @@ Evidence boundaries this tool does not cross
 * A ``coverage`` flag alone proves nothing. An explicit inventory of every
   event in the interval, an account scope and a witness identity are required,
   and every retained/bound/inventoried identity must reconcile exactly.
-* In production mode a capture's digest and identity pointer are necessary but
-  not sufficient: the capture must also *state* the coin, settlement time,
-  rate, size and cash the candidate admits, and those must equal the retained
-  eight-field payload. Agreement between the two evidence sources is still not
-  provenance — both are supplied by the caller.
+* In ``PRODUCTION`` mode, captured values must equal the retained eight-field
+  payload and the fixed witness scope; account, product and interval remain
+  caller declarations checked for consistency. These checks do not authenticate
+  venue provenance because both evidence sources and the scope are supplied by
+  the caller. Actual own-account evidence remains a prerequisite for admission.
 * Unknown, out-of-interval, uninventoried and out-of-scope identities are
   always named in the report. Nothing disappears silently.
 
@@ -64,7 +66,7 @@ Invocation
     python IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py \\
         --snapshot OFFLINE_SCHEMA10_COPY --bindings VERIFIED_LOCAL_PACKET \\
         --symbol BTC --start UTC --end UTC --schedule-id ID \\
-        --staging NEW_NONEXISTENT_DIRECTORY
+        --staging NEW_NONEXISTENT_DIRECTORY [--mode SYNTHETIC|PRODUCTION]
 
 The staging target must be external to the Bridge repository and both input
 paths, have no symlink/reparse-point ancestry, and not exist yet. Exit code 0
@@ -2247,9 +2249,11 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog=TOOL_NAME,
         description=(
-            "Stage a SYNTHETIC_ONLY MTC funding candidate from a quiescent "
-            "offline Bridge snapshot and a separately verified binding packet. "
-            "The result is never an accepted economic record."
+            "Stage an MTC funding candidate from a quiescent offline Bridge "
+            "snapshot and binding packet. SYNTHETIC is the default; explicit "
+            "PRODUCTION mode checks captured values and caller-declared scope "
+            "for consistency, not authenticated venue provenance. Neither "
+            "mode accepts a record or grants production permission."
         ),
     )
     parser.add_argument("--snapshot", required=True)
