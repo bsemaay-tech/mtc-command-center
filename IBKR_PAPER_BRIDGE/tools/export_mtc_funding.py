@@ -171,12 +171,21 @@ PRODUCTION_CAPTURE_TIME_UNIT = "EPOCH_MILLISECONDS"
 PRODUCTION_CAPTURE_DELTA_TYPE_POINTER = "/delta/type"
 PRODUCTION_CAPTURE_DELTA_TYPE = "funding"
 # retained eight-field payload member -> pointer into the capture bytes.
+# ``nSamples`` is part of the documented ``userFunding`` delta and is normalized
+# rather than copied: ``_parse_funding_evidence_row``
+# (``bridge/broker/hyperliquid.py:2139``) keeps it only when it is an integer
+# and not a boolean, and records ``None`` otherwise.
 PRODUCTION_CAPTURE_VALUE_POINTERS = {
     "amount_usdc": "/delta/usdc",
     "funding_rate": "/delta/fundingRate",
+    "n_samples": "/delta/nSamples",
     "position_szi": "/delta/szi",
     "symbol": "/delta/coin",
 }
+# The one source class the same producer stamps on an own-account funding row
+# (``hyperliquid.py:2145``).  It is a constant of that path, never read out of
+# the capture: the capture carries no source member at all.
+PRODUCTION_RETAINED_SOURCE = "HL_USER_FUNDING"
 PRODUCTION_SETTLEMENT_SOURCE = "HL_VENUE_REPORTED_OWN_ACCOUNT_SETTLEMENT"
 NOT_AN_ACCEPTED_RECORD = (
     "Prepared under OD-20260912-P012-PATHD-1. This is not an accepted economic "
@@ -346,9 +355,12 @@ PRODUCTION_EVIDENCE_LIMITATIONS = (
     "and every admitted settlement's authenticated capture time must fall "
     "inside the declared interval.",
     "The capture bytes must state the admitted values: the coin, settlement "
-    "time, payment rate, position size and settled cash read out of the "
-    "capture must equal the Bridge's retained eight-field payload for the same "
-    "settlement, and the capture layout is fixed rather than caller-chosen. "
+    "time, payment rate, position size, sample count and settled cash read out "
+    "of the capture must equal the Bridge's retained eight-field payload for "
+    "the same settlement under the own-account producer's own normalization, "
+    "the retained source must be the one class that producer stamps, the bound "
+    "coin must be the witnessed scope this candidate publishes, and the "
+    "capture layout is fixed rather than caller-chosen. "
     "What this does NOT establish is provenance: the capture is still supplied "
     "by the caller, so agreement proves the two evidence sources tell one "
     "story, not that either came from the venue.",
@@ -1043,16 +1055,19 @@ def _verify_capture_values(
     payload: Mapping[str, Any],
     start: _Instant,
     end: _Instant,
+    scope_symbol: str,
 ) -> Decimal:
     """Prove the capture states the values this settlement was admitted on.
 
     A digest proves the bytes were not edited and the identity pointer proves
     they name this settlement; neither says the bytes *agree* with what is
     being booked.  Here the capture's own coin, settlement time, payment rate,
-    position size and settled cash must equal the retained eight-field payload
-    for the same event, and the capture's time must fall inside the declared
-    interval (A1 = A).  Any disagreement refuses; nothing is reconciled,
-    rounded or preferred.
+    position size, sample count and settled cash must equal the retained
+    eight-field payload for the same event, the retained ``source`` must be the
+    one class the own-account producer stamps, the bound coin must be the
+    witnessed ``scope_symbol`` the candidate publishes, and the capture's time
+    must fall inside the declared interval (A1 = A).  Any disagreement refuses;
+    nothing is reconciled, rounded or preferred.
 
     Returns the capture's settlement time in exact epoch milliseconds.
     """
@@ -1074,6 +1089,45 @@ def _verify_capture_values(
                     f"binding {event_id} capture {pointer} is {captured!r} but the "
                     f"retained payload {field} is {retained!r}",
                 )
+            if retained != scope_symbol:
+                # The outer retained row's symbol is screened against the
+                # witness before this point, but the row and the payload it
+                # carries are two separate statements: an agreeing capture and
+                # payload can still describe another instrument entirely, and
+                # that settlement is not in the scope this candidate publishes.
+                raise _Refusal(
+                    CANDIDATE_SYMBOL_MISMATCH,
+                    f"binding {event_id} capture and retained payload settle "
+                    f"{retained!r}, outside the witnessed {scope_symbol!r} scope",
+                )
+            continue
+        if field == "n_samples":
+            # Not a copy of whatever the capture spells: the retained value is
+            # what the producer's normalization would have written from these
+            # exact bytes.  An absent, boolean, string or fractional nSamples
+            # becomes ``None`` there, and only a whole integer survives.
+            normalized = (
+                captured
+                if isinstance(captured, int) and not isinstance(captured, bool)
+                else None
+            )
+            if isinstance(retained, bool) or not (
+                retained is None or isinstance(retained, int)
+            ):
+                # ``True == 1`` and ``1.0 == 1``; neither is a sample count, so
+                # the type is checked before the value is compared.
+                raise _Refusal(
+                    CANDIDATE_CAPTURE_VALUE_MISMATCH,
+                    f"binding {event_id} retained payload {field} is {retained!r}; "
+                    "a whole sample count or null is required",
+                )
+            if retained != normalized:
+                raise _Refusal(
+                    CANDIDATE_CAPTURE_VALUE_MISMATCH,
+                    f"binding {event_id} capture {pointer} is {captured!r}, which "
+                    f"the own-account funding producer records as {normalized!r}, "
+                    f"but the retained payload {field} is {retained!r}",
+                )
             continue
         if retained is None:
             raise _Refusal(
@@ -1093,6 +1147,14 @@ def _verify_capture_values(
                 f"binding {event_id} capture {pointer} is {captured!r} but the "
                 f"retained payload {field} is {retained!r}",
             )
+    retained_source = payload.get("source")
+    if retained_source != PRODUCTION_RETAINED_SOURCE:
+        raise _Refusal(
+            CANDIDATE_CAPTURE_VALUE_MISMATCH,
+            f"binding {event_id} retained payload source is {retained_source!r}, "
+            f"not the {PRODUCTION_RETAINED_SOURCE!r} class the own-account "
+            "funding producer stamps; this row did not come off that path",
+        )
     captured_ms = _capture_number(
         _resolve_json_pointer(decoded, PRODUCTION_CAPTURE_TIME_POINTER),
         f"binding {event_id} capture {PRODUCTION_CAPTURE_TIME_POINTER}",
@@ -1127,6 +1189,7 @@ def _verify_production_capture(
     payload: Mapping[str, Any],
     start: _Instant,
     end: _Instant,
+    scope_symbol: str,
 ) -> int:
     """Bind one authenticated capture's exact bytes to this event.
 
@@ -1176,7 +1239,7 @@ def _verify_production_capture(
             f"{binding['body']['capture_identity_pointer']!r} resolves to "
             f"{identity!r}, so these bytes are not bound to this settlement",
         )
-    _verify_capture_values(event_id, decoded, payload, start, end)
+    _verify_capture_values(event_id, decoded, payload, start, end, scope_symbol)
     return len(capture)
 
 
@@ -1603,7 +1666,12 @@ def _build(
                     f"but the venue's own retained row is {ledger_instant.text}",
                 )
             _verify_production_capture(
-                binding, witness["source_witnesses"][event_id], payload, start, end
+                binding,
+                witness["source_witnesses"][event_id],
+                payload,
+                start,
+                end,
+                witness["symbol"],
             )
             _check_payer_sign(binding, payload)
             rate = payload.get("funding_rate")
@@ -1615,6 +1683,7 @@ def _build(
                 "capture_value_pointers": dict(PRODUCTION_CAPTURE_VALUE_POINTERS),
                 "capture_time_pointer": PRODUCTION_CAPTURE_TIME_POINTER,
                 "capture_time_unit": PRODUCTION_CAPTURE_TIME_UNIT,
+                "retained_source_class": PRODUCTION_RETAINED_SOURCE,
                 "settlement_rate_source": PRODUCTION_SETTLEMENT_SOURCE,
                 "settlement_time_source": PRODUCTION_SETTLEMENT_SOURCE,
                 "oracle_value_admitted": False,

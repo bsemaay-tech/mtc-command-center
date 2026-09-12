@@ -389,6 +389,19 @@
     "created_by": "Owner approval recorded by Codex Lead task 01a0911b-41e7-79b0-aae3-28e3328bdb99",
     "summary": "Owner exact words `all are approved` approve the presented D1/D2 decision packet. D1 authorizes only the bounded synthetic-only offline funding materializer in IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py, tests/test_mtc_funding_export.py and additive docs/26_FULL_RECONCILIATION_CONTRACT.md, with synthetic tests, independent Lead reproduction and fresh exact Opus5/Sol xhigh plus Gemini3.7. D2 authorizes push/PR of already-reviewed manifest correction ec6347d5 plus factual handoff, now PR179. No production mode or production record/schema/runtime changes, venue facts/capture, accounts/host/trading/deploy, new spend, reviewer substitution, merge or whole-package acceptance. Original settled policies and all venue-evidence refusals remain.",
     "report_path": "MTC_COMMAND_CENTER/_AI_MEMORY/P012_MATERIALIZER_20260911.md"
-  }
+  },
+    {
+      "event_id": "HIST-2026-0044",
+      "task_id": "WP-P012-PATHD-20260912",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-12T11:55:06.7994570Z",
+      "created_by": "Owner approval recorded by Claude Fable Lead (desktop session tradingview-lab-clean-00)",
+      "summary": "Owner exact words `Approve ABCD with suggested matrix` (chat, 2026-09-12 ~11:00Z) approve the WP-P0-12 Path D acceptance-bar decision (root DECISIONS.md OD-20260912-P012-PATHD-1; record _AI_MEMORY/P012_PATH_D_DECISION_20260912.md): A funding HL_FUNDING_VENUE_REPORTED_CASH_V1 (A1=A, A2=B M pending, A3=A); B fees reported per-fill + 5% guarded estimator (B1=C, B2=C, B3=B, B4=A, N=3); C quantity owner guard K=10 with provenance marker (C1=A, C2=B, C3=A). Later addendum (11:50Z): rely on Path D alone, no Path 1 mainnet instances now. Authorizes one local non-accepting implementation candidate on the packet section 3 paths (economics.py, instrument.py, new economic record versions, export_mtc_funding.py production mode) with synthetic fixtures and D026 RED/GREEN, plus its T0 reviews and governance rows. OPEN01/03/05/07 stay OPEN; 27 signed risks stay; Item 4 qualified only by the explicit decision row. No acceptance, merge, deploy, live/TESTNET/mainnet, ARM, order, credential, PAYG or spend authority.",
+      "references": [
+        "DECISIONS.md#OD-20260912-P012-PATHD-1",
+        "MTC_COMMAND_CENTER/_AI_MEMORY/P012_PATH_D_DECISION_20260912.md",
+        "C:/tmp/CLAUDE_P0_JOBS/job02_p012_outbound/PATH_D_DECISION_SIGNED_20260912.md"
+      ]
+    }
   ]
 }

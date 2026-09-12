@@ -28,12 +28,25 @@ with no new symbol involved:
 * the duplicate tests: three retained rows carrying one exact duplicate were
   **accepted** and emitted two settlement events, because ``_fold_unique``
   collapsed the duplicate before the settlement-key guard could see it.
+
+RED (pre-repair, round 3) — behavioural, on the round-2 candidate ``fae07fa7``
+(``capture_binding_probe.py``, lane A):
+
+* the sample-count tests: captures claiming ``nSamples`` ``999``, ``true`` or
+  nothing at all were **accepted** beside a retained ``n_samples`` of ``1``,
+  because the capture binding covered only amount, rate, size and coin;
+* the source test: a retained ``source`` of ``NOT_HL_USER_FUNDING`` was
+  **accepted**, although the producer stamps exactly ``HL_USER_FUNDING``;
+* the scope test: an ETH retained payload with an ETH capture was **accepted**
+  under an outer BTC retained row, a BTC witness and a BTC candidate scope,
+  because only the outer row's symbol was compared with the witness.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -102,12 +115,16 @@ def epoch_ms(moment: datetime) -> int:
     return (moment.astimezone(UTC) - EPOCH) // timedelta(milliseconds=1)
 
 
-def capture(event: FundingEventRecord, **overrides) -> bytes:
+def capture(event: FundingEventRecord, *, drop: tuple[str, ...] = (), **overrides) -> bytes:
     """One invented own-account capture row. Not a venue response.
 
     The layout is the ``userFunding`` element the production digest domain
     names: ``/hash`` is the settlement identity, ``/time`` is epoch
-    milliseconds and ``/delta`` carries the coin, rate, size and settled cash.
+    milliseconds and ``/delta`` carries the coin, rate, size, settled cash and
+    sample count.  ``nSamples`` is present exactly when the record carries one,
+    because the producer normalizes an absent or non-integer ``nSamples`` to
+    ``None`` (``bridge/broker/hyperliquid.py:2139``). ``drop`` removes a delta
+    member so a capture can be made silent about a field it should state.
     """
     delta = {
         "coin": event.symbol,
@@ -116,7 +133,11 @@ def capture(event: FundingEventRecord, **overrides) -> bytes:
         "type": "funding",
         "usdc": repr(event.amount_usdc),
     }
+    if event.n_samples is not None:
+        delta["nSamples"] = event.n_samples
     delta.update(overrides.pop("delta", {}))
+    for member in drop:
+        delta.pop(member, None)
     row = {
         "delta": delta,
         "hash": event.event_id,
@@ -190,6 +211,7 @@ def coverage(
     complete: object = True,
     start: str = START,
     end: str = END,
+    symbol: str = SYMBOL,
 ) -> dict:
     return {
         "account_scope": declared_account,
@@ -210,7 +232,7 @@ def coverage(
             if source_witnesses is None
             else source_witnesses
         ),
-        "symbol": SYMBOL,
+        "symbol": symbol,
         "unattributed_event_ids": [],
         "witness_identity": WITNESS,
     }
@@ -242,6 +264,35 @@ def build(**kwargs):
     declared = kwargs.pop("declarations", declarations())
     params.update(kwargs)
     return exporter.build_funding_candidate(**params, mode=mode, declarations=declared)
+
+
+def build_one(
+    event: FundingEventRecord,
+    blob: bytes,
+    *,
+    row_overrides: dict | None = None,
+    cover_overrides: dict | None = None,
+    **kwargs,
+):
+    """One whole interval carrying one settlement and one explicit capture."""
+    digest = hashlib.sha256(blob).hexdigest()
+    return build(
+        retained_rows=[retained_row(event, **(row_overrides or {}))],
+        approved_event_bindings=[
+            binding(
+                event,
+                event_timestamp=TS_A,
+                source_event_digest=digest,
+                provenance_digest=digest,
+            )
+        ],
+        coverage=coverage(
+            expected_event_ids=[event.event_id],
+            source_witnesses={event.event_id: blob.hex()},
+            **(cover_overrides or {}),
+        ),
+        **kwargs,
+    )
 
 
 def write_snapshot(path: Path, *events: FundingEventRecord) -> Path:
@@ -625,9 +676,136 @@ def test_the_admitted_values_are_exactly_the_capture_and_the_retained_payload() 
         assert float(payload["funding_rate"]) == float(captured["delta"]["fundingRate"])
         assert float(payload["position_szi"]) == float(captured["delta"]["szi"])
         assert float(payload["amount_usdc"]) == float(captured["delta"]["usdc"])
+        assert payload["n_samples"] == captured["delta"]["nSamples"]
+        assert payload["source"] == "HL_USER_FUNDING"
         assert epoch_ms(event.effective_ts) == captured["time"]
         notes = events[event.event_id]["binding_notes"]
         assert notes["capture_values_bound_to_retained_payload"] is True
+        assert notes["capture_value_pointers"]["n_samples"] == "/delta/nSamples"
+
+
+# ---------------------------------------------------------------------------
+# The capture's own sample count, and the producer's source normalization
+#
+# ``bridge/broker/hyperliquid.py:2139`` keeps ``delta.nSamples`` only when it is
+# an ``int`` and not a ``bool``, and stamps ``source = "HL_USER_FUNDING"``.  A
+# retained payload that disagrees with what that producer would have written is
+# not the settlement the capture describes.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("captured", [999, True, "1", 1.0])
+def test_a_capture_sample_count_that_is_not_the_retained_one_refuses(captured) -> None:
+    """RED at ``fae07fa7``: every one of these was admitted beside ``n_samples=1``.
+
+    ``999`` is a different count; ``true``, ``"1"`` and ``1.0`` all normalize to
+    ``None`` in the producer, so none of them can stand behind a retained ``1``.
+    """
+    result = build_one(EVENT_A, capture(EVENT_A, delta={"nSamples": captured}))
+
+    assert result.accepted is False
+    assert result.candidate_bytes is None
+    assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
+    assert "nSamples" in result.report["reason_detail"]
+
+
+def test_a_capture_silent_about_its_sample_count_refuses_a_retained_one() -> None:
+    """RED at ``fae07fa7``: an absent ``nSamples`` was admitted beside ``1``."""
+    result = build_one(EVENT_A, capture(EVENT_A, drop=("nSamples",)))
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
+
+
+@pytest.mark.parametrize("retained", [True, 1.0, "1"])
+def test_a_retained_sample_count_that_is_not_a_whole_number_refuses(retained) -> None:
+    """``True == 1`` and ``1.0 == 1`` in Python; neither is a sample count."""
+    mistyped = replace(EVENT_A, n_samples=retained)
+    result = build_one(mistyped, capture(mistyped, delta={"nSamples": 1}))
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
+
+
+def test_a_matching_sample_count_is_admitted() -> None:
+    """The positive control for the same binding: agreement still builds."""
+    result = build_one(EVENT_A, capture(EVENT_A))
+
+    assert result.accepted is True, result.report
+    payload = json.loads(result.candidate_bytes)["production_candidate"][
+        "settlement_events"
+    ][0]["bridge_evidence"]["payload"]
+    assert payload["n_samples"] == 1
+
+
+def test_a_silent_capture_beside_a_null_retained_sample_count_is_admitted() -> None:
+    """The producer's own normalization, not a "must be present" rule.
+
+    A venue row without ``nSamples`` retains ``n_samples = None``, and that pair
+    agrees.  Refusing it would refuse authentic own-account settlements.
+    """
+    unsampled = replace(EVENT_A, n_samples=None)
+    result = build_one(unsampled, capture(unsampled))
+
+    assert result.accepted is True, result.report
+
+
+def test_a_retained_source_outside_the_production_normalization_refuses() -> None:
+    """RED at ``fae07fa7``: ``NOT_HL_USER_FUNDING`` was admitted.
+
+    The capture carries no source member, so nothing is read from it here: the
+    producer stamps one constant for own-account funding, and a retained row
+    that carries anything else did not come off that path.
+    """
+    foreign = replace(EVENT_A, source="NOT_HL_USER_FUNDING")
+    result = build_one(foreign, capture(foreign))
+
+    assert result.accepted is False
+    assert result.candidate_bytes is None
+    assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
+    assert "HL_USER_FUNDING" in result.report["reason_detail"]
+
+
+# ---------------------------------------------------------------------------
+# Instrument scope: capture, retained payload, retained row, witness, candidate
+# ---------------------------------------------------------------------------
+
+
+def test_a_retained_payload_outside_the_witnessed_instrument_refuses() -> None:
+    """RED at ``fae07fa7``: an ETH settlement was admitted into a BTC candidate.
+
+    Everything the round-2 candidate compared agrees: the outer retained row
+    says BTC like the witness, and the capture's coin equals the retained
+    payload's coin.  But both of those are ETH, so the admitted settlement is
+    not in the scope the candidate publishes.
+    """
+    eth = replace(EVENT_A, symbol="ETH")
+    result = build_one(eth, capture(eth), row_overrides={"symbol": SYMBOL})
+
+    assert result.accepted is False
+    assert result.candidate_bytes is None
+    assert result.reason_code == exporter.CANDIDATE_SYMBOL_MISMATCH
+
+
+def test_a_same_instrument_candidate_is_admitted_end_to_end() -> None:
+    """The positive control: the refusal above is disagreement, not a coin.
+
+    Nothing in the tool prefers BTC; an ETH settlement whose capture, payload,
+    retained row, witness and candidate scope all say ETH still builds.
+    """
+    eth = replace(EVENT_A, symbol="ETH")
+    product = "SYNTHETIC-DECLARED-ETH-PERP"
+    result = build_one(
+        eth,
+        capture(eth),
+        cover_overrides={"symbol": "ETH", "declared_product": product},
+        declarations=declarations(product=product),
+    )
+
+    assert result.accepted is True, result.report
+    candidate = json.loads(result.candidate_bytes)
+    assert candidate["production_candidate"]["symbol_scope"] == "ETH"
+    assert candidate["declarations"]["product"] == product
 
 
 # ---------------------------------------------------------------------------
@@ -1170,6 +1348,45 @@ def test_cli_production_with_declarations_stages_a_candidate(tmp_path, snapshot)
         for child in snapshot.parent.iterdir()
         if child.name.startswith(snapshot.name) and child.name != snapshot.name
     ] == []
+
+
+def test_cli_production_refuses_a_snapshot_the_capture_contradicts(tmp_path):
+    """The same capture binding on the materialize path, not the pure call.
+
+    The retained rows here come out of a real Store snapshot through
+    ``list_funding_events``/``get_funding_event_payload``, so this proves the
+    binding holds for the payloads the tool actually reads rather than for
+    hand-built rows: the stored settlement counts two samples, its capture in
+    the packet states one, and the whole interval refuses with no candidate and
+    no sidecar staged.
+    """
+    resampled = replace(EVENT_A, n_samples=2)
+    snapshot = write_snapshot(tmp_path / "offline" / "snapshot.db", resampled, EVENT_B)
+    staging = tmp_path / "staging"
+
+    code = run_cli(tmp_path, snapshot=snapshot, staging=staging, extra=DECLARED_FLAGS)
+
+    assert code != 0
+    assert sorted(child.name for child in staging.iterdir()) == [
+        exporter.REPORT_FILENAME
+    ]
+    report = json.loads((staging / exporter.REPORT_FILENAME).read_bytes())
+    assert report["reason_code"] == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
+    assert report["accepted"] is False
+
+
+def test_cli_production_refuses_a_snapshot_source_the_producer_never_writes(tmp_path):
+    """The source normalization on the materialize path."""
+    foreign = replace(EVENT_A, source="NOT_HL_USER_FUNDING")
+    snapshot = write_snapshot(tmp_path / "offline" / "snapshot.db", foreign, EVENT_B)
+    staging = tmp_path / "staging"
+
+    code = run_cli(tmp_path, snapshot=snapshot, staging=staging, extra=DECLARED_FLAGS)
+
+    assert code != 0
+    report = json.loads((staging / exporter.REPORT_FILENAME).read_bytes())
+    assert report["reason_code"] == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
+    assert "HL_USER_FUNDING" in report["reason_detail"]
 
 
 def test_cli_production_refuses_a_synthetic_packet_version(tmp_path, snapshot):

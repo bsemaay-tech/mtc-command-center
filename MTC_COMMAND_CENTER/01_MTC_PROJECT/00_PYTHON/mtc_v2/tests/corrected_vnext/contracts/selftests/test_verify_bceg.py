@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import shutil
 import subprocess
 import tempfile
@@ -31,7 +32,7 @@ from mtc_v2.tests.corrected_vnext.verify_bceg import (
 
 FIXTURES = Path(__file__).parent
 MTC_V2_ROOT = FIXTURES.parents[3]
-BASELINE_ROOT = Path(r"C:\tmp\P012_PROSE_BASELINE35_20260911\CURRENT")
+BASELINE_ROOT = Path(os.environ.get("P012_BASELINE_ROOT", r"C:\tmp\P012_PROSE_BASELINE35_20260911\CURRENT"))
 EMPTY_DOCUMENT_BYTES = b"{}" + bytes([10])
 PATCH_BYTES = b"--- a" + bytes([10])
 MEMBER_BYTES = b"x = 1" + bytes([10])
@@ -2261,7 +2262,7 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
         # decision-134 authorization is untouched. The R30 forward repin moved it again, from the
         # re-seal #29 commit 94a0a568 to the re-seal #30 commit 0c01b350, which carries the nine
         # re-derived kernel probe copies and the catalog pins that came with the oracle_price rename.
-        "e98e13a561d82af4c3dda0830af7d5c1a9637c0d"
+        "fae07fa7d1f4f01b5173248da00258ecc10075fd"
     )
     assert record["exceptions"][0]["owner_decision"] == 134
     assert record["exceptions"][0]["lane_ids"] == [
@@ -2612,7 +2613,8 @@ def test_w305_item2_real_catalog_conserves_both_roots() -> None:
     counts = verify_bceg.validate_root_conservation(MTC_V2_ROOT, catalog)
 
     assert counts["observed_root_files"] == 34
-    assert counts["probe_root_files"] == 1103
+    # Catalog contract: 9 KERNEL rows x (145 core + 3 artifacts) + INPUT03 (2 records + 3 artifacts).
+    assert counts["probe_root_files"] == 1337
 
 
 def test_comparison_pipeline_measures_executed_output_once_per_row(
