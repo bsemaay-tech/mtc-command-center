@@ -195,6 +195,18 @@ class P022TrackerContractTests(unittest.TestCase):
             "CON.txt ",
             "NUL:stream",
             "COM1:alt",
+            "COM¹",
+            "COM²",
+            "COM³",
+            "LPT¹",
+            "LPT²",
+            "LPT³",
+            "COM¹.log:stream",
+            "COM².txt",
+            "COM³.",
+            "LPT¹.log:stream",
+            "LPT².txt ",
+            "LPT³.",
         )
         return tuple(
             path
@@ -710,6 +722,93 @@ class P022TrackerContractTests(unittest.TestCase):
                         tracker.disclose_report(
                             self.db, "exp-a", 1, "report-ref", lambda _: None
                         )
+
+    def test_non_device_alternate_data_stream_names_remain_allowed(self):
+        tracker = _load_tracker()
+        path = tracker._safe_path(
+            "ordinary.txt:stream", "test alternate data stream", require_absolute=False
+        )
+        self.assertEqual(os.fspath(path), "ordinary.txt:stream")
+
+    def test_read_only_and_read_write_connect_same_literal_percent_dot_database(self):
+        tracker = _load_tracker()
+        literal_dir = self.root / "%2e%2e"
+        literal_dir.mkdir()
+        literal_db = literal_dir / "markers.sqlite3"
+        parent_db = self.root / "markers.sqlite3"
+        for db, marker in ((parent_db, "parent"), (literal_db, "literal")):
+            with closing(sqlite3.connect(db)) as connection:
+                connection.execute("CREATE TABLE marker (value TEXT NOT NULL)")
+                connection.execute("INSERT INTO marker(value) VALUES (?)", (marker,))
+                connection.commit()
+
+        with closing(tracker._connect(literal_db, read_only=True)) as connection:
+            self.assertEqual(connection.execute("SELECT value FROM marker").fetchone(), ("literal",))
+        with closing(tracker._connect(literal_db)) as connection:
+            connection.execute("UPDATE marker SET value='same-literal-db'")
+            connection.commit()
+        with closing(tracker._connect(literal_db, read_only=True)) as connection:
+            self.assertEqual(
+                connection.execute("SELECT value FROM marker").fetchone(),
+                ("same-literal-db",),
+            )
+        with closing(sqlite3.connect(parent_db)) as connection:
+            self.assertEqual(connection.execute("SELECT value FROM marker").fetchone(), ("parent",))
+
+    def test_read_only_uri_quotes_literal_special_path_characters(self):
+        tracker = _load_tracker()
+        special_dir = self.root / "literal%-hash#-space name-café"
+        special_dir.mkdir()
+        special_db = special_dir / "markers.sqlite3"
+        with closing(sqlite3.connect(special_db)) as connection:
+            connection.execute("CREATE TABLE marker (value TEXT NOT NULL)")
+            connection.execute("INSERT INTO marker(value) VALUES ('special')")
+            connection.commit()
+
+        with closing(tracker._connect(special_db, read_only=True)) as connection:
+            self.assertEqual(connection.execute("SELECT value FROM marker").fetchone(), ("special",))
+        with closing(tracker._connect(special_db)) as connection:
+            self.assertEqual(connection.execute("SELECT value FROM marker").fetchone(), ("special",))
+
+    def test_question_mark_path_is_encoded_for_read_only_and_literal_for_read_write(self):
+        tracker = _load_tracker()
+        question_path = Path(str(self.root / "question?markers.sqlite3"))
+        observed = []
+        fake_connection = mock.Mock()
+        fake_connection.execute.return_value = None
+
+        def fake_connect(database, **kwargs):
+            observed.append((database, kwargs))
+            return fake_connection
+
+        original_exists = tracker.Path.exists
+        original_resolve = tracker.Path.resolve
+
+        def guarded_exists(candidate):
+            if os.fspath(candidate) == os.fspath(question_path):
+                return True
+            return original_exists(candidate)
+
+        def guarded_resolve(candidate, *args, **kwargs):
+            if os.fspath(candidate) == os.fspath(question_path):
+                return candidate
+            return original_resolve(candidate, *args, **kwargs)
+
+        with mock.patch.object(
+            tracker.Path, "exists", autospec=True, side_effect=guarded_exists
+        ), mock.patch.object(
+            tracker.Path, "resolve", autospec=True, side_effect=guarded_resolve
+        ), mock.patch.object(tracker.sqlite3, "connect", side_effect=fake_connect):
+            with closing(tracker._connect(question_path, read_only=True)):
+                pass
+            with closing(tracker._connect(question_path)):
+                pass
+
+        self.assertEqual(len(observed), 2)
+        self.assertIn("%3F", observed[0][0])
+        self.assertTrue(observed[0][1].get("uri"))
+        self.assertEqual(observed[1][0], os.fspath(question_path))
+        self.assertFalse(observed[1][1].get("uri", False))
 
 
 if __name__ == "__main__":

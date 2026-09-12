@@ -24,7 +24,7 @@ ROLES = frozenset({"strategy", "configuration", "dataset", "report"})
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 UTC_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 DOS_DEVICE_NAMES = frozenset({"CON", "PRN", "AUX", "NUL", "CLOCK$", "CONIN$", "CONOUT$"})
-DOS_PORT_RE = re.compile(r"^(?:COM|LPT)[1-9]$")
+DOS_PORT_RE = re.compile(r"^(?:COM|LPT)[1-9¹²³]$")
 
 
 class TrackerError(ValueError):
@@ -259,7 +259,7 @@ def _connect(path: Path, *, read_only: bool = False) -> sqlite3.Connection:
     if read_only:
         if not path.exists():
             raise TrackerError(f"database does not exist: {path}")
-        uri = f"file:{path.resolve().as_posix()}?mode=ro"
+        uri = f"{path.resolve().as_uri()}?mode=ro"
         connection = sqlite3.connect(uri, uri=True)
     else:
         connection = sqlite3.connect(str(path))
