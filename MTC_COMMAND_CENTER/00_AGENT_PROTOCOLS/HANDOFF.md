@@ -1,25 +1,17 @@
-# P012 governance handoff — 2026-09-11
+# P012 Path D Lead handoff — 2026-09-12
 
-Full P012 remains NONACCEPTED: 10 production OPEN rows, 27 signed risks, five residual integration obligations. No venue reply received. Independent engineering/preparation has advanced beyond the earlier proposals.
+CLAIMED: Lead owns worktree `C:/tmp/P012_PATHD_20260912`, branch `feature/p012-path-d-20260912`. Same-scope owned source and local commits are authorized. Metadata scope: `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md`, `MTC_COMMAND_CENTER/_AI_MEMORY/P012_PATH_D_LEAD_20260912.md`, and `MTC_COMMAND_CENTER/_AI_MEMORY/history/p012-pathd-pre-r3-20260912/HANDOFF.md`, all relative to that owned worktree. No shared, canonical, or other-lane writes.
 
-- Owned branch/worktree: feature/p012-independent-readiness-20260911 at C:/tmp/P012_INDEPENDENT_20260911. No live/scheduled dependency. Foreign checkout preserved.
-- Master rechecked: 4ce213184fe35313cafde45da8f59543db306086.
-- Local reviewed corrective commit: ec6347d5277267937a416356df57355a69ad4b2c. Only three manifest declaration fields reconcile stale PENDING with ratified R35. No publish/merge/deploy/admission.
-- Deliverables: C:/Users/BarışSemaay/Documents/Codex/2026-09-11/11-2/outputs/WP_P0_12_CONTROL/CONTROL_TABLE.md and DECISION_PACKET.md.
-- Detailed current note: ../_AI_MEMORY/P012_INDEPENDENT_READINESS_20260911.md.
+VERIFIED_AT: 2026-09-12T17:41:06Z. Branch `feature/p012-path-d-20260912`; code C3 `e1e5484da1f6ab19236a22d655071248bd6036f7`; core `3690266c07b9b95bfc6613da255a16a002efb1d8`; D3 `2d5d63445328c4c92584f2c724e772457711d91d`; clean F3 producer `cf9442b4d60dccb30bca07559ffdef6c97b998ff`.
 
-Completed: 13 fee checks, nine Runner checks, three Bridge/MTC API groups with seven negative controls; R29 PACKET_V4 exact-byte preparation; combined cross-check PASS. Full bar-driven signal run not rerun. R29 semantic review remains at its already-approved final acceptance boundary.
+RUNNING: Lead final metadata/freeze/review preparation. C3 checkpoint is clean: fee/economics/quantity 92 PASS; prescribed Bridge 451 PASS, 1 SKIP. D3 replay/structure is PASS: 10 faults and observed first nodes match; owner receipt schema unchanged. F3 provenance is MATCH with zero path changes and no lifted exception. Baseline independently verifies 36 files and 34 byte-identical semantic surfaces. Builder #37 seal `2405a7d3f05db8c185d1c4f6969a38dc9f703a271c321abf12c57dda38c88906`.
 
-Manifest correction: Lead and fresh Opus5/Sol xhigh reviews reproduce old/fix/reverted-status and 17 tests; both PASS. Gemini3.7 supplemental unexecuted corroboration retained. One false diagnostic removed; four historical diagnostics, all 19 sealed members and production records remain. Accepted R34/R35/PR178 work reused, not re-audited.
+ACCEPTED: Nothing for the current repair-3 candidate. Full MTC test counts are 684 PASS, 1 FAIL, 1 SKIP. Full-gate exit 2 contains the stale semantic receipt identity refusal and the schema test; the sole test failure is the unchanged schema test for the ratification-dependent #36/#37 receipt chain. `acceptance_reachable:true` and an empty blocker list are not approval or full acceptance.
 
-E updated: current official frontend explicitly maps perp taker/maker and referral branches; Lead reproduced six source hashes/import chain/five synthetic cases. Chunk SHA256 215c171cba31045c930ed5718d24464ea5660257819481ff449f8b664024dcb5. Historical applicability, actual billing and rounding remain open. Public funding sample has no payments: reuse its prepared targeted request, no repeated investigation.
+BLOCKED: Final gates and external evidence only. Signed OPEN01/03/05/07, 27 risks, funding M, N=3 maker/taker/near-10 observations, forward-only account/product/interval requirements, actual account admission, CI, and owner ratification remain open. Fee admission binds exact original single-fill bytes/hash/text and native context; it proves local consistency only, not origin, ownership, matching, or producer authenticity. No live, paper, testnet, trading, credentials, spending, push, PR, merge, or outreach authority.
 
-All settled choices retained: STOP_FIRST, explicit zero slippage, retained profiles, no additional bounds, additive schema, GROSS-MINUS-FEES guards, LONG payer, same-timestamp inclusion. No new venue assumptions.
+NEXT ACTION: Finish factual final freeze and prepare the eligible Section 16/R29 review packet; obtain fresh exact Opus 5 xhigh, Sol xhigh, and Gemini 3.7 High reviews. Preserve historical/nonaccepting R3 records and link the detailed history note.
 
-Exact D1 proposal prepares synthetic-only offline exporter behavior for approval. D2 proposes push/PR of the already-reviewed local correction; no merge grant. Other final derivations/reviews depend on real final records/candidate. E and delivery lanes complete; actual running subscription workers: 0. Lead verified the 532-member work bundle and separate E archive. Packaging checks and factual persistence are complete.
+WAITING FOR OWNER: No immediate engineering question. Final ratification, real-account evidence, funding/fee observations, and future acceptance gates remain owner decisions.
 
-Earlier handoff and readiness are preserved byte-for-byte under ../_AI_MEMORY/history/p012-package-continue-20260911/. No reset, stash, overwrite of foreign work, global account change or new spending.
-
-NEXT ACTION: present D1/D2 as one decision packet. WAITING FOR OWNER: D1/D2 and source-backed venue evidence when available.
-
-Owner approval in this task, 2026-09-11: "all are approved" approves DECISION_PACKET D1 (synthetic-only offline materializer) and D2 (push/PR of the reviewed manifest correction plus factual handoff). D2 may now publish; merge and production/operational actions remain excluded. D1 proceeds separately in feature/p012-synthetic-funding-materializer-20260911 at C:/tmp/P012_MATERIALIZER_20260911, so new implementation cannot enter this correction PR. Required review/CI conditions are unchanged.
+Detailed current state and retained active obligations: `../_AI_MEMORY/P012_PATH_D_LEAD_20260912.md`. Exact prior handoff bytes are retained at `../_AI_MEMORY/history/p012-pathd-pre-r3-20260912/HANDOFF.md`.
