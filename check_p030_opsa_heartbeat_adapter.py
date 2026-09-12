@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+import types
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -13,6 +14,22 @@ import p030_opsa_heartbeat_adapter as subject
 
 class HeartbeatAdapterTests(unittest.TestCase):
     ID = "fixture-p030-collector"
+
+    def assert_ambiguous_state_dir_refused(
+        self, module: types.ModuleType, state_dir: Path
+    ) -> None:
+        with mock.patch.object(module.heartbeat, "emit") as emit:
+            with self.assertRaisesRegex(ValueError, "state_dir"):
+                module.emit_process_heartbeat(state_dir, self.ID, seq=1)
+        emit.assert_not_called()
+
+        with mock.patch.object(
+            module, "resolve_confined_path"
+        ) as resolve_path, mock.patch.object(Path, "read_text") as read_text:
+            with self.assertRaisesRegex(ValueError, "state_dir"):
+                module.verify_process_heartbeat(state_dir, self.ID)
+        resolve_path.assert_not_called()
+        read_text.assert_not_called()
 
     def test_exact_p026_heartbeat_round_trip_and_extra_field_refusal(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -84,6 +101,38 @@ class HeartbeatAdapterTests(unittest.TestCase):
                         reconciliation_progress=None,
                     )
             write_json.assert_not_called()
+
+    def test_emitter_and_verifier_refuse_ambiguous_path_state_dirs(self) -> None:
+        for state_dir in (
+            Path("   "),
+            Path(),
+            Path("."),
+            Path("nested") / "..",
+            Path(Path.cwd().drive),
+            Path.cwd(),
+        ):
+            with self.subTest(state_dir=repr(state_dir)):
+                self.assert_ambiguous_state_dir_refused(subject, state_dir)
+
+    def test_permissive_state_directory_reversion_mutant_is_detected(self) -> None:
+        source = Path(subject.__file__).read_text(encoding="utf-8")
+        anchor = (
+            "    if (\n"
+            "        not text.strip()\n"
+            "        or normalized in {os.curdir, current_directory}\n"
+            '        or (bool(drive) and tail in {"", os.curdir})\n'
+            "    ):\n"
+        )
+        self.assertEqual(source.count(anchor), 1)
+        mutant = types.ModuleType("p030_opsa_heartbeat_adapter_permissive_mutant")
+        mutant.__file__ = subject.__file__
+        exec(
+            compile(source.replace(anchor, "    if False:\n"), mutant.__file__, "exec"),
+            mutant.__dict__,
+        )
+
+        with self.assertRaises(AssertionError):
+            self.assert_ambiguous_state_dir_refused(mutant, Path("   "))
 
     def test_verifier_refuses_duplicate_keys_and_nonfinite_json(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
