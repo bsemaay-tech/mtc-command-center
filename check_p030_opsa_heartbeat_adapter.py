@@ -22,7 +22,7 @@ class HeartbeatAdapterTests(unittest.TestCase):
             self.assertFalse(state_dir.exists())
 
             path = subject.emit_process_heartbeat(state_dir, self.ID, seq=7, note="fixture")
-            payload = subject.verify_process_heartbeat(path, expected_id=self.ID)
+            payload = subject.verify_process_heartbeat(state_dir, self.ID)
             self.assertEqual(
                 set(payload), {"schema", "id", "seq", "emitted_at", "pid", "note"}
             )
@@ -31,7 +31,29 @@ class HeartbeatAdapterTests(unittest.TestCase):
             payload["market_freshness"] = {}
             path.write_text(json.dumps(payload), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "heartbeat fields do not match P026"):
-                subject.verify_process_heartbeat(path, expected_id=self.ID)
+                subject.verify_process_heartbeat(state_dir, self.ID)
+
+    def test_verifier_derives_path_and_requires_exact_emitter_grammar(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            state_dir = root / "synthetic-state"
+            path = subject.emit_process_heartbeat(state_dir, self.ID, seq=1)
+            arbitrary = root / "arbitrary-heartbeat.json"
+            arbitrary.write_bytes(path.read_bytes())
+            with self.assertRaises((TypeError, ValueError)):
+                subject.verify_process_heartbeat(arbitrary, self.ID)
+
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            payload["emitted_at"] = "2026-09-12T02:00:00+02:00"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "UTC-Z"):
+                subject.verify_process_heartbeat(state_dir, self.ID)
+
+            payload["emitted_at"] = "2026-09-12T00:00:00Z"
+            payload["note"] = ""
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "note"):
+                subject.verify_process_heartbeat(state_dir, self.ID)
 
     def test_emitter_refuses_values_its_verifier_would_reject(self) -> None:
         for kwargs in ({"seq": True}, {"seq": 1, "note": {"truthy": True}}):
@@ -72,18 +94,18 @@ class HeartbeatAdapterTests(unittest.TestCase):
             duplicate = payload.replace('"seq": 1', '"seq": 1, "seq": 1')
             path.write_text(duplicate, encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
-                subject.verify_process_heartbeat(path, expected_id=self.ID)
+                subject.verify_process_heartbeat(Path(temporary), self.ID)
 
             nonfinite = payload.replace('"seq": 1', '"seq": NaN')
             path.write_text(nonfinite, encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "non-finite JSON constant"):
-                subject.verify_process_heartbeat(path, expected_id=self.ID)
+                subject.verify_process_heartbeat(Path(temporary), self.ID)
 
     def test_health_sidecar_binds_observed_time_raw_timestamp_and_derived_age(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             state_dir = Path(temporary) / "state"
             heartbeat_path = subject.emit_process_heartbeat(state_dir, self.ID, seq=1)
-            subject.verify_process_heartbeat(heartbeat_path, expected_id=self.ID)
+            subject.verify_process_heartbeat(state_dir, self.ID)
 
             sidecar_path = subject.write_health_sidecar(
                 state_dir,
@@ -116,7 +138,7 @@ class HeartbeatAdapterTests(unittest.TestCase):
             self.assertIsNone(sidecar["reconciliation_progress"])
             self.assertNotIn(
                 "market_freshness",
-                subject.verify_process_heartbeat(heartbeat_path, expected_id=self.ID),
+                subject.verify_process_heartbeat(state_dir, self.ID),
             )
 
     def test_health_sidecar_declares_unavailable_and_rejects_fabricated_reconciliation(self) -> None:
