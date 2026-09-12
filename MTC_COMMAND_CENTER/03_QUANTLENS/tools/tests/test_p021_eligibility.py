@@ -34,6 +34,15 @@ _EXPECTED_OPEN_NUMBERS = {
     "divergence_window_length",
     "divergence_min_paired_observations",
 }
+_EXPECTED_CHECK_IDS = {
+    "P021.DETERMINISTIC_REPLAY",
+    "P021.LOOKAHEAD_PREFIX",
+    "P021.REPAINT_CLOSED_BAR",
+    "P021.DATA_QUALITY",
+    "P021.BASIC_FAILURE_FLOOR",
+    "P021.UNSIMULATED_CONTROLS",
+    "P021.BACKTEST_FORWARD_DIVERGENCE",
+}
 
 
 class P021ContractTestCase(unittest.TestCase):
@@ -49,6 +58,10 @@ class P021ContractTestCase(unittest.TestCase):
         self.assertIs(record["ready"], False)
         self.assertEqual(record["status"], "REFUSED")
         self.assertEqual(len(record["checks"]), 7)
+        self.assertEqual(
+            {check["check_id"] for check in record["checks"]},
+            _EXPECTED_CHECK_IDS,
+        )
         self.assertTrue(
             all(check["status"] == "REFUSED" for check in record["checks"])
         )
@@ -62,6 +75,20 @@ class P021ContractTestCase(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.assert_readiness_fence()
+
+
+class ReadinessFenceTests(P021ContractTestCase):
+    def test_refuses_replaced_check_id(self) -> None:
+        changed = p021_readiness_rules.readiness_record()
+        changed["checks"][0]["check_id"] = "P021.REPLACED_BY_MUTANT"
+
+        with patch.object(
+            p021_readiness_rules,
+            "readiness_record",
+            return_value=changed,
+        ):
+            with self.assertRaises(AssertionError):
+                self.assert_readiness_fence()
 
 
 class DsV1CompatibilityTests(P021ContractTestCase):
@@ -233,6 +260,34 @@ class ControlIdentityTests(P021ContractTestCase):
 
 
 class ControlAllowanceTests(P021ContractTestCase):
+    def test_refuses_malformed_executed_control_id_carriers(self) -> None:
+        inventory = (ControlInventoryItem("fee", True),)
+        manifest = (
+            UnsimulatedControl(
+                control_id="fee",
+                required_for_promotion=True,
+                reason="not simulated",
+            ),
+        )
+        common = {
+            "target_state": EligibilityState.SHADOW_ELIGIBLE,
+            "inventory": inventory,
+            "manifest": manifest,
+            "expected_control_inventory_hash": control_inventory_sha256(inventory),
+            "expected_unsimulated_controls_hash": unsimulated_controls_sha256(
+                manifest
+            ),
+        }
+
+        for carrier in ("fee", {"fee": True}, None, ["fee"]):
+            with self.subTest(carrier=carrier):
+                self.assert_refused_reason(
+                    "CONTROL_INVALID_EXECUTED_IDS_CARRIER",
+                    evaluate_control_evidence,
+                    executed_control_ids=carrier,
+                    **common,
+                )
+
     def test_required_unsimulated_control_caps_above_shadow(self) -> None:
         inventory = (
             ControlInventoryItem("fee", True),

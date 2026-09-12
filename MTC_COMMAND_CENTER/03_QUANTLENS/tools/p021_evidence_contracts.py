@@ -202,6 +202,8 @@ def evaluate_control_evidence(
 
     if not isinstance(target_state, EligibilityState):
         raise EvidenceContractRefused("CONTROL_INVALID_TARGET_STATE")
+    if not isinstance(executed_control_ids, tuple):
+        raise EvidenceContractRefused("CONTROL_INVALID_EXECUTED_IDS_CARRIER")
     ordered_inventory = _unique_inventory(inventory)
     ordered_manifest = _unique_manifest(manifest)
     inventory_by_id = {item.control_id: item for item in ordered_inventory}
