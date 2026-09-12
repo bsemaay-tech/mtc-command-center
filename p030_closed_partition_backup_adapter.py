@@ -498,6 +498,68 @@ def _verify_manifest_snapshot(
     _complete_p026_run(config, records, run_id=run_id, store_id=store_id)
 
 
+@contextmanager
+def _isolated_restore_inputs(
+    config: dict, manifest_raw: bytes, *, run_id: str, store_id: str
+):
+    source_prefix = resolve_confined_path(
+        Path(config["backup_root"]), "runs", run_id, store_id
+    )
+    try:
+        receipt_raw = (source_prefix / STABLE_RECEIPT_NAME).read_bytes()
+    except OSError as exc:
+        raise ValueError("stable-prefix receipt is unavailable") from exc
+    receipt = _decode_json_object(receipt_raw, "stable-prefix receipt")
+    snapshot_rel = _canonical_relative_posix(
+        receipt.get("snapshot_rel"), "snapshot_rel"
+    )
+    try:
+        snapshot_raw = resolve_confined_path(source_prefix, snapshot_rel).read_bytes()
+    except OSError as exc:
+        raise ValueError("snapshot prefix is unavailable") from exc
+
+    with tempfile.TemporaryDirectory(prefix="p030-isolated-restore-") as temporary:
+        isolated_root = Path(temporary) / "backup"
+        isolated_prefix = resolve_confined_path(
+            isolated_root, "runs", run_id, store_id
+        )
+        isolated_prefix.mkdir(parents=True)
+        (isolated_prefix / STABLE_RECEIPT_NAME).write_bytes(receipt_raw)
+        isolated_snapshot = resolve_confined_path(isolated_prefix, snapshot_rel)
+        isolated_snapshot.parent.mkdir(parents=True, exist_ok=True)
+        isolated_snapshot.write_bytes(snapshot_raw)
+        isolated_manifest = isolated_root / "manifest.jsonl"
+        isolated_manifest.write_bytes(manifest_raw)
+
+        isolated_config = {**config, "backup_root": str(isolated_root)}
+        isolated_config_raw = (
+            json.dumps(
+                isolated_config,
+                ensure_ascii=False,
+                sort_keys=True,
+                indent=2,
+                allow_nan=False,
+            )
+            + "\n"
+        ).encode("utf-8")
+        isolated_config_path = Path(temporary) / "config.json"
+        isolated_config_path.write_bytes(isolated_config_raw)
+        if isolated_config_path.read_bytes() != isolated_config_raw:
+            raise ValueError("isolated restore config bytes do not match snapshot")
+        try:
+            loaded_config = load_backup_config(isolated_config_path)
+        except (OSError, TypeError, ValueError) as exc:
+            raise ValueError("isolated restore config is not runnable") from exc
+        if loaded_config != isolated_config:
+            raise ValueError("isolated restore config object does not match snapshot")
+        manifest_path, validated_raw = _restore_manifest_snapshot(
+            isolated_config, run_id=run_id, store_id=store_id
+        )
+        if validated_raw != manifest_raw:
+            raise ValueError("isolated P026 manifest bytes do not match validated input")
+        yield isolated_config_path, isolated_config, manifest_path, validated_raw
+
+
 def backup_stable_prefix(
     config_path: Path, *, stable_receipt: Path, store_id: str, source_root: Path
 ) -> str:
@@ -545,53 +607,69 @@ def backup_stable_prefix(
 def restore_verified_prefix(
     config_path: Path, *, run_id: str, store_id: str, target: Path
 ) -> Path:
-    with _bound_strict_config(Path(config_path), store_id=store_id) as (
-        bound_config_path,
-        config,
-    ):
+    with _bound_strict_config(Path(config_path), store_id=store_id) as (_, config):
         target = Path(target).resolve()
         if not target.is_dir() or any(target.iterdir()):
             raise ValueError("restore target must be empty")
         manifest_path, manifest_before = _restore_manifest_snapshot(
             config, run_id=run_id, store_id=store_id
         )
-        check_result = restore.run_restore(
-            bound_config_path,
-            run_id,
-            None,
-            check_only=True,
-            store_filter={store_id},
-        )
-        _verify_manifest_snapshot(
-            manifest_path,
-            manifest_before,
-            config,
-            run_id=run_id,
-            store_id=store_id,
-        )
-        if check_result != RC_OK:
-            raise ValueError("P026 check-only failed; restore withheld")
-        manifest_path, manifest_before = _restore_manifest_snapshot(
-            config, run_id=run_id, store_id=store_id
-        )
-        if not target.is_dir() or any(target.iterdir()):
-            raise ValueError("restore target must be empty")
-        restore_result = restore.run_restore(
-            bound_config_path,
-            run_id,
-            target,
-            check_only=False,
-            store_filter={store_id},
-        )
-        _verify_manifest_snapshot(
-            manifest_path,
-            manifest_before,
-            config,
-            run_id=run_id,
-            store_id=store_id,
-        )
-        if restore_result != RC_OK:
-            raise ValueError("P026 restore failed")
+        with _isolated_restore_inputs(
+            config, manifest_before, run_id=run_id, store_id=store_id
+        ) as (
+            isolated_config_path,
+            isolated_config,
+            isolated_manifest,
+            isolated_manifest_raw,
+        ):
+            check_result = restore.run_restore(
+                isolated_config_path,
+                run_id,
+                None,
+                check_only=True,
+                store_filter={store_id},
+            )
+            _verify_manifest_snapshot(
+                isolated_manifest,
+                isolated_manifest_raw,
+                isolated_config,
+                run_id=run_id,
+                store_id=store_id,
+            )
+            _verify_manifest_snapshot(
+                manifest_path,
+                manifest_before,
+                config,
+                run_id=run_id,
+                store_id=store_id,
+            )
+            if check_result != RC_OK:
+                raise ValueError("P026 check-only failed; restore withheld")
+            if not target.is_dir() or any(target.iterdir()):
+                raise ValueError("restore target must be empty")
+            restore_result = restore.run_restore(
+                isolated_config_path,
+                run_id,
+                target,
+                check_only=False,
+                store_filter={store_id},
+            )
+            _verify_manifest_snapshot(
+                isolated_manifest,
+                isolated_manifest_raw,
+                isolated_config,
+                run_id=run_id,
+                store_id=store_id,
+            )
+            _verify_manifest_snapshot(
+                manifest_path,
+                manifest_before,
+                config,
+                run_id=run_id,
+                store_id=store_id,
+            )
+            if restore_result != RC_OK:
+                raise ValueError("P026 restore failed")
     restored_prefix = resolve_confined_path(target, store_id)
     stable = _verify_stable_receipt(
         restored_prefix, restored_prefix / STABLE_RECEIPT_NAME, verify_source=False
