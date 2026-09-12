@@ -2262,7 +2262,7 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
         # decision-134 authorization is untouched. The R30 forward repin moved it again, from the
         # re-seal #29 commit 94a0a568 to the re-seal #30 commit 0c01b350, which carries the nine
         # re-derived kernel probe copies and the catalog pins that came with the oracle_price rename.
-        "fae07fa7d1f4f01b5173248da00258ecc10075fd"
+        "2d5d63445328c4c92584f2c724e772457711d91d"
     )
     assert record["exceptions"][0]["owner_decision"] == 134
     assert record["exceptions"][0]["lane_ids"] == [
