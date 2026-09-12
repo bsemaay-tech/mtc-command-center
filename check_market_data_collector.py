@@ -699,7 +699,7 @@ def persisted_huge_timestamp_gap_refusal_check(module: types.ModuleType = subjec
 
 
 def persisted_huge_timestamp_public_ingest_check(module: types.ModuleType = subject) -> None:
-    """Every enormous persisted WS_LIVE timestamp must fail before cursor reconstruction."""
+    """An enormous persisted timestamp must refuse before a forming frame can seed the cursor."""
     now = JANUARY_LAST_BAR + 10 * STEP
     huge = (10**1000 // STEP) * STEP
     for label, persisted_opens in (("single", (huge,)), ("contiguous", (huge, huge + STEP))):
@@ -729,19 +729,75 @@ def persisted_huge_timestamp_public_ingest_check(module: types.ModuleType = subj
             )
             before = durable_bytes(root)
             try:
-                restarted.ingest(raw_bar(JANUARY_LAST_BAR + STEP), "WS_LIVE")
+                result = restarted.ingest(raw_bar(now), "WS_LIVE")
+                outcome = ("returned_none", result)
             except module.CollectionRefused as error:
-                assert str(error) == "persisted WS_LIVE bar_open_time is not UTC-renderable", (
-                    label,
-                    str(error),
-                )
+                outcome = ("refused", str(error))
             except BaseException as error:
-                raise AssertionError(("persisted_huge_timestamp_public", label, type(error).__name__)) from error
-            else:
-                raise AssertionError(("persisted_huge_timestamp_public", label, "accepted"))
-            assert durable_bytes(root) == before, (label, "archive_changed")
-            assert source.snapshot_calls == [], (label, "snapshot_called")
+                outcome = ("unexpected_error", type(error).__name__)
+            observed = (
+                outcome,
+                "empty" if not restarted._last_live_open else "cursor_seeded",
+                durable_bytes(root) == before,
+                source.snapshot_calls,
+            )
+            assert observed == (
+                ("refused", "persisted WS_LIVE bar_open_time is not UTC-renderable"),
+                "empty",
+                True,
+                [],
+            ), ("persisted_huge_timestamp_public", label, observed)
     print("PERSISTED HUGE TIMESTAMP PUBLIC INGEST (single/contiguous) REFUSED: PASS")
+
+
+def persisted_ws_only_continuity_check(module: types.ModuleType = subject) -> None:
+    """Snapshots filling every interior slot must not make a WS_LIVE sequence contiguous."""
+    base = FEBRUARY_START
+    now = base + 10 * STEP
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        archive = module.MonthlyArchive(root)
+        for offset in range(6):
+            producer = "WS_LIVE" if offset in (0, 5) else "CANDLE_SNAPSHOT"
+            bar = module.normalize_bar(
+                raw_bar(base + offset * STEP),
+                source_producer=producer,
+                ingest_time=now,
+                env_lineage_id="fixture-lineage",
+                identities=identities_for(module),
+            )
+            assert bar is not None
+            archive._append(archive.bar_path(bar), dataclasses.asdict(bar))
+        source = FakePublicSource([])
+        restarted = module.MarketDataCollector(
+            source=source,
+            archive=archive,
+            identities=identities_for(module),
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: now,
+        )
+        before = durable_bytes(root)
+        try:
+            result = restarted.ingest(raw_bar(base + 6 * STEP), "WS_LIVE")
+            outcome = ("accepted", result.bar_open_time if result is not None else None)
+        except module.CollectionRefused as error:
+            outcome = ("refused", str(error))
+        observed = (
+            outcome,
+            durable_bytes(root) == before,
+            [int(record["bar_open_time"]) for record in archive.bars("BTC", "15m")],
+            [record["source_producer"] for record in archive.bars("BTC", "15m")],
+            source.snapshot_calls,
+        )
+        assert observed == (
+            ("refused", "persisted WS_LIVE sequence has a gap at 2026-02-01T00:15:00Z"),
+            True,
+            [base + offset * STEP for offset in range(6)],
+            ["WS_LIVE", "CANDLE_SNAPSHOT", "CANDLE_SNAPSHOT", "CANDLE_SNAPSHOT", "CANDLE_SNAPSHOT", "WS_LIVE"],
+            [],
+        ), ("persisted_ws_only_continuity", observed)
+    print("PERSISTED WS_ONLY CONTINUITY (snapshots do not fill WS gap): PASS")
 
 
 def durable_bytes(root: Path) -> list[tuple[str, bytes]]:
@@ -1613,6 +1669,13 @@ def mutant_text(label: str) -> str:
             '                    ):\n'
             '                        continue\n',
         )
+    if label == "persisted WS-only filter removed":
+        return _splice(
+            fixed,
+            '                    if record.get("source_producer") != "WS_LIVE":\n'
+            '                        continue\n',
+            "",
+        )
     if label == "forming history not reconstructed":
         return _splice(
             fixed,
@@ -1854,7 +1917,16 @@ def mutation_checks(socket_attempts: list[object]) -> None:
          ("persisted_huge_timestamp", "OverflowError")),
         ("persisted timestamp representability removed", True,
          lambda module, _text: persisted_huge_timestamp_public_ingest_check(module=module),
-         ("single", "bar sequence is non-increasing or off interval")),
+         ("persisted_huge_timestamp_public", "single",
+          (("returned_none", None), "cursor_seeded", True, []))),
+        ("persisted WS-only filter removed", True,
+         lambda module, _text: persisted_ws_only_continuity_check(module=module),
+         ("persisted_ws_only_continuity",
+          (("accepted", FEBRUARY_START + 6 * STEP), False,
+           [FEBRUARY_START + offset * STEP for offset in range(7)],
+           ["WS_LIVE", "CANDLE_SNAPSHOT", "CANDLE_SNAPSHOT", "CANDLE_SNAPSHOT",
+            "CANDLE_SNAPSHOT", "WS_LIVE", "WS_LIVE"],
+           []))),
         ("persisted timestamp coerced", True,
          lambda module, _text: persisted_timestamp_case_check(
              "numeric string", str(JANUARY_LAST_BAR), module=module
@@ -1921,6 +1993,7 @@ def main() -> None:
         forming_first_frame_reconstructs_history_check()
         persisted_huge_timestamp_gap_refusal_check()
         persisted_huge_timestamp_public_ingest_check()
+        persisted_ws_only_continuity_check()
         persisted_timestamp_type_refusal_check()
         persisted_off_grid_refusal_check()
         synthetic_same_id_conflict_check()
