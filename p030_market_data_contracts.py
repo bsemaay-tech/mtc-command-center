@@ -108,6 +108,14 @@ def _track_proxy(record: Mapping[str, Any], label: str) -> None:
         raise ContractRefused(f"{label}.proxy_source is required for PROXY track")
 
 
+def _producer_track_proxy(record: Mapping[str, Any], label: str) -> None:
+    _source_producer(record["source_producer"], f"{label}.source_producer")
+    _track_proxy(record, label)
+    expected_track = "PROXY" if record["source_producer"] == "PROXY_DOWNLOAD" else "NATIVE"
+    if record["track"] != expected_track:
+        raise ContractRefused(f"{label}.source_producer does not match track")
+
+
 def _integer(value: object, label: str, *, nullable: bool = False) -> int | None:
     if value is None and nullable:
         return None
@@ -194,8 +202,7 @@ def _validate_observation(record: Mapping[str, Any]) -> None:
     _exact(record, OBSERVATION_FIELDS, "observation")
     for field in ("venue", "symbol", "interval"):
         _string(record[field], f"observation.{field}")
-    _source_producer(record["source_producer"], "observation.source_producer")
-    _track_proxy(record, "observation")
+    _producer_track_proxy(record, "observation")
     _integer(record["bar_open_time"], "observation.bar_open_time")
     _hash(record["producer_payload_hash"], "observation.producer_payload_hash",
           prefix="p030payload-v1")
@@ -246,6 +253,7 @@ def event_id(record: Mapping[str, Any]) -> str:
 
 
 def validate_correction_chain(records: Iterable[Mapping[str, Any]]) -> None:
+    records = list(records)
     indexed: dict[str, Mapping[str, Any]] = {}
     slots: dict[tuple[Any, ...], str] = {}
     children: dict[str, str] = {}
@@ -318,6 +326,7 @@ def _validate_dataset_row(row: Mapping[str, Any]) -> None:
 def dataset_content_hash(
     slice_descriptor: Mapping[str, Any], observations: Iterable[Mapping[str, Any]]
 ) -> str:
+    observations = list(observations)
     descriptor = _mapping(slice_descriptor, "dataset descriptor")
     _exact(descriptor, DATASET_DESCRIPTOR_FIELDS, "dataset descriptor")
     _string(descriptor["venue"], "dataset descriptor.venue")
@@ -370,9 +379,9 @@ def venue_provenance_manifest_hash(manifest: Mapping[str, Any]) -> str:
     _exact(manifest, MANIFEST_FIELDS, "provenance manifest")
     if manifest["schema_version"] != PROVENANCE_SCHEMA_VERSION:
         raise ContractRefused("provenance schema_version is unknown")
-    for field in ("venue", "track", "archive_schema_version", "env_lineage_id"):
+    for field in ("venue", "archive_schema_version", "env_lineage_id"):
         _string(manifest[field], f"provenance.{field}")
-    _string(manifest["proxy_source"], "provenance.proxy_source", nullable=True)
+    _track_proxy(manifest, "provenance")
     for field in ("window_start", "window_end"):
         _integer(manifest[field], f"provenance.{field}")
     if manifest["window_start"] >= manifest["window_end"]:
