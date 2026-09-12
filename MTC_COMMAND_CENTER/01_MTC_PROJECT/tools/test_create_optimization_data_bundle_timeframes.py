@@ -118,6 +118,25 @@ def write_source_csv(path: Path, rows: list[dict[str, object]]) -> None:
         )
 
 
+def write_source_csv_without_volume(
+    path: Path, rows: list[dict[str, object]]
+) -> None:
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=["time", "open", "high", "low", "close"]
+        )
+        writer.writeheader()
+        writer.writerows(
+            [
+                {
+                    "time": row["timestamp_utc"],
+                    **{key: row[key] for key in ("open", "high", "low", "close")},
+                }
+                for row in rows
+            ]
+        )
+
+
 class QualityTimeframeTests(unittest.TestCase):
     def test_build_preserves_source_order_for_h1_and_sorts_emitted_rows(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -278,6 +297,69 @@ class QualityTimeframeTests(unittest.TestCase):
             validate.assert_not_called()
             self.assertFalse((root / "bundle-parent").exists())
             self.assertFalse((root / "repo").exists())
+
+    def test_build_preflights_clean_first_source_before_volume_less_second(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "archive"
+            archive.mkdir()
+            write_source_csv(
+                archive / "BINANCE_ADAUSDT,5m_fixture.csv", rows_at(0, 300)
+            )
+            write_source_csv_without_volume(
+                archive / "BINANCE_BTCUSDT,5m_fixture.csv", rows_at(0, 300)
+            )
+            args = argparse.Namespace(
+                repo_root=root / "repo",
+                bundle_parent=root / "bundle-parent",
+                archive_root=archive,
+                datasets_root=root / "absent",
+                date_token="fixture",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=600),
+                gap_policy=gap_policy_fixture(),
+            )
+            before = sorted(path.relative_to(root) for path in root.rglob("*"))
+
+            with mock.patch.object(
+                subject,
+                "prepare_dataset_evidence",
+                wraps=subject.prepare_dataset_evidence,
+            ) as prepare, mock.patch.object(
+                subject, "validate_quality", wraps=subject.validate_quality
+            ) as validate, mock.patch.object(
+                subject.Path, "mkdir"
+            ) as mkdir, mock.patch.object(
+                subject.Path, "rename"
+            ) as rename, mock.patch.object(
+                subject.Path, "write_text"
+            ) as write_text, mock.patch.object(
+                subject, "write_csv"
+            ) as write_csv, mock.patch.object(
+                subject, "write_simple_yaml"
+            ) as write_yaml, mock.patch.object(
+                subject, "safe_copy"
+            ) as safe_copy, mock.patch.object(
+                subject.zipfile, "ZipFile"
+            ) as zip_file:
+                with self.assertRaisesRegex(ValueError, "^row 1 volume is required$"):
+                    subject.build_bundle(args)
+
+            self.assertEqual(prepare.call_count, 2)
+            validate.assert_called_once()
+            self.assertFalse(validate.call_args.kwargs["emit"])
+            for boundary in (
+                mkdir,
+                rename,
+                write_text,
+                write_csv,
+                write_yaml,
+                safe_copy,
+                zip_file,
+            ):
+                boundary.assert_not_called()
+            self.assertEqual(
+                sorted(path.relative_to(root) for path in root.rglob("*")), before
+            )
 
     def test_explicit_evidence_inputs_refuses_timezone_naive_string_cutoff(self) -> None:
         args = argparse.Namespace(
@@ -1034,6 +1116,89 @@ class QualityTimeframeTests(unittest.TestCase):
 
             self.assertFalse((root / "bundle-parent").exists())
             self.assertFalse((root / "repo").exists())
+
+    def test_build_preflights_clean_first_source_before_foreign_quality_second(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "archive"
+            archive.mkdir()
+            write_source_csv(
+                archive / "BINANCE_ADAUSDT,5m_fixture.csv", rows_at(0, 300)
+            )
+            write_source_csv(
+                archive / "BINANCE_BTCUSDT,5m_fixture.csv", rows_at(0, 300)
+            )
+            args = argparse.Namespace(
+                repo_root=root / "repo",
+                bundle_parent=root / "bundle-parent",
+                archive_root=archive,
+                datasets_root=root / "absent",
+                date_token="fixture",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=600),
+                gap_policy=gap_policy_fixture(),
+            )
+            before = sorted(path.relative_to(root) for path in root.rglob("*"))
+            prepare_real = subject.prepare_dataset_evidence
+
+            def splice_second_source(rows, **kwargs):
+                clean = prepare_real(rows, **kwargs)
+                if kwargs["instrument_id"] != "BINANCE:BTCUSDT":
+                    return clean
+                foreign = prepare_real(
+                    rows_at(0, 600),
+                    instrument_id=kwargs["instrument_id"],
+                    timeframe=kwargs["timeframe"],
+                    closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+                    gap_policy=kwargs["gap_policy"],
+                )
+                self.assertEqual(len(clean["closed_rows"]), len(foreign["closed_rows"]))
+                return {**clean, "quality": foreign["quality"]}
+
+            with mock.patch.object(
+                subject,
+                "prepare_dataset_evidence",
+                side_effect=splice_second_source,
+            ) as prepare, mock.patch.object(
+                subject, "validate_quality", wraps=subject.validate_quality
+            ) as validate, mock.patch.object(
+                subject.Path, "mkdir"
+            ) as mkdir, mock.patch.object(
+                subject.Path, "rename"
+            ) as rename, mock.patch.object(
+                subject.Path, "write_text"
+            ) as write_text, mock.patch.object(
+                subject, "write_csv"
+            ) as write_csv, mock.patch.object(
+                subject, "write_simple_yaml"
+            ) as write_yaml, mock.patch.object(
+                subject, "safe_copy"
+            ) as safe_copy, mock.patch.object(
+                subject.zipfile, "ZipFile"
+            ) as zip_file:
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "^evidence quality does not match closed rows and timeframe$",
+                ):
+                    subject.build_bundle(args)
+
+            self.assertEqual(prepare.call_count, 2)
+            self.assertEqual(validate.call_count, 2)
+            self.assertTrue(
+                all(not call.kwargs["emit"] for call in validate.call_args_list)
+            )
+            for boundary in (
+                mkdir,
+                rename,
+                write_text,
+                write_csv,
+                write_yaml,
+                safe_copy,
+                zip_file,
+            ):
+                boundary.assert_not_called()
+            self.assertEqual(
+                sorted(path.relative_to(root) for path in root.rglob("*")), before
+            )
 
     def test_build_projects_evidence_into_manifest_and_quality_records(self) -> None:
         class StopAfterQualityRecord(Exception):
