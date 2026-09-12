@@ -366,8 +366,9 @@ def prepare_dataset_evidence(
             timestamps.append(timestamp.timestamp())
     gap_measurement = measure_data_gaps(timestamps, timeframe, gap_policy)
     legacy_gap_rows: list[dict[str, Any]] = []
-    source_order_times = [row["timestamp_utc"] for row in closed_rows]
-    for previous, current in zip(source_order_times, source_order_times[1:]):
+    closed_rows.sort(key=lambda row: row["timestamp_utc"])
+    sorted_times = [row["timestamp_utc"] for row in closed_rows]
+    for previous, current in zip(sorted_times, sorted_times[1:]):
         delta_seconds = int((current - previous).total_seconds())
         if delta_seconds > step * 1.5:
             legacy_gap_rows.append(
@@ -378,7 +379,6 @@ def prepare_dataset_evidence(
                     "missing_bars_estimate": max(0, round(delta_seconds / step) - 1),
                 }
             )
-    closed_rows.sort(key=lambda row: row["timestamp_utc"])
     first_timestamp = closed_rows[0]["timestamp_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
     last_timestamp = closed_rows[-1]["timestamp_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
     canonical = (

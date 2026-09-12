@@ -399,6 +399,19 @@ class QualityTimeframeTests(unittest.TestCase):
         self.assertEqual(gaps[0]["delta_seconds"], "600")
         self.assertEqual(gaps[0]["missing_bars_estimate"], "1")
 
+    def test_legacy_gap_csv_sorts_without_erasing_source_order_evidence(self) -> None:
+        with mock.patch.object(
+            subject, "measure_data_gaps", wraps=subject.measure_data_gaps
+        ) as h1_measure:
+            result, legacy_gaps = self.validate((0, 600, 300, 900), "5m")
+
+        self.assertEqual(h1_measure.call_count, 1)
+        self.assertEqual(result["gap_measurement"]["gap_event_count"], 2)
+        self.assertEqual(
+            result["gap_measurement"]["out_of_order_interval_count"], 1
+        )
+        self.assertEqual(legacy_gaps, [])
+
     def test_5m_fractional_step_missing_count_rounds(self) -> None:
         result, gaps = self.validate((0, 570), "5m")
         self.assertEqual(result["gap_count"], 1)
