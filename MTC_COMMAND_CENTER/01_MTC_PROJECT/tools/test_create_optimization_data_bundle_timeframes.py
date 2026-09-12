@@ -226,6 +226,50 @@ class QualityTimeframeTests(unittest.TestCase):
                 [],
             )
 
+    def test_build_refuses_source_without_volume(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "archive"
+            archive.mkdir()
+            source_path = archive / "BINANCE_BTCUSDT,5m_fixture.csv"
+            with source_path.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(
+                    handle, fieldnames=["time", "open", "high", "low", "close"]
+                )
+                writer.writeheader()
+                for row in rows_at(0, 300):
+                    writer.writerow(
+                        {
+                            "time": row["timestamp_utc"],
+                            **{
+                                key: row[key]
+                                for key in ("open", "high", "low", "close")
+                            },
+                        }
+                    )
+            args = argparse.Namespace(
+                repo_root=root / "repo",
+                bundle_parent=root / "bundle-parent",
+                archive_root=archive,
+                datasets_root=root / "absent",
+                date_token="fixture",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=600),
+                gap_policy=gap_policy_fixture(),
+            )
+
+            with mock.patch.object(
+                subject,
+                "validate_quality",
+                side_effect=AssertionError("volume-less rows reached quality"),
+            ) as validate:
+                with self.assertRaisesRegex(ValueError, "^row 1 volume is required$"):
+                    subject.build_bundle(args)
+
+            validate.assert_not_called()
+            self.assertEqual(
+                list((root / "bundle-parent").rglob("normalized/**/*.csv")), []
+            )
+
     def test_explicit_evidence_inputs_refuses_timezone_naive_string_cutoff(self) -> None:
         args = argparse.Namespace(
             closed_candle_cutoff_utc="2026-01-01T00:10:00",
@@ -237,6 +281,34 @@ class QualityTimeframeTests(unittest.TestCase):
         ):
             subject.explicit_evidence_inputs(args)
 
+    def test_build_refuses_timezone_naive_datetime_before_any_write(self) -> None:
+        args = argparse.Namespace(
+            repo_root="unused",
+            bundle_parent="unused",
+            archive_root="unused",
+            datasets_root="unused",
+            date_token="fixture",
+            closed_candle_cutoff_utc=datetime(2026, 1, 1, 0, 10),
+            gap_policy=gap_policy_fixture(),
+        )
+        with self.assertRaisesRegex(
+            ValueError,
+            "^closed_candle_cutoff_utc must be a timezone-aware timestamp$",
+        ):
+            subject.explicit_evidence_inputs(args)
+        with mock.patch.object(
+            subject.Path,
+            "mkdir",
+            side_effect=AssertionError("write boundary reached"),
+        ) as mkdir, mock.patch.object(subject, "write_csv") as write_csv:
+            with self.assertRaisesRegex(
+                ValueError,
+                "^closed_candle_cutoff_utc must be a timezone-aware timestamp$",
+            ):
+                subject.build_bundle(args)
+        mkdir.assert_not_called()
+        write_csv.assert_not_called()
+
     def test_validate_quality_consumes_one_bound_evidence_record(self) -> None:
         clean_evidence = subject.prepare_dataset_evidence(
             rows_at(0, 300, 600),
@@ -245,7 +317,7 @@ class QualityTimeframeTests(unittest.TestCase):
             closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
             gap_policy=gap_policy_fixture(),
         )
-        foreign_rows = rows_at(0, 900)
+        foreign_rows = rows_at(0, 300, 900)
         foreign_rows[-1].update({"high": 8, "low": 9})
         foreign_evidence = subject.prepare_dataset_evidence(
             foreign_rows,
@@ -260,9 +332,25 @@ class QualityTimeframeTests(unittest.TestCase):
         self.assertEqual(
             foreign_evidence["quality"]["ohlcv_validation_status"], "FAIL"
         )
+        self.assertEqual(
+            len(clean_evidence["closed_rows"]),
+            len(foreign_evidence["closed_rows"]),
+        )
         spliced_evidence = {
             **clean_evidence,
             "quality": foreign_evidence["quality"],
+        }
+        row_tampered_evidence = {
+            **clean_evidence,
+            "closed_rows": [dict(row) for row in clean_evidence["closed_rows"]],
+        }
+        row_tampered_evidence["closed_rows"][1]["volume"] = 2.0
+        quality_tampered_evidence = {
+            **clean_evidence,
+            "quality": {
+                **clean_evidence["quality"],
+                "invalid_ohlcv_count": 1,
+            },
         }
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -279,17 +367,23 @@ class QualityTimeframeTests(unittest.TestCase):
                 result["invalid_ohlcv_count"],
                 len(clean_evidence["quality"]["invalid_ohlcv_reasons"]),
             )
-            with self.assertRaisesRegex(
-                ValueError,
-                "^evidence quality does not match closed rows and timeframe$",
+            for label, evidence in (
+                ("spliced", spliced_evidence),
+                ("row-tampered", row_tampered_evidence),
+                ("quality-tampered", quality_tampered_evidence),
             ):
-                subject.validate_quality(
-                    "SPLICED",
-                    "5m",
-                    root / "spliced",
-                    evidence=spliced_evidence,
-                )
-            self.assertFalse((root / "spliced").exists())
+                refusal_root = root / label
+                with self.subTest(label=label), self.assertRaisesRegex(
+                    ValueError,
+                    "^evidence quality does not match closed rows and timeframe$",
+                ):
+                    subject.validate_quality(
+                        label.upper(),
+                        "5m",
+                        refusal_root,
+                        evidence=evidence,
+                    )
+                self.assertFalse(refusal_root.exists())
 
     def test_public_evidence_seam_returns_exact_h1_m2_shape(self) -> None:
         evidence = subject.prepare_dataset_evidence(
@@ -360,6 +454,29 @@ class QualityTimeframeTests(unittest.TestCase):
         )
         self.assertEqual(evidence["gap_measurement"]["out_of_order_interval_count"], 1)
         self.assertFalse(evidence["gap_measurement"]["series_clean"])
+
+    def test_descending_source_order_refuses_through_h1(self) -> None:
+        with mock.patch.object(
+            subject, "measure_data_gaps", wraps=subject.measure_data_gaps
+        ) as h1_measure:
+            with self.assertRaisesRegex(
+                ValueError, "^timestamp span must be finite and positive$"
+            ):
+                subject.prepare_dataset_evidence(
+                    rows_at(600, 300, 0),
+                    instrument_id="BINANCE:BTCUSDT",
+                    timeframe="5m",
+                    closed_candle_cutoff_utc=BASE_TIME
+                    + timedelta(seconds=900),
+                    gap_policy=gap_policy_fixture(),
+                )
+
+        self.assertEqual(h1_measure.call_count, 1)
+        observed = list(h1_measure.call_args.args[0])
+        self.assertEqual(
+            [timestamp - BASE_TIME.timestamp() for timestamp in observed],
+            [600.0, 300.0, 0.0],
+        )
 
     def test_public_evidence_seam_refuses_only_structurally_invalid_ohlcv(self) -> None:
         cases = []
