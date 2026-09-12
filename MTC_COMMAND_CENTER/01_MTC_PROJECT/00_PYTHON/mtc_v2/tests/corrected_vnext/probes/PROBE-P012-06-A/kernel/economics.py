@@ -541,12 +541,16 @@ def _captured_decimal_float(
 def _require_fee_evidence_consistency(
     *,
     reported: ReportedFillFee,
+    cost: Mapping[str, Any],
     fill_id: str,
     event_class: str,
     declared_account: str,
     declared_product: str,
     settlement_currency: str,
     event_timestamp: datetime,
+    evaluated_symbol: str,
+    verified_venue: str | None,
+    verified_product_type: str | None,
 ) -> _CapturedReportedFee:
     """Recheck exact local capture consistency on every admitted fee path.
 
@@ -794,6 +798,27 @@ def _require_fee_evidence_consistency(
             fill_id=fill_id,
         )
 
+    if coin != evaluated_symbol:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"declares native instrument {reported.native_instrument!r} and "
+            f"captured coin {coin!r}, not evaluated runtime symbol "
+            f"{evaluated_symbol!r}; no symbol alias is inferred",
+        )
+    for scope_key, verified_value in (
+        ("symbol_scope", evaluated_symbol),
+        ("venue_scope", verified_venue),
+        ("product_type_scope", verified_product_type),
+    ):
+        if scope_key in cost and cost[scope_key] != verified_value:
+            raise _fee_evidence_refusal(
+                event_class,
+                fill_id,
+                f"cost {scope_key} {cost[scope_key]!r} does not match verified "
+                f"instrument value {verified_value!r}",
+            )
+
     return _CapturedReportedFee(
         amount=amount,
         amount_raw=raw_fee,
@@ -953,6 +978,7 @@ def _admitted_fee_rows(
     fill_id: str,
     fill_sequence: int,
     event_class: str,
+    evaluated_symbol: str,
     role: str,
     rate: float,
     fill_price: float,
@@ -1027,12 +1053,16 @@ def _admitted_fee_rows(
     settlement_currency = str(cost["settlement_currency"])
     evidence = _require_fee_evidence_consistency(
         reported=reported,
+        cost=cost,
         fill_id=fill_id,
         event_class=event_class,
         declared_account=declared_account,
         declared_product=declared_product,
         settlement_currency=settlement_currency,
         event_timestamp=event_timestamp,
+        evaluated_symbol=evaluated_symbol,
+        verified_venue=records.instrument.venue,
+        verified_product_type=records.instrument.product_type,
     )
     amount = evidence.amount
     notional = abs(fill_price * quantity * contract_multiplier)
@@ -1162,6 +1192,7 @@ def _fee_rows(
     fill_id: str,
     fill_sequence: int,
     event_class: str,
+    evaluated_symbol: str,
     fill_price: float,
     quantity: float,
     contract_multiplier: float,
@@ -1194,6 +1225,7 @@ def _fee_rows(
             fill_id=fill_id,
             fill_sequence=fill_sequence,
             event_class=event_class,
+            evaluated_symbol=evaluated_symbol,
             role=role,
             rate=rate,
             fill_price=fill_price,
@@ -1676,6 +1708,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             fill_id=fill.fill_id,
             fill_sequence=fill_sequence,
             event_class=event_class,
+            evaluated_symbol=instrument.symbol,
             fill_price=final_fill,
             quantity=quantity,
             contract_multiplier=instrument.contract_multiplier,
@@ -1924,6 +1957,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 fill_id=fill_id,
                 fill_sequence=fill_sequence,
                 event_class=event_class,
+                evaluated_symbol=instrument.symbol,
                 fill_price=final_fill,
                 quantity=quantity,
                 contract_multiplier=instrument.contract_multiplier,
@@ -2041,6 +2075,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             fill_id=fill.fill_id,
             fill_sequence=fill_sequence,
             event_class=event_class,
+            evaluated_symbol=instrument.symbol,
             fill_price=final_fill,
             quantity=quantity,
             contract_multiplier=instrument.contract_multiplier,
