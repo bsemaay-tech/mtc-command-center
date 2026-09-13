@@ -152,6 +152,27 @@ class DsV1CompatibilityTests(P021ContractTestCase):
                     envelope,
                 )
 
+    def test_refuses_str_subclass_envelope_keys(self) -> None:
+        class StringKey(str):
+            pass
+
+        digest = "a" * 64
+        envelopes = (
+            {StringKey("contract"): "ds-v1", "digest": digest},
+            {"contract": "ds-v1", StringKey("digest"): digest},
+            {
+                StringKey("contract"): "ds-v1",
+                StringKey("digest"): digest,
+            },
+        )
+        for envelope in envelopes:
+            with self.subTest(keys=tuple(type(key).__name__ for key in envelope)):
+                self.assert_refused_reason(
+                    "DS_V1_INVALID_ENVELOPE",
+                    require_ds_v1_digest,
+                    envelope,
+                )
+
     def test_refusal_exposes_stable_reason_id(self) -> None:
         with self.assertRaises(EvidenceContractRefused) as caught:
             require_ds_v1_digest({"contract": "ds-v2", "digest": "a" * 64})
