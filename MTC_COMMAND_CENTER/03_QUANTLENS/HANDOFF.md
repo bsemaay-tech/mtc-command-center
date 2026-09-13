@@ -24,3 +24,22 @@
   the archived session log; none is a code path.
 - NEXT ACTION: none; update the ledger/inventory rows only if a future inventory refresh is authorized.
 - WAITING FOR OWNER: Nothing.
+
+## P0-22 reduced local research tracker — 2026-09-13
+
+- Product candidate `1bdb7f8c958815b74b1635770294b39c6ced1425` adds fixture-only local
+  `register`, `disclose`, and `status` commands under the frozen reduced contract. It is six local
+  commits ahead of base `42f99571`; no push, PR, merge, P0-13 integration, or shared-schema change.
+- Lead replay: Python 3.14 compile and 27 focused tests PASS; QuantLens discovery 83/83 PASS;
+  pytest 167 tests plus 826 subtests PASS. Synthetic status remains `LOCAL_LOG_ONLY` and
+  `ACCESS_COMPLETENESS_UNVERIFIED`; no `LIVE_CANDIDATE` or clean-window claim is produced.
+- Exact independent reviews on the same candidate: `gpt-5.6-sol` xhigh PASS;
+  `claude-opus-5` xhigh PASS-WITH-NITS; `gemini-3.7-flash-high` supplemental PASS. Three allowed
+  T0 repair rounds were consumed; detailed evidence and the repeatable demo are under
+  `C:\tmp\P022_LEAD_20260912`.
+- Limits remain: local SQLite history is mutable, reader coverage and independent clock/access
+  evidence are incomplete, historical unlogged reads cannot be reconstructed, family identity is
+  not canonical, and full-window binding/admission/promotion/live eligibility are unresolved.
+- NEXT ACTION: integrate this local commit only through the normal PR/CI path when separately
+  authorized; upgrade to full P0-22 only after accepted P0-13 and the remaining assurance work.
+- WAITING FOR OWNER: Nothing.
