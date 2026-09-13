@@ -47,7 +47,8 @@ def _state_directory(value: Path | str) -> Path:
     if not text.strip():
         raise ValueError("state_dir must not be empty, whitespace, or the current directory")
     try:
-        is_current_directory = path.resolve() == Path.cwd().resolve()
+        path = path.expanduser().resolve()
+        is_current_directory = path == Path.cwd().resolve()
     except (OSError, RuntimeError) as exc:
         raise ValueError("state_dir canonical target is unavailable") from exc
     if is_current_directory:

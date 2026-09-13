@@ -130,13 +130,20 @@ class HeartbeatAdapterTests(unittest.TestCase):
             with self.subTest(state_dir=repr(state_dir)):
                 self.assert_ambiguous_state_dir_refused(subject, state_dir)
 
+    def test_entry_points_refuse_tilde_alias_of_current_directory(self) -> None:
+        with mock.patch.object(Path, "cwd", return_value=Path.home()):
+            for state_dir in ("~", Path("~")):
+                with self.subTest(state_dir=repr(state_dir)):
+                    self.assert_ambiguous_state_dir_refused(subject, state_dir)
+
     def test_permissive_state_directory_reversion_mutant_is_detected(self) -> None:
         source = Path(subject.__file__).read_text(encoding="utf-8")
         anchor = (
             "    if not text.strip():\n"
             '        raise ValueError("state_dir must not be empty, whitespace, or the current directory")\n'
             "    try:\n"
-            "        is_current_directory = path.resolve() == Path.cwd().resolve()\n"
+            "        path = path.expanduser().resolve()\n"
+            "        is_current_directory = path == Path.cwd().resolve()\n"
             "    except (OSError, RuntimeError) as exc:\n"
             '        raise ValueError("state_dir canonical target is unavailable") from exc\n'
             "    if is_current_directory:\n"
