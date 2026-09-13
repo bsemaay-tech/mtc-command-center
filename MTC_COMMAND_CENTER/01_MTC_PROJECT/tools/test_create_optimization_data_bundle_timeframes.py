@@ -17,6 +17,7 @@ QUANTLENS_TOOLS = Path(__file__).resolve().parents[2] / "03_QUANTLENS" / "tools"
 sys.path.insert(0, str(QUANTLENS_TOOLS))
 
 import create_optimization_data_bundle as subject
+import data_gap_ratio
 from strategy_type_policy_set import compute_policy_version
 
 
@@ -138,6 +139,9 @@ def write_source_csv_without_volume(
 
 
 class QualityTimeframeTests(unittest.TestCase):
+    def test_timeframe_seconds_is_shared_by_identity(self) -> None:
+        self.assertIs(subject.TIMEFRAME_SECONDS, data_gap_ratio.TIMEFRAME_SECONDS)
+
     def test_build_preserves_source_order_for_h1_and_sorts_emitted_rows(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -595,6 +599,50 @@ class QualityTimeframeTests(unittest.TestCase):
                         evidence=evidence,
                     )
                 self.assertFalse(refusal_root.exists())
+
+    def test_validate_quality_binds_dataset_cutoff_and_excluded_count_before_artifacts(self) -> None:
+        clean = subject.prepare_dataset_evidence(
+            rows_at(0, 300, 600),
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+            gap_policy=gap_policy_fixture(),
+        )
+        mutations = {
+            "foreign-dataset-hash": {
+                **clean,
+                "dataset_hash": {"contract": "ds-v1", "digest": "f" * 64},
+            },
+            "malformed-dataset-hash": {
+                **clean,
+                "dataset_hash": {"contract": "ds-v2", "digest": "f" * 64},
+            },
+            "unrelated-cutoff": {
+                **clean,
+                "closed_candle_cutoff_utc": "2026-01-01T00:20:00Z",
+            },
+            "foreign-excluded-count": {
+                **clean,
+                "excluded_forming_candle_count": 99,
+            },
+            "impossible-excluded-count": {
+                **clean,
+                "excluded_forming_candle_count": -1,
+            },
+        }
+        for label, evidence in mutations.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary) / label
+                expected = (
+                    "^evidence dataset_hash must be a ds-v1 object$"
+                    if label == "malformed-dataset-hash"
+                    else "^evidence quality does not match closed rows and timeframe$"
+                    if label != "impossible-excluded-count"
+                    else "^evidence excluded_forming_candle_count must be a non-negative integer$"
+                )
+                with self.assertRaisesRegex(ValueError, expected):
+                    subject.validate_quality("SYNTHETIC", "5m", root, evidence=evidence)
+                self.assertFalse(root.exists())
 
     def test_public_evidence_seam_returns_exact_h1_m2_shape(self) -> None:
         evidence = subject.prepare_dataset_evidence(
@@ -1114,6 +1162,58 @@ class QualityTimeframeTests(unittest.TestCase):
                 ):
                     subject.build_bundle(args)
 
+            self.assertFalse((root / "bundle-parent").exists())
+            self.assertFalse((root / "repo").exists())
+
+    def test_build_refuses_bound_field_mutations_before_any_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "archive"
+            archive.mkdir()
+            write_source_csv(archive / "BINANCE_BTCUSDT,5m_fixture.csv", rows_at(0, 300, 600))
+            args = argparse.Namespace(
+                repo_root=root / "repo",
+                bundle_parent=root / "bundle-parent",
+                archive_root=archive,
+                datasets_root=root / "absent",
+                date_token="fixture",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+                gap_policy=gap_policy_fixture(),
+            )
+            prepare_real = subject.prepare_dataset_evidence
+            mutations = {
+                "dataset-hash": lambda evidence: {
+                    **evidence,
+                    "dataset_hash": {"contract": "ds-v1", "digest": "f" * 64},
+                },
+                "cutoff": lambda evidence: {
+                    **evidence,
+                    "closed_candle_cutoff_utc": "2026-01-01T00:20:00Z",
+                },
+                "excluded-count": lambda evidence: {
+                    **evidence,
+                    "excluded_forming_candle_count": 99,
+                },
+            }
+            for label, mutate in mutations.items():
+                with self.subTest(label=label):
+                    with mock.patch.object(
+                        subject,
+                        "prepare_dataset_evidence",
+                        side_effect=lambda rows, **kwargs: mutate(
+                            prepare_real(rows, **kwargs)
+                        ),
+                    ), mock.patch.object(subject.Path, "mkdir") as mkdir, mock.patch.object(
+                        subject.Path, "rename"
+                    ) as rename, mock.patch.object(subject, "write_csv") as write_csv:
+                        with self.assertRaisesRegex(
+                            ValueError,
+                            "^evidence quality does not match closed rows and timeframe$",
+                        ):
+                            subject.build_bundle(args)
+                    mkdir.assert_not_called()
+                    rename.assert_not_called()
+                    write_csv.assert_not_called()
             self.assertFalse((root / "bundle-parent").exists())
             self.assertFalse((root / "repo").exists())
 

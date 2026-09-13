@@ -468,6 +468,9 @@ def validate_closed_bar_runtime_receipt(
     expected_dataset_identity: DatasetIdentity,
     expected_intent_sha256: str,
     expected_runtime_code_sha256: str,
+    expected_instrument_id: str,
+    expected_timeframe: str,
+    expected_runtime_producer_id: str,
 ) -> ClosedBarRuntimeReceipt:
     """Validate an immutable receipt emitted by the runtime decision loop."""
 
@@ -475,13 +478,12 @@ def validate_closed_bar_runtime_receipt(
         raise EvidenceContractRefused("CLOSED_BAR_INVALID_RECEIPT")
     if type(receipt.source) is not str or receipt.source != "RUNTIME_DECISION_LOOP":
         raise EvidenceContractRefused("CLOSED_BAR_INVALID_RUNTIME_SOURCE")
-    for field_name in (
-        "candidate_id",
-        "instrument_id",
-        "timeframe",
-        "runtime_producer_id",
-    ):
-        _require_nonempty(getattr(receipt, field_name), field_name)
+    actual_candidate_id = _require_nonempty(receipt.candidate_id, "candidate_id")
+    actual_instrument_id = _require_nonempty(receipt.instrument_id, "instrument_id")
+    actual_timeframe = _require_nonempty(receipt.timeframe, "timeframe")
+    actual_runtime_producer_id = _require_nonempty(
+        receipt.runtime_producer_id, "runtime_producer_id"
+    )
 
     bar_open = _require_utc(receipt.bar_open_timestamp_utc, "bar_open_timestamp_utc")
     bar_close = _require_utc(
@@ -516,15 +518,23 @@ def validate_closed_bar_runtime_receipt(
     expected_runtime_code = _require_sha256(
         expected_runtime_code_sha256, "expected_runtime_code_sha256"
     )
-    _require_nonempty(expected_candidate_id, "expected_candidate_id")
+    expected_candidate = _require_nonempty(expected_candidate_id, "expected_candidate_id")
+    expected_instrument = _require_nonempty(expected_instrument_id, "expected_instrument_id")
+    expected_tf = _require_nonempty(expected_timeframe, "expected_timeframe")
+    expected_producer = _require_nonempty(
+        expected_runtime_producer_id, "expected_runtime_producer_id"
+    )
 
     if (
-        receipt.candidate_id != expected_candidate_id
+        actual_candidate_id != expected_candidate
         or actual_package != expected_package
         or actual_deployment != expected_deployment
         or actual_dataset != expected_dataset
         or actual_intent != expected_intent
         or actual_runtime_code != expected_runtime_code
+        or actual_instrument_id != expected_instrument
+        or actual_timeframe != expected_tf
+        or actual_runtime_producer_id != expected_producer
     ):
         raise EvidenceContractRefused("CLOSED_BAR_IDENTITY_MISMATCH")
     return receipt

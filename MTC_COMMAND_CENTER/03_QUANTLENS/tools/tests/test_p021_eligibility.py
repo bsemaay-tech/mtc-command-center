@@ -1499,6 +1499,9 @@ class ClosedBarReceiptTests(P021ContractTestCase):
             expected_dataset_identity=DatasetIdentity("ds-v1", "c" * 64),
             expected_intent_sha256="d" * 64,
             expected_runtime_code_sha256="e" * 64,
+            expected_instrument_id="BINANCE:BTCUSDT",
+            expected_timeframe="test-timeframe",
+            expected_runtime_producer_id="decision-loop",
         )
 
     def test_refuses_receipt_subclasses_and_mutable_attribute_views(self) -> None:
@@ -1650,6 +1653,9 @@ class ClosedBarReceiptTests(P021ContractTestCase):
             replace(receipt, package_hash="f" * 64),
             replace(receipt, deployment_identity_hash="f" * 64),
             replace(receipt, dataset_identity=DatasetIdentity("ds-v1", "f" * 64)),
+            replace(receipt, instrument_id="other-instrument"),
+            replace(receipt, timeframe="other-timeframe"),
+            replace(receipt, runtime_producer_id="other-producer"),
             replace(receipt, intent_sha256="f" * 64),
             replace(receipt, runtime_code_sha256="f" * 64),
         )
@@ -1659,6 +1665,70 @@ class ClosedBarReceiptTests(P021ContractTestCase):
                     "CLOSED_BAR_IDENTITY_MISMATCH",
                     self._validate,
                     mutation,
+                )
+
+    def test_binds_instrument_timeframe_and_runtime_producer_identity(self) -> None:
+        receipt = self._receipt()
+        expected = {
+            "expected_candidate_id": "cand-1",
+            "expected_package_sha256": "a" * 64,
+            "expected_deployment_identity_sha256": "b" * 64,
+            "expected_dataset_identity": DatasetIdentity("ds-v1", "c" * 64),
+            "expected_intent_sha256": "d" * 64,
+            "expected_runtime_code_sha256": "e" * 64,
+            "expected_instrument_id": "BINANCE:BTCUSDT",
+            "expected_timeframe": "test-timeframe",
+            "expected_runtime_producer_id": "decision-loop",
+        }
+        self.assertIs(
+            validate_closed_bar_runtime_receipt(receipt, **expected),
+            receipt,
+        )
+        for field_name in ("instrument_id", "timeframe", "runtime_producer_id"):
+            with self.subTest(actual=field_name):
+                self.assert_refused_reason(
+                    "CLOSED_BAR_IDENTITY_MISMATCH",
+                    validate_closed_bar_runtime_receipt,
+                    receipt,
+                    **{**expected, f"expected_{field_name}": "other"},
+                )
+        for field_name in ("instrument_id", "timeframe", "runtime_producer_id"):
+            with self.subTest(expected=field_name):
+                self.assert_refused_reason(
+                    "CLOSED_BAR_IDENTITY_MISMATCH",
+                    validate_closed_bar_runtime_receipt,
+                    replace(receipt, **{field_name: "other"}),
+                    **expected,
+                )
+
+    def test_refuses_non_builtin_runtime_identity_strings_actual_and_expected(self) -> None:
+        receipt = self._receipt()
+        expected = {
+            "expected_candidate_id": "cand-1",
+            "expected_package_sha256": "a" * 64,
+            "expected_deployment_identity_sha256": "b" * 64,
+            "expected_dataset_identity": DatasetIdentity("ds-v1", "c" * 64),
+            "expected_intent_sha256": "d" * 64,
+            "expected_runtime_code_sha256": "e" * 64,
+            "expected_instrument_id": "BINANCE:BTCUSDT",
+            "expected_timeframe": "test-timeframe",
+            "expected_runtime_producer_id": "decision-loop",
+        }
+        for field_name in ("instrument_id", "timeframe", "runtime_producer_id"):
+            with self.subTest(actual=field_name):
+                self.assert_refused_reason(
+                    f"INVALID_TEXT:{field_name}",
+                    validate_closed_bar_runtime_receipt,
+                    replace(receipt, **{field_name: StringAlias("wrong", getattr(receipt, field_name))}),
+                    **expected,
+                )
+        for field_name in ("instrument_id", "timeframe", "runtime_producer_id"):
+            with self.subTest(expected=field_name):
+                self.assert_refused_reason(
+                    f"INVALID_TEXT:expected_{field_name}",
+                    validate_closed_bar_runtime_receipt,
+                    receipt,
+                    **{**expected, f"expected_{field_name}": StringAlias("wrong", expected[f"expected_{field_name}"])},
                 )
 
     def test_refuses_string_subclasses_across_runtime_identity_boundary(self) -> None:
@@ -1729,6 +1799,9 @@ class ClosedBarReceiptTests(P021ContractTestCase):
             "expected_dataset_identity": DatasetIdentity("ds-v1", "c" * 64),
             "expected_intent_sha256": "d" * 64,
             "expected_runtime_code_sha256": "e" * 64,
+            "expected_instrument_id": "BINANCE:BTCUSDT",
+            "expected_timeframe": "test-timeframe",
+            "expected_runtime_producer_id": "decision-loop",
         }
         expected_aliases = (
             (
@@ -1760,6 +1833,21 @@ class ClosedBarReceiptTests(P021ContractTestCase):
                 "expected_runtime_code_sha256",
                 StringAlias("f" * 64, "e" * 64),
                 "INVALID_SHA256:expected_runtime_code_sha256",
+            ),
+            (
+                "expected_instrument_id",
+                StringAlias("other", "BINANCE:BTCUSDT"),
+                "INVALID_TEXT:expected_instrument_id",
+            ),
+            (
+                "expected_timeframe",
+                StringAlias("other", "test-timeframe"),
+                "INVALID_TEXT:expected_timeframe",
+            ),
+            (
+                "expected_runtime_producer_id",
+                StringAlias("other", "decision-loop"),
+                "INVALID_TEXT:expected_runtime_producer_id",
             ),
         )
         for field_name, value, reason_id in expected_aliases:

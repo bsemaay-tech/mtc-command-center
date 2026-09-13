@@ -20,7 +20,7 @@ QUANTLENS_TOOLS = Path(__file__).resolve().parents[2] / "03_QUANTLENS" / "tools"
 if str(QUANTLENS_TOOLS) not in sys.path:
     sys.path.insert(0, str(QUANTLENS_TOOLS))
 
-from data_gap_ratio import measure_data_gaps
+from data_gap_ratio import TIMEFRAME_SECONDS, measure_data_gaps
 
 
 EXPECTED_SYMBOLS = [
@@ -59,7 +59,6 @@ TIMEFRAME_ALIASES = {
     "1d": "1D",
     "1440": "1D",
 }
-TIMEFRAME_SECONDS = {"5m": 300, "15m": 900, "1h": 3600, "2h": 7200, "4h": 14400, "1D": 86400}
 METHOD_VERSION = "rule_based_market_regime_v1"
 
 
@@ -312,11 +311,20 @@ def dataset_id_for(source: SourceFile, used_ids: set[str]) -> str:
 
 
 def _quality_evidence_sha256(
-    rows: list[dict[str, Any]], timeframe: str, quality: Mapping[str, Any]
+    rows: list[dict[str, Any]],
+    timeframe: str,
+    quality: Mapping[str, Any],
+    *,
+    dataset_hash: object,
+    closed_candle_cutoff_utc: object,
+    excluded_forming_candle_count: object,
 ) -> str:
     payload = {
         "closed_rows": rows,
         "timeframe": timeframe,
+        "dataset_hash": dataset_hash,
+        "closed_candle_cutoff_utc": closed_candle_cutoff_utc,
+        "excluded_forming_candle_count": excluded_forming_candle_count,
         "quality": {
             key: value
             for key, value in quality.items()
@@ -463,7 +471,12 @@ def prepare_dataset_evidence(
         "invalid_ohlcv_reasons": invalid_ohlcv_reasons,
     }
     quality["evidence_binding_sha256"] = _quality_evidence_sha256(
-        output_rows, timeframe, quality
+        output_rows,
+        timeframe,
+        quality,
+        dataset_hash=dataset_hash,
+        closed_candle_cutoff_utc=cutoff.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        excluded_forming_candle_count=len(rows) - len(closed_rows),
     )
     return {
         "closed_rows": output_rows,
@@ -488,6 +501,29 @@ def validate_quality(
     quality = evidence.get("quality")
     if not isinstance(rows, list) or not isinstance(quality, Mapping):
         raise ValueError("evidence must contain closed rows and quality")
+    dataset_hash = evidence.get("dataset_hash")
+    if dataset_hash is not None:
+        if (
+            type(dataset_hash) is not dict
+            or set(dataset_hash) != {"contract", "digest"}
+            or type(dataset_hash.get("contract")) is not str
+            or dataset_hash.get("contract") != "ds-v1"
+            or type(dataset_hash.get("digest")) is not str
+            or len(dataset_hash["digest"]) != 64
+            or any(character not in "0123456789abcdef" for character in dataset_hash["digest"])
+        ):
+            raise ValueError("evidence dataset_hash must be a ds-v1 object")
+    closed_candle_cutoff_utc = evidence.get("closed_candle_cutoff_utc")
+    if type(closed_candle_cutoff_utc) is not str or not closed_candle_cutoff_utc:
+        raise ValueError("evidence closed_candle_cutoff_utc must be a non-empty string")
+    excluded_forming_candle_count = evidence.get("excluded_forming_candle_count")
+    if (
+        type(excluded_forming_candle_count) is not int
+        or excluded_forming_candle_count < 0
+    ):
+        raise ValueError(
+            "evidence excluded_forming_candle_count must be a non-negative integer"
+        )
     gap_measurement = quality.get("gap_measurement")
     if not isinstance(gap_measurement, dict):
         raise ValueError("quality must contain the H1 gap measurement")
@@ -503,7 +539,12 @@ def validate_quality(
     if status not in {"PASS", "FAIL"} or not isinstance(invalid_rows, list):
         raise ValueError("quality must contain OHLCV validation results")
     if quality.get("evidence_binding_sha256") != _quality_evidence_sha256(
-        rows, timeframe, quality
+        rows,
+        timeframe,
+        quality,
+        dataset_hash=dataset_hash,
+        closed_candle_cutoff_utc=closed_candle_cutoff_utc,
+        excluded_forming_candle_count=excluded_forming_candle_count,
     ):
         raise ValueError("evidence quality does not match closed rows and timeframe")
     duplicates: list[dict[str, Any]] = []
