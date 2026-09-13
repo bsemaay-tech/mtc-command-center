@@ -31,6 +31,20 @@ class HeartbeatAdapterTests(unittest.TestCase):
         resolve_path.assert_not_called()
         read_text.assert_not_called()
 
+        with mock.patch.object(
+            module, "resolve_confined_path"
+        ) as resolve_path, mock.patch.object(module, "atomic_write_json") as write_json:
+            with self.assertRaisesRegex(ValueError, "state_dir"):
+                module.write_health_sidecar(
+                    state_dir,
+                    self.ID,
+                    observed_at_utc="2026-09-12T00:02:00Z",
+                    last_accepted_timestamp_utc=None,
+                    reconciliation_progress=None,
+                )
+        resolve_path.assert_not_called()
+        write_json.assert_not_called()
+
     def test_exact_p026_heartbeat_round_trip_and_extra_field_refusal(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             state_dir = Path(temporary) / "state"
@@ -110,6 +124,8 @@ class HeartbeatAdapterTests(unittest.TestCase):
             Path("nested") / "..",
             Path(Path.cwd().drive),
             Path.cwd(),
+            Path("..") / Path.cwd().name,
+            Path(f"{Path.cwd().drive}synthetic") / "..",
         ):
             with self.subTest(state_dir=repr(state_dir)):
                 self.assert_ambiguous_state_dir_refused(subject, state_dir)
@@ -117,17 +133,20 @@ class HeartbeatAdapterTests(unittest.TestCase):
     def test_permissive_state_directory_reversion_mutant_is_detected(self) -> None:
         source = Path(subject.__file__).read_text(encoding="utf-8")
         anchor = (
-            "    if (\n"
-            "        not text.strip()\n"
-            "        or normalized in {os.curdir, current_directory}\n"
-            '        or (bool(drive) and tail in {"", os.curdir})\n'
-            "    ):\n"
+            "    if not text.strip():\n"
+            '        raise ValueError("state_dir must not be empty, whitespace, or the current directory")\n'
+            "    try:\n"
+            "        is_current_directory = path.resolve() == Path.cwd().resolve()\n"
+            "    except (OSError, RuntimeError) as exc:\n"
+            '        raise ValueError("state_dir canonical target is unavailable") from exc\n'
+            "    if is_current_directory:\n"
+            '        raise ValueError("state_dir must not be empty, whitespace, or the current directory")\n'
         )
         self.assertEqual(source.count(anchor), 1)
         mutant = types.ModuleType("p030_opsa_heartbeat_adapter_permissive_mutant")
         mutant.__file__ = subject.__file__
         exec(
-            compile(source.replace(anchor, "    if False:\n"), mutant.__file__, "exec"),
+            compile(source.replace(anchor, ""), mutant.__file__, "exec"),
             mutant.__dict__,
         )
 
