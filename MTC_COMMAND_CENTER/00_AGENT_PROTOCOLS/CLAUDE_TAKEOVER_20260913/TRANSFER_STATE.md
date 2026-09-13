@@ -1,0 +1,12 @@
+# Transfer checkpoint
+
+READY FOR CLAUDE — 2026-09-13. All six Codex Leads saved their external handoffs, reported no active owned writers/helpers, and are PARKED. Mentor verified the six handoff hashes against their completion messages. The owner has requested Claude continuation; take a fresh exclusive ownership claim before product writes. These parked Leads will not resume automatically.
+
+P012-S16-G5-ITEMS14-WINDOW1 is RELEASED. Exactly one call completed2026-09-13T09:38:03Z, actual exit0/providerSUCCESS, raw SHA256 bcfeae709c8e0e8e2fa77b8178cc5cbdcc5a8e2fbae6b36b657225abe96313b9. Mentor verified terminal, raw hash and zero agy helpers before release. Provider success did not establish acceptance: P012 Lead withheld it for definite required read gaps. Full semantic adjudication remains Claude's next task. No ratification or receipt/chain application occurred.
+
+Verified Lead checkpoints: P012_HANDOFF.md, P020_HANDOFF.md, P013_HANDOFF.md, P021_P030_HANDOFF.md, P022_HANDOFF.md, P031_HANDOFF.md. START_HERE.md is the consolidated owner instruction and next-work map; newer transfer state overrides their historical HELD references. P012 handoff SHA256354ae07352e9837b82efb9479cf69b2c2b88a4e37a25b66d6154df35c57fb376.
+
+Control checkout: C:/CT13, feature/claude-takeover-20260913, base origin/master fcac0ac67cf2682693ad28138b1a56e15a0846f2. Mentor's only write lane was the named handoff/memory files. Package source worktrees remain unchanged. Memory integration is local only; no push/merge. Normal repo guard PASS and whitespace checks pass. See the Git log for the handoff commit; inspect its exact status before takeover. External file SHA256 manifest is FILE_MANIFEST.json; Git text normalization may give different raw working-copy hashes after checkout.
+
+NEXT ACTION: Open Claude in C:/CT13 and follow START_HERE.md. Prioritize P012 formal-review gaps, then the approved P020 profile-selection procedure, then P013's remaining eligible work. Use independent included-subscription lanes where ready; preserve exact required reviewers and external-evidence blockers.
+WAITING FOR OWNER: Nothing to start the requested Claude takeover. Later actual ratification/production evidence and new protected scope remain their specific gates.

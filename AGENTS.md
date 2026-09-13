@@ -1,3 +1,5 @@
+Current P0 takeover (2026-09-13): read MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/CLAUDE_TAKEOVER_20260913/START_HERE.md and TRANSFER_STATE.md before resuming P012/P020/P013; preserve the root router and exact approval gates.
+
 # AGENTS.md — repository router
 
 Canonical checkout: `C:\LAB\Tradingview_LAB_CLEAN`; isolated worktrees are valid.
