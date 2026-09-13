@@ -619,6 +619,41 @@ class ControlAllowanceTests(P021ContractTestCase):
         )
         self.assertEqual(evidence.informational_control_ids, ("restart_recovery",))
 
+    def test_snapshots_inventory_before_manifest_iteration(self) -> None:
+        class HostileString(str):
+            def __hash__(self) -> int:
+                raise RuntimeError("hostile inventory hash")
+
+        inventory_item = ControlInventoryItem("fee", True)
+        expected_inventory_hash = control_inventory_sha256((inventory_item,))
+
+        class MutatingManifest:
+            def __init__(self) -> None:
+                self.iterations = 0
+
+            def __iter__(self):
+                self.iterations += 1
+                object.__setattr__(
+                    inventory_item,
+                    "control_id",
+                    HostileString("fee"),
+                )
+                return iter(())
+
+        manifest = MutatingManifest()
+        evidence = evaluate_control_evidence(
+            target_state=EligibilityState.SHADOW_ELIGIBLE,
+            inventory=(inventory_item,),
+            executed_control_ids=("fee",),
+            manifest=manifest,
+            expected_control_inventory_hash=expected_inventory_hash,
+            expected_unsimulated_controls_hash=unsimulated_controls_sha256(()),
+        )
+
+        self.assertEqual(manifest.iterations, 1)
+        self.assertEqual(evidence.inventory_sha256, expected_inventory_hash)
+        self.assertEqual(evidence.undeclared_control_ids, ())
+
     def test_required_unsimulated_control_caps_above_shadow(self) -> None:
         inventory = (
             ControlInventoryItem("fee", True),

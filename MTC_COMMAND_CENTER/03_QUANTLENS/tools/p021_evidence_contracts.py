@@ -161,9 +161,13 @@ def _unique_inventory(items: object) -> tuple[ControlInventoryItem, ...]:
         raise EvidenceContractRefused("CONTROL_INVENTORY_INVALID_REQUIRED_FLAG")
     for item in typed_items:
         _require_nonempty(item.control_id, "control_id")
-    if len({item.control_id for item in typed_items}) != len(typed_items):
+    snapshots = tuple(
+        ControlInventoryItem(item.control_id, item.required_for_promotion)
+        for item in typed_items
+    )
+    if len({item.control_id for item in snapshots}) != len(snapshots):
         raise EvidenceContractRefused("CONTROL_INVENTORY_DUPLICATE_ID")
-    return tuple(sorted(typed_items, key=lambda item: item.control_id))
+    return tuple(sorted(snapshots, key=lambda item: item.control_id))
 
 
 def _unique_manifest(items: object) -> tuple[UnsimulatedControl, ...]:
