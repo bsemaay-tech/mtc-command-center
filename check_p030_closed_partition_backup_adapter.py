@@ -484,6 +484,84 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
             self.assertEqual(receipt["schema"], "p030.verified_restore/v1")
             self.assertEqual(receipt["state"], "verified_restore")
 
+    def test_restore_refuses_rehashed_archive_with_dot_source_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            backup_root = root / "backups"
+            archived_receipt = (
+                backup_root
+                / "runs"
+                / run_id
+                / self.STORE_ID
+                / subject.STABLE_RECEIPT_NAME
+            )
+            receipt_object = json.loads(archived_receipt.read_bytes())
+            receipt_object["source_path"] = "."
+            receipt_raw = (
+                json.dumps(
+                    receipt_object,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    indent=2,
+                )
+                + "\n"
+            ).encode("utf-8")
+            archived_receipt.write_bytes(receipt_raw)
+            manifest = backup_root / "manifest.jsonl"
+            records = [json.loads(line) for line in manifest.read_bytes().splitlines()]
+            receipt_record = next(
+                record
+                for record in records
+                if record.get("run_id") == run_id
+                and record.get("record") == "file"
+                and record.get("rel") == subject.STABLE_RECEIPT_NAME
+            )
+            receipt_record["size"] = len(receipt_raw)
+            receipt_record["sha256"] = hashlib.sha256(receipt_raw).hexdigest()
+            run_end = next(
+                record
+                for record in records
+                if record.get("run_id") == run_id
+                and record.get("record") == "run_end"
+            )
+            run_end["bytes"] = sum(
+                record["size"]
+                for record in records
+                if record.get("run_id") == run_id
+                and record.get("record") == "file"
+            )
+            manifest.write_bytes(
+                b"".join(
+                    (json.dumps(record, sort_keys=True) + "\n").encode("utf-8")
+                    for record in records
+                )
+            )
+            target = root / "restore-target"
+            target.mkdir()
+            unchanged_restore = subject.restore.run_restore
+            with mock.patch.object(
+                subject.restore, "run_restore", wraps=unchanged_restore
+            ) as run_restore:
+                with self.assertRaisesRegex(ValueError, "source_path"):
+                    subject.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            run_restore.assert_not_called()
+            self.assertFalse(
+                (target / subject.VERIFIED_RESTORE_RECEIPT_NAME).exists()
+            )
+
     def test_manifest_refuses_duplicate_keys_and_nonfinite_json_before_p026(self) -> None:
         for kind in ("duplicate", "nonfinite"):
             with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary:
@@ -811,6 +889,61 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
             self.assertEqual(calls, [True])
             self.assertEqual(intruder.read_text(encoding="utf-8"), "fixture")
 
+    def test_intruder_after_restore_config_verification_blocks_actual_restore(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            target = root / "restore-target"
+            target.mkdir()
+            intruder = target / "synthetic-intruder"
+            unchanged_verify = subject._verify_isolated_config
+            unchanged_restore = subject.restore.run_restore
+            verification_calls = 0
+            restore_calls: list[bool] = []
+
+            def intrude_after_restore_config_verification(*args, **kwargs):
+                nonlocal verification_calls
+                result = unchanged_verify(*args, **kwargs)
+                verification_calls += 1
+                if verification_calls == 3:
+                    intruder.write_text("fixture", encoding="utf-8")
+                return result
+
+            def record_restore(*args, **kwargs):
+                restore_calls.append(kwargs["check_only"])
+                return unchanged_restore(*args, **kwargs)
+
+            with mock.patch.object(
+                subject,
+                "_verify_isolated_config",
+                side_effect=intrude_after_restore_config_verification,
+            ), mock.patch.object(
+                subject.restore,
+                "run_restore",
+                side_effect=record_restore,
+            ):
+                with self.assertRaisesRegex(ValueError, "restore target must be empty"):
+                    subject.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            self.assertEqual(restore_calls, [True])
+            self.assertEqual(intruder.read_text(encoding="utf-8"), "fixture")
+            self.assertFalse(
+                (target / subject.VERIFIED_RESTORE_RECEIPT_NAME).exists()
+            )
+
     def test_partial_run_that_p026_check_only_accepts_never_reaches_restore(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -984,6 +1117,7 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
 
     def test_receipt_always_refuses_absolute_or_noncanonical_source_path(self) -> None:
         invalid_paths = (
+            ".",
             "C:/synthetic/live.jsonl",
             "/synthetic/live.jsonl",
             "feeds\\live.jsonl",

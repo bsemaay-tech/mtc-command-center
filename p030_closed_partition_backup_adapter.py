@@ -143,6 +143,7 @@ def _canonical_relative_posix(value: object, field: str) -> str:
             posix.is_absolute()
             or windows.drive
             or windows.root
+            or not posix.parts
             or posix.as_posix() != candidate
             or any(part in {".", ".."} for part in posix.parts)
         ):
@@ -699,6 +700,8 @@ def restore_verified_prefix(
             with _bound_isolated_config(
                 isolated_config_raw, isolated_config
             ) as restore_config_path:
+                if not target.is_dir() or any(target.iterdir()):
+                    raise ValueError("restore target must be empty")
                 restore_result = restore.run_restore(
                     restore_config_path,
                     run_id,
