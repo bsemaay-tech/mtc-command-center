@@ -611,7 +611,15 @@ def _isolated_restore_inputs(
         )
         if validated_raw != manifest_raw:
             raise ValueError("isolated P026 manifest bytes do not match validated input")
-        yield isolated_config_raw, isolated_config, manifest_path, validated_raw
+        yield (
+            isolated_config_raw,
+            isolated_config,
+            manifest_path,
+            validated_raw,
+            receipt_raw,
+            snapshot_rel,
+            snapshot_raw,
+        )
 
 
 def backup_stable_prefix(
@@ -688,6 +696,9 @@ def restore_verified_prefix(
             isolated_config,
             isolated_manifest,
             isolated_manifest_raw,
+            isolated_receipt_raw,
+            isolated_snapshot_rel,
+            isolated_snapshot_raw,
         ):
             with _bound_isolated_config(
                 isolated_config_raw, isolated_config
@@ -746,9 +757,24 @@ def restore_verified_prefix(
             if restore_result != RC_OK:
                 raise ValueError("P026 restore failed")
     restored_prefix = resolve_confined_path(target, store_id)
-    stable = _verify_stable_receipt(
-        restored_prefix, restored_prefix / STABLE_RECEIPT_NAME, verify_source=False
+    stable, restored_receipt_raw, restored_snapshot_raw = _verify_stable_receipt(
+        restored_prefix,
+        restored_prefix / STABLE_RECEIPT_NAME,
+        verify_source=False,
+        include_bytes=True,
     )
+    expected_members = {STABLE_RECEIPT_NAME, isolated_snapshot_rel}
+    actual_members = {
+        path.relative_to(restored_prefix).as_posix()
+        for path in restored_prefix.rglob("*")
+        if path.is_file()
+    }
+    if (
+        actual_members != expected_members
+        or restored_receipt_raw != isolated_receipt_raw
+        or restored_snapshot_raw != isolated_snapshot_raw
+    ):
+        raise ValueError("restored stable prefix differs from validated archive bytes")
     verified = {
         "schema": "p030.verified_restore/v1",
         "state": "verified_restore",

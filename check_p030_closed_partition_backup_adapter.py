@@ -996,6 +996,100 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                 "shared archive influenced verified content ID",
             )
 
+    def test_restore_refuses_post_p026_target_substitution(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            alternate_snapshot = self._line(self.OBS_3, 99)
+            alternate_receipt_object = json.loads(receipt.read_bytes())
+            alternate_receipt_object.update(
+                {
+                    "high_water_bytes": len(alternate_snapshot),
+                    "record_count": 1,
+                    "last_observation_id": self.OBS_3,
+                    "prefix_sha256": hashlib.sha256(alternate_snapshot).hexdigest(),
+                    "dataset_content_hash": "p030ds-v1:" + "b" * 64,
+                }
+            )
+            alternate_receipt = (
+                json.dumps(
+                    alternate_receipt_object,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    indent=2,
+                )
+                + "\n"
+            ).encode("utf-8")
+            target = root / "restore-target"
+            target.mkdir()
+            unchanged_restore = subject.restore.run_restore
+
+            def substitute_after_restore(*args, **kwargs):
+                result = unchanged_restore(*args, **kwargs)
+                if not kwargs["check_only"]:
+                    restored_prefix = target / self.STORE_ID
+                    (restored_prefix / subject.STABLE_RECEIPT_NAME).write_bytes(
+                        alternate_receipt
+                    )
+                    (restored_prefix / "live.jsonl").write_bytes(alternate_snapshot)
+                return result
+
+            with mock.patch.object(
+                subject.restore, "run_restore", side_effect=substitute_after_restore
+            ):
+                with self.assertRaisesRegex(ValueError, "validated archive bytes"):
+                    subject.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            self.assertFalse(
+                (target / subject.VERIFIED_RESTORE_RECEIPT_NAME).exists()
+            )
+
+    def test_restore_refuses_post_p026_extra_target_member(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            target = root / "restore-target"
+            target.mkdir()
+            unchanged_restore = subject.restore.run_restore
+
+            def add_member_after_restore(*args, **kwargs):
+                result = unchanged_restore(*args, **kwargs)
+                if not kwargs["check_only"]:
+                    (target / self.STORE_ID / "unexpected").write_bytes(b"extra")
+                return result
+
+            with mock.patch.object(
+                subject.restore, "run_restore", side_effect=add_member_after_restore
+            ):
+                with self.assertRaisesRegex(ValueError, "validated archive bytes"):
+                    subject.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            self.assertFalse(
+                (target / subject.VERIFIED_RESTORE_RECEIPT_NAME).exists()
+            )
+
     def test_shared_archive_reversion_mutant_is_detected(self) -> None:
         source = Path(subject.__file__).read_text(encoding="utf-8")
         anchor = (
@@ -1017,7 +1111,8 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
         )
 
         with mock.patch(f"{__name__}.subject", mutant), self.assertRaisesRegex(
-            AssertionError, "shared archive influenced isolated restore bytes"
+            (AssertionError, ValueError),
+            "shared archive influenced isolated restore bytes|validated archive bytes",
         ):
             self.test_restore_consumes_isolated_validated_archive_snapshot()
 
