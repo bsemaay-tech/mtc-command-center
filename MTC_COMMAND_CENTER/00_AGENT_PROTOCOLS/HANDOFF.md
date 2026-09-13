@@ -1,25 +1,29 @@
-# P012 governance handoff — 2026-09-11
+# WP-P0-21 / WP-P0-30 bounded implementation handoff — 2026-09-13
 
-Full P012 remains NONACCEPTED: 10 production OPEN rows, 27 signed risks, five residual integration obligations. No venue reply received. Independent engineering/preparation has advanced beyond the earlier proposals.
+Owner decisions `1 YES, 2 YES, 3 A, 4 YES, 5 YES, 6 A, 7 A` are implemented only within the approved offline/synthetic ceilings. The owner separately authorized push/PR preparation and merge; protected current-head CI, required reviews and safe dependency reconciliation remain binding. Local `origin/master` was `42f99571e6abb5222744d9345e1c8a9e19c23c15`. This factual handoff is on `feature/p021-p030-final-handoff-20260913` in `C:/tmp/P021_P030_HANDOFF_20260913`; no live/scheduled dependency. The prior P012 handoff is preserved byte-exact at `../../_AI_MEMORY/history/p012-governance-handoff-20260911/HANDOFF.md` (Git blob `51a4f10f27ec3a20848e74493d21bd5665538c59`).
 
-- Owned branch/worktree: feature/p012-independent-readiness-20260911 at C:/tmp/P012_INDEPENDENT_20260911. No live/scheduled dependency. Foreign checkout preserved.
-- Master rechecked: 4ce213184fe35313cafde45da8f59543db306086.
-- Local reviewed corrective commit: ec6347d5277267937a416356df57355a69ad4b2c. Only three manifest declaration fields reconcile stale PENDING with ratified R35. No publish/merge/deploy/admission.
-- Deliverables: C:/Users/BarışSemaay/Documents/Codex/2026-09-11/11-2/outputs/WP_P0_12_CONTROL/CONTROL_TABLE.md and DECISION_PACKET.md.
-- Detailed current note: ../_AI_MEMORY/P012_INDEPENDENT_READINESS_20260911.md.
+## Accepted narrow offline slices
 
-Completed: 13 fee checks, nine Runner checks, three Bridge/MTC API groups with seven negative controls; R29 PACKET_V4 exact-byte preparation; combined cross-check PASS. Full bar-driven signal run not rerun. R29 semantic review remains at its already-approved final acceptance boundary.
+- P021 evidence contracts: `C:/tmp/P021_HELPERS_20260912`, `feature/p021-research-helpers-20260912`, `b15ad86bf5e4c8876f64c181b5350754fce0b486`. Lead Python 3.12.12 `44/44`; exact Sol/xhigh `PASS`; exact Opus/xhigh `PASS-WITH-NITS`; complete-input Gemini 3.7 Flash High `PASS`.
+- P021 B1 producer: `C:/tmp/P021_BUNDLE_H1_20260912`, `feature/p021-bundle-h1-combined-20260912`, `194da042bc41bfa2cb33c21e74969a9b160fe7a2`. Lead `35/35`; exact Sol/high `PASS-WITH-NITS`; Gemini `PASS`.
+- P030 identities/events/provenance: `C:/tmp/P030_CONTRACTS_20260912`, `feature/p030-contracts-20260912`, `5126f2311316dcce0b493e07ea555ba1b347ca0a`. Lead checker plus 11 load-bearing RED arms; exact Sol/xhigh `PASS`; exact Opus/xhigh `PASS-WITH-NITS`; Gemini `PASS`.
+- P030 fixture heartbeat/backup: `C:/tmp/P030_OPSA_BACKUP_20260912`, `feature/p030-opsa-backup-20260912`, `644edbdd5bedba49ce15608ca7ee354189314d38`. Lead `44/44 + 10/10 + unchanged P026 33/33`; exact Sol/Opus xhigh `PASS-WITH-NITS`; complete-input Gemini `PASS`.
 
-Manifest correction: Lead and fresh Opus5/Sol xhigh reviews reproduce old/fix/reverted-status and 17 tests; both PASS. Gemini3.7 supplemental unexecuted corroboration retained. One false diagnostic removed; four historical diagnostics, all 19 sealed members and production records remain. Accepted R34/R35/PR178 work reused, not re-audited.
+All four worktrees were clean at final adjudication. Optional nits do not change required behavior. The previously accepted narrow P030 restart repair remains frozen at `9934a78be65d29f8cbd292ea34a5650a88ce9792`.
 
-E updated: current official frontend explicitly maps perp taker/maker and referral branches; Lead reproduced six source hashes/import chain/five synthetic cases. Chunk SHA256 215c171cba31045c930ed5718d24464ea5660257819481ff449f8b664024dcb5. Historical applicability, actual billing and rounding remain open. Public funding sample has no payments: reuse its prepared targeted request, no repeated investigation.
+## Gemini transport and evidence
 
-All settled choices retained: STOP_FIRST, explicit zero slippage, retained profiles, no additional bounds, additive schema, GROSS-MINUS-FEES guards, LONG payer, same-timestamp inclusion. No new venue assumptions.
+The first combined supplied-text call preserved valid PASS results for P030 contracts and P021 B1, but the provider inserted `<truncated 204007 bytes>` before the other two slices. It was not retried. Under a new coordinated hold, two separate compact packets ran once each, with unique footer confirmation, empty stderr, `GEMINI_READ_ONLY_OK`, zero retry and zero surviving helpers:
 
-Exact D1 proposal prepares synthetic-only offline exporter behavior for approval. D2 proposes push/PR of the already-reviewed local correction; no merge grant. Other final derivations/reviews depend on real final records/candidate. E and delivery lanes complete; actual running subscription workers: 0. Lead verified the 532-member work bundle and separate E archive. Packaging checks and factual persistence are complete.
+- P021 contracts raw: `C:/tmp/P021_CONTRACTS_GEMINI_COMPACT_20260913/OUTPUT/RAW.json`, SHA-256 `c59bd79e92f4350a02b684f756b6578f76d5ef7565de896c490b1884f28486d6`.
+- P030 OPSA raw: `C:/tmp/P030_OPSA_GEMINI_COMPACT_20260913/OUTPUT/RAW.json`, SHA-256 `1544a8be6d63aee58c0dab8d11da61cee8b38fbdc625f2381254897b94a8e8a9`.
 
-Earlier handoff and readiness are preserved byte-for-byte under ../_AI_MEMORY/history/p012-package-continue-20260911/. No reset, stash, overwrite of foreign work, global account change or new spending.
+Both reports separately identify Gemini correctly but repeat an embedded Sol review header as "authoritative". Guarded process metadata and launcher pins establish actual `gemini-3.7-flash-high`; preserve this wording caveat.
 
-NEXT ACTION: present D1/D2 as one decision packet. WAITING FOR OWNER: D1/D2 and source-backed venue evidence when available.
+## Limits and blockers
 
-Owner approval in this task, 2026-09-11: "all are approved" approves DECISION_PACKET D1 (synthetic-only offline materializer) and D2 (push/PR of the reviewed manifest correction plus factual handoff). D2 may now publish; merge and production/operational actions remain excluded. D1 proceeds separately in feature/p012-synthetic-funding-materializer-20260911 at C:/tmp/P012_MATERIALIZER_20260911, so new implementation cannot enter this correction PR. Required review/CI conditions are unchanged.
+This is not P021/P030 package acceptance. P020 `6f7f495af889437830a6c416f8417f8ced0bcdff` remains NONACCEPTED and cannot be consumed. Decision 6 keeps all unmeasured limits unset/fail-closed; decision 7 retains WS-only restart continuity. Draft PRs `#181`-`#186` preserve the exact reviewed slices and prerequisite bases; `#181`-`#185` are not safe to merge as currently based. No real bundle/archive, runtime, host/KVM2, credentials, venue contact, trading, deploy, merge, protected-schema change or readiness activation occurred. Writers/helpers: 0.
+
+NEXT ACTION: Merge master-based handoff PR `#186` only after its updated head passes protected CI. Reconcile each code slice onto current master without importing unreviewed prerequisite history, then require applicable fresh review and protected CI before merge.
+
+WAITING FOR OWNER: Nothing for the authorized offline integration. Evidence-backed operating-limit and runtime/host decisions remain out of scope; silence is not approval.
