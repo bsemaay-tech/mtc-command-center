@@ -1079,7 +1079,7 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
             with mock.patch.object(
                 subject.restore, "run_restore", side_effect=add_member_after_restore
             ):
-                with self.assertRaisesRegex(ValueError, "validated archive bytes"):
+                with self.assertRaisesRegex(ValueError, "validated archive"):
                     subject.restore_verified_prefix(
                         config_path,
                         run_id=run_id,
@@ -1089,6 +1089,64 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
             self.assertFalse(
                 (target / subject.VERIFIED_RESTORE_RECEIPT_NAME).exists()
             )
+
+    def test_restore_refuses_post_p026_empty_target_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            target = root / "restore-target"
+            target.mkdir()
+            unchanged_restore = subject.restore.run_restore
+
+            def add_directory_after_restore(*args, **kwargs):
+                result = unchanged_restore(*args, **kwargs)
+                if not kwargs["check_only"]:
+                    (target / self.STORE_ID / "unexpected").mkdir()
+                return result
+
+            with mock.patch.object(
+                subject.restore, "run_restore", side_effect=add_directory_after_restore
+            ):
+                with self.assertRaisesRegex(ValueError, "validated archive members"):
+                    subject.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            self.assertFalse(
+                (target / subject.VERIFIED_RESTORE_RECEIPT_NAME).exists()
+            )
+
+    def test_file_only_restored_inventory_reversion_is_detected(self) -> None:
+        source = Path(subject.__file__).read_text(encoding="utf-8")
+        anchor = (
+            '        for path in restored_prefix.rglob("*")\n'
+            "    }\n"
+        )
+        replacement = (
+            '        for path in restored_prefix.rglob("*")\n'
+            "        if path.is_file()\n"
+            "    }\n"
+        )
+        self.assertEqual(source.count(anchor), 1)
+        mutant = types.ModuleType("p030_file_only_restored_inventory_mutant")
+        mutant.__file__ = subject.__file__
+        exec(
+            compile(source.replace(anchor, replacement), mutant.__file__, "exec"),
+            mutant.__dict__,
+        )
+        with mock.patch(f"{__name__}.subject", mutant), self.assertRaises(
+            AssertionError
+        ):
+            self.test_restore_refuses_post_p026_empty_target_directory()
 
     def test_shared_archive_reversion_mutant_is_detected(self) -> None:
         source = Path(subject.__file__).read_text(encoding="utf-8")

@@ -763,15 +763,33 @@ def restore_verified_prefix(
         verify_source=False,
         include_bytes=True,
     )
-    expected_members = {STABLE_RECEIPT_NAME, isolated_snapshot_rel}
-    actual_members = {
-        path.relative_to(restored_prefix).as_posix()
-        for path in restored_prefix.rglob("*")
-        if path.is_file()
+    expected_files = {STABLE_RECEIPT_NAME, isolated_snapshot_rel}
+    expected_directories = {
+        parent.as_posix()
+        for parent in PurePosixPath(isolated_snapshot_rel).parents
+        if parent != PurePosixPath(".")
     }
+    expected_entries = expected_files | expected_directories
+    actual_entries = {
+        path.relative_to(restored_prefix).as_posix(): path
+        for path in restored_prefix.rglob("*")
+    }
+    if set(actual_entries) != expected_entries:
+        raise ValueError("restored stable prefix differs from validated archive members")
+    if any(
+        actual_entries[rel].is_symlink()
+        or actual_entries[rel].is_junction()
+        or not actual_entries[rel].is_dir()
+        for rel in expected_directories
+    ) or any(
+        actual_entries[rel].is_symlink()
+        or actual_entries[rel].is_junction()
+        or not actual_entries[rel].is_file()
+        for rel in expected_files
+    ):
+        raise ValueError("restored stable prefix differs from validated archive members")
     if (
-        actual_members != expected_members
-        or restored_receipt_raw != isolated_receipt_raw
+        restored_receipt_raw != isolated_receipt_raw
         or restored_snapshot_raw != isolated_snapshot_raw
     ):
         raise ValueError("restored stable prefix differs from validated archive bytes")
