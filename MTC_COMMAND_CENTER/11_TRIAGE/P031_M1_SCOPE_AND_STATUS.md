@@ -612,7 +612,7 @@ LF-normalized identities match the original R19 hashes: ledger `7D9B080C...5B209
 `365B4C90...31D47`.
 
 Freshness regeneration used `origin/master` `62a42514793f192ca4f706ca99cc2700b16300fe`.
-The previous branch was 32 behind; 10 upstream paths had zero overlap. The old branch/worktree were
+The previous branch was 32 behind; 11 upstream paths had zero overlap. The old branch/worktree were
 preserved, exact P031 changes were replayed on `feature/p031-m1-20260913-refresh`, and the guard
 passed at 0 behind.
 

@@ -39,7 +39,7 @@ P0-31 does not absorb P0-22. Preserve its distinct owner-lane section; this is o
   LF-normalized identities match original R19: ledger `7D9B080C...5B209`, test
   `365B4C90...31D47`.
 - Freshness: `origin/master` `62a42514793f192ca4f706ca99cc2700b16300fe`; previous branch was
-  32 behind; 10 upstream paths had zero overlap. Old branch/worktree were preserved; exact P031
+  32 behind; 11 upstream paths had zero overlap. Old branch/worktree were preserved; exact P031
   changes were replayed on `feature/p031-m1-20260913-refresh`; guard PASS, 0 behind.
 - Shared HOLD was honored/released; its unrelated Gemini grants no P031 authority.
 - Seven contracts remain fail-closed: `DEMOTED`, `CHALLENGE`, atomic succession, REJECTED
