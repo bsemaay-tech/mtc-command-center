@@ -280,12 +280,17 @@ def _verify_stable_receipt(
     *,
     verify_source: bool,
     source_root: Path | None = None,
-) -> dict:
+    include_bytes: bool = False,
+) -> dict | tuple[dict, bytes, bytes]:
     stable_prefix = Path(stable_prefix).resolve()
     receipt_path = Path(receipt_path).resolve()
     if receipt_path != (stable_prefix / STABLE_RECEIPT_NAME).resolve():
         raise ValueError("stable receipt must belong to the stable prefix")
-    receipt = _read_json_object(receipt_path, "stable-prefix receipt")
+    try:
+        receipt_raw = receipt_path.read_bytes()
+    except OSError as exc:
+        raise ValueError("invalid stable-prefix receipt") from exc
+    receipt = _decode_json_object(receipt_raw, "stable-prefix receipt")
     if set(receipt) != _STABLE_FIELDS:
         raise ValueError("stable-prefix receipt fields do not match contract")
     if receipt["schema"] != "p030.stable_prefix/v1":
@@ -341,18 +346,9 @@ def _verify_stable_receipt(
             raise ValueError("source prefix is truncated below high water")
         if source_prefix != snapshot_prefix:
             raise ValueError("source prefix no longer matches stable snapshot")
+    if include_bytes:
+        return receipt, receipt_raw, snapshot_prefix
     return receipt
-
-
-def _stable_prefix_bytes(stable_prefix: Path, receipt: dict) -> tuple[bytes, bytes]:
-    try:
-        receipt_raw = (stable_prefix / STABLE_RECEIPT_NAME).read_bytes()
-        snapshot_raw = resolve_confined_path(
-            stable_prefix, receipt["snapshot_rel"]
-        ).read_bytes()
-    except OSError as exc:
-        raise ValueError("stable prefix bytes are unavailable") from exc
-    return receipt_raw, snapshot_raw
 
 
 def load_runnable_config(
@@ -424,9 +420,39 @@ def _bound_strict_config(
         yield bound_path, config
 
 
+def _verify_isolated_config(
+    config_path: Path, expected_raw: bytes, expected_config: dict
+) -> None:
+    try:
+        raw = config_path.read_bytes()
+    except OSError as exc:
+        raise ValueError("isolated restore config is unavailable") from exc
+    strict_config = _decode_json_object(raw, "isolated restore config")
+    if raw != expected_raw:
+        raise ValueError("isolated restore config bytes changed during P026 call")
+    try:
+        loaded_config = load_backup_config(config_path)
+    except (OSError, TypeError, ValueError) as exc:
+        raise ValueError("isolated restore config is not runnable") from exc
+    if strict_config != expected_config or loaded_config != expected_config:
+        raise ValueError("isolated restore config object changed during P026 call")
+
+
+@contextmanager
+def _bound_isolated_config(raw: bytes, config: dict):
+    with tempfile.TemporaryDirectory(prefix="p030-bound-restore-config-") as temporary:
+        config_path = Path(temporary) / "config.json"
+        config_path.write_bytes(raw)
+        _verify_isolated_config(config_path, raw, config)
+        try:
+            yield config_path
+        finally:
+            _verify_isolated_config(config_path, raw, config)
+
+
 def _complete_p026_run(
     config: dict, records: list[dict], *, run_id: str, store_id: str
-) -> dict:
+) -> tuple[dict, bytes, bytes]:
     starts = [
         record
         for record in records
@@ -462,10 +488,11 @@ def _complete_p026_run(
         raise ValueError(failure)
     backup_root = Path(config["backup_root"])
     archived_prefix = resolve_confined_path(backup_root, "runs", run_id, store_id)
-    stable = _verify_stable_receipt(
+    stable, receipt_raw, snapshot_raw = _verify_stable_receipt(
         archived_prefix,
         archived_prefix / STABLE_RECEIPT_NAME,
         verify_source=False,
+        include_bytes=True,
     )
     expected = {STABLE_RECEIPT_NAME, stable["snapshot_rel"]}
     actual = [record.get("rel") for record in files]
@@ -475,7 +502,7 @@ def _complete_p026_run(
         or set(actual) != expected
     ):
         raise ValueError(failure)
-    return stable
+    return stable, receipt_raw, snapshot_raw
 
 
 def _restore_manifest_snapshot(
@@ -553,22 +580,17 @@ def _isolated_restore_inputs(
             )
             + "\n"
         ).encode("utf-8")
-        isolated_config_path = Path(temporary) / "config.json"
-        isolated_config_path.write_bytes(isolated_config_raw)
-        if isolated_config_path.read_bytes() != isolated_config_raw:
-            raise ValueError("isolated restore config bytes do not match snapshot")
-        try:
-            loaded_config = load_backup_config(isolated_config_path)
-        except (OSError, TypeError, ValueError) as exc:
-            raise ValueError("isolated restore config is not runnable") from exc
-        if loaded_config != isolated_config:
+        strict_config = _decode_json_object(
+            isolated_config_raw, "isolated restore config"
+        )
+        if strict_config != isolated_config:
             raise ValueError("isolated restore config object does not match snapshot")
         manifest_path, validated_raw = _restore_manifest_snapshot(
             isolated_config, run_id=run_id, store_id=store_id
         )
         if validated_raw != manifest_raw:
             raise ValueError("isolated P026 manifest bytes do not match validated input")
-        yield isolated_config_path, isolated_config, manifest_path, validated_raw
+        yield isolated_config_raw, isolated_config, manifest_path, validated_raw
 
 
 def backup_stable_prefix(
@@ -578,13 +600,14 @@ def backup_stable_prefix(
     with _bound_strict_config(
         Path(config_path), stable_prefix=stable_prefix, store_id=store_id
     ) as (bound_config_path, config):
-        stable_before = _verify_stable_receipt(
+        _, receipt_before, snapshot_before = _verify_stable_receipt(
             stable_prefix,
             stable_receipt,
             verify_source=True,
             source_root=source_root,
+            include_bytes=True,
         )
-        prevalidated_staging = _stable_prefix_bytes(stable_prefix, stable_before)
+        prevalidated_staging = receipt_before, snapshot_before
         manifest_path = Path(config["backup_root"]) / "manifest.jsonl"
         before_count = (
             len(_read_strict_jsonl(manifest_path, "P026 manifest"))
@@ -612,13 +635,10 @@ def backup_stable_prefix(
         if len(starts) != 1:
             raise ValueError("P026 backup did not produce one identifiable run")
         run_id = starts[0]["run_id"]
-        archived = _complete_p026_run(
+        _, archived_receipt, archived_snapshot = _complete_p026_run(
             config, records, run_id=run_id, store_id=store_id
         )
-        archived_prefix = resolve_confined_path(
-            Path(config["backup_root"]), "runs", run_id, store_id
-        )
-        if _stable_prefix_bytes(archived_prefix, archived) != prevalidated_staging:
+        if (archived_receipt, archived_snapshot) != prevalidated_staging:
             raise ValueError(
                 "archived stable prefix differs from prevalidated staging bytes"
             )
@@ -638,18 +658,21 @@ def restore_verified_prefix(
         with _isolated_restore_inputs(
             config, manifest_before, run_id=run_id, store_id=store_id
         ) as (
-            isolated_config_path,
+            isolated_config_raw,
             isolated_config,
             isolated_manifest,
             isolated_manifest_raw,
         ):
-            check_result = restore.run_restore(
-                isolated_config_path,
-                run_id,
-                None,
-                check_only=True,
-                store_filter={store_id},
-            )
+            with _bound_isolated_config(
+                isolated_config_raw, isolated_config
+            ) as check_config_path:
+                check_result = restore.run_restore(
+                    check_config_path,
+                    run_id,
+                    None,
+                    check_only=True,
+                    store_filter={store_id},
+                )
             _verify_manifest_snapshot(
                 isolated_manifest,
                 isolated_manifest_raw,
@@ -668,13 +691,16 @@ def restore_verified_prefix(
                 raise ValueError("P026 check-only failed; restore withheld")
             if not target.is_dir() or any(target.iterdir()):
                 raise ValueError("restore target must be empty")
-            restore_result = restore.run_restore(
-                isolated_config_path,
-                run_id,
-                target,
-                check_only=False,
-                store_filter={store_id},
-            )
+            with _bound_isolated_config(
+                isolated_config_raw, isolated_config
+            ) as restore_config_path:
+                restore_result = restore.run_restore(
+                    restore_config_path,
+                    run_id,
+                    target,
+                    check_only=False,
+                    store_filter={store_id},
+                )
             _verify_manifest_snapshot(
                 isolated_manifest,
                 isolated_manifest_raw,
