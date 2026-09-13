@@ -6,6 +6,7 @@ import hashlib
 import json
 import subprocess
 import tempfile
+import types
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -684,6 +685,31 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                 verified_receipt["dataset_content_hash"], self.DATASET_CONTENT_HASH
             )
 
+    def test_shared_archive_reversion_mutant_is_detected(self) -> None:
+        source = Path(subject.__file__).read_text(encoding="utf-8")
+        anchor = (
+            '        isolated_config = {**config, "backup_root": str(isolated_root)}\n'
+        )
+        self.assertEqual(source.count(anchor), 1)
+        mutant = types.ModuleType("p030_closed_partition_backup_shared_archive_mutant")
+        mutant.__file__ = subject.__file__
+        exec(
+            compile(
+                source.replace(
+                    anchor,
+                    "        isolated_config = config  # shared-archive reversion mutant\n",
+                ),
+                mutant.__file__,
+                "exec",
+            ),
+            mutant.__dict__,
+        )
+
+        with mock.patch(f"{__name__}.subject", mutant), self.assertRaises(
+            AssertionError
+        ):
+            self.test_restore_consumes_isolated_validated_archive_snapshot()
+
     def test_intruder_after_check_only_blocks_actual_restore(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -931,6 +957,56 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                             store_id=self.STORE_ID,
                             source_root=root / "source-root",
                         )
+
+    def test_backup_refuses_archived_pair_that_differs_from_prevalidated_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            original_receipt = receipt.read_bytes()
+            snapshot = stable / "live.jsonl"
+            original_snapshot = snapshot.read_bytes()
+            alternate_snapshot = self._line(self.OBS_3, 99)
+            alternate_receipt_object = json.loads(original_receipt)
+            alternate_receipt_object.update(
+                {
+                    "high_water_bytes": len(alternate_snapshot),
+                    "record_count": 1,
+                    "last_observation_id": self.OBS_3,
+                    "prefix_sha256": hashlib.sha256(alternate_snapshot).hexdigest(),
+                    "dataset_content_hash": "p030ds-v1:" + "b" * 64,
+                }
+            )
+            alternate_receipt = (
+                json.dumps(
+                    alternate_receipt_object,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    indent=2,
+                )
+                + "\n"
+            ).encode("utf-8")
+            unchanged_backup = subject.backup.run_backup
+
+            def aba_during_backup(*args, **kwargs):
+                receipt.write_bytes(alternate_receipt)
+                snapshot.write_bytes(alternate_snapshot)
+                try:
+                    return unchanged_backup(*args, **kwargs)
+                finally:
+                    receipt.write_bytes(original_receipt)
+                    snapshot.write_bytes(original_snapshot)
+
+            with mock.patch.object(
+                subject.backup, "run_backup", side_effect=aba_during_backup
+            ):
+                with self.assertRaisesRegex(ValueError, "prevalidated staging bytes"):
+                    subject.backup_stable_prefix(
+                        config_path,
+                        stable_receipt=receipt,
+                        store_id=self.STORE_ID,
+                        source_root=root / "source-root",
+                    )
 
     def test_restore_refuses_nonempty_target_before_p026(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

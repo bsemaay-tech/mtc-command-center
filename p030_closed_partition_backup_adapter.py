@@ -344,6 +344,17 @@ def _verify_stable_receipt(
     return receipt
 
 
+def _stable_prefix_bytes(stable_prefix: Path, receipt: dict) -> tuple[bytes, bytes]:
+    try:
+        receipt_raw = (stable_prefix / STABLE_RECEIPT_NAME).read_bytes()
+        snapshot_raw = resolve_confined_path(
+            stable_prefix, receipt["snapshot_rel"]
+        ).read_bytes()
+    except OSError as exc:
+        raise ValueError("stable prefix bytes are unavailable") from exc
+    return receipt_raw, snapshot_raw
+
+
 def load_runnable_config(
     config_path: Path, *, stable_prefix: Path, store_id: str
 ) -> dict:
@@ -567,12 +578,13 @@ def backup_stable_prefix(
     with _bound_strict_config(
         Path(config_path), stable_prefix=stable_prefix, store_id=store_id
     ) as (bound_config_path, config):
-        _verify_stable_receipt(
+        stable_before = _verify_stable_receipt(
             stable_prefix,
             stable_receipt,
             verify_source=True,
             source_root=source_root,
         )
+        prevalidated_staging = _stable_prefix_bytes(stable_prefix, stable_before)
         manifest_path = Path(config["backup_root"]) / "manifest.jsonl"
         before_count = (
             len(_read_strict_jsonl(manifest_path, "P026 manifest"))
@@ -600,7 +612,16 @@ def backup_stable_prefix(
         if len(starts) != 1:
             raise ValueError("P026 backup did not produce one identifiable run")
         run_id = starts[0]["run_id"]
-        _complete_p026_run(config, records, run_id=run_id, store_id=store_id)
+        archived = _complete_p026_run(
+            config, records, run_id=run_id, store_id=store_id
+        )
+        archived_prefix = resolve_confined_path(
+            Path(config["backup_root"]), "runs", run_id, store_id
+        )
+        if _stable_prefix_bytes(archived_prefix, archived) != prevalidated_staging:
+            raise ValueError(
+                "archived stable prefix differs from prevalidated staging bytes"
+            )
         return run_id
 
 

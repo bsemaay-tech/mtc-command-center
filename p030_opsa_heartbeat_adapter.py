@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import sys
 from datetime import datetime
@@ -45,14 +44,13 @@ def _state_directory(value: Path | str) -> Path:
     except TypeError as exc:
         raise ValueError("state_dir must be a path") from exc
     text = str(path)
-    normalized = os.path.normcase(os.path.normpath(text))
-    current_directory = os.path.normcase(os.path.normpath(os.getcwd()))
-    drive, tail = os.path.splitdrive(text)
-    if (
-        not text.strip()
-        or normalized in {os.curdir, current_directory}
-        or (bool(drive) and tail in {"", os.curdir})
-    ):
+    if not text.strip():
+        raise ValueError("state_dir must not be empty, whitespace, or the current directory")
+    try:
+        is_current_directory = path.resolve() == Path.cwd().resolve()
+    except (OSError, RuntimeError) as exc:
+        raise ValueError("state_dir canonical target is unavailable") from exc
+    if is_current_directory:
         raise ValueError("state_dir must not be empty, whitespace, or the current directory")
     return path
 
