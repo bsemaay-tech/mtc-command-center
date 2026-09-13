@@ -411,6 +411,28 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                         )
                 run_backup.assert_not_called()
 
+    def test_config_and_receipt_refuse_nested_overflowed_numbers_before_p026(
+        self,
+    ) -> None:
+        for container in ("config", "receipt"):
+            with self.subTest(container=container), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                _, stable, receipt, _ = self._capture(root)
+                config_path = self._runnable_config(root, stable)
+                path = config_path if container == "config" else receipt
+                raw = path.read_text(encoding="utf-8").rstrip()
+                raw = raw[:-1] + ', "synthetic_probe": {"nested": [1e9999]}}'
+                path.write_text(raw, encoding="utf-8")
+                with mock.patch.object(subject.backup, "run_backup") as run_backup:
+                    with self.assertRaisesRegex(ValueError, "non-finite JSON number"):
+                        subject.backup_stable_prefix(
+                            config_path,
+                            stable_receipt=receipt,
+                            store_id=self.STORE_ID,
+                            source_root=root / "source-root",
+                        )
+                run_backup.assert_not_called()
+
     def test_backup_consumes_bound_config_when_original_is_swapped(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -587,6 +609,153 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                 target.mkdir()
                 with mock.patch.object(subject.restore, "run_restore") as run_restore:
                     with self.assertRaisesRegex(ValueError, expected):
+                        subject.restore_verified_prefix(
+                            config_path,
+                            run_id=run_id,
+                            store_id=self.STORE_ID,
+                            target=target,
+                        )
+                run_restore.assert_not_called()
+
+    def test_manifest_refuses_boolean_size_and_byte_totals_before_p026(self) -> None:
+        for field in ("file.size", "run_end.bytes"):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                _, stable, receipt, _ = self._capture(root)
+                config_path = self._runnable_config(root, stable)
+                run_id = subject.backup_stable_prefix(
+                    config_path,
+                    stable_receipt=receipt,
+                    store_id=self.STORE_ID,
+                    source_root=root / "source-root",
+                )
+                manifest = root / "backups" / "manifest.jsonl"
+                records = [
+                    json.loads(line)
+                    for line in manifest.read_text(encoding="utf-8").splitlines()
+                ]
+                if field == "file.size":
+                    next(
+                        record
+                        for record in records
+                        if record.get("record") == "file"
+                    )["size"] = True
+                    next(
+                        record
+                        for record in records
+                        if record.get("record") == "run_end"
+                    )["bytes"] = sum(
+                        record["size"]
+                        for record in records
+                        if record.get("record") == "file"
+                    )
+                else:
+                    for record in records:
+                        if record.get("record") == "file":
+                            record["size"] = 0
+                    next(
+                        record
+                        for record in records
+                        if record.get("record") == "file"
+                    )["size"] = 1
+                    next(
+                        record
+                        for record in records
+                        if record.get("record") == "run_end"
+                    )["bytes"] = True
+                manifest.write_text(
+                    "".join(
+                        json.dumps(record, sort_keys=True) + "\n"
+                        for record in records
+                    ),
+                    encoding="utf-8",
+                )
+                target = root / "restore-target"
+                target.mkdir()
+                with mock.patch.object(subject.restore, "run_restore") as run_restore:
+                    with self.assertRaisesRegex(
+                        ValueError, "complete successful P026 run"
+                    ):
+                        subject.restore_verified_prefix(
+                            config_path,
+                            run_id=run_id,
+                            store_id=self.STORE_ID,
+                            target=target,
+                        )
+                run_restore.assert_not_called()
+
+    def test_manifest_refuses_inconsistent_byte_total_before_p026(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            manifest = root / "backups" / "manifest.jsonl"
+            records = [
+                json.loads(line)
+                for line in manifest.read_text(encoding="utf-8").splitlines()
+            ]
+            next(
+                record
+                for record in records
+                if record.get("record") == "run_end"
+            )["bytes"] += 1
+            manifest.write_text(
+                "".join(
+                    json.dumps(record, sort_keys=True) + "\n" for record in records
+                ),
+                encoding="utf-8",
+            )
+            target = root / "restore-target"
+            target.mkdir()
+            with mock.patch.object(subject.restore, "run_restore") as run_restore:
+                with self.assertRaisesRegex(
+                    ValueError, "complete successful P026 run"
+                ):
+                    subject.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            run_restore.assert_not_called()
+
+    def test_manifest_refuses_overflowed_size_and_byte_totals_before_p026(
+        self,
+    ) -> None:
+        for field in ("file.size", "run_end.bytes"):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                _, stable, receipt, _ = self._capture(root)
+                config_path = self._runnable_config(root, stable)
+                run_id = subject.backup_stable_prefix(
+                    config_path,
+                    stable_receipt=receipt,
+                    store_id=self.STORE_ID,
+                    source_root=root / "source-root",
+                )
+                manifest = root / "backups" / "manifest.jsonl"
+                lines = manifest.read_text(encoding="utf-8").splitlines()
+                record_kind, key = field.split(".")
+                for index, line in enumerate(lines):
+                    record = json.loads(line)
+                    if record.get("record") == record_kind:
+                        lines[index] = line.replace(
+                            f'"{key}": {record[key]}', f'"{key}": 1e9999'
+                        )
+                        break
+                else:
+                    self.fail(f"missing manifest record for {field}")
+                manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                target = root / "restore-target"
+                target.mkdir()
+                with mock.patch.object(subject.restore, "run_restore") as run_restore:
+                    with self.assertRaisesRegex(ValueError, "non-finite JSON number"):
                         subject.restore_verified_prefix(
                             config_path,
                             run_id=run_id,
@@ -1041,15 +1210,15 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
             elif defect == "status_ok_nonempty_errors":
                 run_end["errors"] = ["synthetic failure"]
             elif defect == "duplicate_expected_member":
-                records.append(
-                    next(
-                        record.copy()
-                        for record in records
-                        if record.get("record") == "file"
-                        and record.get("rel") == "live.jsonl"
-                    )
+                duplicate = next(
+                    record.copy()
+                    for record in records
+                    if record.get("record") == "file"
+                    and record.get("rel") == "live.jsonl"
                 )
+                records.append(duplicate)
                 run_end["files"] += 1
+                run_end["bytes"] += duplicate["size"]
             else:
                 self.fail(f"unknown run-envelope defect: {defect}")
             manifest.write_text(
@@ -1320,14 +1489,15 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                         source_root=root / "source-root",
                     )
 
-    def test_backup_binds_bytes_from_the_same_read_that_validated_them(self) -> None:
+    def assert_backup_binds_bytes_from_the_same_read_that_validated_them(
+        self, module: types.ModuleType
+    ) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            _, stable, receipt, _ = self._capture(root)
+            source, stable, receipt, _ = self._capture(root)
             config_path = self._runnable_config(root, stable)
             original_receipt = receipt.read_bytes()
             snapshot = stable / "live.jsonl"
-            original_snapshot = snapshot.read_bytes()
             alternate_snapshot = self._line(self.OBS_3, 99)
             alternate_receipt_object = json.loads(original_receipt)
             alternate_receipt_object.update(
@@ -1348,8 +1518,7 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                 )
                 + "\n"
             ).encode("utf-8")
-            unchanged_verify = subject._verify_stable_receipt
-            unchanged_backup = subject.backup.run_backup
+            unchanged_verify = module._verify_stable_receipt
             first_validation = True
 
             def swap_after_first_validation(*args, **kwargs):
@@ -1357,33 +1526,62 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                 result = unchanged_verify(*args, **kwargs)
                 if first_validation:
                     first_validation = False
+                    source.write_bytes(alternate_snapshot)
                     receipt.write_bytes(alternate_receipt)
                     snapshot.write_bytes(alternate_snapshot)
                 return result
 
-            def restore_staging_after_backup(*args, **kwargs):
-                try:
-                    return unchanged_backup(*args, **kwargs)
-                finally:
-                    receipt.write_bytes(original_receipt)
-                    snapshot.write_bytes(original_snapshot)
-
             with mock.patch.object(
-                subject,
+                module,
                 "_verify_stable_receipt",
                 side_effect=swap_after_first_validation,
-            ), mock.patch.object(
-                subject.backup,
-                "run_backup",
-                side_effect=restore_staging_after_backup,
             ):
                 with self.assertRaisesRegex(ValueError, "prevalidated staging bytes"):
-                    subject.backup_stable_prefix(
+                    module.backup_stable_prefix(
                         config_path,
                         stable_receipt=receipt,
                         store_id=self.STORE_ID,
                         source_root=root / "source-root",
                     )
+
+    def test_backup_binds_bytes_from_the_same_read_that_validated_them(self) -> None:
+        self.assert_backup_binds_bytes_from_the_same_read_that_validated_them(subject)
+
+    def test_validate_then_reopen_reversion_is_detected(self) -> None:
+        source = Path(subject.__file__).read_text(encoding="utf-8")
+        anchor = """        _, receipt_before, snapshot_before = _verify_stable_receipt(
+            stable_prefix,
+            stable_receipt,
+            verify_source=True,
+            source_root=source_root,
+            include_bytes=True,
+        )
+        prevalidated_staging = receipt_before, snapshot_before
+"""
+        replacement = """        stable_before, _, _ = _verify_stable_receipt(
+            stable_prefix,
+            stable_receipt,
+            verify_source=True,
+            source_root=source_root,
+            include_bytes=True,
+        )
+        receipt_before = Path(stable_receipt).read_bytes()
+        snapshot_before = resolve_confined_path(
+            stable_prefix, stable_before["snapshot_rel"]
+        ).read_bytes()
+        prevalidated_staging = receipt_before, snapshot_before
+"""
+        self.assertEqual(source.count(anchor), 1)
+        mutant = types.ModuleType("p030_validate_then_reopen_mutant")
+        mutant.__file__ = subject.__file__
+        exec(
+            compile(source.replace(anchor, replacement), mutant.__file__, "exec"),
+            mutant.__dict__,
+        )
+        with self.assertRaises(AssertionError):
+            self.assert_backup_binds_bytes_from_the_same_read_that_validated_them(
+                mutant
+            )
 
     def test_restore_refuses_nonempty_target_before_p026(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
