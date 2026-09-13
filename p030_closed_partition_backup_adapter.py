@@ -619,12 +619,17 @@ def backup_stable_prefix(
         )
         if result != RC_OK:
             raise ValueError("P026 backup failed")
-        _verify_stable_receipt(
+        _, receipt_after, snapshot_after = _verify_stable_receipt(
             stable_prefix,
             stable_receipt,
             verify_source=True,
             source_root=source_root,
+            include_bytes=True,
         )
+        if (receipt_after, snapshot_after) != prevalidated_staging:
+            raise ValueError(
+                "post-P026 stable prefix differs from prevalidated staging bytes"
+            )
         records = _read_strict_jsonl(manifest_path, "P026 manifest")
         starts = [
             record

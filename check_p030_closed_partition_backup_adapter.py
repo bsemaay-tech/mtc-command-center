@@ -1086,6 +1086,56 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                             source_root=root / "source-root",
                         )
 
+    def test_backup_refuses_coordinated_valid_staging_replacement_after_p026(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            snapshot = stable / "live.jsonl"
+            alternate_snapshot = self._line(self.OBS_3, 99)
+            alternate_receipt_object = json.loads(receipt.read_bytes())
+            alternate_receipt_object.update(
+                {
+                    "high_water_bytes": len(alternate_snapshot),
+                    "record_count": 1,
+                    "last_observation_id": self.OBS_3,
+                    "prefix_sha256": hashlib.sha256(alternate_snapshot).hexdigest(),
+                    "dataset_content_hash": "p030ds-v1:" + "b" * 64,
+                }
+            )
+            alternate_receipt = (
+                json.dumps(
+                    alternate_receipt_object,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    indent=2,
+                )
+                + "\n"
+            ).encode("utf-8")
+            unchanged_backup = subject.backup.run_backup
+
+            def replace_staging_after_backup(*args, **kwargs):
+                result = unchanged_backup(*args, **kwargs)
+                source.write_bytes(alternate_snapshot)
+                snapshot.write_bytes(alternate_snapshot)
+                receipt.write_bytes(alternate_receipt)
+                return result
+
+            with mock.patch.object(
+                subject.backup,
+                "run_backup",
+                side_effect=replace_staging_after_backup,
+            ):
+                with self.assertRaisesRegex(ValueError, "prevalidated staging bytes"):
+                    subject.backup_stable_prefix(
+                        config_path,
+                        stable_receipt=receipt,
+                        store_id=self.STORE_ID,
+                        source_root=root / "source-root",
+                    )
+
     def test_backup_refuses_archived_pair_that_differs_from_prevalidated_staging(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
