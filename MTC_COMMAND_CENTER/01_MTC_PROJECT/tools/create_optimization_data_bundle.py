@@ -6,12 +6,21 @@ import hashlib
 import json
 import math
 import shutil
+import sys
 import zipfile
 from collections import Counter, defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+
+QUANTLENS_TOOLS = Path(__file__).resolve().parents[2] / "03_QUANTLENS" / "tools"
+if str(QUANTLENS_TOOLS) not in sys.path:
+    sys.path.insert(0, str(QUANTLENS_TOOLS))
+
+from data_gap_ratio import measure_data_gaps
 
 
 EXPECTED_SYMBOLS = [
@@ -35,6 +44,8 @@ EXPECTED_SYMBOLS = [
 ]
 EXPECTED_TIMEFRAMES = ["15m", "1h", "2h", "4h", "1D"]
 TIMEFRAME_ALIASES = {
+    "5": "5m",
+    "5m": "5m",
     "15": "15m",
     "15m": "15m",
     "60": "1h",
@@ -48,7 +59,7 @@ TIMEFRAME_ALIASES = {
     "1d": "1D",
     "1440": "1D",
 }
-TIMEFRAME_SECONDS = {"15m": 900, "1h": 3600, "2h": 7200, "4h": 14400, "1D": 86400}
+TIMEFRAME_SECONDS = {"5m": 300, "15m": 900, "1h": 3600, "2h": 7200, "4h": 14400, "1D": 86400}
 METHOD_VERSION = "rule_based_market_regime_v1"
 
 
@@ -93,6 +104,18 @@ def parse_time(value: str) -> datetime | None:
         return parsed.astimezone(timezone.utc)
     except ValueError:
         return None
+
+
+def _normalize_cutoff_utc(value: datetime, message: str) -> datetime:
+    if type(value) is not datetime or type(value.tzinfo) is not timezone:
+        raise ValueError(message)
+    try:
+        offset = value.utcoffset()
+        if offset is None:
+            raise ValueError(message)
+        return (value.replace(tzinfo=None) - offset).replace(tzinfo=timezone.utc)
+    except Exception as exc:
+        raise ValueError(message) from exc
 
 
 def iso(dt: datetime | None) -> str | None:
@@ -221,24 +244,36 @@ def yaml_scalar(value: Any) -> str:
 
 
 def write_simple_yaml(path: Path, payload: dict[str, Any]) -> None:
-    lines: list[str] = []
-    for key, value in payload.items():
-        if isinstance(value, list):
-            lines.append(f"{key}:")
-            for item in value:
-                if isinstance(item, dict):
-                    lines.append("  -")
-                    for item_key, item_value in item.items():
-                        if isinstance(item_value, list):
-                            lines.append(f"    {item_key}:")
-                            for sub in item_value:
-                                lines.append(f"      - {yaml_scalar(sub)}")
-                        else:
-                            lines.append(f"    {item_key}: {yaml_scalar(item_value)}")
+    def render(value: Any, indent: int) -> list[str]:
+        prefix = " " * indent
+        if isinstance(value, Mapping):
+            lines: list[str] = []
+            for key, item in value.items():
+                if isinstance(item, Mapping):
+                    if item:
+                        lines.append(f"{prefix}{key}:")
+                        lines.extend(render(item, indent + 2))
+                    else:
+                        lines.append(f"{prefix}{key}: {{}}")
+                elif isinstance(item, list):
+                    if item:
+                        lines.append(f"{prefix}{key}:")
+                        lines.extend(render(item, indent + 2))
+                    else:
+                        lines.append(f"{prefix}{key}: []")
                 else:
-                    lines.append(f"  - {yaml_scalar(item)}")
-        else:
-            lines.append(f"{key}: {yaml_scalar(value)}")
+                    lines.append(f"{prefix}{key}: {yaml_scalar(item)}")
+            return lines
+        lines = []
+        for item in value:
+            if isinstance(item, (Mapping, list)):
+                lines.append(f"{prefix}-")
+                lines.extend(render(item, indent + 2))
+            else:
+                lines.append(f"{prefix}- {yaml_scalar(item)}")
+        return lines
+
+    lines = render(payload, 0)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -262,7 +297,6 @@ def normalize_rows(rows: list[dict[str, str]], columns: list[str]) -> tuple[list
         if volume_column:
             item["volume"] = row.get(volume_column, "")
         result.append(item)
-    result.sort(key=lambda item: str(item["timestamp_utc"]))
     notes = {"volume": "present" if volume_column else "missing_in_source"}
     return result, notes
 
@@ -277,92 +311,256 @@ def dataset_id_for(source: SourceFile, used_ids: set[str]) -> str:
     return dataset_id
 
 
-def validate_quality(dataset_id: str, rows: list[dict[str, Any]], timeframe: str, bundle_root: Path) -> dict[str, Any]:
-    times: list[datetime] = []
-    invalid_rows: list[dict[str, Any]] = []
+def _quality_evidence_sha256(
+    rows: list[dict[str, Any]], timeframe: str, quality: Mapping[str, Any]
+) -> str:
+    payload = {
+        "closed_rows": rows,
+        "timeframe": timeframe,
+        "quality": {
+            key: value
+            for key, value in quality.items()
+            if key != "evidence_binding_sha256"
+        },
+    }
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), default=str
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def prepare_dataset_evidence(
+    rows: list[dict[str, Any]],
+    *,
+    instrument_id: str,
+    timeframe: str,
+    closed_candle_cutoff_utc: datetime,
+    gap_policy: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Prepare synthetic-testable closed-row evidence without bundle I/O."""
+
+    if (
+        not isinstance(instrument_id, str)
+        or instrument_id.count(":") != 1
+        or not all(part for part in instrument_id.split(":"))
+    ):
+        raise ValueError("instrument_id must be exchange-qualified")
+    try:
+        step = TIMEFRAME_SECONDS[timeframe]
+    except KeyError:
+        raise ValueError(f"unsupported timeframe: {timeframe}") from None
+    cutoff = _normalize_cutoff_utc(
+        closed_candle_cutoff_utc,
+        "closed_candle_cutoff_utc must be timezone-aware",
+    )
+    if cutoff.microsecond:
+        raise ValueError("closed_candle_cutoff_utc must use whole seconds")
+    closed_rows: list[dict[str, Any]] = []
+    timestamps: list[float] = []
+    invalid_ohlcv_reasons: list[dict[str, Any]] = []
+    for index, row in enumerate(rows, start=1):
+        timestamp = parse_time(str(row.get("timestamp_utc", "")))
+        if timestamp is None:
+            raise ValueError("row timestamp_utc must be parseable")
+        if timestamp.microsecond:
+            raise ValueError(f"row {index} timestamp_utc must use whole seconds")
+        if timestamp + timedelta(seconds=step) <= cutoff:
+            values: dict[str, float] = {}
+            for name in ("open", "high", "low", "close", "volume"):
+                if name not in row:
+                    raise ValueError(f"row {index} {name} is required")
+                value = row[name]
+                if isinstance(value, bool):
+                    raise ValueError(f"row {index} {name} must be a finite number")
+                try:
+                    number = float(value)
+                except (TypeError, ValueError):
+                    raise ValueError(f"row {index} {name} must be a finite number") from None
+                if not math.isfinite(number):
+                    raise ValueError(f"row {index} {name} must be a finite number")
+                values[name] = number
+            key = timestamp.isoformat()
+            if values["volume"] < 0:
+                invalid_ohlcv_reasons.append(
+                    {"row": index, "timestamp_utc": key, "reason": "negative_volume"}
+                )
+            if values["high"] < values["low"]:
+                invalid_ohlcv_reasons.append(
+                    {"row": index, "timestamp_utc": key, "reason": "high_below_low"}
+                )
+            if not values["low"] <= values["open"] <= values["high"]:
+                invalid_ohlcv_reasons.append(
+                    {"row": index, "timestamp_utc": key, "reason": "open_outside_high_low"}
+                )
+            if not values["low"] <= values["close"] <= values["high"]:
+                invalid_ohlcv_reasons.append(
+                    {"row": index, "timestamp_utc": key, "reason": "close_outside_high_low"}
+                )
+            if min(values[name] for name in ("open", "high", "low", "close")) < 0:
+                invalid_ohlcv_reasons.append(
+                    {"row": index, "timestamp_utc": key, "reason": "negative_ohlc"}
+                )
+            if values["close"] <= 0:
+                invalid_ohlcv_reasons.append(
+                    {"row": index, "timestamp_utc": key, "reason": "zero_or_negative_close"}
+                )
+            closed_rows.append({"timestamp_utc": timestamp, **values})
+            timestamps.append(timestamp.timestamp())
+    gap_measurement = measure_data_gaps(timestamps, timeframe, gap_policy)
+    legacy_gap_rows: list[dict[str, Any]] = []
+    closed_rows.sort(key=lambda row: row["timestamp_utc"])
+    sorted_times = [row["timestamp_utc"] for row in closed_rows]
+    for previous, current in zip(sorted_times, sorted_times[1:]):
+        delta_seconds = int((current - previous).total_seconds())
+        if delta_seconds > step * 1.5:
+            legacy_gap_rows.append(
+                {
+                    "prev_timestamp_utc": previous.isoformat(),
+                    "next_timestamp_utc": current.isoformat(),
+                    "delta_seconds": delta_seconds,
+                    "missing_bars_estimate": max(0, round(delta_seconds / step) - 1),
+                }
+            )
+    first_timestamp = closed_rows[0]["timestamp_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
+    last_timestamp = closed_rows[-1]["timestamp_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")
+    canonical = (
+        "p021.dataset/v1\n"
+        f"{instrument_id}\n"
+        f"{timeframe}\n"
+        f"{first_timestamp}\n"
+        f"{last_timestamp}\n"
+        f"{len(closed_rows)}\n"
+    )
+    canonical += "".join(
+        ",".join(
+            [
+                row["timestamp_utc"].strftime("%Y-%m-%dT%H:%M:%SZ"),
+                row["open"].hex(),
+                row["high"].hex(),
+                row["low"].hex(),
+                row["close"].hex(),
+                row["volume"].hex(),
+            ]
+        )
+        + "\n"
+        for row in closed_rows
+    )
+    output_rows = [
+        {**row, "timestamp_utc": row["timestamp_utc"].strftime("%Y-%m-%dT%H:%M:%SZ")}
+        for row in closed_rows
+    ]
+    dataset_hash = None
+    if not invalid_ohlcv_reasons:
+        dataset_hash = {
+            "contract": "ds-v1",
+            "digest": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+        }
+    quality = {
+        "gap_measurement": gap_measurement,
+        "legacy_gap_rows": legacy_gap_rows,
+        "ohlcv_validation_status": "PASS" if not invalid_ohlcv_reasons else "FAIL",
+        "invalid_ohlcv_count": len(invalid_ohlcv_reasons),
+        "invalid_ohlcv_reasons": invalid_ohlcv_reasons,
+    }
+    quality["evidence_binding_sha256"] = _quality_evidence_sha256(
+        output_rows, timeframe, quality
+    )
+    return {
+        "closed_rows": output_rows,
+        "excluded_forming_candle_count": len(rows) - len(closed_rows),
+        "closed_candle_cutoff_utc": cutoff.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "quality": quality,
+        "dataset_hash": dataset_hash,
+    }
+
+
+def validate_quality(
+    dataset_id: str,
+    timeframe: str,
+    bundle_root: Path,
+    *,
+    evidence: Mapping[str, Any],
+    emit: bool = True,
+) -> dict[str, Any]:
+    if timeframe not in TIMEFRAME_SECONDS:
+        raise ValueError(f"unsupported timeframe: {timeframe}")
+    rows = evidence.get("closed_rows")
+    quality = evidence.get("quality")
+    if not isinstance(rows, list) or not isinstance(quality, Mapping):
+        raise ValueError("evidence must contain closed rows and quality")
+    gap_measurement = quality.get("gap_measurement")
+    if not isinstance(gap_measurement, dict):
+        raise ValueError("quality must contain the H1 gap measurement")
+    if gap_measurement.get("result_kind") != "P021_DATA_GAP_MEASUREMENT_ONLY":
+        raise ValueError("quality must contain the exact H1 result")
+    if gap_measurement.get("timeframe") != timeframe:
+        raise ValueError("H1 measurement timeframe does not match dataset")
+    legacy_gap_rows = quality.get("legacy_gap_rows")
+    if not isinstance(legacy_gap_rows, list):
+        raise ValueError("quality must contain legacy per-gap rows")
+    status = quality.get("ohlcv_validation_status")
+    invalid_rows = quality.get("invalid_ohlcv_reasons")
+    if status not in {"PASS", "FAIL"} or not isinstance(invalid_rows, list):
+        raise ValueError("quality must contain OHLCV validation results")
+    if quality.get("evidence_binding_sha256") != _quality_evidence_sha256(
+        rows, timeframe, quality
+    ):
+        raise ValueError("evidence quality does not match closed rows and timeframe")
     duplicates: list[dict[str, Any]] = []
-    gaps: list[dict[str, Any]] = []
     seen: set[str] = set()
     for index, row in enumerate(rows, start=1):
-        ts = parse_time(str(row["timestamp_utc"]))
-        if not ts:
-            invalid_rows.append({"row": index, "reason": "timestamp_parse_failed"})
-            continue
-        key = ts.isoformat()
+        key = str(row["timestamp_utc"])
         if key in seen:
             duplicates.append({"row": index, "timestamp_utc": key})
         seen.add(key)
-        times.append(ts)
-        try:
-            open_price = float(row["open"])
-            high = float(row["high"])
-            low = float(row["low"])
-            close = float(row["close"])
-            if high < low:
-                invalid_rows.append({"row": index, "timestamp_utc": key, "reason": "high_below_low"})
-            if open_price < low or open_price > high:
-                invalid_rows.append({"row": index, "timestamp_utc": key, "reason": "open_outside_high_low"})
-            if close < low or close > high:
-                invalid_rows.append({"row": index, "timestamp_utc": key, "reason": "close_outside_high_low"})
-            if min(open_price, high, low, close) < 0:
-                invalid_rows.append({"row": index, "timestamp_utc": key, "reason": "negative_ohlc"})
-            if close <= 0:
-                invalid_rows.append({"row": index, "timestamp_utc": key, "reason": "zero_or_negative_close"})
-        except (TypeError, ValueError):
-            invalid_rows.append({"row": index, "timestamp_utc": key, "reason": "ohlc_parse_failed"})
-    times = sorted(times)
-    expected_step = TIMEFRAME_SECONDS.get(timeframe)
-    if expected_step and len(times) > 1:
-        for prev, current in zip(times, times[1:]):
-            delta = int((current - prev).total_seconds())
-            if delta > expected_step * 1.5:
-                gaps.append(
-                    {
-                        "prev_timestamp_utc": prev.isoformat(),
-                        "next_timestamp_utc": current.isoformat(),
-                        "delta_seconds": delta,
-                        "missing_bars_estimate": int(delta / expected_step) - 1,
-                    }
-                )
     gap_path = bundle_root / "quality" / "gap_reports" / f"{dataset_id}_gaps.csv"
     duplicate_path = bundle_root / "quality" / "duplicate_timestamp_reports" / f"{dataset_id}_duplicates.csv"
     ohlcv_path = bundle_root / "quality" / "ohlcv_validation_reports" / f"{dataset_id}_ohlcv.md"
-    write_csv(gap_path, gaps, ["prev_timestamp_utc", "next_timestamp_utc", "delta_seconds", "missing_bars_estimate"])
-    write_csv(duplicate_path, duplicates, ["row", "timestamp_utc"])
-    ohlcv_path.parent.mkdir(parents=True, exist_ok=True)
-    status = "PASS" if not invalid_rows else "FAIL"
-    ohlcv_path.write_text(
-        "\n".join(
-            [
-                f"# OHLCV Validation - {dataset_id}",
-                "",
-                f"- Status: `{status}`",
-                f"- Invalid rows: `{len(invalid_rows)}`",
-                f"- Duplicate timestamps: `{len(duplicates)}`",
-                f"- Gaps: `{len(gaps)}`",
-                "",
-                "## First Invalid Rows",
-                "",
-                json.dumps(invalid_rows[:50], indent=2, sort_keys=True),
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    expected_bars = None
-    if expected_step and len(times) > 1:
-        expected_bars = int((times[-1] - times[0]).total_seconds() / expected_step) + 1
-    return {
-        "has_gaps": bool(gaps),
-        "gap_count": len(gaps),
+    projection = {
+        "gap_measurement": gap_measurement,
+        "has_gaps": gap_measurement["gap_event_count"] > 0,
+        "gap_count": gap_measurement["gap_event_count"],
         "gap_report_path": str(gap_path.relative_to(bundle_root)),
         "duplicate_timestamp_count": len(duplicates),
         "duplicate_report_path": str(duplicate_path.relative_to(bundle_root)),
         "ohlcv_validation_status": status,
         "ohlcv_report_path": str(ohlcv_path.relative_to(bundle_root)),
         "invalid_ohlcv_count": len(invalid_rows),
-        "expected_bars": expected_bars,
+        "invalid_ohlcv_reasons": invalid_rows,
+        "expected_bars": gap_measurement["expected_bars"],
     }
+    if emit:
+        write_csv(
+            gap_path,
+            legacy_gap_rows,
+            [
+                "prev_timestamp_utc",
+                "next_timestamp_utc",
+                "delta_seconds",
+                "missing_bars_estimate",
+            ],
+        )
+        write_csv(duplicate_path, duplicates, ["row", "timestamp_utc"])
+        ohlcv_path.parent.mkdir(parents=True, exist_ok=True)
+        ohlcv_path.write_text(
+            "\n".join(
+                [
+                    f"# OHLCV Validation - {dataset_id}",
+                    "",
+                    f"- Status: `{status}`",
+                    f"- Invalid rows: `{len(invalid_rows)}`",
+                    f"- Duplicate timestamps: `{len(duplicates)}`",
+                    f"- Gaps: `{gap_measurement['gap_event_count']}`",
+                    "",
+                    "## First Invalid Rows",
+                    "",
+                    json.dumps(invalid_rows[:50], indent=2, sort_keys=True),
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    return projection
 
 
 def regime_lookback(timeframe: str) -> int:
@@ -456,34 +654,55 @@ def safe_copy(src: Path, dst: Path) -> None:
     shutil.copy2(src, dst)
 
 
+def explicit_evidence_inputs(args: argparse.Namespace) -> tuple[datetime, Mapping[str, Any]]:
+    """Resolve caller-supplied evidence inputs before bundle/report paths are touched."""
+
+    cutoff_value = getattr(args, "closed_candle_cutoff_utc", None)
+    if cutoff_value is None or cutoff_value == "":
+        raise ValueError("closed_candle_cutoff_utc is required")
+    if isinstance(cutoff_value, datetime):
+        cutoff = cutoff_value
+    else:
+        cutoff_text = str(cutoff_value).strip()
+        cutoff = parse_time(cutoff_text)
+        if cutoff is not None and not cutoff_text.isdigit():
+            parsed_text = datetime.fromisoformat(cutoff_text.replace("Z", "+00:00"))
+            if parsed_text.tzinfo is None:
+                raise ValueError(
+                    "closed_candle_cutoff_utc must be a timezone-aware timestamp"
+                )
+    if cutoff is None:
+        raise ValueError("closed_candle_cutoff_utc must be a timezone-aware timestamp")
+    cutoff = _normalize_cutoff_utc(
+        cutoff,
+        "closed_candle_cutoff_utc must be a timezone-aware timestamp",
+    )
+    if cutoff.microsecond:
+        raise ValueError("closed_candle_cutoff_utc must use whole seconds")
+
+    policy_value = getattr(args, "gap_policy", None)
+    if policy_value is None or policy_value == "":
+        raise ValueError("gap_policy is required")
+    if isinstance(policy_value, Mapping):
+        policy = policy_value
+    else:
+        try:
+            policy = json.loads(Path(policy_value).read_text(encoding="utf-8"))
+        except (OSError, TypeError, json.JSONDecodeError) as exc:
+            raise ValueError("gap_policy must be a readable JSON object") from exc
+    if not isinstance(policy, Mapping):
+        raise ValueError("gap_policy must be a JSON object")
+    return cutoff, policy
+
+
 def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
+    closed_candle_cutoff_utc, gap_policy = explicit_evidence_inputs(args)
     repo_root = Path(args.repo_root)
     parent_root = Path(args.bundle_parent)
     bundle_name = f"MTC_V2_OPTIMIZATION_DATA_BUNDLE_{args.date_token}"
     bundle_root = parent_root / bundle_name
-    if bundle_root.exists():
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        bundle_root.rename(parent_root / f"{bundle_name}_previous_{timestamp}")
     zip_path = parent_root / f"{bundle_name}.zip"
-    if zip_path.exists():
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        zip_path.rename(parent_root / f"{bundle_name}_previous_{timestamp}.zip")
     sha_path = parent_root / f"{bundle_name}.zip.sha256"
-    if sha_path.exists():
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        sha_path.rename(parent_root / f"{bundle_name}_previous_{timestamp}.zip.sha256")
-    for sub in [
-        "raw/binance_futures",
-        "normalized/binance_futures",
-        "manifests",
-        "regimes/per_dataset",
-        "quality/gap_reports",
-        "quality/duplicate_timestamp_reports",
-        "quality/ohlcv_validation_reports",
-        "docs",
-    ]:
-        (bundle_root / sub).mkdir(parents=True, exist_ok=True)
-
     discovery_roots = [Path(args.archive_root), Path(args.datasets_root), repo_root / "reports" / "data_downloads"]
     csv_files: list[Path] = []
     for root in discovery_roots:
@@ -508,29 +727,86 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
         }
         for item in source_files
     ]
+    included = [item for item in source_files if item.include_candidate]
+    used_ids: set[str] = set()
+    prepared_sources: list[dict[str, Any]] = []
+    for source in included:
+        dataset_id = dataset_id_for(source, used_ids)
+        rows, columns = read_rows(source.source_path)
+        normalized_rows, normalize_notes = normalize_rows(rows, columns)
+        evidence = prepare_dataset_evidence(
+            normalized_rows,
+            instrument_id=f"{source.exchange}:{source.symbol}",
+            timeframe=source.timeframe,
+            closed_candle_cutoff_utc=closed_candle_cutoff_utc,
+            gap_policy=gap_policy,
+        )
+        if evidence["dataset_hash"] is None:
+            raise ValueError("semantically invalid closed OHLCV refuses bundle emission")
+        normalized_rows = evidence["closed_rows"]
+        validate_quality(
+            dataset_id,
+            source.timeframe,
+            bundle_root,
+            evidence=evidence,
+            emit=False,
+        )
+        prepared_sources.append(
+            {
+                "source": source,
+                "dataset_id": dataset_id,
+                "normalized_rows": normalized_rows,
+                "normalize_notes": normalize_notes,
+                "evidence": evidence,
+            }
+        )
+
+    for path, archived_name in (
+        (bundle_root, f"{bundle_name}_previous_{{timestamp}}"),
+        (zip_path, f"{bundle_name}_previous_{{timestamp}}.zip"),
+        (sha_path, f"{bundle_name}_previous_{{timestamp}}.zip.sha256"),
+    ):
+        if path.exists():
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            path.rename(parent_root / archived_name.format(timestamp=timestamp))
+    for sub in [
+        "raw/binance_futures",
+        "normalized/binance_futures",
+        "manifests",
+        "regimes/per_dataset",
+        "quality/gap_reports",
+        "quality/duplicate_timestamp_reports",
+        "quality/ohlcv_validation_reports",
+        "docs",
+    ]:
+        (bundle_root / sub).mkdir(parents=True, exist_ok=True)
     report_root = repo_root / "reports" / "optimization_data_bundle"
     report_root.mkdir(parents=True, exist_ok=True)
     write_csv(report_root / "source_file_discovery.csv", discovery_rows)
 
-    included = [item for item in source_files if item.include_candidate]
-    used_ids: set[str] = set()
     manifests: list[dict[str, Any]] = []
     source_index: list[dict[str, Any]] = []
     quality_summaries: list[dict[str, Any]] = []
     regime_registry: list[dict[str, Any]] = []
     total_rows = 0
-    for source in included:
-        dataset_id = dataset_id_for(source, used_ids)
+    for prepared in prepared_sources:
+        source = prepared["source"]
+        dataset_id = prepared["dataset_id"]
         raw_dst = bundle_root / "raw" / "binance_futures" / source.symbol / source.timeframe / source.source_path.name
+        normalized_rows = prepared["normalized_rows"]
+        normalize_notes = prepared["normalize_notes"]
+        evidence = prepared["evidence"]
         safe_copy(source.source_path, raw_dst)
-        rows, columns = read_rows(source.source_path)
-        normalized_rows, normalize_notes = normalize_rows(rows, columns)
         normalized_dst = bundle_root / "normalized" / "binance_futures" / source.symbol / source.timeframe / f"{dataset_id}.csv"
-        normalized_fields = ["timestamp_utc", "open", "high", "low", "close"]
-        if normalize_notes["volume"] == "present":
-            normalized_fields.append("volume")
+        normalized_fields = ["timestamp_utc", "open", "high", "low", "close", "volume"]
         write_csv(normalized_dst, normalized_rows, normalized_fields)
-        quality = validate_quality(dataset_id, normalized_rows, source.timeframe, bundle_root)
+        quality = validate_quality(
+            dataset_id,
+            source.timeframe,
+            bundle_root,
+            evidence=evidence,
+            emit=True,
+        )
         regime_rel = Path("regimes") / "per_dataset" / f"{dataset_id}_regimes.csv"
         regime = classify_regimes(dataset_id, source.symbol, source.timeframe, normalized_rows, bundle_root / regime_rel)
         total_rows += len(normalized_rows)
@@ -543,13 +819,17 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
             "source_type": source.source_type,
             "raw_path": str(raw_dst.relative_to(bundle_root)),
             "normalized_path": str(normalized_dst.relative_to(bundle_root)),
-            "start": source.first_timestamp,
-            "end": source.last_timestamp,
+            "start": normalized_rows[0]["timestamp_utc"],
+            "end": normalized_rows[-1]["timestamp_utc"],
             "timezone": "UTC",
             "row_count": len(normalized_rows),
             "sha256_raw": sha256_file(raw_dst),
             "sha256_normalized": sha256_file(normalized_dst),
             "file_size_bytes": raw_dst.stat().st_size,
+            "dataset_hash": evidence["dataset_hash"],
+            "closed_candle_cutoff_utc": evidence["closed_candle_cutoff_utc"],
+            "excluded_forming_candle_count": evidence["excluded_forming_candle_count"],
+            "gap_measurement": quality["gap_measurement"],
             "has_gaps": quality["has_gaps"],
             "gap_report_path": quality["gap_report_path"],
             "duplicate_timestamp_count": quality["duplicate_timestamp_count"],
@@ -558,7 +838,18 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
             "notes": f"volume={normalize_notes['volume']}; expected_bars={quality['expected_bars']}",
         }
         manifests.append(manifest)
-        quality_summaries.append({**quality, "dataset_id": dataset_id, "symbol": source.symbol, "timeframe": source.timeframe, "row_count": len(normalized_rows)})
+        quality_summaries.append(
+            {
+                **quality,
+                "dataset_id": dataset_id,
+                "dataset_hash": evidence["dataset_hash"],
+                "symbol": source.symbol,
+                "timeframe": source.timeframe,
+                "row_count": len(normalized_rows),
+                "closed_candle_cutoff_utc": evidence["closed_candle_cutoff_utc"],
+                "excluded_forming_candle_count": evidence["excluded_forming_candle_count"],
+            }
+        )
         regime_registry.append({"dataset_id": dataset_id, "symbol": source.symbol, "timeframe": source.timeframe, "regime_file": str(regime_rel).replace("\\", "/"), **regime})
         source_index.append(
             {
@@ -808,6 +1099,8 @@ def main() -> int:
     parser.add_argument("--archive-root", default=r"C:\LAB\tradingview-lab\mtc_backtest\parity_suite_350\tv_manual_inputs\raw_tv_exports\ARŞİV")
     parser.add_argument("--datasets-root", default=r"C:\LAB\tradingview-lab\mtc_backtest\datasets")
     parser.add_argument("--date-token", default="20260427")
+    parser.add_argument("--closed-candle-cutoff-utc", required=True)
+    parser.add_argument("--gap-policy", required=True, help="Path to explicit P021 policy JSON")
     args = parser.parse_args()
     payload = build_bundle(args)
     print(json.dumps(payload, indent=2, sort_keys=True))
