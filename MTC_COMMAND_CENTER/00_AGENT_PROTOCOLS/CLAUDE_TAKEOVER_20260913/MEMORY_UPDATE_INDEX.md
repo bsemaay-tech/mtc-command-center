@@ -24,4 +24,4 @@ Codex durable memory update follows its append-only mechanism:
 
 Canonical foreign checkout and frozen evidence packets remain unchanged. No blanket rewrite of historical journals, sealed evidence, other agents' working trees or root policy files in the canonical checkout. The owner should open Claude in C:/CT13 or paste the exact START_HERE path.
 
-Validation: six Lead handoff hashes matched their reported checkpoints; live transfer status distinguishes tool success from semantic acceptance; repository diff whitespace check and governed local commit performed, with exact result in final owner message/TRANSFER_STATE. This T3 status/handoff update grants no product acceptance.
+Validation: six Lead handoff hashes matched their reported checkpoints; live transfer status distinguishes tool success from semantic acceptance; repo guard PASS and governed local commit performed. The staged whitespace check reported one preserved Markdown hard-break in the original P013 checkpoint; original checkpoint bytes remain intact. Exact result is recorded in TRANSFER_STATE. This T3 status/handoff update grants no product acceptance.

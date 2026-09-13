@@ -1,8 +1,8 @@
 [
   {
     "name": "MEMORY_UPDATE_INDEX.md",
-    "bytes": 2226,
-    "sha256": "4dc70c7ad8ea4c7d48f5225d99891b4c42ecd52061a6831d18d6d0cbfe9130b5"
+    "bytes": 2341,
+    "sha256": "769d7dc66aa4046876df33205c56a1affcdbdadc015ce3dbc6ddd834a53e4ebc"
   },
   {
     "name": "P012_HANDOFF.md",
@@ -41,7 +41,7 @@
   },
   {
     "name": "TRANSFER_STATE.md",
-    "bytes": 2254,
-    "sha256": "00b551f46955984c7b7b5e9c92c6ccd55aba7b8997d5781df90261e5f901373b"
+    "bytes": 2418,
+    "sha256": "2b8e5e8385d4ad3706ea63c06bcf9533f67fa4e0a1deb7fe59e02824c417bf44"
   }
 ]
