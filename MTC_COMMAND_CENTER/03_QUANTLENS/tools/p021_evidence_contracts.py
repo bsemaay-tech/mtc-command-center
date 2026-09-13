@@ -130,7 +130,7 @@ def _validated_dataset_identity(identity: object) -> DatasetIdentity:
 
 
 def _materialize_once(value: object, reason_id: str) -> tuple[object, ...]:
-    if isinstance(value, (str, bytes, bytearray, Mapping)):
+    if issubclass(type(value), (str, bytes, bytearray, Mapping)):
         raise EvidenceContractRefused(reason_id)
     try:
         return tuple(value)  # type: ignore[arg-type]
@@ -141,7 +141,7 @@ def _materialize_once(value: object, reason_id: str) -> tuple[object, ...]:
 def _mapping_items_once(
     value: object, reason_id: str
 ) -> tuple[tuple[object, object], ...]:
-    if not isinstance(value, Mapping):
+    if not issubclass(type(value), Mapping):
         raise EvidenceContractRefused(reason_id)
     try:
         items = tuple(value.items())

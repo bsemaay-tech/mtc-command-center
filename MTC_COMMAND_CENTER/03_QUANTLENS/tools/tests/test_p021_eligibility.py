@@ -919,6 +919,36 @@ class IntentIdentityTests(P021ContractTestCase):
                     intent,
                 )
 
+    def test_refuses_builtin_timezone_with_spoofed_offset(self) -> None:
+        class ZeroEqualTimedelta(timedelta):
+            def __eq__(self, other: object) -> bool:
+                return other == timedelta(0)
+
+            def __ne__(self, other: object) -> bool:
+                return not self == other
+
+        spoofed_zone = timezone(ZeroEqualTimedelta(hours=1))
+        timestamp = datetime(2026, 1, 1, tzinfo=spoofed_zone)
+        self.assertIs(type(spoofed_zone), timezone)
+        self.assertIs(type(timestamp.utcoffset()), ZeroEqualTimedelta)
+        intent = IntentEvidence(
+            candidate_id="cand-1",
+            package_hash="a" * 64,
+            deployment_identity_hash="b" * 64,
+            dataset_identity=DatasetIdentity("ds-v1", "c" * 64),
+            instrument_id="BINANCE:BTCUSDT",
+            decision_bar_timestamp_utc=timestamp,
+            intent_id="intent-1",
+            p012_intent_contract="p012.intent-stream/v1",
+            p012_semantic_payload_sha256="d" * 64,
+        )
+
+        self.assert_refused_reason(
+            "INVALID_UTC_DATETIME:decision_bar_timestamp_utc",
+            intent_evidence_sha256,
+            intent,
+        )
+
     def test_refuses_naive_builtin_datetime(self) -> None:
         intent = IntentEvidence(
             candidate_id="cand-1",
@@ -988,6 +1018,65 @@ class LookaheadDomainTests(P021ContractTestCase):
                 full_intents={},
                 prefix_intents={},
             )
+
+    def test_refuses_hostile_class_properties_at_carrier_boundaries(self) -> None:
+        class HostileClassCarrier:
+            @property
+            def __class__(self):
+                raise RuntimeError("hostile class property")
+
+        carrier = HostileClassCarrier()
+        timestamp = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        key = DecisionKey("BINANCE:BTCUSDT", timestamp)
+        intent = self._intent(timestamp, "intent")
+        cases = (
+            (
+                "CONTROL_INVENTORY_INVALID_CARRIER",
+                control_inventory_sha256,
+                (carrier,),
+                {},
+            ),
+            (
+                "UNSIMULATED_CONTROLS_INVALID_CARRIER",
+                unsimulated_controls_sha256,
+                (carrier,),
+                {},
+            ),
+            (
+                "DS_V1_INVALID_ENVELOPE",
+                require_ds_v1_digest,
+                (carrier,),
+                {},
+            ),
+            (
+                "LOOKAHEAD_INVALID_CLOSED_KEYS_CARRIER",
+                compare_lookahead,
+                (),
+                {
+                    "closed_decision_keys": carrier,
+                    "full_intents": {key: intent},
+                    "prefix_intents": {key: intent},
+                },
+            ),
+            (
+                "LOOKAHEAD_INVALID_MAPPING:full_intents",
+                compare_lookahead,
+                (),
+                {
+                    "closed_decision_keys": (key,),
+                    "full_intents": carrier,
+                    "prefix_intents": {key: intent},
+                },
+            ),
+        )
+        for reason_id, function, args, kwargs in cases:
+            with self.subTest(reason_id=reason_id):
+                self.assert_refused_reason(
+                    reason_id,
+                    function,
+                    *args,
+                    **kwargs,
+                )
 
     def test_distinguishes_causal_match_from_future_reading_on_common_key(
         self,
@@ -1179,7 +1268,7 @@ class LookaheadDomainTests(P021ContractTestCase):
                 object.__setattr__(
                     full_key,
                     "decision_bar_timestamp_utc",
-                    datetime(2026, 1, 1, tzinfo=timezone.utc),
+                    datetime(2026, 1, 1, minute=1, tzinfo=timezone.utc),
                 )
                 object.__setattr__(
                     full_intent,
@@ -1198,6 +1287,8 @@ class LookaheadDomainTests(P021ContractTestCase):
         self.assertEqual(prefix_mapping.items_calls, 1)
         self.assertEqual(evidence.intent_mismatch_count, 1)
         self.assertIsNot(evidence.first_mismatch_key, full_key)
+        self.assertNotEqual(evidence.first_mismatch_key, full_key)
+        self.assertEqual(evidence.first_mismatch_key, prefix_key)
         self.assertEqual(evidence.first_full_intent_sha256, full_digest)
         self.assertEqual(evidence.first_prefix_intent_sha256, prefix_digest)
 
