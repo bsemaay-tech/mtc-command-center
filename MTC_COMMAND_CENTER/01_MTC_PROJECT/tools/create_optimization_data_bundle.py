@@ -392,6 +392,14 @@ def prepare_dataset_evidence(
                 invalid_ohlcv_reasons.append(
                     {"row": index, "timestamp_utc": key, "reason": "negative_volume"}
                 )
+            if values["volume"] == 0:
+                invalid_ohlcv_reasons.append(
+                    {
+                        "row": index,
+                        "timestamp_utc": key,
+                        "reason": "zero_or_negative_volume",
+                    }
+                )
             if values["high"] < values["low"]:
                 invalid_ohlcv_reasons.append(
                     {"row": index, "timestamp_utc": key, "reason": "high_below_low"}
@@ -408,6 +416,15 @@ def prepare_dataset_evidence(
                 invalid_ohlcv_reasons.append(
                     {"row": index, "timestamp_utc": key, "reason": "negative_ohlc"}
                 )
+            for name in ("open", "high", "low"):
+                if values[name] == 0:
+                    invalid_ohlcv_reasons.append(
+                        {
+                            "row": index,
+                            "timestamp_utc": key,
+                            "reason": f"zero_or_negative_{name}",
+                        }
+                    )
             if values["close"] <= 0:
                 invalid_ohlcv_reasons.append(
                     {"row": index, "timestamp_utc": key, "reason": "zero_or_negative_close"}

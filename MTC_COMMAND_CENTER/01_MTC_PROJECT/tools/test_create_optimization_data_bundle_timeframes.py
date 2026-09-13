@@ -793,6 +793,29 @@ class QualityTimeframeTests(unittest.TestCase):
                 self.assertIsNone(evidence["dataset_hash"])
                 self.assertEqual(len(evidence["closed_rows"]), 2)
 
+    def test_zero_in_any_ohlcv_field_fails_and_withholds_dataset_identity(self) -> None:
+        for field_name in ("open", "high", "low", "close", "volume"):
+            with self.subTest(field_name=field_name):
+                rows = rows_at(0, 300)
+                rows[0][field_name] = 0
+                evidence = subject.prepare_dataset_evidence(
+                    rows,
+                    instrument_id="BINANCE:BTCUSDT",
+                    timeframe="5m",
+                    closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=600),
+                    gap_policy=gap_policy_fixture(),
+                )
+                reasons = [
+                    finding["reason"]
+                    for finding in evidence["quality"]["invalid_ohlcv_reasons"]
+                ]
+                expected_reason = f"zero_or_negative_{field_name}"
+                self.assertEqual(evidence["quality"]["ohlcv_validation_status"], "FAIL")
+                self.assertEqual(reasons.count(expected_reason), 1)
+                self.assertEqual(evidence["quality"]["invalid_ohlcv_count"], len(reasons))
+                self.assertEqual(len(reasons), len(set(reasons)))
+                self.assertIsNone(evidence["dataset_hash"])
+
     def test_valid_evidence_exposes_pass_and_dataset_identity(self) -> None:
         evidence = subject.prepare_dataset_evidence(
             rows_at(0, 300),
