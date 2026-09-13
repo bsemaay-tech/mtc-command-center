@@ -1,25 +1,20 @@
-# P012 governance handoff — 2026-09-11
+# WP-P0-21 / WP-P0-30 offline integration closeout — 2026-09-13
 
-Full P012 remains NONACCEPTED: 10 production OPEN rows, 27 signed risks, five residual integration obligations. No venue reply received. Independent engineering/preparation has advanced beyond the earlier proposals.
+Owner decisions `1 YES, 2 YES, 3 A, 4 YES, 5 YES, 6 A, 7 A`, plus later push/PR and merge authorization, were completed only inside the approved offline/synthetic ceilings. Current verified `origin/master` is `ca2f8a68219b03085edc86900a4e15745e67a504`. This closeout is prepared from that commit on `feature/p021-p030-integration-closeout-20260913` in `C:/tmp/P021_P030_CLOSEOUT_20260913`; no live/scheduled dependency. The prior P012 handoff remains preserved at `../../_AI_MEMORY/history/p012-governance-handoff-20260911/HANDOFF.md` (Git blob `51a4f10f27ec3a20848e74493d21bd5665538c59`).
 
-- Owned branch/worktree: feature/p012-independent-readiness-20260911 at C:/tmp/P012_INDEPENDENT_20260911. No live/scheduled dependency. Foreign checkout preserved.
-- Master rechecked: 4ce213184fe35313cafde45da8f59543db306086.
-- Local reviewed corrective commit: ec6347d5277267937a416356df57355a69ad4b2c. Only three manifest declaration fields reconcile stale PENDING with ratified R35. No publish/merge/deploy/admission.
-- Deliverables: C:/Users/BarışSemaay/Documents/Codex/2026-09-11/11-2/outputs/WP_P0_12_CONTROL/CONTROL_TABLE.md and DECISION_PACKET.md.
-- Detailed current note: ../_AI_MEMORY/P012_INDEPENDENT_READINESS_20260911.md.
+## Merged results
 
-Completed: 13 fee checks, nine Runner checks, three Bridge/MTC API groups with seven negative controls; R29 PACKET_V4 exact-byte preparation; combined cross-check PASS. Full bar-driven signal run not rerun. R29 semantic review remains at its already-approved final acceptance boundary.
+- Governance handoff PR `#186` merged as `2e9c94413b0e8183dfb58e0ec88d9848b084ba0c` after exact-head protected checks passed.
+- P030 master-based integration PR `#187` merged as `62a42514793f192ca4f706ca99cc2700b16300fe`. It contains exactly nine reviewed collector/contracts/OPSA backup-heartbeat paths, excluding 67 unrelated overnight-preparation files. Lead Python 3.12.12 evidence: collector PASS, contracts PASS, backup `44/44`, heartbeat `10/10`, unchanged P026 `33/33`, compile and repo guard PASS. Exact-head Bridge, Pine, research and Vercel checks passed.
+- P021 master-based integration PR `#188` merged as `ca2f8a68219b03085edc86900a4e15745e67a504`. It contains exactly ten research-helper, evidence-contract and bundle-producer paths, excluding unrelated preparation history. The full-diff Sol/high review reproduced three binding/state-owner defects; repair checkpoint 1 bound receipt instrument/timeframe/producer identity, bound dataset hash/cutoff/excluded-count evidence before artifacts, and made `data_gap_ratio.TIMEFRAME_SECONDS` the single owner. The next review found zero OHLCV values could still receive a dataset hash; repair checkpoint 2 made all OHLCV zeros fail and withhold identity. Fresh affected-delta Sol/high review returned PASS. Lead post-master-merge Python 3.12 evidence was `103/103`, compile/diff/guard PASS, and all reviewed P021 blobs were unchanged by the disjoint P030 merge. Exact-head Bridge, Pine, research and Vercel checks passed.
+- Superseded stacked PRs `#181`–`#185` were closed without deleting their branches. No force push, admin merge, bypass, destructive history operation or foreign-worktree overwrite occurred.
 
-Manifest correction: Lead and fresh Opus5/Sol xhigh reviews reproduce old/fix/reverted-status and 17 tests; both PASS. Gemini3.7 supplemental unexecuted corroboration retained. One false diagnostic removed; four historical diagnostics, all 19 sealed members and production records remain. Accepted R34/R35/PR178 work reused, not re-audited.
+## Preserved limits and blockers
 
-E updated: current official frontend explicitly maps perp taker/maker and referral branches; Lead reproduced six source hashes/import chain/five synthetic cases. Chunk SHA256 215c171cba31045c930ed5718d24464ea5660257819481ff449f8b664024dcb5. Historical applicability, actual billing and rounding remain open. Public funding sample has no payments: reuse its prepared targeted request, no repeated investigation.
+These merges are scoped implementation milestones, not P021 or P030 package acceptance. P020 `6f7f495af889437830a6c416f8417f8ced0bcdff` remains NONACCEPTED and cannot be consumed as accepted evidence. Decision 6 keeps unmeasured limits unset and fail-closed. Decision 7 retains WS-only restart continuity; it does not prove every restart-first-message case or a production backend.
 
-All settled choices retained: STOP_FIRST, explicit zero slippage, retained profiles, no additional bounds, additive schema, GROSS-MINUS-FEES guards, LONG payer, same-timestamp inclusion. No new venue assumptions.
+No real bundle/archive, qualifying forward window, runtime integration, P026 monitoring/delivery acceptance, host/KVM2 action, credential use, venue contact, TESTNET/mainnet action, ARM/order path, deployment, protected-schema change, readiness activation or package acceptance occurred. P021 still needs actual qualifying evidence and accepted upstream dependencies; P030 still needs separately authorized backend, operating policy, permission protocol and host work. Shared quiet-window holds used during coordination were explicitly released. Writers/helpers: 0.
 
-Exact D1 proposal prepares synthetic-only offline exporter behavior for approval. D2 proposes push/PR of the already-reviewed local correction; no merge grant. Other final derivations/reviews depend on real final records/candidate. E and delivery lanes complete; actual running subscription workers: 0. Lead verified the 532-member work bundle and separate E archive. Packaging checks and factual persistence are complete.
+NEXT ACTION: Treat `ca2f8a68` as the integrated offline baseline. Resume evidence collection or runtime/host work only under its separate authority and acceptance gates; do not convert these merged slices into readiness or production claims.
 
-Earlier handoff and readiness are preserved byte-for-byte under ../_AI_MEMORY/history/p012-package-continue-20260911/. No reset, stash, overwrite of foreign work, global account change or new spending.
-
-NEXT ACTION: present D1/D2 as one decision packet. WAITING FOR OWNER: D1/D2 and source-backed venue evidence when available.
-
-Owner approval in this task, 2026-09-11: "all are approved" approves DECISION_PACKET D1 (synthetic-only offline materializer) and D2 (push/PR of the reviewed manifest correction plus factual handoff). D2 may now publish; merge and production/operational actions remain excluded. D1 proceeds separately in feature/p012-synthetic-funding-materializer-20260911 at C:/tmp/P012_MATERIALIZER_20260911, so new implementation cannot enter this correction PR. Required review/CI conditions are unchanged.
+WAITING FOR OWNER: Nothing for the authorized offline integration.

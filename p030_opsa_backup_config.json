@@ -1,0 +1,11 @@
+{
+  "schema": "mtc.opsa_backup_config/v1",
+  "backup_root": null,
+  "stores": [
+    {
+      "id": null,
+      "path": null,
+      "class": "protected"
+    }
+  ]
+}
