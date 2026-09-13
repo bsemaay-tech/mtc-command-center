@@ -174,6 +174,8 @@ class LifecycleRecord:
     authoritative: bool = False
 
     def __getattr__(self, name: str) -> Any:
+        if name.startswith("__") and name.endswith("__"):
+            raise AttributeError(name)
         return getattr(self.event, name)
 
 

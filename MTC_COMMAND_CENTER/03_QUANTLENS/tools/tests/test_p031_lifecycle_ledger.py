@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import os
+import pickle
 import sqlite3
 import subprocess
 import sys
@@ -26,7 +28,7 @@ for search_path in (TOOLS_DIR, CONTRACTS_DIR):
         sys.path.insert(0, str(search_path))
 
 from mtc_contracts.execution import LifecycleEvent, LifecycleWriterClass
-from p031_lifecycle_ledger import LifecycleLedger, Registrar
+from p031_lifecycle_ledger import LifecycleLedger, LifecycleRecord, Registrar
 
 
 SCHEMA_VERSION = "p031.lifecycle-ledger.v1"
@@ -3872,6 +3874,32 @@ class LifecycleLedgerTests(unittest.TestCase):
         self.assertEqual(observed_state(state), "LIVE")
         self.assertEqual(public_field(state, "source_kind"), "FIXTURE")
         self.assertIs(public_field(state, "authoritative"), False)
+
+    def test_replay_record_copy_and_protocol_serialization_preserve_provenance(
+        self,
+    ) -> None:
+        self.append_capture()
+        record = self.ledger.replay()[0]
+
+        copied = copy.deepcopy(record)
+        self.assertIs(type(copied), LifecycleRecord)
+        self.assertEqual(copied.event_id, record.event_id)
+        self.assertEqual(copied.check_set_purpose, record.check_set_purpose)
+        self.assertEqual(copied.check_set_version, record.check_set_version)
+        self.assertEqual(copied.evaluation_run_hash, record.evaluation_run_hash)
+        self.assertEqual(copied.failing_checks, record.failing_checks)
+        self.assertEqual(copied.source_kind, "FIXTURE")
+        self.assertIs(copied.authoritative, False)
+
+        restored = pickle.loads(pickle.dumps(copied))
+        self.assertIs(type(restored), LifecycleRecord)
+        self.assertEqual(restored, record)
+        self.assertEqual(
+            restored.event.model_dump(mode="json"),
+            record.event.model_dump(mode="json"),
+        )
+        self.assertEqual(restored.source_kind, "FIXTURE")
+        self.assertIs(restored.authoritative, False)
 
     def test_failing_checks_require_canonical_complete_ordered_unique_records(
         self,
