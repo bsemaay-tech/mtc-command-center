@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import subprocess
 import tempfile
 import types
@@ -555,6 +556,65 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
             self.assertEqual(calls, [True])
             self.assertEqual(list(target.iterdir()), [])
 
+    def test_isolated_config_redirect_after_check_never_reaches_restore(self) -> None:
+        for defect, expected in (
+            ("duplicate_backup_root", "duplicate JSON key"),
+            ("nonfinite", "non-finite JSON constant"),
+        ):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                _, stable, receipt, _ = self._capture(root)
+                config_path = self._runnable_config(root, stable)
+                run_id = subject.backup_stable_prefix(
+                    config_path,
+                    stable_receipt=receipt,
+                    store_id=self.STORE_ID,
+                    source_root=root / "source-root",
+                )
+                alternate_root = root / "alternate-backups"
+                shutil.copytree(root / "backups", alternate_root)
+                target = root / "restore-target"
+                target.mkdir()
+                unchanged_restore = subject.restore.run_restore
+                calls: list[bool] = []
+
+                def redirect_after_check(bound_config_path, *args, **kwargs):
+                    calls.append(kwargs["check_only"])
+                    result = unchanged_restore(bound_config_path, *args, **kwargs)
+                    if kwargs["check_only"]:
+                        raw = Path(bound_config_path).read_text(encoding="utf-8")
+                        if defect == "duplicate_backup_root":
+                            configured_root = json.loads(raw)["backup_root"]
+                            anchor = f'  "backup_root": {json.dumps(configured_root)},'
+                            replacement = (
+                                anchor
+                                + f'\n  "backup_root": {json.dumps(str(alternate_root))},'
+                            )
+                            self.assertEqual(raw.count(anchor), 1)
+                            raw = raw.replace(anchor, replacement)
+                        else:
+                            raw = raw.rstrip()[:-1] + ',\n  "synthetic_probe": NaN\n}\n'
+                        Path(bound_config_path).write_text(raw, encoding="utf-8")
+                    return result
+
+                with mock.patch.object(
+                    subject.restore,
+                    "run_restore",
+                    side_effect=redirect_after_check,
+                ):
+                    with self.assertRaisesRegex(ValueError, expected):
+                        subject.restore_verified_prefix(
+                            config_path,
+                            run_id=run_id,
+                            store_id=self.STORE_ID,
+                            target=target,
+                        )
+                self.assertEqual(calls, [True])
+                self.assertEqual(list(target.iterdir()), [])
+                self.assertFalse(
+                    (target / subject.VERIFIED_RESTORE_RECEIPT_NAME).exists()
+                )
+
     def test_manifest_swap_immediately_before_restore_never_yields_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -678,11 +738,15 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                     target=target,
                 )
             self.assertEqual(
-                (target / self.STORE_ID / "live.jsonl").read_bytes(), original_prefix
+                (target / self.STORE_ID / "live.jsonl").read_bytes(),
+                original_prefix,
+                "shared archive influenced isolated restore bytes",
             )
             verified_receipt = json.loads(verified.read_text(encoding="utf-8"))
             self.assertEqual(
-                verified_receipt["dataset_content_hash"], self.DATASET_CONTENT_HASH
+                verified_receipt["dataset_content_hash"],
+                self.DATASET_CONTENT_HASH,
+                "shared archive influenced verified content ID",
             )
 
     def test_shared_archive_reversion_mutant_is_detected(self) -> None:
@@ -705,8 +769,8 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
             mutant.__dict__,
         )
 
-        with mock.patch(f"{__name__}.subject", mutant), self.assertRaises(
-            AssertionError
+        with mock.patch(f"{__name__}.subject", mutant), self.assertRaisesRegex(
+            AssertionError, "shared archive influenced isolated restore bytes"
         ):
             self.test_restore_consumes_isolated_validated_archive_snapshot()
 
@@ -793,63 +857,127 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                     )
             run_restore.assert_not_called()
 
-    def test_restore_requires_exact_run_envelope_store_and_members(self) -> None:
-        for defect in ("duplicate_start", "missing_snapshot", "wrong_store"):
-            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as temporary:
-                root = Path(temporary)
-                _, stable, receipt, _ = self._capture(root)
-                config_path = self._runnable_config(root, stable)
-                run_id = subject.backup_stable_prefix(
-                    config_path,
-                    stable_receipt=receipt,
-                    store_id=self.STORE_ID,
-                    source_root=root / "source-root",
-                )
-                manifest = root / "backups" / "manifest.jsonl"
-                records = [
-                    json.loads(line)
-                    for line in manifest.read_text(encoding="utf-8").splitlines()
-                ]
-                if defect == "duplicate_start":
-                    records.append(
-                        next(record.copy() for record in records if record["record"] == "run_start")
-                    )
-                elif defect == "missing_snapshot":
-                    records = [
-                        record
+    def assert_run_envelope_defect_refused(
+        self, module: types.ModuleType, defect: str
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = module.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            manifest = root / "backups" / "manifest.jsonl"
+            records = [
+                json.loads(line)
+                for line in manifest.read_text(encoding="utf-8").splitlines()
+            ]
+            run_end = next(
+                record for record in records if record.get("record") == "run_end"
+            )
+            if defect == "duplicate_start":
+                records.append(
+                    next(
+                        record.copy()
                         for record in records
-                        if not (
-                            record.get("record") == "file"
-                            and record.get("rel") == "live.jsonl"
-                        )
-                    ]
+                        if record["record"] == "run_start"
+                    )
+                )
+            elif defect == "missing_snapshot":
+                records = [
+                    record
+                    for record in records
+                    if not (
+                        record.get("record") == "file"
+                        and record.get("rel") == "live.jsonl"
+                    )
+                ]
+                run_end["files"] = 1
+            elif defect == "wrong_store":
+                next(
+                    record
+                    for record in records
+                    if record.get("record") == "file"
+                    and record.get("rel") == "live.jsonl"
+                )["store_id"] = "fixture-other-store"
+            elif defect == "status_non_ok_errors_empty":
+                run_end["status"] = "partial"
+            elif defect == "status_ok_nonempty_errors":
+                run_end["errors"] = ["synthetic failure"]
+            elif defect == "duplicate_expected_member":
+                records.append(
                     next(
-                        record for record in records if record.get("record") == "run_end"
-                    )["files"] = 1
-                else:
-                    next(
-                        record
+                        record.copy()
                         for record in records
                         if record.get("record") == "file"
                         and record.get("rel") == "live.jsonl"
-                    )["store_id"] = "fixture-other-store"
-                manifest.write_text(
-                    "".join(
-                        json.dumps(record, sort_keys=True) + "\n" for record in records
-                    ),
-                    encoding="utf-8",
+                    )
                 )
-                target = root / "restore-target"
-                target.mkdir()
-                with mock.patch.object(subject.restore, "run_restore") as run_restore:
-                    with self.assertRaisesRegex(ValueError, "complete successful P026 run"):
-                        subject.restore_verified_prefix(
-                            config_path,
-                            run_id=run_id,
-                            store_id=self.STORE_ID,
-                            target=target,
-                        )
-                run_restore.assert_not_called()
+                run_end["files"] += 1
+            else:
+                self.fail(f"unknown run-envelope defect: {defect}")
+            manifest.write_text(
+                "".join(
+                    json.dumps(record, sort_keys=True) + "\n" for record in records
+                ),
+                encoding="utf-8",
+            )
+            target = root / "restore-target"
+            target.mkdir()
+            with mock.patch.object(module.restore, "run_restore") as run_restore:
+                with self.assertRaisesRegex(
+                    ValueError, "complete successful P026 run"
+                ):
+                    module.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            run_restore.assert_not_called()
+
+    def test_restore_requires_exact_run_envelope_store_and_members(self) -> None:
+        for defect in (
+            "duplicate_start",
+            "missing_snapshot",
+            "wrong_store",
+            "status_non_ok_errors_empty",
+            "status_ok_nonempty_errors",
+            "duplicate_expected_member",
+        ):
+            with self.subTest(defect=defect):
+                self.assert_run_envelope_defect_refused(subject, defect)
+
+    def test_run_envelope_guards_are_independently_load_bearing(self) -> None:
+        source = Path(subject.__file__).read_text(encoding="utf-8")
+        mutations = {
+            "status_non_ok_errors_empty": (
+                '    if end.get("status") != "ok" or end.get("errors") != []:\n',
+                '    if False or end.get("errors") != []:\n',
+            ),
+            "status_ok_nonempty_errors": (
+                '    if end.get("status") != "ok" or end.get("errors") != []:\n',
+                '    if end.get("status") != "ok" or False:\n',
+            ),
+            "duplicate_expected_member": (
+                "        or len(actual) != len(expected)\n",
+                "        or False\n",
+            ),
+        }
+        for defect, (anchor, replacement) in mutations.items():
+            with self.subTest(defect=defect):
+                self.assertEqual(source.count(anchor), 1)
+                mutant = types.ModuleType(f"p030_run_envelope_{defect}_mutant")
+                mutant.__file__ = subject.__file__
+                exec(
+                    compile(source.replace(anchor, replacement), mutant.__file__, "exec"),
+                    mutant.__dict__,
+                )
+                with self.assertRaises(AssertionError):
+                    self.assert_run_envelope_defect_refused(mutant, defect)
 
     def test_speculative_replay_opening_api_is_absent(self) -> None:
         self.assertFalse(hasattr(subject, "open_verified_replay_prefix"))
@@ -999,6 +1127,71 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
 
             with mock.patch.object(
                 subject.backup, "run_backup", side_effect=aba_during_backup
+            ):
+                with self.assertRaisesRegex(ValueError, "prevalidated staging bytes"):
+                    subject.backup_stable_prefix(
+                        config_path,
+                        stable_receipt=receipt,
+                        store_id=self.STORE_ID,
+                        source_root=root / "source-root",
+                    )
+
+    def test_backup_binds_bytes_from_the_same_read_that_validated_them(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            original_receipt = receipt.read_bytes()
+            snapshot = stable / "live.jsonl"
+            original_snapshot = snapshot.read_bytes()
+            alternate_snapshot = self._line(self.OBS_3, 99)
+            alternate_receipt_object = json.loads(original_receipt)
+            alternate_receipt_object.update(
+                {
+                    "high_water_bytes": len(alternate_snapshot),
+                    "record_count": 1,
+                    "last_observation_id": self.OBS_3,
+                    "prefix_sha256": hashlib.sha256(alternate_snapshot).hexdigest(),
+                    "dataset_content_hash": "p030ds-v1:" + "b" * 64,
+                }
+            )
+            alternate_receipt = (
+                json.dumps(
+                    alternate_receipt_object,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    indent=2,
+                )
+                + "\n"
+            ).encode("utf-8")
+            unchanged_verify = subject._verify_stable_receipt
+            unchanged_backup = subject.backup.run_backup
+            first_validation = True
+
+            def swap_after_first_validation(*args, **kwargs):
+                nonlocal first_validation
+                result = unchanged_verify(*args, **kwargs)
+                if first_validation:
+                    first_validation = False
+                    receipt.write_bytes(alternate_receipt)
+                    snapshot.write_bytes(alternate_snapshot)
+                return result
+
+            def restore_staging_after_backup(*args, **kwargs):
+                try:
+                    return unchanged_backup(*args, **kwargs)
+                finally:
+                    receipt.write_bytes(original_receipt)
+                    snapshot.write_bytes(original_snapshot)
+
+            with mock.patch.object(
+                subject,
+                "_verify_stable_receipt",
+                side_effect=swap_after_first_validation,
+            ), mock.patch.object(
+                subject.backup,
+                "run_backup",
+                side_effect=restore_staging_after_backup,
             ):
                 with self.assertRaisesRegex(ValueError, "prevalidated staging bytes"):
                     subject.backup_stable_prefix(
