@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import sys
 import tempfile
@@ -61,6 +62,17 @@ def _reject_duplicate_json_keys(pairs: list[tuple[str, object]]) -> dict:
     return result
 
 
+def _reject_nonfinite_numbers(value: object) -> None:
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError("non-finite JSON number")
+    if isinstance(value, dict):
+        for nested in value.values():
+            _reject_nonfinite_numbers(nested)
+    elif isinstance(value, list):
+        for nested in value:
+            _reject_nonfinite_numbers(nested)
+
+
 def _decode_json_object(raw: bytes, description: str) -> dict:
     try:
         payload = json.loads(
@@ -72,6 +84,7 @@ def _decode_json_object(raw: bytes, description: str) -> dict:
         raise ValueError(f"invalid {description}") from exc
     if not isinstance(payload, dict):
         raise ValueError(f"invalid {description}")
+    _reject_nonfinite_numbers(payload)
     return payload
 
 
@@ -102,6 +115,7 @@ def _decode_strict_jsonl(raw: bytes, description: str) -> list[dict]:
             raise ValueError(f"invalid {description} line {line_number}") from exc
         if not isinstance(record, dict):
             raise ValueError(f"invalid {description} line {line_number}")
+        _reject_nonfinite_numbers(record)
         records.append(record)
     return records
 
@@ -179,6 +193,7 @@ def _prefix_facts(data: bytes) -> tuple[int, str]:
             raise ValueError("prefix record is not canonical JSONL") from exc
         if not isinstance(record, dict):
             raise ValueError("prefix record is not a JSON object")
+        _reject_nonfinite_numbers(record)
         canonical = (
             json.dumps(
                 record,
@@ -480,9 +495,14 @@ def _complete_p026_run(
         raise ValueError(failure)
     files = [record for record in run_records if record.get("record") == "file"]
     if (
-        isinstance(end.get("files"), bool)
-        or not isinstance(end.get("files"), int)
+        type(end.get("files")) is not int
         or end["files"] != len(files)
+        or any(
+            type(record.get("size")) is not int or record["size"] < 0
+            for record in files
+        )
+        or type(end.get("bytes")) is not int
+        or end["bytes"] != sum(record["size"] for record in files)
         or any(record.get("store_id") != store_id for record in files)
         or any(record.get("readback") != "match" for record in files)
     ):
