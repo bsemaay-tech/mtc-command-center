@@ -1,6 +1,6 @@
 # WP-P0-21 / WP-P0-30 bounded implementation handoff — 2026-09-13
 
-Owner decisions `1 YES, 2 YES, 3 A, 4 YES, 5 YES, 6 A, 7 A` are implemented only within the approved offline/synthetic ceilings. Local `origin/master` was `42f99571e6abb5222744d9345e1c8a9e19c23c15`. This factual handoff is on `feature/p021-p030-final-handoff-20260913` in `C:/tmp/P021_P030_HANDOFF_20260913`; no live/scheduled dependency. The prior P012 handoff is preserved byte-exact at `../../_AI_MEMORY/history/p012-governance-handoff-20260911/HANDOFF.md` (Git blob `51a4f10f27ec3a20848e74493d21bd5665538c59`).
+Owner decisions `1 YES, 2 YES, 3 A, 4 YES, 5 YES, 6 A, 7 A` are implemented only within the approved offline/synthetic ceilings. The owner separately authorized push/PR preparation and merge; protected current-head CI, required reviews and safe dependency reconciliation remain binding. Local `origin/master` was `42f99571e6abb5222744d9345e1c8a9e19c23c15`. This factual handoff is on `feature/p021-p030-final-handoff-20260913` in `C:/tmp/P021_P030_HANDOFF_20260913`; no live/scheduled dependency. The prior P012 handoff is preserved byte-exact at `../../_AI_MEMORY/history/p012-governance-handoff-20260911/HANDOFF.md` (Git blob `51a4f10f27ec3a20848e74493d21bd5665538c59`).
 
 ## Accepted narrow offline slices
 
@@ -22,8 +22,8 @@ Both reports separately identify Gemini correctly but repeat an embedded Sol rev
 
 ## Limits and blockers
 
-This is not P021/P030 package acceptance. P020 `6f7f495af889437830a6c416f8417f8ced0bcdff` remains NONACCEPTED and cannot be consumed. Decision 6 keeps all unmeasured limits unset/fail-closed; decision 7 retains WS-only restart continuity. No real bundle/archive, runtime, host/KVM2, credentials, venue contact, trading, deploy, push, PR, merge, protected-schema change or readiness activation occurred. Writers/helpers: 0.
+This is not P021/P030 package acceptance. P020 `6f7f495af889437830a6c416f8417f8ced0bcdff` remains NONACCEPTED and cannot be consumed. Decision 6 keeps all unmeasured limits unset/fail-closed; decision 7 retains WS-only restart continuity. Draft PRs `#181`-`#186` preserve the exact reviewed slices and prerequisite bases; `#181`-`#185` are not safe to merge as currently based. No real bundle/archive, runtime, host/KVM2, credentials, venue contact, trading, deploy, merge, protected-schema change or readiness activation occurred. Writers/helpers: 0.
 
-NEXT ACTION: Preserve the frozen heads. If integration is desired, obtain separate push/PR authority, reconcile each branch against current master and require protected CI; merge remains separately gated.
+NEXT ACTION: Merge master-based handoff PR `#186` only after its updated head passes protected CI. Reconcile each code slice onto current master without importing unreviewed prerequisite history, then require applicable fresh review and protected CI before merge.
 
-WAITING FOR OWNER: Push/PR integration authority and later evidence-backed operating-limit/runtime-host decisions. Silence is not approval.
+WAITING FOR OWNER: Nothing for the authorized offline integration. Evidence-backed operating-limit and runtime/host decisions remain out of scope; silence is not approval.
