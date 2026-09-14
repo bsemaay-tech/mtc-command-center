@@ -95,3 +95,6 @@ Notes: O-8 records an APPROVED offline execution scope (T-A) for drills D-1…D-
 
 ## Ninth batch (~13:45Z) — owner chat, verbatim: `provisioned` (preceded by `terminal nerde?` and `terminal açılıp hemen kapanıyor` — the button launcher had a parse error, fixed 13:25Z)
 - KVM2-P4-03 DONE by the owner's hands → row `OD-20260914-BRIDGE-P403-PROVISIONED-1`; Lead read-only post-conditions all satisfied (record `BRIDGE_TESTNET_P403_PROVISIONED_20260914/`). Next lever put to the owner: one-off testnet smoke (`tools/smoke_p0.py`, fake money) — needs an explicit sentence; no restart exists that would consume the credentials on the accepted release.
+
+## Tenth batch (~14:03Z) — owner chat, verbatim: `smoke GO`
+- One run of `tools/smoke_p0.py` on KVM2 against Hyperliquid TESTNET (fake money) → row `OD-20260914-BRIDGE-SMOKE-GO-1`; **PASS 12/12** at 14:05:28-14:05:40Z; service untouched; record `BRIDGE_TESTNET_SMOKE_P0_20260914/` (log with the account address redacted). Not production evidence; no ARM.
