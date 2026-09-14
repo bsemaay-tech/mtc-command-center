@@ -75,3 +75,7 @@ Notes: O-8 records an APPROVED offline execution scope (T-A) for drills D-1…D-
 - **2. P031 batch GO** → row `OD-20260914-P031-BATCH-GO-1`: one new candidate implementing the recorded answers + full T0 roster (one Opus Pro slot). No push/PR/merge/acceptance.
 - **3. O-9 implement GO** → row `OD-20260914-P030-EXPORTER-GO-1`: Shape-B exporter with tests + D-13 GREEN on fixtures, normal review path.
 - **4.** O-1/O-2 explained to the owner in chat with a concrete recommendation (this PC has a single fixed drive C: 930 GB / 68 GB free; no second device is attached, so O-2 needs an external drive or a host).
+
+## Fifth batch (~07:58Z) — owner chat, verbatim: `O-1 ok / O-2 "C:\Users\BarışSemaay\OneDrive - Ertek Group\ARSİV\MTC_DATA\ARCHIVE"`
+- **O-1** = `C:\LAB\MTC_DATA\ARCHIVE` (20 GB reserve); **O-2** = the OneDrive-synced folder above → row `OD-20260914-P030-P026-ROOTS-1`, with the residuals the Lead stated (same physical disk locally; cloud copy only via sync; Files-On-Demand hydration; tenant policy; non-ASCII path must be drilled). Values recorded only; nothing created or run.
+- Open: T-B (real-root) drill execution scope — not yet requested from the owner as a one-line lever.
