@@ -59,3 +59,8 @@ Notes: O-8 records an APPROVED offline execution scope (T-A) for drills D-1…D-
 - O-4 phone OS; O-1 concrete archive volume (at G9).
 - P013 plan V5: no decision requested; B-01 stays NOT SATISFIED.
 
+
+## Second batch (~06:47Z) — owner chat, verbatim: `D5 A / O-4 Android`
+- **D5 = A** → row `OD-20260914-P020-DRIVER-FAMILIES-1`: bounded driver change (family-set generalization) under the full T0 roster; folded into the V1.5 re-freeze; no measurement.
+- **O-4 = Android** → row `OD-20260914-P026-PHONE-OS-1`: closes O-4; O-5 path stands (self-hosted ntfy delivers instantly on Android).
+- Still open after this batch: **D6** (record interval / V1.5 / reset of the spent shot — gates D5's engineering and the derivation-tool review), **O-9 shape** (A or B; recommended B), O-1 concrete volume (at G9).
