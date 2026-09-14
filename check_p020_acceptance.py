@@ -125,8 +125,19 @@ def probe_kernel_present():
     This asks the AST for real imports rather than searching the text, because a comment, a
     docstring or a TODO naming CORRECTED_VNEXT would satisfy a substring search -- and a
     harness whose purpose is to resist inflation must not be the easiest thing in the
-    repository to fool. When WP-P0-12 lands, confirm the module name below against what it
-    actually delivers; a wrong name here reads as absence, which is the safe direction.
+    repository to fool.
+
+    Module name confirmed against the delivered kernel (WP-P0-12 landed on master ef29f7e1,
+    2026-09-08). What it delivers as an importable surface is ``mtc_v2.core.*`` -- runner,
+    economics, exits, types, config, results, semantics, instrument and their siblings -- so
+    a migrated allocator is caught by ``name.split(".")[0] == "mtc_v2"``. That clause is the
+    load-bearing one. The ``"kernel" in name`` clause matches nothing the delivery exposes:
+    the only modules literally named ``kernel`` are the frozen per-probe snapshots under
+    tests/corrected_vnext/probes/PROBE-*/kernel/, and verify_bceg.py loads those through
+    importlib.util.spec_from_file_location, so no import statement names them and this AST
+    would not see them regardless. It is kept as a widening for a kernel that arrives under
+    some other name; a name this predicate misses reads as absence, which is the safe
+    direction.
     """
     import ast
     import check_allocator_import_identity as identity
@@ -144,9 +155,10 @@ def probe_kernel_present():
     if "CORRECTED_VNEXT" in source:
         return UNMET, ("CORRECTED_VNEXT appears in the canonical path as text only; no "
                        "kernel module is imported")
-    return BLOCKED, ("WP-P0-12 CORRECTED_VNEXT is not in this repository; its Item-2 packet "
-                     "is on the Windows host. The STOP is lifted (OD-20260907-1) but the "
-                     "work has not been imported")
+    return BLOCKED, ("the canonical allocator path imports no kernel module, so the "
+                     "migration binding it to the WP-P0-12 corrected kernel has not been "
+                     "performed; this probe reads that path's imports only and says nothing "
+                     "about whether the kernel is present in the repository")
 
 
 def probe_required_tier_implemented():
