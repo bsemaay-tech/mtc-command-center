@@ -1,0 +1,3 @@
+# Archived ABORTED outputs of the V1.4 one-shot (ELIG14) — moved, never deleted
+
+Owner reset ruling: OD-20260914-P020-RECORD-V2-1 ("D6 A with end date 2026-05-01", 2026-09-14 ~07:08Z). The two ABORTED records written by the V1.4 one-shot at 2026-09-14T05:57:04Z were MOVED here from `C:/tmp/P020_PRESELECT_20260913/` by the Lead at 06:56Z so the V1.5 one-shot can reserve fresh outputs after the round-5 roster accepts. Digests verified identical before and after the move (`SHA256SUMS_before_move.txt`): calibration 5ebbcfd8…, eligibility 7f3f8f47…. Root cause and evidence: `../LEAD_TERMINAL_ELIG14.md`. The V1.4 token f839c960… stays dead.
