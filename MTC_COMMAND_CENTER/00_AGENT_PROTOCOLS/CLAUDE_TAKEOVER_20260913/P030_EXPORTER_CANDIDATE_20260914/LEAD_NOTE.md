@@ -1,0 +1,9 @@
+# WP-P0-30 — Shape-B archive exporter candidate `daf6a43b0c4eaafd78e84df776d30d3e41d81d7b` — 2026-09-14
+
+Authorization: `OD-20260914-P030-EXPORTER-GO-1` (implement) on `OD-20260914-P030-BRIDGE-SHAPE-1` (Shape B, design `P030_BRIDGE_DESIGN_CHOICE_20260914.md`). Worktree `C:/tmp/P030_INTEGRATION_20260913`, branch `feature/p030-integrated-20260913`, base `f42fd540`, candidate **`daf6a43b`** (backup-pushed; no PR, no merge).
+
+Build: lane O9EXP (Codex Plus gpt-5.5, 15:40-15:53Z). New files only: `p030_archive_exporter.py` (323 lines: `export_partition(source_jsonl, target_jsonl, *, source_root) -> ExportReceipt`; single byte read, strict JSON decode with duplicate-key and non-finite refusals, re-identification through `p030_market_data_contracts`, canonical sorted-key LF JSONL, exclusive-create target with byte re-read, receipt sidecar; `ExportRefused.code`) and `check_p030_archive_exporter.py` (263 lines: refusal cases + the D-13 RED→GREEN pair). `market_data_collector.py` untouched (no diff). No network/subprocess imports (grep).
+
+The Codex sandbox could not take the shared index lock; the Lead inspected the files and re-ran on the pinned **Python 3.12.12**: `check_p030_archive_exporter.py` OK + `D-13 RED RAW REFUSAL: prefix record is not canonical JSONL` / `D-13 GREEN EXPORTED CAPTURE: PASS`; `check_market_data_collector.py` PASS (NETWORK ATTEMPTS 0); `check_p030_market_data_contracts.py` PASS; `check_p030_closed_partition_backup_adapter.py` OK (2 files, readback match); Ruff 0.16.4 clean; repo guard PASS; committed the two exact paths.
+
+Status: candidate built, Lead-verified, **NOT reviewed, NOT accepted**; no real archive, no host, no deployment. Review plan: Gemini 3.8 read-only (design conformance) + exact Sol (Codex Plus after the reset); Grok out for the week. The D-13 drill's GREEN half now exists on fixtures only; T-B real-root drills still need an explicit owner execution scope.

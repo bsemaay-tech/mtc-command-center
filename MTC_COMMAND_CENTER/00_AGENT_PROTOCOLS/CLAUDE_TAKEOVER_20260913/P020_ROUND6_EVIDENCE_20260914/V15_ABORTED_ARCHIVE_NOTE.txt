@@ -1,0 +1,1 @@
+Archived 2026-09-14T16:18:22Z by Claude Opus 5 Lead (b9df29) under owner decision D9-A (OD-20260914-P020-RECORD-V3-1: "then ONE new eligibility shot"; the spent V1.5 shot stays archived, never deleted), same pattern as the V1.4 reset under OD-20260914-P020-RECORD-V2-1. Digests as in SHA256SUMS_outputs.txt.
