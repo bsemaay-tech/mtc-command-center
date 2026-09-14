@@ -65,7 +65,13 @@ Notes: O-8 records an APPROVED offline execution scope (T-A) for drills D-1…D-
 - **O-4 = Android** → row `OD-20260914-P026-PHONE-OS-1`: closes O-4; O-5 path stands (self-hosted ntfy delivers instantly on Android).
 - Still open after this batch: **D6** (record interval / V1.5 / reset of the spent shot — gates D5's engineering and the derivation-tool review), **O-9 shape** (A or B; recommended B), O-1 concrete volume (at G9).
 
-## Third batch (~07:08Z) — owner chat, verbatim: `D6 A with end date 2026-05-01 / O-9 B`
+## Third batch (~06:50Z; an earlier draft of this header said ~07:08Z — clock slip corrected) — owner chat, verbatim: `D6 A with end date 2026-05-01 / O-9 B`
 - **D6 = A, end date 2026-05-01** → row `OD-20260914-P020-RECORD-V2-1`: record V2 ratified (end_exclusive `2026-05-01T00:00:00Z`); V1.5 re-freeze authorized (interval check + 6 NITs + D5 driver change + derivation-tool repair); ONE more exact Opus review on Claude Pro (round 5); spent shot reset by archiving the ABORTED files. Builder lane P20R6 launched after this record.
 - **O-9 = B** → row `OD-20260914-P030-BRIDGE-SHAPE-1`: separate exporter; implementation may be scoped as its own reviewed lane later (not started; P020 has priority on the Codex Plus pool).
 - Still open: O-1 concrete volume (at G9). Nothing else pending from the owner.
+
+## Fourth batch (~07:50Z) — owner chat, verbatim: `1. B YES / 2. P031 batch GO / 3. O-9 implement GO / 4. explain this and give recomended answer?`
+- **1. B YES** → row `OD-20260914-P020-MEASURE-1`: bounded measurement may run once after eligibility + derived-plan review (supersedes B NO).
+- **2. P031 batch GO** → row `OD-20260914-P031-BATCH-GO-1`: one new candidate implementing the recorded answers + full T0 roster (one Opus Pro slot). No push/PR/merge/acceptance.
+- **3. O-9 implement GO** → row `OD-20260914-P030-EXPORTER-GO-1`: Shape-B exporter with tests + D-13 GREEN on fixtures, normal review path.
+- **4.** O-1/O-2 explained to the owner in chat with a concrete recommendation (this PC has a single fixed drive C: 930 GB / 68 GB free; no second device is attached, so O-2 needs an external drive or a host).
