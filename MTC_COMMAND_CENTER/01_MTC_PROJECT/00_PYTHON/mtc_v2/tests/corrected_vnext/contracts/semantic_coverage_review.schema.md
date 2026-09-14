@@ -60,7 +60,8 @@ ordered row for each `S18-01` through `S18-12`, with nonnegative integer indices
 values have fixed types and formats. The Python gate additionally checks recomputed ranges, ordering,
 counts, assignments, and digest identity.
 
-`owner_ratification.chain` is exactly `#5`, `#6`, `#7`, `#8`, `#9`, `#10`, `#11`, `#12`,
-`#12b`, `#13`, `#14`, `#14b`, `#15`, `#16`, `#17`, `#18`, `#19`, `#20`, `#21`,
-`#22`, `#23`, `#24`, `#25`, `#26`, `#27`, `#28`, `#29`, and `#30`, in that order. `ratified` must be true, and `signed_at` must be a timezone-qualified
+`owner_ratification.chain` is exactly `#5`, `#6`, `#7`, `#8`, `#9`, `#10`, `#11`, `#12`, `#12b`,
+`#13`, `#14`, `#14b`, `#15`, `#16`, `#17`, `#18`, `#19`, `#20`, `#21`, `#22`, `#23`, `#24`, `#25`,
+`#26`, `#27`, `#28`, `#29`, `#30`, `#31`, `#32`, `#33`, `#34`, `#35`, `#36`, `#37`,
+`#38`, and `#39`, in that order. `ratified` must be true, and `signed_at` must be a timezone-qualified
 date-time.

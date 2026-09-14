@@ -116,8 +116,8 @@
       "properties": {
         "chain": {
           "type": "array",
-          "minItems": 33,
-          "maxItems": 33,
+          "minItems": 37,
+          "maxItems": 37,
           "prefixItems": [
             {"const": "#5"},
             {"const": "#6"},
@@ -151,7 +151,11 @@
             {"const": "#32"},
             {"const": "#33"},
             {"const": "#34"},
-            {"const": "#35"}
+            {"const": "#35"},
+            {"const": "#36"},
+            {"const": "#37"},
+            {"const": "#38"},
+            {"const": "#39"}
           ],
           "items": false
         },
