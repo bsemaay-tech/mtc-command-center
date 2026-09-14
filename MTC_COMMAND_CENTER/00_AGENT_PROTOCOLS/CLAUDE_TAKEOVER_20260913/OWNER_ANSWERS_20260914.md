@@ -86,3 +86,9 @@ Notes: O-8 records an APPROVED offline execution scope (T-A) for drills D-1…D-
 
 ## Seventh batch (~10:55Z and ~11:05Z) — owner chat, verbatim: `D7- A` then `D8 A`
 - Two bounded diagnostics authorized and executed (counts only, identities withheld) → row `OD-20260914-P020-DIAG-1`. Result: the block is a sizing/lot-quantization artefact of the synthetic instrument (quantity_step = 1 at BTC prices under risk fraction 0.0001), not strategy behaviour. **D9 open** (record V3 with quantity_step 0.00001 recommended).
+
+## Eighth batch (~12:59Z, session 3 / b9df29) — owner chat, verbatim: `1. D9-A / 2. Last Opus slot this week it goes to the P020 V1.6 roster / 3. D10  Yes / 4. Explain this to me`
+- **1. D9-A** → row `OD-20260914-P020-RECORD-V3-1`: synthetic instrument record V3 with `quantity_step = 0.00001`, nothing else; V1.6 re-freeze + round-6 roster + one new shot. Builder lane `laneP20R7_repair` released from HOLD and queued FIRST on the Codex Plus pool (15:08Z reset), ahead of P31B-CONT and O9EXP.
+- **2.** → row `OD-20260914-P020-OPUS6-1`: the last Claude Pro Opus slot this week goes to the P020 V1.6 roster; P031's Opus review waits for the Sep 16 reset.
+- **3. D10 Yes** → row `OD-20260914-GEMINI-WRAPPER-2`: bounded wrapper repair (raw stdout/stderr persisted on post-run failure; tolerant result envelope with stderr notice) — executed by the Lead, see the row for the new hash once applied.
+- **4. "Explain this to me"** (answering the TESTNET question): the Lead explains Toolkit button 5 in chat; no host action taken; "provisioned" still awaited.
