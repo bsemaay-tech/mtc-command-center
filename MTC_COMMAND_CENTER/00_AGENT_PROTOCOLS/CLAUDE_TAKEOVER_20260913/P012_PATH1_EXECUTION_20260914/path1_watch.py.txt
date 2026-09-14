@@ -1,7 +1,7 @@
 """Path 1 watcher: polls the public Info API for the owner's address; prints one line per NEW fill / funding event /
 open-order change; exits when the resting T1 order has filled (or after MAX_MIN minutes). Read-only; address is public."""
 import json, urllib.request, datetime, time, sys
-ADDR = "0x1E265F5E39957E08ed02A120ceFA33A9bd46AC49"
+ADDR = "<OWNER_MAINNET_ADDRESS_0x1E26...AC49>"
 MAX_MIN = int(sys.argv[1]) if len(sys.argv) > 1 else 180
 def info(body):
     req = urllib.request.Request("https://api.hyperliquid.xyz/info", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
