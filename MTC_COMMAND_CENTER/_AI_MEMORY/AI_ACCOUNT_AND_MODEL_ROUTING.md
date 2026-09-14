@@ -27,7 +27,7 @@ routing. It is not part of normal onboarding.
 | Gemini read-only corroboration | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1` |
 | Gemini bounded coder | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProCoder.ps1` |
 | API fallback harness | repository-relative `_deepseek_driver/ds_agent.py`; read its `README.md` first |
-| freellmapi free-tier router (TRIAL, 2026-09-14) | local `http://127.0.0.1:3001/v1` (source at `C:\LAB\TOOLSreellmapi`); documentary/mechanical lanes only — no exact T0 slots, no protected code or secrets; owner adds provider keys in its dashboard; wrapper and first assessment pending |
+| freellmapi free-tier router (TRIAL, 2026-09-14) | local `http://127.0.0.1:3001/v1` (source at `C:\LAB\TOOLS\freellmapi`); documentary/mechanical lanes only — no exact T0 slots, no protected code or secrets; owner adds provider keys in its dashboard; wrapper and first assessment pending |
 
 The Codex launcher currently allowlists route names `secondary`, `third`,
 `fourth`, and `free`. Select identity only through the launcher's
