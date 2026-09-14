@@ -83,3 +83,6 @@ Notes: O-8 records an APPROVED offline execution scope (T-A) for drills D-1…D-
 ## Sixth batch (~08:28Z) — owner chat, verbatim: `TESTNET GO and prepare the P012 risk packet`
 - **TESTNET GO** → row `OD-20260914-BRIDGE-TESTNET-GO-1`: KVM2-P4-03 provisioning by the owner's hands (wizard button 5 in the Bridge Toolkit), then Lead-run post-conditions / verify / DISARMED credential-mode restart / testnet smoke; ARM excluded (own sentence).
 - **prepare the P012 risk packet** → row `OD-20260914-P012-RISK-PACKET-1`: Grok documentary lane P12RISK + audit chain; presented for the owner's answers.
+
+## Seventh batch (~10:55Z and ~11:05Z) — owner chat, verbatim: `D7- A` then `D8 A`
+- Two bounded diagnostics authorized and executed (counts only, identities withheld) → row `OD-20260914-P020-DIAG-1`. Result: the block is a sizing/lot-quantization artefact of the synthetic instrument (quantity_step = 1 at BTC prices under risk fraction 0.0001), not strategy behaviour. **D9 open** (record V3 with quantity_step 0.00001 recommended).
