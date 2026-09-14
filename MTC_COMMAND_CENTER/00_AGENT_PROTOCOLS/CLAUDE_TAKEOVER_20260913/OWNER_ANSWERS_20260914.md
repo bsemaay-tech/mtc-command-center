@@ -98,3 +98,15 @@ Notes: O-8 records an APPROVED offline execution scope (T-A) for drills D-1…D-
 
 ## Tenth batch (~14:03Z) — owner chat, verbatim: `smoke GO`
 - One run of `tools/smoke_p0.py` on KVM2 against Hyperliquid TESTNET (fake money) → row `OD-20260914-BRIDGE-SMOKE-GO-1`; **PASS 12/12** at 14:05:28-14:05:40Z; service untouched; record `BRIDGE_TESTNET_SMOKE_P0_20260914/` (log with the account address redacted). Not production evidence; no ARM.
+
+## Eleventh batch (~14:20Z) — owner chat, verbatim (seven lines):
+```
+Q1  me
+Q2 No
+Q3 Wait
+Q4  keep exactly that signed rule
+Q5 keep the signed B3 rule
+Q6 follow the gate order exactly, no shortcuts
+Q7 NO
+```
+- Answers to the P012 production-admission packet (presented 12:59Z; explained again 14:1xZ) → rows `OD-20260914-P012-ADMISSION-Q1`..`Q7`. All seven equal the packet's recommended answers except that Q1 names a person: the owner himself. Lead note on Q1 (stated to the owner in chat): recorded as designation and self-attestation; the Lead cannot certify "experienced engineer"; an additional independent engineer's review before real money remains recommended. Nothing executed.
