@@ -1,0 +1,17 @@
+set -u
+# KVM2-P4-03 post-conditions after the owner's "provisioned" — READ-ONLY; prints permissions, counts and key NAMES only, never a value.
+echo "UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ) host=$(hostname)"
+echo "env_mode=$(sudo -n stat -c '%a %U:%G' /etc/mtc-bridge/mtc-bridge.env)"
+echo "env_mtime=$(sudo -n stat -c '%y' /etc/mtc-bridge/mtc-bridge.env)"
+echo "env_lines=$(sudo -n wc -l < /etc/mtc-bridge/mtc-bridge.env)"
+echo "HL_LIVE_ACK_lines=$(sudo -n grep -c '^HL_LIVE_ACK=' /etc/mtc-bridge/mtc-bridge.env)"
+echo "HL_ACCOUNT_ADDRESS_wellformed_lines=$(sudo -n grep -cE '^HL_ACCOUNT_ADDRESS=0x[0-9a-fA-F]{40}$' /etc/mtc-bridge/mtc-bridge.env)"
+echo "HL_API_WALLET_KEY_wellformed_lines=$(sudo -n grep -cE '^HL_API_WALLET_KEY=0x[0-9a-fA-F]{64}$' /etc/mtc-bridge/mtc-bridge.env)"
+echo "uncommented_key_names=$(sudo -n grep -E '^[A-Z_]+=' /etc/mtc-bridge/mtc-bridge.env | cut -d= -f1 | sort | paste -sd, -)"
+if [ -e /tmp/testnet_provision_wizard.sh ]; then echo "wizard_tmp_copy=PRESENT"; else echo "wizard_tmp_copy=removed"; fi
+echo "service_active=$(systemctl is-active mtc-bridge-first-start.service)"
+echo "service_nrestarts=$(systemctl show -p NRestarts --value mtc-bridge-first-start.service)"
+echo "listen_8790=$(ss -ltn | grep 8790 | awk '{print $4}' | paste -sd' ' -)"
+echo "api_status=$(curl -s --max-time 5 http://127.0.0.1:8790/api/status)"
+echo "install_manifest_keys=$(sudo -n python3 -c 'import json;d=json.load(open("/etc/mtc-bridge/install_manifest.json"));print(sorted(d.keys()))' 2>&1 | head -c 400)"
+echo "install_manifest_release=$(sudo -n python3 -c 'import json;d=json.load(open("/etc/mtc-bridge/install_manifest.json"));print({k:v for k,v in d.items() if isinstance(v,str) and (\"sha\" in k.lower() or \"release\" in k.lower())})' 2>&1 | head -c 600)"

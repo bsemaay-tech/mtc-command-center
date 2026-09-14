@@ -92,3 +92,6 @@ Notes: O-8 records an APPROVED offline execution scope (T-A) for drills D-1…D-
 - **2.** → row `OD-20260914-P020-OPUS6-1`: the last Claude Pro Opus slot this week goes to the P020 V1.6 roster; P031's Opus review waits for the Sep 16 reset.
 - **3. D10 Yes** → row `OD-20260914-GEMINI-WRAPPER-2`: bounded wrapper repair (raw stdout/stderr persisted on post-run failure; tolerant result envelope with stderr notice) — executed by the Lead, see the row for the new hash once applied.
 - **4. "Explain this to me"** (answering the TESTNET question): the Lead explains Toolkit button 5 in chat; no host action taken; "provisioned" still awaited.
+
+## Ninth batch (~13:45Z) — owner chat, verbatim: `provisioned` (preceded by `terminal nerde?` and `terminal açılıp hemen kapanıyor` — the button launcher had a parse error, fixed 13:25Z)
+- KVM2-P4-03 DONE by the owner's hands → row `OD-20260914-BRIDGE-P403-PROVISIONED-1`; Lead read-only post-conditions all satisfied (record `BRIDGE_TESTNET_P403_PROVISIONED_20260914/`). Next lever put to the owner: one-off testnet smoke (`tools/smoke_p0.py`, fake money) — needs an explicit sentence; no restart exists that would consume the credentials on the accepted release.
