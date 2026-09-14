@@ -1,0 +1,6 @@
+| evidence item from the packet | observed | file:line or artefact path | GREEN / RED-as-expected / NOT OBSERVED |
+| --- | --- | --- | --- |
+| (a) `require_non_empty_string_field` on `backup_root` (`opsa_common.py:232`) | outer wrap `ValueError: backup config is not runnable`; inner `RequiredFieldError: backup config field 'backup_root' must be a non-empty string`; wrap site `p030_closed_partition_backup_adapter.py:388` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-1/stdout.txt:1` `C:/tmp/P026_DRILLS_TA_20260914/drills/D-1/stdout.txt:2` `C:/tmp/P026_DRILLS_TA_20260914/drills/D-1/stdout.txt:3` | RED-as-expected |
+| (b) refuses "P030 backup store class must be protected" | `ValueError: P030 backup store class must be protected` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-1/stdout.txt:4` | RED-as-expected |
+| (c) refuses "P030 backup store path must equal the stable prefix" | `ValueError: P030 backup store path must equal the stable prefix` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-1/stdout.txt:5` | RED-as-expected |
+| (d) returns the parsed config | `d: OK p030_closed_partition protected C:\tmp\P026_DRILLS_TA_20260914\fixtures\contract_partition\stable_prefix` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-1/stdout.txt:6` | GREEN |

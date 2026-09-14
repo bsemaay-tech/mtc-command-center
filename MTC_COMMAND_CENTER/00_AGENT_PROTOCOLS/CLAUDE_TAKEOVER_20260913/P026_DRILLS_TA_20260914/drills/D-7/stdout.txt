@@ -1,0 +1,6 @@
+status: ERROR ValueError: restore requires one complete successful P026 run
+errors: ERROR ValueError: restore requires one complete successful P026 run
+files: ERROR ValueError: restore requires one complete successful P026 run
+skipped: ERROR ValueError: restore requires one complete successful P026 run
+third: ERROR ValueError: restore requires one complete successful P026 run
+malformed: ERROR ValueError: invalid P026 manifest line 13

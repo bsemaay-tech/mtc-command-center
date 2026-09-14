@@ -1,0 +1,63 @@
+absent-state-dir: rc=3
+absent-state-dir: stdout
+{"overall": "check_failed", "ids": {}, "error": "state dir does not exist: C:\\tmp\\P026_DRILLS_TA_20260914\\fixtures\\watchdog_state\\absent"}
+absent-state-dir: stderr
+error: state dir does not exist: C:\tmp\P026_DRILLS_TA_20260914\fixtures\watchdog_state\absent
+absent-state-dir: notifier
+{"checked_at": "2026-09-14T05:00:01Z", "error": "state dir does not exist: C:\\tmp\\P026_DRILLS_TA_20260914\\fixtures\\watchdog_state\\absent", "id": "_watchdog_check", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "check_failed"}
+fresh-ok: rc=0
+fresh-ok: stdout
+p030_market_data_collector: state=ok emitted_at=2026-09-14T05:00:00Z age_seconds=10.0
+{"overall": "ok", "ids": {"p030_market_data_collector": {"state": "ok", "emitted_at": "2026-09-14T05:00:00Z", "age_seconds": 10.0}}}
+fresh-ok: stderr
+fresh-ok: notifier
+fresh-ok: notifier-missing
+silent: rc=2
+silent: stdout
+p030_market_data_collector: state=silent emitted_at=2026-09-14T05:00:00Z age_seconds=10000.0 bound_seconds=300.0
+{"overall": "alert", "ids": {"p030_market_data_collector": {"state": "silent", "emitted_at": "2026-09-14T05:00:00Z", "age_seconds": 10000.0, "bound_seconds": 300.0}}}
+silent: stderr
+silent: notifier
+{"age_seconds": 10000.0, "bound_seconds": 300.0, "checked_at": "2026-09-14T07:46:40Z", "emitted_at": "2026-09-14T05:00:00Z", "id": "p030_market_data_collector", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "silent"}
+missing: rc=2
+missing: stdout
+missing_id: state=missing expected=True
+{"overall": "alert", "ids": {"missing_id": {"state": "missing", "expected": true}}}
+missing: stderr
+missing: notifier
+{"checked_at": "2026-09-14T05:00:10Z", "id": "missing_id", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "missing"}
+unreadable: rc=3
+unreadable: stdout
+bad: state=unreadable error=Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+{"overall": "check_failed", "ids": {"bad": {"state": "unreadable", "error": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"}}}
+unreadable: stderr
+unreadable: notifier
+{"checked_at": "2026-09-14T05:00:10Z", "error": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)", "id": "bad", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "unreadable"}
+bad-ts: rc=3
+bad-ts: stdout
+good2: state=bad_timestamp error=emitted_at missing
+{"overall": "check_failed", "ids": {"good2": {"state": "bad_timestamp", "error": "emitted_at missing"}}}
+bad-ts: stderr
+bad-ts: notifier
+{"checked_at": "2026-09-14T05:00:10Z", "error": "emitted_at missing", "id": "good2", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "bad_timestamp"}
+clock-skew: rc=3
+clock-skew: stdout
+skewed: state=clock_skew emitted_at=2026-09-14T05:15:00Z age_seconds=-900.0
+{"overall": "check_failed", "ids": {"skewed": {"state": "clock_skew", "emitted_at": "2026-09-14T05:15:00Z", "age_seconds": -900.0}}}
+clock-skew: stderr
+clock-skew: notifier
+{"age_seconds": -900.0, "checked_at": "2026-09-14T05:00:00Z", "emitted_at": "2026-09-14T05:15:00Z", "id": "skewed", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "clock_skew"}
+empty-no-expect: rc=3
+empty-no-expect: stdout
+{"overall": "check_failed", "ids": {}, "error": "no heartbeat files found and no --expect ids given (watching nothing cannot be OK)"}
+empty-no-expect: stderr
+error: no heartbeat files found and no --expect ids given (watching nothing cannot be OK)
+empty-no-expect: notifier
+{"checked_at": "2026-09-14T05:00:05Z", "error": "no heartbeat files found and no --expect ids given (watching nothing cannot be OK)", "id": "_watchdog_check", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "check_failed"}
+invalid-now: rc=3
+invalid-now: stdout
+{"overall": "check_failed", "ids": {}, "error": "invalid --now value: Invalid isoformat string: 'not-a-timestamp'"}
+invalid-now: stderr
+error: invalid --now value: Invalid isoformat string: 'not-a-timestamp'
+invalid-now: notifier
+{"checked_at": "2026-09-14T06:19:21Z", "error": "invalid --now value: Invalid isoformat string: 'not-a-timestamp'", "id": "_watchdog_check", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "check_failed"}
