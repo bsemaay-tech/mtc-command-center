@@ -79,3 +79,7 @@ Notes: O-8 records an APPROVED offline execution scope (T-A) for drills D-1…D-
 ## Fifth batch (~07:58Z) — owner chat, verbatim: `O-1 ok / O-2 "C:\Users\BarışSemaay\OneDrive - Ertek Group\ARSİV\MTC_DATA\ARCHIVE"`
 - **O-1** = `C:\LAB\MTC_DATA\ARCHIVE` (20 GB reserve); **O-2** = the OneDrive-synced folder above → row `OD-20260914-P030-P026-ROOTS-1`, with the residuals the Lead stated (same physical disk locally; cloud copy only via sync; Files-On-Demand hydration; tenant policy; non-ASCII path must be drilled). Values recorded only; nothing created or run.
 - Open: T-B (real-root) drill execution scope — not yet requested from the owner as a one-line lever.
+
+## Sixth batch (~08:28Z) — owner chat, verbatim: `TESTNET GO and prepare the P012 risk packet`
+- **TESTNET GO** → row `OD-20260914-BRIDGE-TESTNET-GO-1`: KVM2-P4-03 provisioning by the owner's hands (wizard button 5 in the Bridge Toolkit), then Lead-run post-conditions / verify / DISARMED credential-mode restart / testnet smoke; ARM excluded (own sentence).
+- **prepare the P012 risk packet** → row `OD-20260914-P012-RISK-PACKET-1`: Grok documentary lane P12RISK + audit chain; presented for the owner's answers.
