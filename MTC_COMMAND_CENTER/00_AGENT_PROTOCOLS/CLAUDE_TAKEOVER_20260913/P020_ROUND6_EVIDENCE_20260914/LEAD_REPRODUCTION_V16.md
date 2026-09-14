@@ -18,4 +18,4 @@ Disclosure: step P reveals the eligibility of ONE family (the first in the froze
 
 NOT VERIFIED by this reproduction: the full 45-cell matrix and the 15 trials (the one-shot, still unrun); whether 1D has ANY trade-bearing family under V3 (D8-A counted three 1D families with ≥1 signal under V2 and zero fills; V3 may or may not lift them) — if none, the one-shot returns `BENCHMARK_PROFILE_BLOCKED` again and the owner's D7 options B/C/D (drop 1D / longer 1D data / stop) return; reviewer verdicts for round 6 (Gemini 3.7 V16, Sol R6 on Codex Plus, exact Opus R6 on Claude Pro under `OD-20260914-P020-OPUS6-1`; Grok out).
 
-Lead reproduction result: **REPRODUCED**. One roster member only; authorizes no execution. The V1.6 token `cb75602080850873e28dc3aa268ad1072a0f1d50148d91ad75c9896cf37fb126` stays unused until the roster accepts.
+Lead reproduction result: REPRODUCED. One roster member only; authorizes no execution. The V1.6 token `cb75602080850873e28dc3aa268ad1072a0f1d50148d91ad75c9896cf37fb126` stays unused until the roster accepts.

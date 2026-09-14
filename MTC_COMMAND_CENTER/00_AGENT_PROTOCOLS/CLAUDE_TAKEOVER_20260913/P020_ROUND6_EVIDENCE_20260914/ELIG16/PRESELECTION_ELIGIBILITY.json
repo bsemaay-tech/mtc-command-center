@@ -1,0 +1,78 @@
+{
+  "blocked": [],
+  "calibration_sha256": "808cbcb4ce529450e7e832baeffae00d00e64a57c456331936a75232c3299427",
+  "frozen_sha256": "cb75602080850873e28dc3aa268ad1072a0f1d50148d91ad75c9896cf37fb126",
+  "kind": "eligibility",
+  "one_shot": true,
+  "second_selection": "FORBIDDEN",
+  "selection": {
+    "15m": "GEN_TRIPLE_EMA_STACK",
+    "1D": "GEN_DONCHIAN_BREAKOUT",
+    "1h": "GEN_STOCH_OVERSOLD_CROSS",
+    "2h": "GEN_KELTNER_BREAKOUT",
+    "4h": "GEN_MACD_BULL_CROSS"
+  },
+  "status": "PROFILE_ELIGIBLE_NOT_ACCEPTED",
+  "trials": [
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_TRIPLE_EMA_STACK-15m-n512"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_TRIPLE_EMA_STACK-15m-n1024"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_TRIPLE_EMA_STACK-15m-n2048"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_STOCH_OVERSOLD_CROSS-1h-n512"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_STOCH_OVERSOLD_CROSS-1h-n1024"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_STOCH_OVERSOLD_CROSS-1h-n2048"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_KELTNER_BREAKOUT-2h-n512"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_KELTNER_BREAKOUT-2h-n1024"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_KELTNER_BREAKOUT-2h-n2048"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_MACD_BULL_CROSS-4h-n512"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_MACD_BULL_CROSS-4h-n1024"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_MACD_BULL_CROSS-4h-n2048"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_DONCHIAN_BREAKOUT-1D-n512"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_DONCHIAN_BREAKOUT-1D-n1024"
+    },
+    {
+      "trade_bearing": true,
+      "trial_id": "elig-GEN_DONCHIAN_BREAKOUT-1D-n2048"
+    }
+  ]
+}
