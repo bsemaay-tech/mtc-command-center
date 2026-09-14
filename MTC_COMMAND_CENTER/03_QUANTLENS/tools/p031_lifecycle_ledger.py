@@ -39,6 +39,25 @@ CHECK_SET_PURPOSES = frozenset(
         "supervisor",
     }
 )
+LADDER_RANK = {"SHADOW": 0, "TESTNET": 1, "LIVE_CANDIDATE": 2, "LIVE": 3}
+CAPACITY_PURPOSES_BY_RUNG = {
+    "FROZEN": frozenset({"shadow_eligibility"}),
+    "SHADOW": frozenset(
+        {"paper_eligibility", "testnet_live_candidate_eligibility"}
+    ),
+}
+REJECTED_PURPOSES_BY_RUNG = {
+    "CAPTURED": frozenset({"worthiness"}),
+    "CANDIDATE": frozenset({"worthiness"}),
+    "FROZEN": frozenset({"shadow_eligibility"}),
+    "SHADOW": frozenset(
+        {"paper_eligibility", "testnet_live_candidate_eligibility"}
+    ),
+    "TESTNET": frozenset({"live_candidate_eligibility"}),
+    "LIVE_CANDIDATE": frozenset({"promotion"}),
+    "LIVE": frozenset({"supervisor"}),
+    "SUSPENDED": frozenset({"supervisor"}),
+}
 
 REGISTRAR_TRANSITIONS = frozenset(
     {
@@ -48,6 +67,19 @@ REGISTRAR_TRANSITIONS = frozenset(
         ("TRIAGED", "CANDIDATE", "CANDIDATE"),
         ("CANDIDATE", "FROZEN", "FROZEN"),
         ("CANDIDATE", "PARKED", "PARKED"),
+        ("CANDIDATE", "REJECTED", "REJECTED"),
+        ("FROZEN", "REJECTED", "REJECTED"),
+        ("SHADOW", "REJECTED", "REJECTED"),
+        ("TESTNET", "REJECTED", "REJECTED"),
+        ("LIVE_CANDIDATE", "REJECTED", "REJECTED"),
+        ("LIVE", "REJECTED", "REJECTED"),
+        ("SUSPENDED", "REJECTED", "REJECTED"),
+        ("SHADOW", "FROZEN", "FROZEN"),
+        ("TESTNET", "FROZEN", "FROZEN"),
+        ("LIVE_CANDIDATE", "FROZEN", "FROZEN"),
+        ("LIVE", "FROZEN", "FROZEN"),
+        ("SUSPENDED", "FROZEN", "FROZEN"),
+        ("REJECTED", "RE_ENTRY", "CANDIDATE"),
         ("DECLINED", "RE_ENTRY", "CANDIDATE"),
         ("PARKED", "RE_ENTRY", "CANDIDATE"),
         ("RETIRED", "RE_ENTRY", "CANDIDATE"),
@@ -60,6 +92,7 @@ REENTRY_TRIGGERS = frozenset(
         "NEW_SUBSTITUTE_CATALOGUE",
         "NEW_ENRICHMENT_MODULES",
         "OWNER_CURIOSITY",
+        "OWNER_EXTERNAL_CHANGE",
     }
 )
 AUTHORITY_EVENTS = {
@@ -86,7 +119,7 @@ AUTHORITY_EVENTS = {
     ),
     LifecycleWriterClass.PROMOTION_AUTHORITY: frozenset({"PROMOTED", "RESUMED"}),
     LifecycleWriterClass.MULTI_WORKER_SUPERVISOR: frozenset(
-        {"SUSPENDED", "RESUMED", "RETIRED"}
+        {"SUSPENDED", "RESUMED", "RETIRED", "DEMOTED"}
     ),
 }
 LADDER_TRANSITIONS = frozenset(
@@ -97,6 +130,13 @@ LADDER_TRANSITIONS = frozenset(
         ("TESTNET", "LIVE_CANDIDATE", "LIVE_CANDIDATE"),
         ("LIVE_CANDIDATE", "PROMOTED", "LIVE"),
         ("FROZEN", "ADMISSION_WITHHELD_CAPACITY", "FROZEN"),
+        ("SHADOW", "ADMISSION_WITHHELD_CAPACITY", "SHADOW"),
+        ("TESTNET", "DEMOTED", "SHADOW"),
+        ("LIVE_CANDIDATE", "DEMOTED", "SHADOW"),
+        ("LIVE_CANDIDATE", "DEMOTED", "TESTNET"),
+        ("LIVE", "DEMOTED", "SHADOW"),
+        ("LIVE", "DEMOTED", "TESTNET"),
+        ("LIVE", "DEMOTED", "LIVE_CANDIDATE"),
         ("SHADOW", "SUSPENDED", "SUSPENDED"),
         ("TESTNET", "SUSPENDED", "SUSPENDED"),
         ("LIVE_CANDIDATE", "SUSPENDED", "SUSPENDED"),
@@ -170,6 +210,7 @@ class LifecycleRecord:
     check_set_version: str | None
     evaluation_run_hash: str | None
     failing_checks: tuple[dict[str, Any], ...]
+    catalog_backed: bool
     source_kind: str
     authoritative: bool = False
 
@@ -193,6 +234,7 @@ def _canonical_evidence(
     check_set_version: str | None,
     evaluation_run_hash: str | None,
     failing_checks: tuple[dict[str, Any], ...],
+    catalog_backed: bool,
     source_kind: str,
 ) -> bytes:
     return json.dumps(
@@ -201,6 +243,7 @@ def _canonical_evidence(
             "check_set_version": check_set_version,
             "evaluation_run_hash": evaluation_run_hash,
             "failing_checks": list(failing_checks),
+            "catalog_backed": catalog_backed,
             "source_kind": source_kind,
         },
         ensure_ascii=False,
@@ -213,6 +256,13 @@ def _digest(previous: str, event_bytes: bytes, evidence_bytes: bytes) -> str:
     return hashlib.sha256(
         previous.encode("ascii") + b"\n" + event_bytes + b"\n" + evidence_bytes
     ).hexdigest()
+
+
+def _is_one_sentence(value: str) -> bool:
+    stripped = value.strip()
+    return bool(stripped) and stripped[-1] in ".!?" and sum(
+        stripped.count(mark) for mark in ".!?"
+    ) == 1
 
 
 def _validated_writer_pair(writer_pair: object, error: str) -> tuple[str, str]:
@@ -267,6 +317,7 @@ class LifecycleLedger:
         path: str | Path,
         writer_allowlist: Iterable[tuple[str | LifecycleWriterClass, str]] | None = None,
         active_check_sets: Mapping[str, Iterable[str]] | None = None,
+        accepted_evaluation_catalog: Iterable[str] | None = None,
     ) -> None:
         if writer_allowlist is None:
             raise ValueError("WRITER_ALLOWLIST_EMPTY")
@@ -278,6 +329,9 @@ class LifecycleLedger:
         if not self.writer_allowlist:
             raise ValueError("WRITER_ALLOWLIST_EMPTY")
         self.active_check_sets = self._normalize_active_check_sets(active_check_sets)
+        self.accepted_evaluation_catalog = self._normalize_accepted_catalog(
+            accepted_evaluation_catalog
+        )
         existed = self.path.exists()
         if not existed:
             self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -328,6 +382,19 @@ class LifecycleLedger:
                 raise ValueError("CHECK_SET_VERSIONS_INVALID")
             normalized[purpose] = normalized_versions
         return normalized
+
+    @staticmethod
+    def _normalize_accepted_catalog(
+        accepted_evaluation_catalog: Iterable[str] | None,
+    ) -> frozenset[str] | None:
+        if accepted_evaluation_catalog is None:
+            return None
+        if isinstance(accepted_evaluation_catalog, (str, bytes, bytearray)):
+            raise ValueError("ACCEPTED_EVALUATION_CATALOG_INVALID")
+        hashes = tuple(accepted_evaluation_catalog)
+        if any(type(value) is not str or not SHA256.fullmatch(value) for value in hashes):
+            raise ValueError("ACCEPTED_EVALUATION_CATALOG_INVALID")
+        return frozenset(hashes)
 
     @staticmethod
     def _create_schema(connection: sqlite3.Connection) -> None:
@@ -434,8 +501,9 @@ class LifecycleLedger:
         check_set_version: str | None,
         evaluation_run_hash: str | None,
         failing_checks: Sequence[Mapping[str, Any]],
+        catalog_backed: bool,
         source_kind: str,
-    ) -> tuple[str | None, str | None, tuple[dict[str, Any], ...], str]:
+    ) -> tuple[str | None, str | None, tuple[dict[str, Any], ...], bool, str]:
         if check_set_version is not None and (
             type(check_set_version) is not str or not check_set_version.strip()
         ):
@@ -479,7 +547,9 @@ class LifecycleLedger:
             )
         if type(source_kind) is not str or source_kind != "FIXTURE":
             raise ValueError("SOURCE_KIND_NOT_FIXTURE")
-        return check_set_version, evaluation_run_hash, tuple(checks), source_kind
+        if type(catalog_backed) is not bool:
+            raise ValueError("CATALOG_BACKED_INVALID")
+        return check_set_version, evaluation_run_hash, tuple(checks), catalog_backed, source_kind
 
     @staticmethod
     def _is_json_scalar(value: Any) -> bool:
@@ -494,7 +564,7 @@ class LifecycleLedger:
         return state
 
     @staticmethod
-    def _check_set_purpose(event: LifecycleEvent) -> str | None:
+    def _fixed_check_set_purpose(event: LifecycleEvent) -> str | None:
         if event.event_type in {"TRIAGED", "DECLINED"}:
             return "worthiness"
         if event.event_type == "SHADOW_ELIGIBLE":
@@ -505,19 +575,53 @@ class LifecycleLedger:
             return "testnet_live_candidate_eligibility"
         if event.event_type == "LIVE_CANDIDATE":
             return "live_candidate_eligibility"
-        if event.event_type == "ADMISSION_WITHHELD_CAPACITY":
-            return "shadow_eligibility" if event.previous_state == "FROZEN" else None
         if event.event_type == "PROMOTED" or (
             event.event_type == "RESUMED"
             and event.writer_class is LifecycleWriterClass.PROMOTION_AUTHORITY
         ):
             return "promotion"
-        if event.event_type in {"SUSPENDED", "RETIRED"} or (
+        if event.event_type in {"DEMOTED", "SUSPENDED", "RETIRED"} or (
             event.event_type == "RESUMED"
             and event.writer_class is LifecycleWriterClass.MULTI_WORKER_SUPERVISOR
         ):
             return "supervisor"
         return None
+
+    def _purpose_for_check_set_version(self, check_set_version: str | None) -> str | None:
+        if check_set_version is None:
+            return None
+        matches = [
+            purpose
+            for purpose, versions in self.active_check_sets.items()
+            if check_set_version in versions
+        ]
+        if len(matches) == 1:
+            return matches[0]
+        return None
+
+    def _resolve_check_set_purpose(
+        self,
+        event: LifecycleEvent,
+        check_set_version: str | None,
+        supplied_check_set_purpose: str | None,
+    ) -> str | None:
+        if supplied_check_set_purpose is not None and (
+            type(supplied_check_set_purpose) is not str
+            or supplied_check_set_purpose not in CHECK_SET_PURPOSES
+        ):
+            raise ValueError("CHECK_SET_PURPOSE_UNKNOWN")
+        if event.event_type == "REJECTED":
+            if supplied_check_set_purpose is None:
+                raise ValueError("CHECK_SET_PURPOSE_REQUIRED")
+            return supplied_check_set_purpose
+        if event.event_type == "ADMISSION_WITHHELD_CAPACITY":
+            return supplied_check_set_purpose or self._purpose_for_check_set_version(
+                check_set_version
+            )
+        fixed = self._fixed_check_set_purpose(event)
+        if supplied_check_set_purpose is not None and supplied_check_set_purpose != fixed:
+            raise ValueError("CHECK_SET_PURPOSE_MISMATCH")
+        return fixed
 
     def _validate_transition(
         self,
@@ -527,6 +631,8 @@ class LifecycleLedger:
         check_set_version: str | None,
         evaluation_run_hash: str | None,
         failing_checks: tuple[dict[str, Any], ...],
+        catalog_backed: bool,
+        check_set_purpose: str | None,
         prior_evaluations: set[str],
         current_evaluations: set[str],
         evaluation_owners: Mapping[str, str],
@@ -542,17 +648,8 @@ class LifecycleLedger:
         if not event.evidence_references:
             raise ValueError("EVIDENCE_REFERENCES_REQUIRED")
         writer_class = event.writer_class
-        if event.event_type == "DEMOTED":
-            raise ValueError("DEMOTION_TARGET_RUNG_MAPPING_UNRESOLVED")
         if event.event_type == "CHALLENGE":
             raise ValueError("CHALLENGE_INCUMBENT_DEPLOYMENT_IDENTITY_FIELD_MISSING")
-        if event.event_type == "REJECTED":
-            raise ValueError("REJECTED_PURPOSE_UNRESOLVED")
-        if (
-            event.event_type == "ADMISSION_WITHHELD_CAPACITY"
-            and event.previous_state == "SHADOW"
-        ):
-            raise ValueError("ADMISSION_WITHHELD_TARGET_UNRESOLVED")
         actual_state = None if current is None else str(current["current_state"])
         if actual_state == "RETIRED" and event.event_type != "RE_ENTRY":
             raise ValueError("RETIRED_IDENTITY_TERMINAL")
@@ -563,6 +660,12 @@ class LifecycleLedger:
         if last_timestamp is not None and event.timestamp < last_timestamp:
             raise ValueError("TIMESTAMP_NOT_MONOTONIC")
 
+        is_registrar_refresh = (
+            writer_class is LifecycleWriterClass.REGISTRAR
+            and event.event_type == "FROZEN"
+            and actual_state
+            in {"SHADOW", "TESTNET", "LIVE_CANDIDATE", "LIVE", "SUSPENDED"}
+        )
         if (
             writer_class is not LifecycleWriterClass.REGISTRAR
             and actual_state
@@ -576,6 +679,12 @@ class LifecycleLedger:
         ):
             raise ValueError("DEPLOYMENT_REFRESH_ENVELOPE_UNRESOLVED")
 
+        if event.event_type == "DEMOTED" and (
+            event.previous_state not in LADDER_RANK
+            or event.next_state not in LADDER_RANK
+            or LADDER_RANK[event.next_state] >= LADDER_RANK[event.previous_state]
+        ):
+            raise ValueError("DEMOTION_TARGET_RUNG_NOT_BELOW_CURRENT")
         transition = (event.previous_state, event.event_type, event.next_state)
         if writer_class is LifecycleWriterClass.REGISTRAR:
             if transition not in REGISTRAR_TRANSITIONS:
@@ -605,8 +714,15 @@ class LifecycleLedger:
         ):
             raise ValueError("SUCCESSION_ENVELOPE_UNRESOLVED")
 
-        check_set_purpose = self._check_set_purpose(event)
         needs_check_set = check_set_purpose is not None
+        if event.event_type == "ADMISSION_WITHHELD_CAPACITY":
+            allowed_capacity = CAPACITY_PURPOSES_BY_RUNG.get(event.previous_state)
+            if allowed_capacity is None or check_set_purpose not in allowed_capacity:
+                raise ValueError("ADMISSION_WITHHELD_TARGET_UNRESOLVED")
+        if event.event_type == "REJECTED":
+            allowed_rejected = REJECTED_PURPOSES_BY_RUNG.get(event.previous_state)
+            if allowed_rejected is None or check_set_purpose not in allowed_rejected:
+                raise ValueError("CHECK_SET_PURPOSE_MISMATCH")
         if needs_check_set and check_set_version is None:
             raise ValueError("CHECK_SET_REQUIRED")
         if not needs_check_set and check_set_version is not None:
@@ -619,8 +735,26 @@ class LifecycleLedger:
 
         if event.event_type != "RE_ENTRY" and event.trigger is not None:
             raise ValueError("TRIGGER_NOT_APPLICABLE")
+        if catalog_backed and self.accepted_evaluation_catalog is None:
+            raise ValueError("CATALOG_BACKED_EVIDENCE_WITHOUT_ACCEPTED_CATALOG")
+        if (
+            self.accepted_evaluation_catalog is not None
+            and evaluation_run_hash is not None
+            and evaluation_run_hash not in self.accepted_evaluation_catalog
+        ):
+            raise ValueError("EVALUATION_RUN_HASH_NOT_IN_ACCEPTED_CATALOG")
+
         if event.event_type == "RE_ENTRY":
             if event.trigger not in REENTRY_TRIGGERS:
+                raise ValueError("REENTRY_TRIGGER_INVALID")
+            if actual_state == "RETIRED":
+                if event.trigger != "OWNER_EXTERNAL_CHANGE" or not _is_one_sentence(
+                    event.reason
+                ):
+                    raise ValueError(
+                        "RETIRED_REENTRY_EXTERNAL_CHANGE_REASON_REQUIRED"
+                    )
+            elif event.trigger == "OWNER_EXTERNAL_CHANGE":
                 raise ValueError("REENTRY_TRIGGER_INVALID")
             if evaluation_run_hash is None or evaluation_run_hash in (
                 prior_evaluations | current_evaluations
@@ -628,6 +762,11 @@ class LifecycleLedger:
                 raise ValueError("REENTRY_EVALUATION_NOT_FRESH")
             if failing_checks:
                 raise ValueError("REENTRY_RECOUNTS_PRIOR_EVIDENCE")
+        elif event.event_type == "REJECTED":
+            if evaluation_run_hash is None:
+                raise ValueError("EVALUATION_RUN_HASH_REQUIRED")
+            if not failing_checks:
+                raise ValueError("FAILING_CHECKS_REQUIRED")
         elif writer_class is not LifecycleWriterClass.REGISTRAR and evaluation_run_hash is None:
             raise ValueError("EVALUATION_RUN_HASH_REQUIRED")
         elif writer_class is LifecycleWriterClass.REGISTRAR and evaluation_run_hash is not None:
@@ -654,7 +793,20 @@ class LifecycleLedger:
             if event.event_type == "FROZEN":
                 if package_hash is None:
                     raise ValueError("FROZEN_PACKAGE_HASH_REQUIRED")
-                if deployment_hash is not None:
+                if is_registrar_refresh:
+                    if (
+                        deployment_hash is None
+                        or current is None
+                        or package_hash != current.get("package_hash")
+                        or deployment_hash == current.get("deployment_identity_hash")
+                    ):
+                        raise ValueError("DEPLOYMENT_REFRESH_IDENTITY_INVALID")
+                    if deployment_hash in retired_deployments:
+                        raise ValueError("DEPLOYMENT_IDENTITY_RETIRED")
+                    owner = deployment_owners.get(deployment_hash)
+                    if owner is not None and owner != event.candidate_id:
+                        raise ValueError("DEPLOYMENT_IDENTITY_BOUND_TO_ANOTHER_CANDIDATE")
+                elif deployment_hash is not None:
                     raise ValueError("FROZEN_DEPLOYMENT_IDENTITY_FORBIDDEN")
                 if package_hash in retired_packages.get(event.candidate_id, set()):
                     raise ValueError("RETIRED_PACKAGE_IDENTITY")
@@ -692,6 +844,8 @@ class LifecycleLedger:
         check_set_version: str | None = None,
         evaluation_run_hash: str | None = None,
         failing_checks: Sequence[Mapping[str, Any]] = (),
+        check_set_purpose: str | None = None,
+        catalog_backed: bool = False,
         source_kind: str = "FIXTURE",
     ) -> LifecycleEvent:
         connection = self._connect()
@@ -703,16 +857,24 @@ class LifecycleLedger:
                 check_set_version,
                 evaluation_run_hash,
                 checks,
+                catalog_backed,
                 source_kind,
             ) = self._normalize_evidence(
-                check_set_version, evaluation_run_hash, failing_checks, source_kind
+                check_set_version,
+                evaluation_run_hash,
+                failing_checks,
+                catalog_backed,
+                source_kind,
             )
-            check_set_purpose = self._check_set_purpose(event)
+            check_set_purpose = self._resolve_check_set_purpose(
+                event, check_set_version, check_set_purpose
+            )
             evidence_bytes = _canonical_evidence(
                 check_set_purpose,
                 check_set_version,
                 evaluation_run_hash,
                 checks,
+                catalog_backed,
                 source_kind,
             )
             writer_pair = (event.writer_class.value, event.writer_id)
@@ -757,6 +919,8 @@ class LifecycleLedger:
                 check_set_version=check_set_version,
                 evaluation_run_hash=evaluation_run_hash,
                 failing_checks=checks,
+                catalog_backed=catalog_backed,
+                check_set_purpose=check_set_purpose,
                 prior_evaluations=prior_evaluations.setdefault(
                     event.candidate_id, set()
                 ),
@@ -867,10 +1031,13 @@ class LifecycleLedger:
                 "check_set_version",
                 "evaluation_run_hash",
                 "failing_checks",
+                "catalog_backed",
                 "source_kind",
             }:
                 raise ValueError("INVALID_CANONICAL_PAYLOAD")
-            check_set_purpose = self._check_set_purpose(event)
+            check_set_purpose = self._resolve_check_set_purpose(
+                event, evidence["check_set_version"], evidence["check_set_purpose"]
+            )
             if evidence["check_set_purpose"] != check_set_purpose:
                 raise ValueError("CHECK_SET_PURPOSE_MISMATCH")
             try:
@@ -878,6 +1045,7 @@ class LifecycleLedger:
                     evidence["check_set_version"],
                     evidence["evaluation_run_hash"],
                     evidence["failing_checks"],
+                    evidence["catalog_backed"],
                     evidence["source_kind"],
                 )
             except Exception as exc:
@@ -912,6 +1080,8 @@ class LifecycleLedger:
                 check_set_version=evidence["check_set_version"],
                 evaluation_run_hash=evidence["evaluation_run_hash"],
                 failing_checks=tuple(evidence["failing_checks"]),
+                catalog_backed=evidence["catalog_backed"],
+                check_set_purpose=check_set_purpose,
                 prior_evaluations=prior,
                 current_evaluations=current_epoch,
                 evaluation_owners=evaluation_owners,
@@ -963,6 +1133,7 @@ class LifecycleLedger:
                     check_set_version=evidence["check_set_version"],
                     evaluation_run_hash=evidence["evaluation_run_hash"],
                     failing_checks=tuple(evidence["failing_checks"]),
+                    catalog_backed=evidence["catalog_backed"],
                     source_kind=evidence["source_kind"],
                 )
             )
@@ -1120,7 +1291,10 @@ class LifecycleLedger:
             target.close()
             target = None
             restored = LifecycleLedger(
-                temporary, self.writer_allowlist, active_check_sets=self.active_check_sets
+                temporary,
+                self.writer_allowlist,
+                active_check_sets=self.active_check_sets,
+                accepted_evaluation_catalog=self.accepted_evaluation_catalog,
             )
             restored.verify_integrity()
             os.link(temporary, destination)
@@ -1139,6 +1313,7 @@ class LifecycleLedger:
         destination: str | Path,
         writer_allowlist: Iterable[tuple[str | LifecycleWriterClass, str]] | None,
         active_check_sets: Mapping[str, Iterable[str]] | None = None,
+        accepted_evaluation_catalog: Iterable[str] | None = None,
     ) -> LifecycleLedger:
         source = Path(source)
         destination = Path(destination)
@@ -1147,10 +1322,18 @@ class LifecycleLedger:
         if destination.exists() or destination.is_symlink():
             raise FileExistsError("RESTORE_DESTINATION_EXISTS_OR_SYMLINK")
         source_ledger = cls(
-            source, writer_allowlist, active_check_sets=active_check_sets
+            source,
+            writer_allowlist,
+            active_check_sets=active_check_sets,
+            accepted_evaluation_catalog=accepted_evaluation_catalog,
         )
         source_ledger.backup_to(destination)
-        return cls(destination, writer_allowlist, active_check_sets=active_check_sets)
+        return cls(
+            destination,
+            writer_allowlist,
+            active_check_sets=active_check_sets,
+            accepted_evaluation_catalog=accepted_evaluation_catalog,
+        )
 
     def render_status_report(self) -> str:
         connection = self._connect(readonly=True)
@@ -1235,6 +1418,7 @@ def _render_status_report(
                 "check_set_version": evidence["check_set_version"],
                 "evaluation_run_hash": evidence["evaluation_run_hash"],
                 "failing_checks": evidence["failing_checks"],
+                "catalog_backed": evidence["catalog_backed"],
                 "evidence_references": event["evidence_references"],
                 "timestamp": event["timestamp"],
                 "authoritative": False,
@@ -1257,13 +1441,16 @@ def _render_status_report(
             "missing events require external expected-event/writer checkpoints",
         ],
         "unresolved_lifecycle_contracts": [
-            "DEMOTED TARGET RUNG MAPPING: UNRESOLVED",
             "CHALLENGE INCUMBENT DEPLOYMENT IDENTITY FIELD: MISSING",
-            "ATOMIC SUCCESSION PROMOTED ACROSS TWO CANDIDATES: UNRESOLVED",
-            "REJECTED FAILED-GATE PURPOSE: UNRESOLVED",
-            "ADMISSION WITHHELD CAPACITY TARGET: UNRESOLVED",
-            "DEPLOYMENT REFRESH ENVELOPE: UNRESOLVED",
-            "EVALUATION RUN CANDIDATE SCOPE: UNRESOLVED",
+        ],
+        "ratified_lifecycle_contracts": [
+            "DEMOTED TARGET RUNG MAPPING: RESOLVED BY OD-2",
+            "ATOMIC SUCCESSION INTERIM REFUSAL: RATIFIED BY OD-4",
+            "REJECTED FAILED-GATE PURPOSE: RESOLVED BY OD-5",
+            "ADMISSION WITHHELD CAPACITY TARGET: RESOLVED BY OD-6",
+            "DEPLOYMENT REFRESH ENVELOPE: RESOLVED BY OD-7",
+            "EVALUATION RUN CANDIDATE SCOPE: RATIFIED BY OD-8",
+            "SAME-EPOCH EVALUATION REUSE: RATIFIED BY OD-10",
         ],
     }
     return json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True)

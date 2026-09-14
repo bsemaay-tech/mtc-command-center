@@ -224,11 +224,17 @@ class LifecycleLedgerTests(unittest.TestCase):
             )
         )
 
-    def new_ledger(self, name: str) -> LifecycleLedger:
+    def new_ledger(
+        self,
+        name: str,
+        *,
+        accepted_evaluation_catalog: tuple[str, ...] | None = None,
+    ) -> LifecycleLedger:
         return LifecycleLedger(
             Path(self.temp_dir.name) / f"{name}.sqlite",
             ALLOWLIST,
             active_check_sets=ACTIVE_CHECK_SETS,
+            accepted_evaluation_catalog=accepted_evaluation_catalog,
         )
 
     def append_candidate_fixture(
@@ -305,6 +311,9 @@ class LifecycleLedgerTests(unittest.TestCase):
         deployment_identity_hash: str = DEPLOYMENT_A,
         offset: int = 4,
         evaluation_run_hash: str | None = None,
+        failing_checks: tuple[dict[str, Any], ...] = (),
+        check_set_purpose: str | None = None,
+        catalog_backed: bool = False,
     ) -> None:
         ledger.append(
             event(
@@ -324,6 +333,9 @@ class LifecycleLedgerTests(unittest.TestCase):
             check_set_version=check_set_version,
             evaluation_run_hash=evaluation_run_hash
             or hashlib.sha256(event_id.encode()).hexdigest(),
+            failing_checks=failing_checks,
+            check_set_purpose=check_set_purpose,
+            catalog_backed=catalog_backed,
         )
 
     def build_to_rung(
@@ -413,6 +425,7 @@ class LifecycleLedgerTests(unittest.TestCase):
             "check_set_version": "testnet-eligibility.v1",
             "evaluation_run_hash": EVALUATION_A,
             "failing_checks": [],
+            "catalog_backed": False,
             "source_kind": "FIXTURE",
         }
         if include_purpose:
@@ -661,7 +674,7 @@ class LifecycleLedgerTests(unittest.TestCase):
 
         self.assertEqual(len(self.ledger.replay()), 1)
 
-    def test_rejected_purpose_is_unresolved_for_every_evidence_shape(self) -> None:
+    def test_rejected_requires_purpose_hash_and_failing_checks(self) -> None:
         self.append_to_candidate()
         rejected = event(
             event_id="event-rejected-a",
@@ -671,33 +684,82 @@ class LifecycleLedgerTests(unittest.TestCase):
             timestamp=BASE_TIME + timedelta(seconds=3),
         )
 
-        evidence_shapes = (
+        refusal_shapes = (
             {
+                "error": "CHECK_SET_PURPOSE_REQUIRED",
                 "check_set_version": None,
                 "evaluation_run_hash": EVALUATION_A,
                 "failing_checks": FAILING_CHECKS,
             },
             {
+                "error": "EVALUATION_RUN_HASH_REQUIRED",
                 "check_set_version": "worthiness.v1",
                 "evaluation_run_hash": None,
                 "failing_checks": FAILING_CHECKS,
+                "check_set_purpose": "worthiness",
             },
             {
+                "error": "FAILING_CHECKS_REQUIRED",
                 "check_set_version": "worthiness.v1",
                 "evaluation_run_hash": EVALUATION_A,
                 "failing_checks": (),
-            },
-            {
-                "check_set_version": "worthiness.v1",
-                "evaluation_run_hash": EVALUATION_A,
-                "failing_checks": FAILING_CHECKS,
+                "check_set_purpose": "worthiness",
             },
         )
-        for evidence in evidence_shapes:
+        for evidence in refusal_shapes:
+            error = evidence.pop("error")
             with self.subTest(evidence=evidence):
-                with self.assertRaisesRegex(ValueError, "REJECTED_PURPOSE_UNRESOLVED"):
+                with self.assertRaisesRegex(ValueError, error):
                     self.registrar.append(rejected, **evidence)
 
+        with self.assertRaisesRegex(ValueError, "CHECK_SET_PURPOSE_MISMATCH"):
+            self.registrar.append(
+                rejected,
+                check_set_version="promotion.v1",
+                evaluation_run_hash=EVALUATION_A,
+                failing_checks=FAILING_CHECKS,
+                check_set_purpose="promotion",
+            )
+
+        self.registrar.append(
+            rejected,
+            check_set_version="worthiness.v1",
+            evaluation_run_hash=EVALUATION_A,
+            failing_checks=FAILING_CHECKS,
+            check_set_purpose="worthiness",
+        )
+        replayed = self.ledger.replay()[-1]
+        self.assertEqual(observed_state(self.ledger.current_state(CANDIDATE_A)), "REJECTED")
+        self.assertEqual(replayed.check_set_purpose, "worthiness")
+        self.assertEqual(replayed.evaluation_run_hash, EVALUATION_A)
+        self.assertEqual(replayed.failing_checks, FAILING_CHECKS)
+
+    def test_rejected_reentry_returns_to_same_candidate(self) -> None:
+        self.append_to_candidate()
+        self.registrar.append(
+            event(
+                event_id="event-rejected-for-reentry",
+                event_type="REJECTED",
+                previous_state="CANDIDATE",
+                next_state="REJECTED",
+                timestamp=BASE_TIME + timedelta(seconds=3),
+            ),
+            check_set_version="worthiness.v1",
+            evaluation_run_hash=EVALUATION_A,
+            failing_checks=FAILING_CHECKS,
+            check_set_purpose="worthiness",
+        )
+        self.registrar.append(
+            event(
+                event_id="event-rejected-reentry",
+                event_type="RE_ENTRY",
+                previous_state="REJECTED",
+                next_state="CANDIDATE",
+                trigger="NEW_DATA_REGIME",
+                timestamp=BASE_TIME + timedelta(seconds=4),
+            ),
+            evaluation_run_hash=EVALUATION_B,
+        )
         self.assertEqual(observed_state(self.ledger.current_state(CANDIDATE_A)), "CANDIDATE")
 
     def test_every_ratified_reentry_trigger_returns_to_same_candidate(self) -> None:
@@ -1327,8 +1389,8 @@ class LifecycleLedgerTests(unittest.TestCase):
             with self.subTest(forbidden_inference=forbidden_inference):
                 self.assertNotIn(forbidden_inference, decoded)
         self.assertIn(
-            "ATOMIC SUCCESSION PROMOTED ACROSS TWO CANDIDATES: UNRESOLVED",
-            decoded["unresolved_lifecycle_contracts"],
+            "ATOMIC SUCCESSION INTERIM REFUSAL: RATIFIED BY OD-4",
+            decoded["ratified_lifecycle_contracts"],
         )
         for forbidden_record_state in (
             "SHADOW_ELIGIBLE",
@@ -1916,17 +1978,39 @@ class LifecycleLedgerTests(unittest.TestCase):
         self.build_to_rung(
             shadow, shadow_candidate, "ambiguous-shadow-capacity", "SHADOW_ELIGIBLE"
         )
+        self.append_authority_event(
+            shadow,
+            candidate_id=shadow_candidate,
+            event_id="shadow-capacity-withheld",
+            event_type="ADMISSION_WITHHELD_CAPACITY",
+            previous_state="SHADOW",
+            next_state="SHADOW",
+            writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
+            writer_id="admission-1",
+            check_set_version="paper-eligibility.v1",
+            offset=5,
+        )
+        self.assertEqual(observed_state(shadow.current_state(shadow_candidate)), "SHADOW")
+
+        wrong_capacity = self.new_ledger("wrong-shadow-capacity")
+        wrong_capacity_candidate = "QLC-20260913-wrong-shadow-capacity"
+        self.build_to_rung(
+            wrong_capacity,
+            wrong_capacity_candidate,
+            "wrong-shadow-capacity",
+            "SHADOW_ELIGIBLE",
+        )
         with self.assertRaisesRegex(ValueError, "ADMISSION_WITHHELD_TARGET_UNRESOLVED"):
             self.append_authority_event(
-                shadow,
-                candidate_id=shadow_candidate,
-                event_id="ambiguous-shadow-capacity-withheld",
+                wrong_capacity,
+                candidate_id=wrong_capacity_candidate,
+                event_id="wrong-shadow-capacity-withheld",
                 event_type="ADMISSION_WITHHELD_CAPACITY",
                 previous_state="SHADOW",
                 next_state="SHADOW",
                 writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
                 writer_id="admission-1",
-                check_set_version="paper-eligibility.v1",
+                check_set_version="promotion.v1",
                 offset=5,
             )
 
@@ -1955,6 +2039,7 @@ class LifecycleLedgerTests(unittest.TestCase):
                     "check_set_version": check_set_version,
                     "evaluation_run_hash": evaluation_run_hash,
                     "failing_checks": list(failing_checks),
+                    "catalog_backed": False,
                     "source_kind": "FIXTURE",
                 },
                 ensure_ascii=False,
@@ -2022,10 +2107,10 @@ class LifecycleLedgerTests(unittest.TestCase):
             finally:
                 connection.close()
 
-        rejected = self.new_ledger("rejected-purpose-unresolved")
-        rejected_candidate = "QLC-20260913-rejected-purpose-unresolved"
+        rejected = self.new_ledger("rejected-purpose-required")
+        rejected_candidate = "QLC-20260913-rejected-purpose-required"
         self.append_candidate_fixture(
-            rejected, rejected_candidate, "rejected-purpose-unresolved"
+            rejected, rejected_candidate, "rejected-purpose-required"
         )
         rejected_refused = False
         try:
@@ -2043,7 +2128,7 @@ class LifecycleLedgerTests(unittest.TestCase):
                 failing_checks=FAILING_CHECKS,
             )
         except ValueError as exc:
-            rejected_refused = str(exc) == "REJECTED_PURPOSE_UNRESOLVED"
+            rejected_refused = str(exc) == "CHECK_SET_PURPOSE_REQUIRED"
         inject_history(
             rejected,
             event(
@@ -2058,7 +2143,7 @@ class LifecycleLedgerTests(unittest.TestCase):
             evaluation_run_hash=EVALUATION_A,
             failing_checks=FAILING_CHECKS,
         )
-        with self.assertRaisesRegex(ValueError, "REJECTED_PURPOSE_UNRESOLVED"):
+        with self.assertRaisesRegex(ValueError, "CHECK_SET_PURPOSE_REQUIRED"):
             rejected.replay()
 
         stale = self.new_ledger("stale-evaluation-epoch")
@@ -2086,7 +2171,8 @@ class LifecycleLedgerTests(unittest.TestCase):
                 previous_state="RETIRED",
                 next_state="CANDIDATE",
                 candidate_id=stale_candidate,
-                trigger="NEW_DATA_REGIME",
+                reason="Exchange rules materially changed.",
+                trigger="OWNER_EXTERNAL_CHANGE",
                 timestamp=BASE_TIME + timedelta(seconds=6),
             ),
             evaluation_run_hash=EVALUATION_B,
@@ -2286,6 +2372,74 @@ class LifecycleLedgerTests(unittest.TestCase):
 
         for ledger in (capacity, paper, live):
             ledger.verify_integrity()
+        self.assertEqual(
+            [
+                (
+                    record.event_type,
+                    record.check_set_purpose,
+                    record.check_set_version,
+                    record.evaluation_run_hash,
+                )
+                for record in capacity.replay()[-2:]
+            ],
+            [
+                (
+                    "ADMISSION_WITHHELD_CAPACITY",
+                    "shadow_eligibility",
+                    "shadow-eligibility.v1",
+                    EVALUATION_A,
+                ),
+                (
+                    "SHADOW_ELIGIBLE",
+                    "shadow_eligibility",
+                    "shadow-eligibility.v1",
+                    EVALUATION_A,
+                ),
+            ],
+        )
+        self.assertEqual(observed_state(capacity.current_state(capacity_candidate)), "SHADOW")
+        self.assertEqual(
+            [
+                (
+                    record.event_type,
+                    record.check_set_purpose,
+                    record.check_set_version,
+                    record.evaluation_run_hash,
+                )
+                for record in paper.replay()[-2:]
+            ],
+            [
+                ("PAPER_ELIGIBLE", "paper_eligibility", "paper-eligibility.v1", EVALUATION_A),
+                (
+                    "TESTNET_ELIGIBLE",
+                    "testnet_live_candidate_eligibility",
+                    "testnet-eligibility.v1",
+                    EVALUATION_A,
+                ),
+            ],
+        )
+        self.assertEqual(observed_state(paper.current_state(paper_candidate)), "TESTNET")
+        self.assertEqual(
+            [
+                (
+                    record.event_type,
+                    record.check_set_purpose,
+                    record.check_set_version,
+                    record.evaluation_run_hash,
+                )
+                for record in live.replay()[-2:]
+            ],
+            [
+                (
+                    "LIVE_CANDIDATE",
+                    "live_candidate_eligibility",
+                    "live-candidate-eligibility.v1",
+                    EVALUATION_A,
+                ),
+                ("PROMOTED", "promotion", "promotion.v1", EVALUATION_A),
+            ],
+        )
+        self.assertEqual(observed_state(live.current_state(live_candidate)), "LIVE")
 
     def test_live_candidate_uses_a_distinct_check_set_purpose(self) -> None:
         self.build_to_rung(
@@ -2327,26 +2481,77 @@ class LifecycleLedgerTests(unittest.TestCase):
             offset=6,
         )
 
-    def test_deployment_refresh_attempt_exposes_unresolved_envelope(self) -> None:
+    def test_demoted_requires_strict_descent_and_keeps_deployment_identity(self) -> None:
+        candidate_id = "QLC-20260913-demoted"
+        self.build_to_rung(self.ledger, candidate_id, "demoted", "PROMOTED")
+        self.append_authority_event(
+            self.ledger,
+            candidate_id=candidate_id,
+            event_id="demoted-to-live-candidate",
+            event_type="DEMOTED",
+            previous_state="LIVE",
+            next_state="LIVE_CANDIDATE",
+            writer_class="MULTI_WORKER_SUPERVISOR",
+            writer_id="supervisor-1",
+            check_set_version="supervisor.v1",
+            offset=8,
+        )
+        state = self.ledger.current_state(candidate_id)
+        self.assertEqual(observed_state(state), "LIVE_CANDIDATE")
+        self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_A)
+
+        with self.assertRaisesRegex(ValueError, "DEMOTION_TARGET_RUNG_NOT_BELOW_CURRENT"):
+            self.append_authority_event(
+                self.ledger,
+                candidate_id=candidate_id,
+                event_id="demoted-sideways-refused",
+                event_type="DEMOTED",
+                previous_state="LIVE_CANDIDATE",
+                next_state="LIVE_CANDIDATE",
+                writer_class="MULTI_WORKER_SUPERVISOR",
+                writer_id="supervisor-1",
+                check_set_version="supervisor.v1",
+                offset=9,
+            )
+
+    def test_deployment_refresh_returns_to_frozen_under_new_composite(self) -> None:
         candidate_id = "QLC-20260913-deployment-refresh"
         self.build_to_rung(
             self.ledger, candidate_id, "deployment-refresh", "SHADOW_ELIGIBLE"
         )
         with self.assertRaisesRegex(
-            ValueError, "DEPLOYMENT_REFRESH_ENVELOPE_UNRESOLVED"
+            ValueError, "DEPLOYMENT_REFRESH_IDENTITY_INVALID"
         ):
-            self.append_authority_event(
-                self.ledger,
-                candidate_id=candidate_id,
-                event_id="deployment-refresh-readmission",
-                event_type="SHADOW_ELIGIBLE",
-                previous_state="SHADOW",
-                next_state="SHADOW",
-                writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
-                writer_id="admission-1",
-                check_set_version="shadow-eligibility.v1",
-                deployment_identity_hash=DEPLOYMENT_B,
+            self.registrar.append(
+                event(
+                    event_id="deployment-refresh-same-identity-refused",
+                    event_type="FROZEN",
+                    previous_state="SHADOW",
+                    next_state="FROZEN",
+                    candidate_id=candidate_id,
+                    package_hash=PACKAGE_A,
+                    deployment_identity_hash=DEPLOYMENT_A,
+                    evidence_references=("fixture://deployment-refresh/same-composite",),
+                    timestamp=BASE_TIME + timedelta(seconds=5),
+                )
             )
+        self.registrar.append(
+            event(
+                event_id="deployment-refresh-record",
+                event_type="FROZEN",
+                previous_state="SHADOW",
+                next_state="FROZEN",
+                candidate_id=candidate_id,
+                package_hash=PACKAGE_A,
+                deployment_identity_hash=DEPLOYMENT_B,
+                evidence_references=("fixture://deployment-refresh/new-composite",),
+                timestamp=BASE_TIME + timedelta(seconds=6),
+            )
+        )
+        state = self.ledger.current_state(candidate_id)
+        self.assertEqual(observed_state(state), "FROZEN")
+        self.assertEqual(state["package_hash"], PACKAGE_A)
+        self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
 
     def test_status_report_identifies_events_and_all_contract_blockers(self) -> None:
         self.append_capture()
@@ -2360,13 +2565,19 @@ class LifecycleLedgerTests(unittest.TestCase):
         self.assertEqual(
             set(report["unresolved_lifecycle_contracts"]),
             {
-                "DEMOTED TARGET RUNG MAPPING: UNRESOLVED",
                 "CHALLENGE INCUMBENT DEPLOYMENT IDENTITY FIELD: MISSING",
-                "ATOMIC SUCCESSION PROMOTED ACROSS TWO CANDIDATES: UNRESOLVED",
-                "REJECTED FAILED-GATE PURPOSE: UNRESOLVED",
-                "ADMISSION WITHHELD CAPACITY TARGET: UNRESOLVED",
-                "DEPLOYMENT REFRESH ENVELOPE: UNRESOLVED",
-                "EVALUATION RUN CANDIDATE SCOPE: UNRESOLVED",
+            },
+        )
+        self.assertEqual(
+            set(report["ratified_lifecycle_contracts"]),
+            {
+                "DEMOTED TARGET RUNG MAPPING: RESOLVED BY OD-2",
+                "ATOMIC SUCCESSION INTERIM REFUSAL: RATIFIED BY OD-4",
+                "REJECTED FAILED-GATE PURPOSE: RESOLVED BY OD-5",
+                "ADMISSION WITHHELD CAPACITY TARGET: RESOLVED BY OD-6",
+                "DEPLOYMENT REFRESH ENVELOPE: RESOLVED BY OD-7",
+                "EVALUATION RUN CANDIDATE SCOPE: RATIFIED BY OD-8",
+                "SAME-EPOCH EVALUATION REUSE: RATIFIED BY OD-10",
             },
         )
 
@@ -2451,6 +2662,7 @@ class LifecycleLedgerTests(unittest.TestCase):
                     "check_set_version",
                     "evaluation_run_hash",
                     "failing_checks",
+                    "catalog_backed",
                     "source_kind",
                 }
                 for item in evidence
@@ -2560,20 +2772,80 @@ class LifecycleLedgerTests(unittest.TestCase):
             ):
                 replay.replay()
 
-    def test_deployment_refresh_class_is_explicit_at_every_deep_state(self) -> None:
+    def test_catalog_backed_claim_fails_closed_without_catalog(self) -> None:
+        candidate_id = "QLC-20260913-catalog-backed"
+        self.append_frozen_fixture(self.ledger, candidate_id, "catalog-backed")
+        with self.assertRaisesRegex(
+            ValueError, "CATALOG_BACKED_EVIDENCE_WITHOUT_ACCEPTED_CATALOG"
+        ):
+            self.append_authority_event(
+                self.ledger,
+                candidate_id=candidate_id,
+                event_id="catalog-backed-without-catalog",
+                event_type="SHADOW_ELIGIBLE",
+                previous_state="FROZEN",
+                next_state="SHADOW",
+                writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
+                writer_id="admission-1",
+                check_set_version="shadow-eligibility.v1",
+                evaluation_run_hash=EVALUATION_A,
+                catalog_backed=True,
+            )
+
+    def test_configured_catalog_refuses_absent_hash_and_accepts_present_hash(self) -> None:
+        ledger = self.new_ledger(
+            "configured-catalog",
+            accepted_evaluation_catalog=(EVALUATION_A,),
+        )
+        accepted_candidate = "QLC-20260913-catalog-accepted"
+        self.append_frozen_fixture(ledger, accepted_candidate, "catalog-accepted")
+        self.append_authority_event(
+            ledger,
+            candidate_id=accepted_candidate,
+            event_id="catalog-present-shadow",
+            event_type="SHADOW_ELIGIBLE",
+            previous_state="FROZEN",
+            next_state="SHADOW",
+            writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
+            writer_id="admission-1",
+            check_set_version="shadow-eligibility.v1",
+            evaluation_run_hash=EVALUATION_A,
+            catalog_backed=True,
+        )
+        self.assertEqual(observed_state(ledger.current_state(accepted_candidate)), "SHADOW")
+
+        refused_candidate = "QLC-20260913-catalog-refused"
+        self.append_frozen_fixture(
+            ledger,
+            refused_candidate,
+            "catalog-refused",
+            package_hash=PACKAGE_B,
+        )
+        with self.assertRaisesRegex(
+            ValueError, "EVALUATION_RUN_HASH_NOT_IN_ACCEPTED_CATALOG"
+        ):
+            self.append_authority_event(
+                ledger,
+                candidate_id=refused_candidate,
+                event_id="catalog-absent-shadow",
+                event_type="SHADOW_ELIGIBLE",
+                previous_state="FROZEN",
+                next_state="SHADOW",
+                writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
+                writer_id="admission-1",
+                check_set_version="shadow-eligibility.v1",
+                package_hash=PACKAGE_B,
+                deployment_identity_hash=DEPLOYMENT_B,
+                evaluation_run_hash=EVALUATION_B,
+            )
+
+    def test_deployment_refresh_registrar_path_is_available_at_every_deep_state(
+        self,
+    ) -> None:
         cases = (
             (
                 "TESTNET_ELIGIBLE",
                 "TESTNET",
-                "TESTNET_ELIGIBLE",
-                "TESTNET",
-                "ENVIRONMENT_ADMISSION_AUTHORITY",
-                "admission-1",
-                "testnet-eligibility.v1",
-            ),
-            (
-                "LIVE_CANDIDATE",
-                "LIVE_CANDIDATE",
                 "LIVE_CANDIDATE",
                 "LIVE_CANDIDATE",
                 "ENVIRONMENT_ADMISSION_AUTHORITY",
@@ -2581,13 +2853,22 @@ class LifecycleLedgerTests(unittest.TestCase):
                 "live-candidate-eligibility.v1",
             ),
             (
-                "PROMOTED",
-                "LIVE",
+                "LIVE_CANDIDATE",
+                "LIVE_CANDIDATE",
                 "PROMOTED",
                 "LIVE",
                 "PROMOTION_AUTHORITY",
                 "promotion-1",
                 "promotion.v1",
+            ),
+            (
+                "PROMOTED",
+                "LIVE",
+                "SUSPENDED",
+                "SUSPENDED",
+                "MULTI_WORKER_SUPERVISOR",
+                "supervisor-1",
+                "supervisor.v1",
             ),
         )
         for build_target, state, event_type, next_state, writer_class, writer_id, check_set in cases:
@@ -2603,7 +2884,7 @@ class LifecycleLedgerTests(unittest.TestCase):
                     self.append_authority_event(
                         ledger,
                         candidate_id=candidate_id,
-                        event_id=f"refresh-{state.lower()}-attempt",
+                        event_id=f"refresh-{state.lower()}-authority-attempt",
                         event_type=event_type,
                         previous_state=state,
                         next_state=next_state,
@@ -2613,6 +2894,36 @@ class LifecycleLedgerTests(unittest.TestCase):
                         deployment_identity_hash=DEPLOYMENT_B,
                         offset=9,
                     )
+                with self.assertRaisesRegex(ValueError, "DEPLOYMENT_REFRESH_IDENTITY_INVALID"):
+                    Registrar(ledger, "registrar-1").append(
+                        event(
+                            event_id=f"refresh-{state.lower()}-same-identity",
+                            event_type="FROZEN",
+                            previous_state=state,
+                            next_state="FROZEN",
+                            candidate_id=candidate_id,
+                            package_hash=PACKAGE_A,
+                            deployment_identity_hash=DEPLOYMENT_A,
+                            evidence_references=(f"fixture://refresh/{state.lower()}/same",),
+                            timestamp=BASE_TIME + timedelta(seconds=10),
+                        )
+                    )
+                Registrar(ledger, "registrar-1").append(
+                    event(
+                        event_id=f"refresh-{state.lower()}-record",
+                        event_type="FROZEN",
+                        previous_state=state,
+                        next_state="FROZEN",
+                        candidate_id=candidate_id,
+                        package_hash=PACKAGE_A,
+                        deployment_identity_hash=DEPLOYMENT_B,
+                        evidence_references=(f"fixture://refresh/{state.lower()}",),
+                        timestamp=BASE_TIME + timedelta(seconds=11),
+                    )
+                )
+                refreshed = ledger.current_state(candidate_id)
+                self.assertEqual(observed_state(refreshed), "FROZEN")
+                self.assertEqual(refreshed["deployment_identity_hash"], DEPLOYMENT_B)
 
         suspended = self.new_ledger("deployment-refresh-suspended")
         suspended_candidate = "QLC-20260913-refresh-suspended"
@@ -2635,8 +2946,38 @@ class LifecycleLedgerTests(unittest.TestCase):
             offset=5,
         )
         with self.subTest(state="SUSPENDED"):
+            with self.assertRaisesRegex(ValueError, "DEPLOYMENT_REFRESH_ENVELOPE_UNRESOLVED"):
+                self.append_authority_event(
+                    suspended,
+                    candidate_id=suspended_candidate,
+                    event_id="refresh-suspended-authority-attempt",
+                    event_type="RESUMED",
+                    previous_state="SUSPENDED",
+                    next_state="SHADOW",
+                    writer_class="MULTI_WORKER_SUPERVISOR",
+                    writer_id="supervisor-1",
+                    check_set_version="supervisor.v1",
+                    deployment_identity_hash=DEPLOYMENT_B,
+                    offset=6,
+                )
+            Registrar(suspended, "registrar-1").append(
+                event(
+                    event_id="refresh-suspended-recorded",
+                    event_type="FROZEN",
+                    previous_state="SUSPENDED",
+                    next_state="FROZEN",
+                    candidate_id=suspended_candidate,
+                    package_hash=PACKAGE_A,
+                    deployment_identity_hash=DEPLOYMENT_B,
+                    evidence_references=("fixture://refresh/suspended",),
+                    timestamp=BASE_TIME + timedelta(seconds=7),
+                )
+            )
+            self.assertEqual(
+                observed_state(suspended.current_state(suspended_candidate)), "FROZEN"
+            )
             with self.assertRaisesRegex(
-                ValueError, "DEPLOYMENT_REFRESH_ENVELOPE_UNRESOLVED"
+                ValueError, "RESUME_TARGET_RUNG_MISMATCH|PREVIOUS_STATE_MISMATCH"
             ):
                 self.append_authority_event(
                     suspended,
@@ -2694,6 +3035,7 @@ class LifecycleLedgerTests(unittest.TestCase):
                 "check_set_version": "worthiness.v1",
                 "evaluation_run_hash": None,
                 "failing_checks": [],
+                "catalog_backed": False,
                 "source_kind": "FIXTURE",
             },
             ensure_ascii=False,
@@ -3665,7 +4007,8 @@ class LifecycleLedgerTests(unittest.TestCase):
                 previous_state="RETIRED",
                 next_state="CANDIDATE",
                 candidate_id=candidate_id,
-                trigger="NEW_DATA_REGIME",
+                reason="Exchange rules materially changed.",
+                trigger="OWNER_EXTERNAL_CHANGE",
                 evidence_references=("fixture://retired/reentry/fresh",),
                 timestamp=BASE_TIME + timedelta(seconds=6),
             ),
@@ -3720,6 +4063,77 @@ class LifecycleLedgerTests(unittest.TestCase):
         state = ledger.current_state(candidate_id)
         self.assertEqual(state["package_hash"], PACKAGE_B)
         self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
+
+    def test_retired_reentry_requires_owner_external_change_reason(self) -> None:
+        ledger = self.new_ledger("retired-reentry-trigger")
+        candidate_id = "QLC-20260913-retired-trigger"
+        self.build_to_rung(ledger, candidate_id, "retired-trigger", "SHADOW_ELIGIBLE")
+        self.append_authority_event(
+            ledger,
+            candidate_id=candidate_id,
+            event_id="retired-trigger-record",
+            event_type="RETIRED",
+            previous_state="SHADOW",
+            next_state="RETIRED",
+            writer_class="MULTI_WORKER_SUPERVISOR",
+            writer_id="supervisor-1",
+            check_set_version="supervisor.v1",
+            offset=5,
+        )
+        registrar = Registrar(ledger, "registrar-1")
+        for label, trigger, reason in (
+            ("ordinary-trigger", "NEW_DATA_REGIME", "New data exists."),
+            ("not-one-sentence", "OWNER_EXTERNAL_CHANGE", "One. Two."),
+        ):
+            with self.subTest(label=label):
+                with self.assertRaisesRegex(
+                    ValueError, "RETIRED_REENTRY_EXTERNAL_CHANGE_REASON_REQUIRED"
+                ):
+                    registrar.append(
+                        event(
+                            event_id=f"retired-reentry-{label}",
+                            event_type="RE_ENTRY",
+                            previous_state="RETIRED",
+                            next_state="CANDIDATE",
+                            candidate_id=candidate_id,
+                            reason=reason,
+                            trigger=trigger,
+                            evidence_references=(f"fixture://retired/{label}",),
+                            timestamp=BASE_TIME + timedelta(seconds=6),
+                        ),
+                        evaluation_run_hash=hashlib.sha256(label.encode()).hexdigest(),
+                    )
+
+        parked = self.new_ledger("owner-external-nonretired")
+        parked_candidate = "QLC-20260913-owner-external-nonretired"
+        self.append_candidate_fixture(
+            parked, parked_candidate, "owner-external-nonretired"
+        )
+        Registrar(parked, "registrar-1").append(
+            event(
+                event_id="owner-external-nonretired-parked",
+                event_type="PARKED",
+                previous_state="CANDIDATE",
+                next_state="PARKED",
+                candidate_id=parked_candidate,
+                timestamp=BASE_TIME + timedelta(seconds=3),
+            )
+        )
+        with self.assertRaisesRegex(ValueError, "REENTRY_TRIGGER_INVALID"):
+            Registrar(parked, "registrar-1").append(
+                event(
+                    event_id="owner-external-nonretired-reentry",
+                    event_type="RE_ENTRY",
+                    previous_state="PARKED",
+                    next_state="CANDIDATE",
+                    candidate_id=parked_candidate,
+                    reason="External rule changed.",
+                    trigger="OWNER_EXTERNAL_CHANGE",
+                    evidence_references=("fixture://owner-external/nonretired",),
+                    timestamp=BASE_TIME + timedelta(seconds=4),
+                ),
+                evaluation_run_hash=EVALUATION_B,
+            )
 
     def test_second_promoted_candidate_requires_atomic_succession_envelope(self) -> None:
         ledger = self.new_ledger("second-promotion")
@@ -3958,6 +4372,7 @@ class LifecycleLedgerTests(unittest.TestCase):
                         check_set_version="worthiness.v1",
                         evaluation_run_hash=EVALUATION_A,
                         failing_checks=failing_checks,
+                        check_set_purpose="worthiness",
                     )
 
         accepted = self.new_ledger("canonical-failing-checks")
@@ -3965,22 +4380,22 @@ class LifecycleLedgerTests(unittest.TestCase):
         self.append_candidate_fixture(
             accepted, accepted_candidate, "canonical-failing-checks"
         )
-        with self.assertRaisesRegex(ValueError, "REJECTED_PURPOSE_UNRESOLVED"):
-            Registrar(accepted, "registrar-1").append(
-                event(
-                    event_id="canonical-failing-checks-rejected",
-                    event_type="REJECTED",
-                    previous_state="CANDIDATE",
-                    next_state="REJECTED",
-                    candidate_id=accepted_candidate,
-                    timestamp=BASE_TIME + timedelta(seconds=3),
-                ),
-                check_set_version="worthiness.v1",
-                evaluation_run_hash=EVALUATION_A,
-                failing_checks=FAILING_CHECKS,
-            )
+        Registrar(accepted, "registrar-1").append(
+            event(
+                event_id="canonical-failing-checks-rejected",
+                event_type="REJECTED",
+                previous_state="CANDIDATE",
+                next_state="REJECTED",
+                candidate_id=accepted_candidate,
+                timestamp=BASE_TIME + timedelta(seconds=3),
+            ),
+            check_set_version="worthiness.v1",
+            evaluation_run_hash=EVALUATION_A,
+            failing_checks=FAILING_CHECKS,
+            check_set_purpose="worthiness",
+        )
         self.assertEqual(
-            observed_state(accepted.current_state(accepted_candidate)), "CANDIDATE"
+            observed_state(accepted.current_state(accepted_candidate)), "REJECTED"
         )
 
     def test_report_uses_event_next_state_and_true_derived_current_state(self) -> None:
@@ -4109,7 +4524,8 @@ class LifecycleLedgerTests(unittest.TestCase):
                     previous_state="RETIRED",
                     next_state="CANDIDATE",
                     candidate_id=candidate_id,
-                    trigger="NEW_DATA_REGIME",
+                    reason="Exchange rules materially changed.",
+                    trigger="OWNER_EXTERNAL_CHANGE",
                     evidence_references=(f"fixture://{name}/fresh-evaluation",),
                     timestamp=BASE_TIME + timedelta(seconds=6),
                 ),
@@ -4445,31 +4861,7 @@ class LifecycleLedgerTests(unittest.TestCase):
                             **append_kwargs,
                         )
 
-    def test_underspecified_lifecycle_contracts_fail_closed_and_stay_visible(self) -> None:
-        demotion_ledger = self.new_ledger("demotion-unresolved")
-        demotion_candidate = "QLC-20260912-demotion-unresolved"
-        self.build_to_rung(
-            demotion_ledger,
-            demotion_candidate,
-            "demotion-unresolved",
-            "PROMOTED",
-        )
-        with self.assertRaisesRegex(
-            ValueError, "DEMOTION_TARGET_RUNG_MAPPING_UNRESOLVED"
-        ):
-            self.append_authority_event(
-                demotion_ledger,
-                candidate_id=demotion_candidate,
-                event_id="demotion-unresolved-record",
-                event_type="DEMOTED",
-                previous_state="LIVE",
-                next_state="SHADOW",
-                writer_class="MULTI_WORKER_SUPERVISOR",
-                writer_id="supervisor-1",
-                check_set_version="supervisor.v1",
-                offset=9,
-            )
-
+    def test_unresolved_challenge_contract_fails_closed_and_stays_visible(self) -> None:
         challenge_ledger = self.new_ledger("challenge-missing-identity")
         challenge_candidate = "QLC-20260912-challenge-missing-identity"
         self.append_frozen_fixture(
@@ -4495,13 +4887,19 @@ class LifecycleLedgerTests(unittest.TestCase):
         self.assertEqual(
             set(report["unresolved_lifecycle_contracts"]),
             {
-                "DEMOTED TARGET RUNG MAPPING: UNRESOLVED",
                 "CHALLENGE INCUMBENT DEPLOYMENT IDENTITY FIELD: MISSING",
-                "ATOMIC SUCCESSION PROMOTED ACROSS TWO CANDIDATES: UNRESOLVED",
-                "REJECTED FAILED-GATE PURPOSE: UNRESOLVED",
-                "ADMISSION WITHHELD CAPACITY TARGET: UNRESOLVED",
-                "DEPLOYMENT REFRESH ENVELOPE: UNRESOLVED",
-                "EVALUATION RUN CANDIDATE SCOPE: UNRESOLVED",
+            },
+        )
+        self.assertEqual(
+            set(report["ratified_lifecycle_contracts"]),
+            {
+                "DEMOTED TARGET RUNG MAPPING: RESOLVED BY OD-2",
+                "ATOMIC SUCCESSION INTERIM REFUSAL: RATIFIED BY OD-4",
+                "REJECTED FAILED-GATE PURPOSE: RESOLVED BY OD-5",
+                "ADMISSION WITHHELD CAPACITY TARGET: RESOLVED BY OD-6",
+                "DEPLOYMENT REFRESH ENVELOPE: RESOLVED BY OD-7",
+                "EVALUATION RUN CANDIDATE SCOPE: RATIFIED BY OD-8",
+                "SAME-EPOCH EVALUATION REUSE: RATIFIED BY OD-10",
             },
         )
 
