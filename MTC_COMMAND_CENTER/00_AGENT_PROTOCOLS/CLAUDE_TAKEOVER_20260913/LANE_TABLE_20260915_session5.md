@@ -286,3 +286,17 @@
 | CT13 | commit after the Gemini chain (records for c/B0/a/b + owner answers already committed as `fc5dfcac`) |
 
 **Executing provider workers at 15:27Z: 1 (Gemini chain, 4 roots, agy.exe).**
+
+## 16:30Z (session 5 — after the O9FIX Gemini attempt and the extra blocks)
+| Lane | State |
+|---|---|
+| O9FIX (a) | DONE `153edee9`; Gemini delta attempt 1 PASS-WITH-NITS by content, VOIDED (503) → SUPPLEMENTAL; K-06 (test regex) deferred to the Wednesday reviewer, K-07 (lane sums hashed CRLF checkout) recorded; lane-3 brief prose fixed |
+| P012INTAKE (b) | DONE `004a0711`; Gemini detection in the 16:17Z chain (first root) |
+| P027GEM | attempt 3 second in the 16:17Z chain |
+| DD06PREP (B0) | PREPARED `69377d6b`; both Gemini attempts voided-but-complete (PASS-WITH-NITS at slice 2); ask "probe steps approved" |
+| P026PREVIEW (new) | NONACCEPTING T-A drill preview on `d81b07f6` DONE (D-4..D-7; blob-verified); recorded under `P026_REPAIR_20260915/DRILLS_TA_PREVIEW_20260915/` in CT13 |
+| P021 | gap table + S2 options packet + v1.6 fold note DONE; S2 answers = owner morning ask |
+| OPUSQ | worktree HEADs 4/4 verified; lane-3 brief rev'd; lane-4 brief pinned `d81b07f6` |
+| CT13 | `17cb7606` pushed 16:24Z (fourth wave, 32 paths); next commit after the chain |
+
+**Executing provider workers at 16:30Z: 1 (Gemini chain, 2 roots, waiting for a clean probe).**

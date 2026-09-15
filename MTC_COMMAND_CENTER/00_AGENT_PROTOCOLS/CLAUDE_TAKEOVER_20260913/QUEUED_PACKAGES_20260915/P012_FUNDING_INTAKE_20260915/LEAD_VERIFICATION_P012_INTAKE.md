@@ -21,3 +21,6 @@ No production packet; no evidence kind the export tool accepts; no oracle price;
 Gemini DETECTION review (`P012_INTAKE_GEMINI`, queued in the 15:26Z chain); exact Opus / Sol only if the owner wants this half reviewed as a candidate (it is documentary-adjacent engineering under P0-12; the P0-12 Lead lane decides D-1..D-6 first). The Lead never accepts its own code.
 
 Recorded by Claude Opus 5 Lead (session 5, `03c6c8`).
+
+## Slice 2 — 2026-09-15 16:52Z (`65c4bc40`, test-only)
+Gemini detection attempt 1 on `004a0711` (voided by the CLI 503 after a complete PASS-WITH-NITS report; `P012_INTAKE_GEMINI/LEAD_ADJUDICATION.md`): NIT-01 = the determinism test's clock assertion exempted `binding_packet_draft.json` through a vacuous disjunction → tightened to "every `YYYY-MM-DDT` prefix in every output is the capture day `2026-09-14T`"; RED arm `LEAD_RED_ARM_nit01_wall_clock.txt` (wall-clock mutant: 1 failed / 6 passed; the old assertion would have passed it); GREEN 7 passed (`C:/bt_intake_nit1`); Ruff `LEAD_RUFF_nit01.txt` clean; guard `LEAD_GUARD_nit01.txt` PASS; pushed. NIT-02 (D-6 completeness rule: end-boundary latency, expected count) folded into the design note's D-6 row as owner options — no adapter change. Adapter bytes unchanged since `004a0711`.

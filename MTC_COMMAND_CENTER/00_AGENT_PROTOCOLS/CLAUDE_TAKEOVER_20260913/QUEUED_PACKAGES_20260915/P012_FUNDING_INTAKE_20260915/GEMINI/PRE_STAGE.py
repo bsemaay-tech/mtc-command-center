@@ -37,7 +37,7 @@ cap = subprocess.run(["git", "-C", "C:/tmp/P1CAP_20260914", "-c", "safe.director
 for n in ("binding_packet_draft.json", "retained_rows_expected.json", "intake_gap_report.json"):
     shutil.copy2(RUN / "intake_r1" / n, DST / "sources" / f"r1_{n}")
 shutil.copy2(pathlib.Path("C:/tmp/CLAUDE_P0_RUN_20260913/P012_PATH1_REAL_CAPTURE_20260915/r1/DERIVED_EXTRACTION.json"), DST / "sources/r1_DERIVED_EXTRACTION.json")
-for n in ("LEAD_PYTEST_focused.txt", "LEAD_RUFF.txt", "LEAD_GUARD.txt", "LEAD_RED_ARM_fabrication_fence.txt", "LEAD_INTAKE_r1_stdout.txt"):
+for n in ("LEAD_PYTEST_focused.txt", "LEAD_RUFF.txt", "LEAD_GUARD.txt", "LEAD_RED_ARM_fabrication_fence.txt", "LEAD_INTAKE_r1_stdout.txt", "LEAD_RED_ARM_nit01_wall_clock.txt", "LEAD_RUFF_nit01.txt", "LEAD_GUARD_nit01.txt"):
     p = RUN / n
     if p.exists(): shutil.copy2(p, DST / "sources" / n)
 dec = (CT13 / "DECISIONS.md").read_text(encoding="utf-8").split("\n")

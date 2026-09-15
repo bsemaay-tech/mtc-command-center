@@ -102,7 +102,7 @@ Nothing runs until you answer; the Lead recommends A first (cheap, ~5 minutes, n
 2. **P0-27 CI additions (raised ~09:35Z):** "go" = the Lead opens ONE PR adding to `research-gates.yml` the shared contracts tests, the three P030 checkers and a Ruff step (PR only; the ruleset's required contexts stay the two named today); "later" = leave CI as is; the reconciliation already recommends acceptance of the day-one scope as-is.
 Also open on the owner's side (his acts, not decisions): formal acceptance of WP-P0-27 day-one scope; the P0-29 ChatGPT research output; "keys added" (freellmapi).
 
-## 11:45Z — the two 10:00Z one-liners are ANSWERED ("A", "go"); e-mail: "yes but it is in bsemaay@gmail.com" (no connector reaches that account → forward the GitHub "Run failed: CI" mail to the connected address when convenient; optional)
+## 11:45Z — the two 10:00Z one-liners are ANSWERED ("A", "go"); e-mail: "yes but it is in <owner's other mailbox, not the connector account>" (no connector reaches that account → forward the GitHub "Run failed: CI" mail to the connected address when convenient; optional)
 ## NEW, not urgent (P0-29 research reconciliation, `P029_RESEARCH_20260915/P029_RESEARCH_RECONCILIATION_20260915.md`)
 1. **DD-01:** open `https://app.hyperliquid.xyz/terms` (June 15, 2026 text; Lead capture sha256 `28df55bf…`), read it → "ToS read — HOLD stands" / "ToS read — proceed to the next gate" / "question: …".
 2. **DD-05:** fallback candidate for the record → "OKX" / "Binance" / "Bybit" / "none yet" (Lead reading: OKX has trade-only keys + IP allow-list + sub-accounts + demo documented).

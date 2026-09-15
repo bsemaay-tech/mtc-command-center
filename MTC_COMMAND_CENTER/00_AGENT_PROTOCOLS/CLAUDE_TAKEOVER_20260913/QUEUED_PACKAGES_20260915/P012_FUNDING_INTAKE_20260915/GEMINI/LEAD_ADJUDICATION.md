@@ -1,0 +1,20 @@
+# LEAD_ADJUDICATION — P012_INTAKE_GEMINI (gemini-3.8-flash-high DETECTION review of the Lead-written WP-P0-12 funding intake adapter, non-accepting half) — 2026-09-15 16:52Z
+
+**Formal outcome: NO COUNTED ATTEMPT.** Attempt 1 (HEAD `004a0711`, 16:34:19-16:49:38Z, 919 s) ended with the CLI envelope `status: ERROR` AFTER a complete report — the 6th of 6 full calls tonight with that pattern. Recovered from `%TEMP%\gemini_wrapper_failures\20260915T164938Z_43492.stdout.jsonl` and kept SUPPLEMENTAL: `RECOVERED_RESPONSE_attempt1_VOIDED.md` (21 350 chars, sentinel + JSON), `RECOVERED_ENVELOPE_attempt1_VOIDED.json`, `NATIVE_READ_AUDIT_attempt1_VOIDED.json` (23 native reads, 0 outside the packet, 0 display mismatches; 11 "no displayed range/result" entries = grep/continuation calls the audit cannot pair, not reads outside the packet). Run files archived under `FAILED_ATTEMPTS/attempt1/`.
+
+| Attempt | HEAD | Verdict by content | Findings |
+|---|---|---|---|
+| 1 | `004a0711` (packet 17 files) | **PASS-WITH-NITS** — `fabricated_fields: []`; field-by-field audit of the r1 binding packet (33 keys: COPIED / TOOL-RULE / DERIVED-LABELLED / UNRESOLVED, none fabricated; the back-derived oracle price `78758.6` appears nowhere); design-note claims verified against `export_mtc_funding.py` lines (no `--mode`, `ACCEPTED_EVIDENCE_KINDS = ("SYNTHETIC_FIXTURE",)`, refusal `CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE`, D-1..D-6 each a real gap); leakage CLEAN (short address only; stdlib only; no env/network); 7 tests reviewed + the fabrication-fence RED arm confirmed; scope = exactly two new files; "accepting half present: zero" | NIT-01 vacuous clock assertion; NIT-02 D-6 completeness rule ignores end-boundary latency and expected event count |
+
+## Findings → disposition
+| # | Finding | Lead check | Disposition |
+|---|---|---|---|
+| NIT-01 | `test_funding_intake_adapter.py:201-203`: `assert (b"2026-09-15T" not in raw or name == "binding_packet_draft.json")` short-circuits to True for the packet file | correct — the exemption had no reason (no output carries a 2026-09-15 string); a wall-clock stamp leaking into the packet would have passed | **FIXED as slice 2 = commit `65c4bc40`** (test-only): every `YYYY-MM-DDT` prefix in every output must be the capture window's day (`2026-09-14T`); RED arm `LEAD_RED_ARM_nit01_wall_clock.txt` (mutant stamping `generated_at=2026-09-15T17:00:00+00:00` → 1 failed / 6 passed; old assertion would have passed it); GREEN 7 passed; Ruff clean; guard PASS; pushed. Root re-pinned to `65c4bc40`, packet re-staged (20 files), attempt 2 queued behind P027 attempt 3 |
+| NIT-02 | `completeness()` (`funding_intake_adapter.py:145-171`) checks only hour-aligned bounds + two byte-identical passes: a payment stamped `19:00:00.041Z` for the 18-19 interval would fall outside a `[15:00, 19:00)` window yet `complete` stays `True`; the expected per-hour event count is not checked (r1 has 2 events in 4 hours because the position opened ~16:03Z) | correct as a description of the proposed rule; the design note already lists D-6 as OPEN and D-3 (timestamp authority) as the venue-offset question | **NO CODE CHANGE** (the rule is labelled `proposed D-6`, the adapter is non-accepting); the two points are folded into the design note's D-6 as options (end-boundary tolerance of the venue's +31..+60 ms offset; expected-count witness needs the position-open time, which the funding rows do not carry) — owner decision, not a Lead choice |
+
+## What the corroboration establishes / does not
+- By content: nothing in the intake is invented; every unfillable field is labelled `UNRESOLVED:D-n`; the accepting half does not exist in the diff (the reviewer lists the five changes it would take, none present). This matches the Lead's own `P012_FUNDING_INTAKE_DESIGN_20260915.md`.
+- Uncounted (wrapper-voided); Lead-built, never Lead-accepted; the branch stays `NONACCEPTING_INTAKE_DRAFT` until the owner's D-1..D-6 words and a T1 roster read.
+- Route: 6/6 full Gemini calls tonight voided after complete reports; see [[route-lessons-2026-09-15-night]].
+
+Recorded by Claude Opus 5 Lead (session 5, `03c6c8`).

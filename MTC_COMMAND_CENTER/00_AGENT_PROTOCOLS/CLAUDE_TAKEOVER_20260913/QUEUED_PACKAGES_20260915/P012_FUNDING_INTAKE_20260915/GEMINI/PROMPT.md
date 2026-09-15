@@ -15,3 +15,5 @@ TASK.
 7. **What would make this the accepting half — and is any of it present?** List every change the export tool would need (new evidence kind, digest domain, `--mode`) and confirm none of it is in this diff.
 
 OUTPUT (under 2500 words): (a) the field-by-field fabrication table; (b) findings numbered with severity REQUIRED / NIT and file:line (packet-relative); a REQUIRED finding means REQUEST_CHANGES; (c) EXACT read coverage with ranges and continuations; (d) nonempty NOT VERIFIED (no execution); (e) one fenced JSON object {"part":"P012_INTAKE_GEMINI","verdict":"PASS or PASS-WITH-NITS or REQUEST_CHANGES","evidence_class":"SUPPLEMENTAL_UNEXECUTED","fabricated_fields":[...],"findings":[...],"required_scope_unread":[...]}. Never force a verdict. End with the helper's GEMINI_READ_ONLY_OK sentinel.
+
+NOTE (attempt 2, HEAD 65c4bc40): since attempt 1 (HEAD 004a0711, voided by the CLI) only `subject/test_funding_intake_adapter.py` changed — the determinism test's no-wall-clock assertion was tightened per your NIT-01 (`sources/LEAD_RED_ARM_nit01_wall_clock.txt` shows the mutant it now catches). Re-check that arm; everything else is the same bytes.
