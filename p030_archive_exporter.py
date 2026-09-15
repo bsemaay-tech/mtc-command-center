@@ -106,6 +106,10 @@ def _utc_z(value: str) -> str:
         ) from exc
     if parsed.utcoffset() is None:
         _refuse("invalid_timestamp", "exported_at_utc must be a caller-supplied UTC Z timestamp")
+    # The backup adapter's whole-second convention (p030_closed_partition_backup_adapter.py
+    # `_utc_z`: "must use whole seconds"); a sub-second receipt timestamp would be refused there.
+    if parsed.microsecond:
+        _refuse("invalid_timestamp", "exported_at_utc must use whole seconds")
     return value
 
 
@@ -152,7 +156,15 @@ def _decode_source_line(raw_line: bytes, line_number: int) -> dict[str, Any]:
         ) from exc
     if type(record) is not dict:
         _refuse("source_line_invalid", f"source line {line_number} is not a JSON object")
-    _reject_nonfinite_numbers(record)
+    try:
+        # json.loads turns an overflowing token such as 1e999 into inf without consulting
+        # parse_constant; the walk below is the only guard, so its ValueError must surface
+        # as the same refusal code as a NaN/Infinity literal.
+        _reject_nonfinite_numbers(record)
+    except ValueError as exc:
+        raise ExportRefused(
+            "source_line_invalid", f"source line {line_number} carries a non-finite number"
+        ) from exc
     try:
         canonical = (
             json.dumps(
@@ -272,7 +284,12 @@ def export_partition(
         ).encode("utf-8")
         for row in rows
     )
-    dataset_hash = dataset_content_hash(_descriptor(rows), rows)
+    try:
+        # whole-slice validations (window ordering, duplicate observation ids, ...) live in the
+        # contracts module; their refusal must carry the exporter's code, never leak raw
+        dataset_hash = dataset_content_hash(_descriptor(rows), rows)
+    except ContractRefused as exc:
+        raise ExportRefused("contract_refused", str(exc)) from exc
     try:
         target_jsonl.parent.mkdir(parents=True, exist_ok=True)
         with target_jsonl.open("xb") as handle:

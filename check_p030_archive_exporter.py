@@ -259,5 +259,208 @@ class ArchiveExporterTests(unittest.TestCase):
             self.assertEqual(caught.exception.code, "identity_mismatch")
 
 
+
+class ArchiveExporterRefusalCodeTests(unittest.TestCase):
+    """One explicit negative test per ExportRefused code (Gemini K-01..K-04, O9FIX 2026-09-15).
+
+    Codes covered here: invalid_timestamp (incl. the whole-second rule, K-03), source_outside_root,
+    source_unreadable, short_read (two arms), source_line_invalid (overflow and NaN literal, K-01),
+    source_line_noncanonical, source_fields_mismatch, contract_refused (row-level and slice-level,
+    K-02), mixed_dataset_descriptor, receipt_exists, target_unwritable, receipt_unwritable.
+    target_exists, empty_partition, target_verify_failed and identity_mismatch keep their tests above.
+    """
+
+    def _partition(self, root: Path) -> tuple[Path, Path]:
+        return ArchiveExporterTests._collector_partition(self, root)
+
+    @staticmethod
+    def _rows(source: Path) -> list[dict]:
+        return [json.loads(line) for line in source.read_text(encoding="utf-8").splitlines()]
+
+    @staticmethod
+    def _write_rows(source: Path, rows: list[dict]) -> None:
+        source.write_text(
+            "".join(
+                json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n"
+                for row in rows
+            ),
+            encoding="utf-8",
+        )
+
+    def _refused(self, code: str, message_regex: str, source: Path, root: Path, **overrides):
+        kwargs = {
+            "source_root": overrides.pop("source_root", root),
+            "exported_at_utc": overrides.pop("exported_at_utc", EXPORTED_AT),
+        }
+        target = overrides.pop("target", root / "out.jsonl")
+        with self.assertRaisesRegex(subject.ExportRefused, message_regex) as caught:
+            subject.export_partition(source, target, **kwargs)
+        self.assertEqual(caught.exception.code, code)
+        return caught.exception
+
+    def test_invalid_timestamp_refusals_including_sub_second(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            for stamp in ("2026-09-14T00:00:00.500Z", "2026-09-14T00:00:00.000001Z"):
+                self._refused(
+                    "invalid_timestamp", "whole seconds", source, root,
+                    source_root=source_root, exported_at_utc=stamp,
+                )
+            for stamp in ("2026-09-14T00:00:00+00:00", "2026-09-14T00:00:00", "not-a-time", 20260914):
+                self._refused(
+                    "invalid_timestamp", "UTC Z timestamp", source, root,
+                    source_root=source_root, exported_at_utc=stamp,
+                )
+            self.assertFalse((root / "out.jsonl").exists())
+
+    def test_source_outside_root_refusal(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            self._refused(
+                "source_outside_root", "relative to source_root", source, root,
+                source_root=root / "elsewhere",
+            )
+
+    def test_source_unreadable_refusal(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._refused("source_unreadable", "unreadable", root / "missing.jsonl", root)
+
+    def test_short_read_refusals(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            source.write_bytes(source.read_bytes().rstrip(b"\n"))
+            self._refused("short_read", "partial line", source, root, source_root=source_root)
+
+            source_root, source = self._partition(root / "second")
+            original_stat = Path.stat
+
+            def inflated_stat(path, *args, **kwargs):
+                result = original_stat(path, *args, **kwargs)
+                if path == source:
+                    return _StatWithSize(result, result.st_size + 1)
+                return result
+
+            with mock.patch.object(Path, "stat", inflated_stat):
+                self._refused(
+                    "short_read", "short or partial", source, root / "second", source_root=source_root
+                )
+
+    def test_source_line_invalid_for_overflow_and_nan_literals(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for name, line in (
+                ("overflow.jsonl", b'{"open":1e999}\n'),
+                ("nan.jsonl", b'{"open":NaN}\n'),
+                ("nested.jsonl", b'{"a":{"b":[1,-1e999]}}\n'),
+            ):
+                source = root / name
+                source.write_bytes(line)
+                self._refused("source_line_invalid", "non-finite|not parseable", source, root)
+
+    def test_source_line_noncanonical_refusal(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "pretty.jsonl"
+            source.write_bytes(b'{"open": 1}\n')
+            self._refused("source_line_noncanonical", "not canonical", source, root)
+
+    def test_source_fields_mismatch_refusal(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            rows = self._rows(source)
+            rows[0]["unexpected"] = 1
+            self._write_rows(source, rows)
+            self._refused("source_fields_mismatch", "extra=\\['unexpected'\\]", source, root, source_root=source_root)
+
+    def test_contract_refused_from_row_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            rows = self._rows(source)
+            rows[0]["open"] = "not-a-decimal"
+            self._write_rows(source, rows)
+            self._refused("contract_refused", "decimal string", source, root, source_root=source_root)
+
+    def test_contract_refused_from_slice_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            rows = self._rows(source)
+            duplicated = [rows[0], rows[0]]
+            self._write_rows(source, duplicated)
+            self._refused("contract_refused", "duplicate observation_id", source, root, source_root=source_root)
+
+            source_root, source = self._partition(root / "window")
+            rows = self._rows(source)
+            for row in rows:
+                row["bar_close_time"] = row["bar_open_time"]
+            self._write_rows(source, rows)
+            self._refused(
+                "contract_refused", "must be after bar_open_time", source, root / "window", source_root=source_root
+            )
+
+    def test_mixed_dataset_descriptor_refusal(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            rows = self._rows(source)
+            rows[1]["venue"] = "OTHERVENUE"
+            self._write_rows(source, rows)
+            self._refused("mixed_dataset_descriptor", "does not match descriptor", source, root, source_root=source_root)
+
+    def test_receipt_exists_refusal(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            target = root / "out.jsonl"
+            Path(str(target) + ".p030export.json").write_bytes(b"{}\n")
+            self._refused("receipt_exists", "receipt already exists", source, root, source_root=source_root, target=target)
+            self.assertFalse(target.exists())
+
+    def test_target_and_receipt_unwritable_refusals(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            target = root / "out.jsonl"
+            original_open = Path.open
+
+            def denied_target(path, *args, **kwargs):
+                if path == target:
+                    raise PermissionError("target denied")
+                return original_open(path, *args, **kwargs)
+
+            with mock.patch.object(Path, "open", denied_target):
+                self._refused("target_unwritable", "unwritable", source, root, source_root=source_root, target=target)
+            self.assertFalse(target.exists())
+
+            receipt = Path(str(target) + ".p030export.json")
+
+            def denied_receipt(path, *args, **kwargs):
+                if path == receipt:
+                    raise PermissionError("receipt denied")
+                return original_open(path, *args, **kwargs)
+
+            with mock.patch.object(Path, "open", denied_receipt):
+                self._refused("receipt_unwritable", "receipt is unwritable", source, root, source_root=source_root, target=target)
+            self.assertTrue(target.exists())
+            self.assertFalse(receipt.exists())
+
+
+class _StatWithSize:
+    """os.stat_result stand-in that reports a larger st_size."""
+
+    def __init__(self, result, st_size: int) -> None:
+        self._result = result
+        self.st_size = st_size
+
+    def __getattr__(self, name):
+        return getattr(self._result, name)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
