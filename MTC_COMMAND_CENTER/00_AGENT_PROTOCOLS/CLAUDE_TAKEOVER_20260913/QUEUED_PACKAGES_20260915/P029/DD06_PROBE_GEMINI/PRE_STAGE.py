@@ -37,10 +37,12 @@ shutil.copy2(CT13 / "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/CLAUDE_TAKEOVER_20260
 dec = (CT13 / "DECISIONS.md").read_text(encoding="utf-8").split("\n")
 rows = [l for l in dec if l.startswith("| OD-20260915-P029-DD06-TESTNET-PROBE-PREP-1") or l.startswith("| OD-20260914-BRIDGE-SMOKE-GO-1") or l.startswith("| OD-20260915-P029-DD01-READ-1")]
 (DST / "sources/DECISIONS_rows_DD06.md").write_text("# Rows from C:/CT13/DECISIONS.md (verbatim)\n" + "\n".join(rows) + "\n", encoding="utf-8", newline="\n")
-for n in ("LEAD_PYTEST_focused_slice2.txt", "LEAD_PYTEST_full_bridge_slice2.txt", "LEAD_RUFF_slice2.txt", "LEAD_RED_ARM_m1.txt", "LEAD_RED_ARM_m2.txt", "LEAD_RED_ARM_m3.txt", "SDK_0_24_0_SIGNATURES.txt", "LEAD_GUARD_slice2.txt", "RECOVERED_RESPONSE_attempt1_VOIDED.md"):
+for n in ("LEAD_PYTEST_focused_slice2.txt", "LEAD_PYTEST_full_bridge_slice2.txt", "LEAD_RUFF_slice2.txt", "LEAD_RED_ARM_m1.txt", "LEAD_RED_ARM_m2.txt", "LEAD_RED_ARM_m3.txt", "SDK_0_24_0_SIGNATURES.txt", "LEAD_GUARD_slice2.txt", "RECOVERED_RESPONSE_attempt1_VOIDED.md", "RECOVERED_RESPONSE_attempt2_VOIDED.md", "LEAD_PYTEST_focused_slice3.txt", "LEAD_PYTEST_full_bridge_slice3.txt", "LEAD_RUFF_slice3.txt", "LEAD_GUARD_slice3.txt", "LEAD_RED_ARM_slice3_old_probe_new_tests.txt", "kvm2_dd06_probe_run.sh", "kvm2_dd06_probe_run_OUTPUT.redacted.txt"):
     p = RUN / n
     if not p.exists(): p = pathlib.Path(__file__).with_name(n)
-    if p.exists(): shutil.copy2(p, DST / "sources" / n)
+    if p.exists():
+        b = p.read_bytes().decode("utf-8", "replace")
+        (DST / "sources" / n).write_text("".join(ch if ord(ch) < 128 else "?" for ch in b), encoding="ascii", newline="\n")
 H = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
 sums = [f"{H(p)}  {p.relative_to(DST).as_posix()}" for p in sorted(DST.rglob("*")) if p.is_file() and p.name != "PACKET_SHA256SUMS.txt"]
 (DST / "PACKET_SHA256SUMS.txt").write_text("\n".join(sums) + "\n", encoding="ascii")

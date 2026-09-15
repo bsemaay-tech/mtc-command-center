@@ -26,6 +26,7 @@ Plus the relayed "testnet agent-withdraw test: go" → the DD-06 probe is **prep
 | # | Ask | Default |
 |---|---|---|
 | R2 | DD-06 probe re-run on slice 3 `1af85067`: **"r2 go"** (same steps; ≤ 6 test-USDC at risk; refuses mainnet) | not run |
+| I | P0-31 M2 scope (six one-liners, packet `P031_M2_SCOPE_PACKET_DRAFT_20260915.md`): **Q1** run the M2 design half now on scratch copies (A) / wait for M1 (B) — rec. A; **Q2** migrated-record label `MIGRATED_2026`, non-authoritative (A) / reuse `FIXTURE` (B) / defer (C) — rec. A; **Q3** composite legacy values: fold §4 rule (A) / all `UNKNOWN` (B) — rec. A; **Q4** two-writer disagreement: `migrated-conflict` + the LOWER state (A) / `UNKNOWN` (B) — rec. A; **Q5** unparseable rows → `UNKNOWN` + listed (A only); **Q6** dispatch M2 build after the roster's fixture-scope acceptance (A) / wait for full M1 acceptance (B) — plan says B, A is an amendment you may make | nothing moves |
 | H | P0-21 S1 catalogue slice (puts your S2 values into the rule catalogue): closing `gap_ratio_max` also mints a NEW hashed policy-set version — **"catalogue only"** (recommended: artifact waits for the whole-set ratification B-22) or **"ratify the new policy-set version too"** | catalogue only, built in a daytime slot |
 | F | Optional: forward the 08:18Z "Run failed: CI" demo-run e-mail to the connected mailbox if you want it archived beside the PR #193 one | skip |
 

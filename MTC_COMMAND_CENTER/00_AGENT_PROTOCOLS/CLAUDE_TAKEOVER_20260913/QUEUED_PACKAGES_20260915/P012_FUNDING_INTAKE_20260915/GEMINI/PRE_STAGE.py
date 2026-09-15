@@ -39,7 +39,9 @@ for n in ("binding_packet_draft.json", "retained_rows_expected.json", "intake_ga
 shutil.copy2(pathlib.Path("C:/tmp/CLAUDE_P0_RUN_20260913/P012_PATH1_REAL_CAPTURE_20260915/r1/DERIVED_EXTRACTION.json"), DST / "sources/r1_DERIVED_EXTRACTION.json")
 for n in ("LEAD_PYTEST_focused.txt", "LEAD_RUFF.txt", "LEAD_GUARD.txt", "LEAD_RED_ARM_fabrication_fence.txt", "LEAD_INTAKE_r1_stdout.txt", "LEAD_RED_ARM_nit01_wall_clock.txt", "LEAD_RUFF_nit01.txt", "LEAD_GUARD_nit01.txt"):
     p = RUN / n
-    if p.exists(): shutil.copy2(p, DST / "sources" / n)
+    if p.exists():
+        b = p.read_bytes().decode("utf-8", "replace")
+        (DST / "sources" / n).write_text("".join(ch if ord(ch) < 128 else "?" for ch in b), encoding="ascii", newline="\n")  # ASCII: the reviewer's native view refuses non-ASCII text files
 dec = (CT13 / "DECISIONS.md").read_text(encoding="utf-8").split("\n")
 rows = [l for l in dec if l.startswith("| OD-20260915-BUILD-ABC-1") or l.startswith("| OD-20260914-P012-ADMISSION-Q3") or l.startswith("| OD-20260914-P012-ADMISSION-Q6")]
 (DST / "sources/DECISIONS_rows_P012.md").write_text("# Rows from C:/CT13/DECISIONS.md (verbatim)\n" + "\n".join(rows) + "\n", encoding="utf-8", newline="\n")

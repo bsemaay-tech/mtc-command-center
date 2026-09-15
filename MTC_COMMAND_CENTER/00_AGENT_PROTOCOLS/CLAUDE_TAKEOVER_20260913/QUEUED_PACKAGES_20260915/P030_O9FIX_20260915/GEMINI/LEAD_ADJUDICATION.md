@@ -1,10 +1,11 @@
 # LEAD_ADJUDICATION — P030_O9FIX_GEMINI (gemini-3.8-flash-high DELTA review `daf6a43b..153edee9`, the Lead-built O9FIX on the WP-P0-30 archive exporter) — 2026-09-15 16:25Z
 
-**Formal outcome: NO COUNTED ATTEMPT.** Attempt 1 ended with the CLI envelope `status: ERROR` (`Gemini did not return a successful, non-empty response`) AFTER a complete report — the same wrapper/CLI 503 pattern as every full call tonight. Recovered from `%TEMP%\gemini_wrapper_failures\20260915T161519Z_45748.stdout.jsonl` and kept SUPPLEMENTAL: `RECOVERED_RESPONSE_attempt1_VOIDED.md`, `RECOVERED_ENVELOPE_attempt1_VOIDED.json`, `NATIVE_READ_AUDIT_attempt1_VOIDED.json`; the run files are archived under `FAILED_ATTEMPTS/attempt1/`. The root is left re-runnable (a counted run is still owed before the Wednesday exact-Opus lane 3 reads `153edee9`).
+**Formal outcome (updated 20:06Z): COUNTED attempt 2 — PASS-WITH-NITS** (20:00:23-20:03:55Z, 212 s, envelope `status: SUCCESS`, exit 0; K-01..K-05 CLOSED again; one NIT N-01 = the K-07 hash-form note of attempt 1, direction now stated neutrally; native-read audit `NATIVE_READ_AUDIT_attempt2_COUNTED.json`). K-06 (test regex) was not raised again; the ready patch stays unapplied pending the Wednesday reviewer. Attempt 1 history: **uncounted.** Attempt 1 ended with the CLI envelope `status: ERROR` (`Gemini did not return a successful, non-empty response`) AFTER a complete report — the same wrapper/CLI 503 pattern as every full call tonight. Recovered from `%TEMP%\gemini_wrapper_failures\20260915T161519Z_45748.stdout.jsonl` and kept SUPPLEMENTAL: `RECOVERED_RESPONSE_attempt1_VOIDED.md`, `RECOVERED_ENVELOPE_attempt1_VOIDED.json`, `NATIVE_READ_AUDIT_attempt1_VOIDED.json`; the run files are archived under `FAILED_ATTEMPTS/attempt1/`. The counted run followed at 20:00Z (attempt 2).
 
 | Attempt | HEAD | Window | Report | Reads (`native_read_audit.py`) | Verdict by content |
 |---|---|---|---|---|---|
-| 1 | `153edee9` (packet `P030_O9FIX_20260915`, 19 files) | 16:04:35-16:15:19Z (649 s) | 19 845 chars; sentinel `GEMINI_READ_ONLY_OK` + JSON | 28 native reads, 0 outside, 0 display failures; the report's own coverage table lists 20 file views, all inside the packet | **PASS-WITH-NITS**: K-01..K-05 CLOSED; 16/16 refusal codes VERIFIED with test names and assertion lines; two NITs K-06, K-07 |
+| 2 (COUNTED) | `153edee9` (same packet) | 20:00:23-20:03:55Z (212 s) | 18 177 B; sentinel + JSON — `REPORT_RESPONSE_UTF8.md` | 28 native reads, 0 outside, 0 mismatches | **PASS-WITH-NITS**: K-01..K-05 CLOSED; N-01 = hash-form note |
+| 1 (voided) | `153edee9` (packet `P030_O9FIX_20260915`, 19 files) | 16:04:35-16:15:19Z (649 s) | 19 845 chars; sentinel `GEMINI_READ_ONLY_OK` + JSON | 28 native reads, 0 outside, 0 display failures; the report's own coverage table lists 20 file views, all inside the packet | **PASS-WITH-NITS**: K-01..K-05 CLOSED; 16/16 refusal codes VERIFIED with test names and assertion lines; two NITs K-06, K-07 |
 
 ## Lead check of the closure table (grep against the packet bytes)
 | Finding | Reviewer's location | Lead grep | Verdict |
@@ -23,7 +24,7 @@
 
 ## What the corroboration establishes / does not
 - By content, the delta closes K-01..K-05 and every `ExportRefused` code has a named negative test; scope is exactly two files (+21/−2 exporter, +203 checker); the RED arm is sharp (fails on exactly the three fixed defects, 17 others pass).
-- Uncounted (wrapper-voided). The Lead built this change and does not accept it; the Wednesday exact-Opus lane 3 (`C:/tmp/OPUS_QUEUE_20260916/P030/`, pinned `153edee9`, worktree HEAD verified by file read at 16:12Z) is the first flagship read; a counted Gemini run is still owed.
+- Attempt 1 uncounted (wrapper-voided); attempt 2 COUNTED (28 native reads, 0 outside). The Lead built this change and does not accept it; the Wednesday exact-Opus lane 3 (`C:/tmp/OPUS_QUEUE_20260916/P030/`, pinned `153edee9`) is the first flagship read.
 - Route: five of five full Gemini calls tonight ended in the 503/ERROR envelope after a complete report (P027 ×2, DD06 ×2, O9FIX ×1); the recovery path (`recover_gemini_attempt.py` + `native_read_audit.py`) is now routine — see [[route-lessons-2026-09-15-night]].
 
 Recorded by Claude Opus 5 Lead (session 5, `03c6c8`).

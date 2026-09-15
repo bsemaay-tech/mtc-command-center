@@ -1,6 +1,6 @@
 # LEAD_ADJUDICATION — DD06_PROBE_GEMINI (gemini-3.8-flash-high DETECTION review of the Lead-written WP-P0-29 DD-06 testnet probe) — 2026-09-15 16:05Z
 
-**Formal outcome: NO COUNTED ATTEMPT.** Both attempts ended with the CLI envelope `status: ERROR … UNAVAILABLE (code 503)` after the report; both are recovered from `%TEMP%\gemini_wrapper_failures\` and kept SUPPLEMENTAL (`RECOVERED_RESPONSE_attempt{1,2}_VOIDED.md`, envelopes, native-read audits). The findings were acted on regardless; a counted run is still owed before the T1 roster reads the branch.
+**Formal outcome (updated 20:02Z): COUNTED attempt 3 on slice 3 `1af85067` — PASS-WITH-NITS** (19:56:16-19:59:50Z, 214 s, envelope `status: SUCCESS`, exit 0; 34 native reads, 0 outside, 0 display mismatches, 27 distinct packet files; tasks 1-8 PASS again and the three new tasks 9-11 PASS: the r1 record matches the packet's promised abort semantics; `round_hl_price` bounds the control price to wire constraints (76974.0 → 69270.0); only a `statuses[].error` makes an ok-envelope REFUSED, so a genuine success of a fund-moving arm stays NOT_REFUSED; with spot USDC recorded, an r2 `DD06_REFUSALS_OBSERVED` reads soundly under §4). The two NITs are the same observational ones as attempt 2 (`_HEX40` prefix boundary; `_resting_oid` regex parse, fail-closed) — no change. Earlier history: **attempts 1-2 uncounted.** Both attempts ended with the CLI envelope `status: ERROR … UNAVAILABLE (code 503)` after the report; both are recovered from `%TEMP%\gemini_wrapper_failures\` and kept SUPPLEMENTAL (`RECOVERED_RESPONSE_attempt{1,2}_VOIDED.md`, envelopes, native-read audits). The findings were acted on regardless; a counted run is still owed before the T1 roster reads the branch.
 
 | Attempt | HEAD | Window | Report | Reads (`native_read_audit.py`) | Verdict |
 |---|---|---|---|---|---|
@@ -23,7 +23,7 @@
 
 ## What the corroboration establishes / does not
 - Tasks 1-8 PASS in attempt 2: no mainnet path; key custody sound; funds cannot leave silently (withdraw3 stated plainly); classification honest; state-left-behind handled by abort conditions; stop rule + RED arms verified; packet honest; scope exactly two files with the Bridge suite green (1612 passed).
-- Uncounted (wrapper-voided). Route: every full Gemini call tonight ended in a 503 after the report; recorded in `route-lessons-2026-09-15-night`.
-- The probe stays PREPARED; execution needs "probe steps approved"; the T1 roster (exact flagship + Gemini) applies before any merge.
+- Attempts 1-2 uncounted (wrapper-voided); attempt 3 COUNTED (the route recovered at 19:45Z). Route history in `route-lessons-2026-09-15-night`.
+- Execution word given 18:25Z; r1 ran 18:33Z and aborted at the control arm (tick size; slice 3 fixes it); **r2 waits for the owner's "r2 go"**; the T1 roster (exact flagship + this counted Gemini) applies before any merge.
 
 Recorded by Claude Opus 5 Lead (session 5, `03c6c8`).
