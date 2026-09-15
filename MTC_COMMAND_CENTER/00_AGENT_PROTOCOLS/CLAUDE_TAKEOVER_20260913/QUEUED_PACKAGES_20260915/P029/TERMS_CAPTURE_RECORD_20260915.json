@@ -1,0 +1,17 @@
+{
+  "record": "hyperliquid_terms_of_use_capture",
+  "url": "https://app.hyperliquid.xyz/terms",
+  "page_states": "Last updated on June 15, 2026",
+  "method": "rendered in the Claude desktop sandboxed browser (JavaScript app; a plain HTTP fetch returns only the page title); document.body.innerText sliced from 'Terms of Use' to the footer",
+  "captured_utc_browser_clock": "2026-09-15T11:11:36.872Z",
+  "chars": 33520,
+  "sha256_utf8": "28df55bf91a77c7e2a9e9c115ffeca1bc4d10b4d35cfec54aa2fa54309c034bb",
+  "first_60_chars": "Terms of Use\n\n\nLast updated on June 15, 2026\n\n\nThese Terms o",
+  "publisher_named_in_text": "Hyperliquid Corp.",
+  "governing_law": "England and Wales (section 11.4)",
+  "arbitration": "LCIA rules, London, single arbitrator (section 11.4); class-action waiver (11.2)",
+  "liability_cap": "$100.00 (section 10.3)",
+  "restricted_persons": "section 1.6: United States of America or Ontario, Canada; jurisdictions under economic/trade sanctions or export-control laws; citizens of Restricted Territories regardless of location",
+  "automation_clause": "section 3.1.8 'Automated or High-Frequency Abuses' (abusive automation only)",
+  "note": "Full text not stored by the Lead (owner to save/print the page when he reads it for DD-01); the hash lets a later capture prove sameness. No wallet was connected; no account action."
+}

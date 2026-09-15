@@ -27,3 +27,17 @@ Effect: an owner-side verification, not a decision. It closes the delivery half 
 Owner chat, verbatim: `P028 read go` — authorizes ONE read-only capture of `subAccounts`, `userFees`, `userRole` (+ `clearinghouseState`) for the owner's own mainnet address (the Path 1 address `0x1E26…AC49`, the packet's default; no other address was named) with the owner's `personal_sign` ownership signature over the fresh run_id `p028-eligibility-20260915-r1`, stored write-once with sidecars and a manifest like the Path 1 capture (`QUEUED_PACKAGES_20260915/P028_ACCOUNT_ELIGIBILITY_PACKET_20260915.md` §3-§4). No credential, no order, no sub-account creation, no venue write. The capture is NONACCEPTING evidence until the tool and the capture are reviewed. Row `OD-20260915-P028-READ-GO-1`.
 
 Owner chat, verbatim: `A` (answering "P0-26 repair 'A' (me now) / 'wait' (Codex Sep 19)") — the Lead (Claude Opus 5) implements the WP-P0-26 bounded local repair accepted on 2026-09-12 exactly within the scope packet `C:/tmp/P026_LOCAL_SCOPE_DECISION_20260907.md` §2-§5 (5 MODIFY files under `MTC_COMMAND_CENTER/tools/opsa/`: `backup.py`, `restore.py`, `opsa_common.py`, `watchdog.py`, `test_opsa.py`; 0 ADD; fake/fixture tests only; no host contact, no notifier, no schedule, no delete path), disclosed in the commit; RED/GREEN on the pre-fix code required; acceptance keeps the T1 roster (Gemini corroboration + exact flagship review) and the Lead never accepts its own code. Row `OD-20260915-P026-REPAIR-LEAD-1`.
+
+## Q5 — WP-P0-26 adapter fix (asked ~09:35Z and again ~10:36Z; answered ~10:50Z)
+Lead question (chat): "P0-26 adapter fix: A (I do the 6 lines now) / B (park till Codex Sep 19)" — context: the repaired explicit-run restore gate refuses the P0-30 closed-partition backup adapter's isolated restore root (`check_p030_closed_partition_backup_adapter.py`: 44 tests, 7 failures + 2 errors, 13 `run_not_complete` refusals) because that root lacks `COMPLETE.json` / `RUN_MANIFEST.jsonl`; both files sit at the repo root, outside the scope packet's five-file ceiling.
+
+Owner chat, verbatim: `A`.
+
+Effect: `OD-20260915-P026-ADAPTER-LEAD-1` — the slice is extended by exactly two repo-root files (the adapter and its checker); the Lead builds it as a further disclosed commit on the same branch; adapter checks must return to exit 0; RED on the pre-fix adapter required; roster unchanged (Gemini + exact Opus + exact Sol); the Lead never accepts its own code.
+
+## Q6 — WP-P0-27 CI additions (asked ~09:35Z and again ~10:36Z; answered ~10:52Z)
+Lead question (chat): "P0-27 CI additions: go (one PR: contracts tests + 3 P030 checkers + Ruff step) / later".
+
+Owner chat, verbatim: `go`.
+
+Effect: `OD-20260915-P027-CI-ADDITIONS-GO-1` — ONE PR changing only `.github/workflows/research-gates.yml` (informational workflow; required contexts unchanged); opened for review, not merged by this word.

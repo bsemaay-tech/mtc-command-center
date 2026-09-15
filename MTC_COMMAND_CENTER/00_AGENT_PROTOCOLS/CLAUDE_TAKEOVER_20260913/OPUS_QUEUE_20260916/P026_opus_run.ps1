@@ -1,7 +1,6 @@
-# Exact claude-opus-5 xhigh T0 review of WP-P0-26 candidate 6ac9cfb7 on the Claude PRO profile (~/.claude), NOT the Max desktop session.
+# Exact claude-opus-5 xhigh T0 review of WP-P0-26 candidate d81b07f6 (6ac9cfb7 + adapter slice 8d4056c5 + findings slice) on the Claude PRO profile (~/.claude), NOT the Max desktop session.
 # PREPARED 2026-09-15 for the weekly reset (2026-09-16 20:00Z). LANE 4 = optional: only if allowance remains after lanes 1-3.
-# Lead starts it; never while agy.exe runs; never two Pro lanes at once. If the owner chose option A (adapter commit), the Lead
-# updates the HEAD pin below and the brief BEFORE starting; the launcher refuses on any drift.
+# Lead starts it; never while agy.exe runs; never two Pro lanes at once. Option A landed 2026-09-15 10:58Z as 8d4056c5; the Gemini-findings slice 3 landed 11:33Z as d81b07f6 (pin updated); the launcher refuses on any drift.
 $ErrorActionPreference = 'Continue'
 Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
 Remove-Item Env:HL_API_WALLET_KEY -ErrorAction SilentlyContinue
@@ -13,7 +12,7 @@ New-Item -ItemType Directory -Force $tmp, "$lane\logs", 'C:\tmp\OPUS_P026_SCRATC
 $env:CLAUDE_CONFIG_DIR = (Join-Path $env:USERPROFILE '.claude')
 Set-Location 'C:\tmp\P026_REPAIR_20260915'
 $head = (git -c safe.directory=* rev-parse HEAD).Trim()
-if ($head -ne '6ac9cfb7b923e8d86b8546f7c0117fbb0553d0a3') { "HEAD $head != 6ac9cfb7: refuse" | Out-File "$lane\launch.exit" -Encoding ascii; exit 3 }
+if ($head -ne 'd81b07f62569996edb20dc96f83e7d7029406cdd') { "HEAD $head != d81b07f6: refuse" | Out-File "$lane\launch.exit" -Encoding ascii; exit 3 }
 $start = Get-Date
 & claude --print "Read and execute exactly $lane\BRIEF.md. Start by reading that file." --model claude-opus-5 --effort xhigh --permission-mode dontAsk --allowedTools 'Bash' 'Edit' 'Read' 'Write' 'Glob' 'Grep' --disallowedTools 'Agent' 'WebFetch' 'WebSearch' 'NotebookEdit' --add-dir 'C:\tmp\OPUS_QUEUE_20260916\P026' 'C:\tmp\OPUS_P026_SCRATCH' 'C:\tmp\P026_REPAIR_20260915' 'C:\CT13' --strict-mcp-config --max-turns 100 --output-format stream-json --verbose 2>&1 | Out-File -FilePath "$lane\stream.jsonl" -Encoding utf8
 "exit=$LASTEXITCODE start=$($start.ToUniversalTime().ToString('o')) end=$((Get-Date).ToUniversalTime().ToString('o'))" | Out-File "$lane\launch.exit" -Encoding ascii

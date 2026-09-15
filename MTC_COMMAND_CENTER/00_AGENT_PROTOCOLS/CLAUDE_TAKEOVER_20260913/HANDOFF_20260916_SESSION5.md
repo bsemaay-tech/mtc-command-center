@@ -18,9 +18,9 @@ Owner: Barış — non-technical, answers in one line, wants English. He ruled t
 | **P031** | `bd0d56d0` (P31FIX, Codex: J-01..J-05) + `48bd70de` (Lead-authored registrar-path RED test; disclosed) → Gemini delta PASS-WITH-NITS (attempt 1 voided by the CLI "cut off" envelope, recovered supplemental) | CT13 `P031_FIX_20260915/` |
 | **P012 Path 1** | tool `e77af1c8` → Gemini REQUEST_CHANGES (F-1 run-id/signature, F-2 half-open window) → owner "A" `OD-20260915-P012-P1FIX-LEAD-1` → **Lead-built `af921d75`** (21 tests; RED 12/9 pre-fix; Bridge suite 1649 green) → Gemini delta PASS-WITH-NITS; **real capture r1 DONE** (ownership VERIFIED by the owner's `personal_sign`; 5 fills + 2 funding rows = his declared activity; net +0.2839 USDC; NONACCEPTING) | CT13 `P012_PATH1_CAPTURE_TOOL_REVIEW_20260915/`, `…_FIX_20260915/`, `P012_PATH1_REAL_CAPTURE_20260915/` |
 | **P030** | unchanged (`daf6a43b`, Gemini PASS-WITH-NITS K-01..K-05 OPEN); O9FIX waits for Codex | CT13 `P030_EXPORTER_CANDIDATE_20260914/` |
-| Records | route ledger appended (docs branch `3c374a6f`, pushed); kit `TOOLBOX.md` rows updated (`d0286fc`, local repo); memory `p0-claude-lead-session-2026-09-15.md` + `route-lessons-2026-09-15.md` | — |
+| Records | route ledger appended (docs branch `3c374a6f` + afternoon addendum `a4e4a385`, pushed); kit `TOOLBOX.md` rows updated (`d0286fc`, local repo); memory `p0-claude-lead-session-2026-09-15.md` + `route-lessons-2026-09-15.md` | — |
 
-## 1b. DONE in the afternoon (owner "Go" 08:10Z on the packages queued 2026-09-12; CT13 `0646ba85` + close-out)
+## 1b. DONE in the afternoon (owner "Go" 08:10Z on the packages queued 2026-09-12; CT13 `0646ba85` + `20a9eeff`)
 | Package | Done | Left |
 |---|---|---|
 | **P0-27** | requirement reconciliation R1-R20 (`QUEUED_PACKAGES_20260915/P027/`); the never-run D026 red/green demo EXECUTED (draft PR #192 → RED run 34946092493 BLOCKED → GREEN run 34946405229 CLEAN; closed unmerged, branch deleted); owner confirmed the failure e-mail ("yes") | owner's acceptance of the day-one scope (Lead recommendation recorded); optional CI additions (contracts tests, three P030 checkers, Ruff step into `Research gates`) on the owner's "go" |
