@@ -1,5 +1,7 @@
 # WP-P0-26 (OPS-A) — deployment-and-drill decision packet, draft 1 (2026-09-15)
 
+> Status note added 2026-09-15 10:25Z (Gemini counted-corroboration NIT F-03): this draft is a snapshot of the pickup state. After it was written the owner ruled "A" (`OD-20260915-P026-REPAIR-LEAD-1`) and the Lead built candidate `6ac9cfb7` on `feature/p026-completion-marker-20260915` (records: `P026_REPAIR_20260915/`; NOT reviewed, NOT accepted; blocker on the P0-30 adapter's isolated restore root pending the owner's A/B). §0's "still ABSENT" statement describes master (`fcac0ac6`), which is unchanged.
+
 Prepared by the Claude Opus 5 Lead (session 743291) on the owner's 2026-09-12 queue decision (`20260912-214745-p026-queued-for-existing-lead.md`, item 3). Facts were refreshed today; host-side facts are marked UNKNOWN because no host contact (G9) is authorized by this packet. Nothing here installs, schedules, sends, deletes or accepts.
 
 ## 0. State refreshed at pickup
