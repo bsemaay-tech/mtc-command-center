@@ -76,6 +76,8 @@ Proposed ordinary refresh: **90 calendar days**. Review within **1 business day*
 
 The current record expires on **2026-11-23** if not earlier invalidated. Expiry blocks new deposits and new risk; it does not automatically move funds.
 
+Refresh log (append-only): **2026-09-15** — dated T2 addendum [VENUE_DUE_DILIGENCE_ADDENDUM_2026-09-15.md](VENUE_DUE_DILIGENCE_ADDENDUM_2026-09-15.md) (Terms of Use read: Hyperliquid Corp., England & Wales law, LCIA; dependency/failure map; dated partial security review; fallback comparison; DD-06/DD-07 confirmed undocumented). It changes no status above; the owner decides DD-01 and DD-05 on it.
+
 ## 6. Owner review and signature
 
 By signing, the owner acknowledges the twelve-criterion record and its current **HOLD** disposition. Signature accepts this policy record; it does not clear DD-01–DD-09, authorize a deposit, or declare live readiness.

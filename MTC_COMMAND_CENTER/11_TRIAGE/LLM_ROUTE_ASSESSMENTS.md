@@ -308,3 +308,27 @@ byte outputs), and no round-2 launcher script exists on disk because that round 
 - **ChatGPT Web deep research as an owner-run route (P0-29):** prompt delivered as a file the owner
   pastes himself; no account data in the prompt; output comes back through the owner and the Lead
   reconciles it against the DD-01..DD-09 packet. Not yet measured (awaiting the owner's paste).
+
+### Addendum 2 (same Lead, 10:50Z–12:00Z) — code review by Gemini paid for itself again
+- **Gemini 3.8 flash-high as DETECTION reviewer of Lead-written code (P0-26 candidate `8d4056c5`, 28-file
+  packet, 889 s, 557k input tokens):** found a REAL fail-open the Lead had missed — the bare restore accepted
+  a hand-made completion pair for a run the backup tool never closed (no successful `run_end` check), while
+  the P0-30 adapter had that rule. REQUEST_CHANGES with three findings, all confirmed in the bytes and
+  fixed within 15 minutes (`d81b07f6`, RED test on the old code). One out-of-packet read (the repository's
+  `AGENTS.md`) despite the "read ONLY the packet" instruction — harmless here, recorded. Route verdict:
+  a Lead-built change gets a Gemini detection pass BEFORE the exact-flagship slots; it is cheap and it
+  catches the author's blind spots.
+- **Fourth 503 shape of the day:** the DELTA review of `d81b07f6` again returned a complete PASS report
+  and then a `503 UNAVAILABLE` mid-run (522 s of work voided); recovered supplemental, counted re-run
+  launched — the capacity errors cluster on the 15-minute calls. Two 503 voids in one day = plan 2×
+  wall-clock for any Gemini call over ~10 minutes.
+- **GitHub-hosted Windows runner (`windows-2025`) for repo checkers:** works (40 s for three stdlib
+  checkers) but the checkout fails on this repository without `git config --system core.longpaths true`
+  (paths > 260 chars under `03_QUANTLENS/research`). Ubuntu runner: contracts (50 tests) + Ruff in 27 s.
+- **Sandboxed browser as a reader of JS-app pages:** the venue's Terms of Use page returns only a title to
+  fetch tools (which is why the owner's ChatGPT research could not quote its clauses); the desktop
+  sandboxed browser rendered it and `document.body.innerText` gave the full 33 520-character text —
+  hashed and dated for the record, no wallet connected. Use it for any SPA-only legal/document page.
+- **Gmail connector as an evidence route:** works read-only, but the connected account is not the one
+  that receives GitHub notifications; the owner forwarded the mail and the forwarded copy (tokens
+  redacted) became the artifact. Cost: one owner action.
