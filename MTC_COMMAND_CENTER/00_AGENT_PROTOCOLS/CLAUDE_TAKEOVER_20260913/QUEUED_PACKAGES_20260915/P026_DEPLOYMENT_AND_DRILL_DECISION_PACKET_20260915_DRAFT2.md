@@ -61,3 +61,8 @@ No host contact, credentials, deployment, phone send, schedule creation, deletio
 - Draft 1: `P026_DEPLOYMENT_AND_DRILL_DECISION_PACKET_20260915.md` (kept as written). Draft 2: this file (run root `P026_DECISION_PACKET_20260915/`; copied to CT13 `QUEUED_PACKAGES_20260915/`).
 - Candidate records: `P026_REPAIR_20260915/` (run root + CT13); Gemini roots `P012_S16_REVIEWS_20260913/P026_CAND_GEMINI/` (detection) and `P026_DELTA_GEMINI/` (delta PASS); Opus lane 4 `C:/tmp/OPUS_QUEUE_20260916/P026/`.
 - Drills: CT13 `P026_DRILLS_TA_20260914/` (65 files; fixtures in the scratch lane `C:/tmp/P026_DRILLS_TA_20260914/`).
+
+## Addendum 2026-09-15 18:4xZ — owner item 7 answered "A" (`OD-20260915-P026-README-A-1`)
+- README residual fixed as **`e114ed31`** on `feature/p026-completion-marker-20260915` (documentation only: usage lines name an explicit `--run <run_id>` and the `COMPLETE.json` + `RUN_MANIFEST.jsonl` pair; +5/−3; no code or test bytes). Candidate for the Wednesday exact-Opus lane 4 is now `e114ed31` (= `d81b07f6` + this docs commit); the brief, launcher and queue file were re-pinned and their prose re-read (four commits, seven files incl. README).
+- The T-A drill PREVIEW of 16:19Z (`P026_REPAIR_20260915/DRILLS_TA_PREVIEW_20260915/`, NONACCEPTING) ran on `d81b07f6`; the code bytes are identical at `e114ed31`, so its observations carry over. Still not a counted T-A execution.
+- Acceptance path unchanged: Wednesday Opus (lane 4) + Friday Sol + Gemini + Lead reproduction, then PR + merge under the standing delegation.

@@ -60,7 +60,7 @@ No item below is performed or authorized by this draft.
 
 | ID | Closure required before first mainnet deposit | Owner/Lead evidence |
 |---|---|---|
-| DD-01 | Owner ToS/entity/jurisdiction read and signed decision | `[POINTER / DATE]` |
+| DD-01 | Owner ToS/entity/jurisdiction read and signed decision | CLOSED 2026-09-15 — read: `OD-20260915-P029-DD01-READ-1` (five facts restated by the owner, 14:41Z); decision "proceed to the next gate": `OD-20260915-P029-DD01-PROCEED-1` (18:25Z). The overall disposition HOLD FOR FIRST MAINNET DEPOSIT is unchanged by this closure. |
 | DD-02 | Venue dependency/failure map accepted | `[POINTER / DATE]` |
 | DD-03 | Dated venue security/advisory/governance review | `[POINTER / DATE]` |
 | DD-04 | Independently readable account-history/export path demonstrated under separate authority | `[POINTER / DATE]` |

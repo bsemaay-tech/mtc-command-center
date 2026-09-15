@@ -120,3 +120,6 @@ NEW tonight (no rush, one line each):
 8. Optional: forward the 08:18 "Run failed: CI" e-mail (demo-run mail) if you want it archived beside the PR #193 one.
 
 ## 13:10Z owner: "testnet agent-withdraw test: go" -> `OD-20260915-P029-DD06-TESTNET-PROBE-PREP-1` (PREPARE only). Morning ask: approve the exact execution steps of the DD-06 testnet probe packet ("probe steps approved"), or "changes: ...".
+
+## 18:25Z — morning asks A-G ANSWERED early (`A "probe steps approved"` / `B A` / `C procced` / `D we'd opus` / `E recomended` / `G yes`; F silent → skip). Rows `OD-20260915-P029-DD06-PROBE-STEPS-APPROVED-1`, `-P026-README-A-1`, `-P029-DD01-PROCEED-1`, `-P027-T1-WEDOPUS-1`, `-P021-S2-RECOMMENDED-1`, `-P013-E4-ASK-1`. Item 7 (README) CLOSED by B; item 8 (demo mail) stays optional.
+**PENDING now:** "r2 go" for the DD-06 probe re-run on slice 3 `1af85067` (r1 aborted at the control arm on a tick-size rejection; fix shipped and dry-run on KVM2). Nothing else blocks.

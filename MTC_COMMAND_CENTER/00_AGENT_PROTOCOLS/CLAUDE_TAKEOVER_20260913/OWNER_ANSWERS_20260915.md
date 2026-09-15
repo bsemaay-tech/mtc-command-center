@@ -70,3 +70,17 @@ Lead proposal (chat): "DD-06 — test it instead of reading about it. We have a 
 Owner chat, verbatim: `testnet agent-withdraw test: go`.
 
 Effect: `OD-20260915-P029-DD06-TESTNET-PROBE-PREP-1` — preparation authority only (script, tests, packet, Gemini review); execution needs a second word on the exact steps and happens on TESTNET from the P4-03 environment (owner's hands / G9), never on mainnet.
+
+## 18:25Z batch — morning asks A-G answered early (owner awake; chat, verbatim)
+Lead's asks (chat 18:1xZ, one line each with defaults): A DD-06 probe "probe steps approved" (default not run); B P0-26 README "A"/"B" (default B); C DD-01 "HOLD stands"/"proceed" (default HOLD); D PR #193/#194 T1 "Wed Opus after lanes 1-4"/"Fri Sol" (default Wed Opus); E P0-21 S2 values (default nothing moves); F forward the demo-run e-mail (default skip); G P0-13 E-4 question to the contract owner (default ask later).
+
+Owner chat, verbatim:
+```
+A "probe steps approved"
+B A
+C procced
+D we'd opus
+E recomended
+G yes
+```
+Reading: A = execution word for §3 of the DD-06 step packet → `OD-20260915-P029-DD06-PROBE-STEPS-APPROVED-1` (r1 executed 18:33Z, ABORTED at the control arm on a tick-size rejection; re-run needs "r2 go"); B = option A → `OD-20260915-P026-README-A-1` (`e114ed31`, lane 4 re-pinned); C = "proceed" (typo) → `OD-20260915-P029-DD01-PROCEED-1` (DD-01 closed; HOLD disposition unchanged); D = "Wed Opus" → `OD-20260915-P027-T1-WEDOPUS-1` (lane 5); E = "recommended" → `OD-20260915-P021-S2-RECOMMENDED-1` (T / B-17 pin / B-13 pin / M-C); G = yes → `OD-20260915-P013-E4-ASK-1`. F unanswered → default skip.
