@@ -139,3 +139,22 @@ Route facts: Gemini 3.8 returned `503` after the report on every full call tonig
 | CT13 | `17cb7606` (fourth wave, 16:24Z); `8e4f172c` (fifth wave, 17:08Z); sixth wave after this delta | git log |
 | Snapshots | the copy script now masks the owner's mailbox addresses on every run (session-4 and session-5 snapshots) | `copy_night_records_to_ct13.py` |
 Route: Gemini 503-after-report 8/8 tonight (P027 ×3, DD06 ×2, O9FIX, intake ×2); probes fail intermittently (15-min chain waits); git only in no-`agy.exe` windows. Morning summary draft: `MORNING_SUMMARY_20260916_DRAFT.md` (asks A-G with defaults).
+
+---
+
+## §2-delta-3 — what moved 18:25Z → 20:25Z (owner answered A-G early and asked for work; read after §2-delta-2)
+| Item | Δ state | Evidence |
+|---|---|---|
+| Owner answers 18:25Z | `A "probe steps approved"` / `B A` / `C procced` / `D we'd opus` / `E recomended` / `G yes` (F silent) → six DECISIONS rows (`OD-20260915-P029-DD06-PROBE-STEPS-APPROVED-1`, `-P026-README-A-1`, `-P029-DD01-PROCEED-1`, `-P027-T1-WEDOPUS-1`, `-P021-S2-RECOMMENDED-1`, `-P013-E4-ASK-1`) | CT13 `67f2febf`; `OWNER_ANSWERS_20260915.md` 18:25Z batch |
+| P0-29 DD-06 | **r1 EXECUTED 18:33Z** on testnet from KVM2 (smoke's host-contact shape) → `ABORTED_CONTROL_ARM_NOT_ACCEPTED` (venue `Price must be divisible by tick size`; no transfer arm ran; nothing rests; service DISARMED). Slice 3 `1af85067` (Bridge's `round_hl_price`; per-status errors = REFUSED; spot USDC recorded) shipped + dry-run on KVM2; counted Gemini attempt 3 PASS-WITH-NITS (tasks 1-11). **r2 waits for "r2 go".** DD-01 CLOSED by "proceed" (register pointer filled; HOLD deposit disposition unchanged); addendum §A/§E on the docs branch `9e060857` | `P029/DD06_TESTNET_PROBE_20260915/`, `P029/DD06_PROBE_GEMINI/` |
+| P0-26 | README docs-only `e114ed31`; Wednesday lane 4 re-pinned (SHA + prose); measurements: ONE physical NVMe on the owner PC (A1 unavailable as written), daily all-store dry run 338.9 MiB / 11,469 files, two sandbox-locked pytest dirs to exclude | packet draft-2 addenda; `P026_MEASUREMENTS_20260915/` |
+| P0-27 | Wednesday lane 5 = T1 of PR #193 + #194 (by hand after lane 4); Gemini attempt 4 COUNTED PASS-WITH-NITS ×2, clauses (a)-(d) corroborated | `OPUS_QUEUE_20260916/P027CI/`, `P027_CI_GEMINI/` |
+| P0-21 | S2 values recorded (T / B-17 pin / B-13 pin / M-C); **S1 catalogue-only slice built `701c5ddd` + `7fecf204`** (branch `feature/p021-s1-policy-v1-numbers-20260915`; counted Gemini PASS-WITH-NITS; policy-set artifact untouched — owner ask H) | `P021_S1_20260915/` |
+| P0-30 | O9FIX counted Gemini attempt 2 PASS-WITH-NITS (K-01..K-05 CLOSED) | `P030_O9FIX_20260915/GEMINI/` |
+| P0-12 | intake counted Gemini attempt 4 PASS-WITH-NITS (`fabricated_fields: []`); test slice `4c802e9b`; owner packet D-1..D-6 as one-liners | `P012_FUNDING_INTAKE_20260915/` |
+| P0-13 | E-4 `SimulatorClass` question filed for the P0-20 contract owner (E1/E2/E3) | `P013_E4_SIMULATORCLASS_QUESTION_20260915.md` |
+| P0-22 | N1 reader-path inventory draft 1 (R1-R11) | `P022_N1_READER_PATH_INVENTORY_20260915.md` |
+| Queues | Wednesday optional lanes 6-8 (P021S1 `7fecf204`, DD06 `1af85067`, P012INTAKE `4c802e9b`); Friday Sol generator `SOL_QUEUE_20260919/make_sol_lane.ps1` (generates from the Wednesday brief, refuses on drift/agy); `run_queue.ps1` self-test refuses before the reset | `OPUS_QUEUE_20260916.md`, `SOL_QUEUE_20260919/README.md` |
+| Route | Gemini: 8/8 voided until 17:25Z, then 6/6 clean from 19:45Z (all counted); route ledger section appended (docs `6bd01789`); packet craft: ASCII-only lane logs | `LLM_ROUTE_ASSESSMENTS.md` |
+| CT13 | `67f2febf`, `adcb3582`, `e178a471`, `01a9247c` | git log |
+Still open for the owner: "r2 go" (DD-06); H (policy-set ratification with the S1 slice); I (P0-31 Q1-Q6); D-1..D-6 words; F (optional mail). Morning summary draft: `MORNING_SUMMARY_20260916_DRAFT.md`.

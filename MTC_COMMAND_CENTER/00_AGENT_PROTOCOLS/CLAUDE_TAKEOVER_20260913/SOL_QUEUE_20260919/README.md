@@ -2,7 +2,7 @@
 
 Second flagship for every candidate the Wednesday exact-Opus lanes read (owner routing: two flagships of different families + Gemini + Lead reproduction before any merge). Lanes are GENERATED on Friday from the Wednesday briefs by `make_sol_lane.ps1 -Pkg <P031|P1CAP|P030|P026|P027CI>` so that a Wednesday REQUEST_CHANGES (new HEAD, re-pinned brief) is picked up and a stale pin can never run; the generator refuses when the worktree HEAD differs from the Wednesday pin.
 
-Candidates without a Wednesday lane (add a `OPUS_QUEUE_20260916/<pkg>/REVIEW_BRIEF.md` + `opus/run.ps1` first, or write a Sol brief by hand): P0-21 S1 catalogue slice `7fecf204` (`C:/tmp/P021_S1_20260915`; counted Gemini PASS-WITH-NITS), DD-06 probe `1af85067` (`C:/tmp/P029_DD06_20260915`; counted Gemini PASS-WITH-NITS), P0-12 intake adapter `65c4bc40` (`C:/tmp/P012_INTAKE_20260915`; Gemini ×2 voided-but-complete PASS-WITH-NITS).
+Wednesday lanes 6-8 (optional there) exist for the three remaining candidates, so the generator covers them too: `P021S1` (`7fecf204`), `DD06` (`1af85067`), `P012INTAKE` (`4c802e9b`) - each with a counted Gemini PASS-WITH-NITS.
 
 Order (serial, one Codex lane at a time on `secondary`): P031 → P1CAP → P030 → P026 → P027CI (T1) → then the three above if budget remains. Each lane: verify HEAD + `git status --porcelain` empty in the worktree before AND after; adjudicate (grep citations; reproduce one RED arm); record under CT13 `<package>_SOL_20260919/`; ledger row.
 
