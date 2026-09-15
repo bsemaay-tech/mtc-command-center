@@ -42,6 +42,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from bridge.broker.hyperliquid import round_hl_price  # noqa: E402 - the Bridge's own wire rounding
+
 TESTNET_URL = "https://api.hyperliquid-testnet.xyz"
 PROBE_VERSION = "dd06-probe/v1"
 CONTROL_COIN = "BTC"
@@ -78,6 +80,7 @@ def redact(value: object, cap: int = 4000) -> str:
 
 class InfoLike(Protocol):
     def user_state(self, address: str) -> Any: ...
+    def spot_user_state(self, address: str) -> Any: ...
     def extra_agents(self, address: str) -> Any: ...
     def all_mids(self) -> Any: ...
     def meta(self) -> Any: ...
@@ -124,14 +127,28 @@ def _now() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
+def per_status_errors(response: Any) -> list[str]:
+    """Venue ok-envelopes for orders carry per-request results in response.data.statuses; an entry with an
+    ``error`` key means the venue rejected THAT request (r1 on testnet: ``Price must be divisible by tick size``)."""
+    if not isinstance(response, dict):
+        return []
+    inner = response.get("response")
+    data = inner.get("data") if isinstance(inner, dict) else None
+    statuses = data.get("statuses") if isinstance(data, dict) else None
+    if not isinstance(statuses, list):
+        return []
+    return [str(s["error"]) for s in statuses if isinstance(s, dict) and "error" in s]
+
+
 def classify_response(response: Any) -> str:
-    """REFUSED for a venue error envelope, NOT_REFUSED for a venue ok envelope, INCONCLUSIVE otherwise."""
+    """REFUSED for a venue error envelope or an ok envelope whose per-request statuses carry an error;
+    NOT_REFUSED for a clean ok envelope; INCONCLUSIVE otherwise."""
     if isinstance(response, dict):
         status = response.get("status")
         if status == "err":
             return "REFUSED"
         if status == "ok":
-            return "NOT_REFUSED"
+            return "REFUSED" if per_status_errors(response) else "NOT_REFUSED"
     return "INCONCLUSIVE"
 
 
@@ -209,8 +226,11 @@ def refuse_master_key(agent_address: str, account_address: str) -> None:
 
 
 def control_order_size(mid_px: float, sz_decimals: int) -> tuple[float, float]:
-    """Resting bid price and the smallest size clearing the venue's minimum notional."""
-    limit_px = round(mid_px * CONTROL_PRICE_FRACTION, 1)
+    """Resting bid price (rounded DOWN to the venue's wire constraints: at most 5 significant figures and
+    6 - szDecimals decimals, via the Bridge's own ``round_hl_price``) and the smallest size clearing the
+    venue's minimum notional. r1 on testnet (2026-09-15) was rejected with ``Price must be divisible by
+    tick size`` because ``round(mid * 0.9, 1)`` produced a 6-significant-figure price."""
+    limit_px = round_hl_price(mid_px * CONTROL_PRICE_FRACTION, sz_decimals)
     step = 10 ** (-sz_decimals)
     size = math.ceil(CONTROL_MIN_NOTIONAL_USD / limit_px / step) * step
     return limit_px, round(size, sz_decimals)
@@ -239,8 +259,11 @@ def _attempt(
     outcome = classify_response(response)
     data = {"request": redact(request), "response": redact(response)}
     if outcome == "REFUSED":
+        errors = per_status_errors(response)
         venue_text = (
-            response.get("response") if isinstance(response, dict) else response
+            "; ".join(errors)
+            if errors
+            else (response.get("response") if isinstance(response, dict) else response)
         )
         data["refusal_class"] = classify_refusal_text(venue_text)
     record.step(name, outcome, data)
@@ -282,6 +305,29 @@ def run_probe(
     except BaseException as exc:  # noqa: BLE001
         record.step(
             "S0_user_state",
+            "ERROR",
+            {"error_type": type(exc).__name__, "error": redact(str(exc))},
+        )
+    # A unifiedAccount keeps its USDC in the spot balance (perp accountValue reads 0.0 — r1 on testnet);
+    # record it so the balance behind the transfer arms is visible in the record.
+    try:
+        spot = info.spot_user_state(account_address)
+        balances = spot.get("balances", []) if isinstance(spot, dict) else []
+        usdc = next(
+            (b for b in balances if isinstance(b, dict) and b.get("coin") == "USDC"),
+            {},
+        )
+        record.step(
+            "S0_spot_user_state",
+            "RECORDED",
+            {
+                "usdc_total": redact(usdc.get("total")),
+                "usdc_hold": redact(usdc.get("hold")),
+            },
+        )
+    except BaseException as exc:  # noqa: BLE001
+        record.step(
+            "S0_spot_user_state",
             "ERROR",
             {"error_type": type(exc).__name__, "error": redact(str(exc))},
         )

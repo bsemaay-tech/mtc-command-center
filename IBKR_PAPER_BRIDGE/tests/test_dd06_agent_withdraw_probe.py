@@ -33,7 +33,10 @@ class FakeInfo:
         self.mid = mid
 
     def user_state(self, address: str):
-        return {"marginSummary": {"accountValue": "998.98"}, "withdrawable": "998.98"}
+        return {"marginSummary": {"accountValue": "0.0"}, "withdrawable": "0.0"}
+
+    def spot_user_state(self, address: str):
+        return {"balances": [{"coin": "USDC", "total": "998.987457", "hold": "0.0"}]}
 
     def extra_agents(self, address: str):
         return [
@@ -139,6 +142,47 @@ def test_control_order_size_clears_minimum_notional_and_cannot_fill():
     assert limit_px == 54000.0
     assert size * limit_px >= probe.CONTROL_MIN_NOTIONAL_USD
     assert size == 0.0002
+
+
+def test_control_price_is_wire_valid_for_a_real_btc_mid():
+    """r1 on testnet (2026-09-15 18:33Z): mid 76974.0 -> round(69276.6, 1) = 69276.6 (six significant
+    figures) -> venue: `Price must be divisible by tick size`. The price must carry at most 5 significant
+    figures and at most 6 - szDecimals decimals, and stay at or below 90 % of mid (cannot fill)."""
+    for mid in (76974.0, 69276.6 / 0.9, 123456.7, 99999.9, 10000.1):
+        limit_px, size = probe.control_order_size(mid, 5)
+        digits = f"{limit_px:.10g}".replace(".", "").strip("0")  # significant figures
+        assert len(digits) <= 5, (mid, limit_px)
+        assert limit_px <= mid * probe.CONTROL_PRICE_FRACTION
+        assert limit_px >= mid * probe.CONTROL_PRICE_FRACTION * 0.999
+        assert round(limit_px, 1) == limit_px
+        assert size * limit_px >= probe.CONTROL_MIN_NOTIONAL_USD
+    assert probe.control_order_size(76974.0, 5)[0] == 69270.0
+
+
+def test_ok_envelope_with_a_per_status_error_is_a_refusal():
+    """The venue answers a rejected order with status ok and a statuses[].error entry (r1 record)."""
+    rejected = {
+        "status": "ok",
+        "response": {
+            "type": "order",
+            "data": {
+                "statuses": [{"error": "Price must be divisible by tick size. asset=3"}]
+            },
+        },
+    }
+    assert probe.per_status_errors(rejected) == [
+        "Price must be divisible by tick size. asset=3"
+    ]
+    assert probe.classify_response(rejected) == "REFUSED"
+    resting = {
+        "status": "ok",
+        "response": {"type": "order", "data": {"statuses": [{"resting": {"oid": 7}}]}},
+    }
+    assert probe.classify_response(resting) == "NOT_REFUSED"
+    assert (
+        probe.classify_response({"status": "ok", "response": {"type": "default"}})
+        == "NOT_REFUSED"
+    )
 
 
 def test_all_arms_refused_gives_refusals_observed_and_redacts_everything(
@@ -289,16 +333,37 @@ def test_control_arm_rejection_aborts_before_any_transfer_arm():
             self.calls.append("order")
             return {"status": "err", "response": "Insufficient margin"}
 
-    exchange = NoOrders()
-    record = probe.run_probe(
-        record=_record(),
-        info=FakeInfo(),
-        exchange=exchange,
-        account_address=ACCOUNT,
-        sub_account=None,
-    )
-    assert record.result == "ABORTED_CONTROL_ARM_NOT_ACCEPTED"
-    assert exchange.calls == ["order"]
+    class TickRejected(FakeExchange):
+        """The r1 shape: ok envelope, per-order error, no resting oid."""
+
+        def order(self, *args, **kwargs):
+            self.calls.append("order")
+            return {
+                "status": "ok",
+                "response": {
+                    "type": "order",
+                    "data": {
+                        "statuses": [
+                            {"error": "Price must be divisible by tick size. asset=3"}
+                        ]
+                    },
+                },
+            }
+
+    for factory in (NoOrders, TickRejected):
+        exchange = factory()
+        record = probe.run_probe(
+            record=_record(),
+            info=FakeInfo(),
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+        )
+        assert record.result == "ABORTED_CONTROL_ARM_NOT_ACCEPTED"
+        assert exchange.calls == ["order"]
+        outcomes = {s["name"]: s["outcome"] for s in record.steps}
+        assert outcomes["S1_control_order"] == "REFUSED"
+        assert outcomes["S0_spot_user_state"] == "RECORDED"
 
 
 def test_uncancelled_control_order_is_reported_loudly():
