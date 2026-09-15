@@ -2535,6 +2535,38 @@ class LifecycleLedgerTests(unittest.TestCase):
                     timestamp=BASE_TIME + timedelta(seconds=5),
                 )
             )
+        with self.assertRaisesRegex(
+            ValueError, "DEPLOYMENT_REFRESH_IDENTITY_INVALID"
+        ):
+            self.registrar.append(
+                event(
+                    event_id="deployment-refresh-missing-identity-refused",
+                    event_type="FROZEN",
+                    previous_state="SHADOW",
+                    next_state="FROZEN",
+                    candidate_id=candidate_id,
+                    package_hash=PACKAGE_A,
+                    deployment_identity_hash=None,
+                    evidence_references=("fixture://deployment-refresh/missing-identity",),
+                    timestamp=BASE_TIME + timedelta(seconds=5),
+                )
+            )
+        with self.assertRaisesRegex(
+            ValueError, "DEPLOYMENT_REFRESH_IDENTITY_INVALID"
+        ):
+            self.registrar.append(
+                event(
+                    event_id="deployment-refresh-package-drift-refused",
+                    event_type="FROZEN",
+                    previous_state="SHADOW",
+                    next_state="FROZEN",
+                    candidate_id=candidate_id,
+                    package_hash=PACKAGE_B,
+                    deployment_identity_hash=DEPLOYMENT_B,
+                    evidence_references=("fixture://deployment-refresh/package-drift",),
+                    timestamp=BASE_TIME + timedelta(seconds=5),
+                )
+            )
         self.registrar.append(
             event(
                 event_id="deployment-refresh-record",
@@ -2792,6 +2824,51 @@ class LifecycleLedgerTests(unittest.TestCase):
                 catalog_backed=True,
             )
 
+    def test_accepted_evaluation_catalog_rejects_invalid_shapes(self) -> None:
+        for label, catalog in (
+            ("string", EVALUATION_A),
+            ("bytes", EVALUATION_A.encode("ascii")),
+            ("bytearray", bytearray(EVALUATION_A.encode("ascii"))),
+            ("uppercase-hash", ("A" * 64,)),
+            ("short-hash", ("abc",)),
+            ("non-string-hash", (1,)),
+        ):
+            with self.subTest(label=label):
+                with self.assertRaisesRegex(
+                    ValueError, "ACCEPTED_EVALUATION_CATALOG_INVALID"
+                ):
+                    LifecycleLedger(
+                        Path(self.temp_dir.name) / f"invalid-catalog-{label}.sqlite",
+                        ALLOWLIST,
+                        active_check_sets=ACTIVE_CHECK_SETS,
+                        accepted_evaluation_catalog=catalog,
+                    )
+
+    def test_accepted_evaluation_catalog_accepts_valid_hash_tuple(self) -> None:
+        ledger = self.new_ledger(
+            "valid-catalog-tuple",
+            accepted_evaluation_catalog=(EVALUATION_A, EVALUATION_B),
+        )
+
+        self.assertEqual(
+            ledger.accepted_evaluation_catalog,
+            frozenset((EVALUATION_A, EVALUATION_B)),
+        )
+
+    def test_catalog_backed_argument_must_be_bool(self) -> None:
+        for label, catalog_backed in (
+            ("integer", 1),
+            ("string", "true"),
+            ("float", 1.0),
+            ("none", None),
+        ):
+            with self.subTest(label=label):
+                with self.assertRaisesRegex(ValueError, "CATALOG_BACKED_INVALID"):
+                    self.registrar.append(
+                        event(event_id=f"catalog-backed-invalid-{label}"),
+                        catalog_backed=catalog_backed,
+                    )
+
     def test_configured_catalog_refuses_absent_hash_and_accepts_present_hash(self) -> None:
         ledger = self.new_ledger(
             "configured-catalog",
@@ -2837,6 +2914,33 @@ class LifecycleLedgerTests(unittest.TestCase):
                 package_hash=PACKAGE_B,
                 deployment_identity_hash=DEPLOYMENT_B,
                 evaluation_run_hash=EVALUATION_B,
+            )
+
+        missing_hash_candidate = "QLC-20260913-catalog-missing-hash"
+        self.append_frozen_fixture(
+            ledger,
+            missing_hash_candidate,
+            "catalog-missing-hash",
+            package_hash="7" * 64,
+        )
+        with self.assertRaisesRegex(
+            ValueError, "CATALOG_BACKED_WITHOUT_EVALUATION_HASH"
+        ):
+            ledger.append(
+                event(
+                    event_id="catalog-backed-without-evaluation-hash",
+                    event_type="SHADOW_ELIGIBLE",
+                    writer_id="admission-1",
+                    writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
+                    previous_state="FROZEN",
+                    next_state="SHADOW",
+                    candidate_id=missing_hash_candidate,
+                    package_hash="7" * 64,
+                    deployment_identity_hash="8" * 64,
+                    timestamp=BASE_TIME + timedelta(seconds=4),
+                ),
+                check_set_version="shadow-eligibility.v1",
+                catalog_backed=True,
             )
 
     def test_deployment_refresh_registrar_path_is_available_at_every_deep_state(

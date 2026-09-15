@@ -310,7 +310,13 @@ def _normalize_schema_sql(sql: str | None) -> str:
 
 
 class LifecycleLedger:
-    """A single-file SQLite ledger with one guarded append route."""
+    """A single-file SQLite ledger with one guarded append route.
+
+    Catalog refusal codes:
+    CATALOG_BACKED_EVIDENCE_WITHOUT_ACCEPTED_CATALOG,
+    CATALOG_BACKED_WITHOUT_EVALUATION_HASH,
+    EVALUATION_RUN_HASH_NOT_IN_ACCEPTED_CATALOG.
+    """
 
     def __init__(
         self,
@@ -737,6 +743,8 @@ class LifecycleLedger:
             raise ValueError("TRIGGER_NOT_APPLICABLE")
         if catalog_backed and self.accepted_evaluation_catalog is None:
             raise ValueError("CATALOG_BACKED_EVIDENCE_WITHOUT_ACCEPTED_CATALOG")
+        if catalog_backed and evaluation_run_hash is None:
+            raise ValueError("CATALOG_BACKED_WITHOUT_EVALUATION_HASH")
         if (
             self.accepted_evaluation_catalog is not None
             and evaluation_run_hash is not None
