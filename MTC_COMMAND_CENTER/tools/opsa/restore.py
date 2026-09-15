@@ -1,4 +1,12 @@
-"""OPS-A restore tool (WP-P0-26, local half) — restore a backup run, verifying byte-hashes.
+"""OPS-A restore tool (WP-P0-26, local half) — restore a COMPLETED backup run, verifying byte-hashes.
+
+Consumes one EXPLICIT run id (there is no "latest": greatest-started-run selection was
+removed by the WP-P0-26 completion-marker repair because the newest run may be the
+interrupted one). Before anything is verified or written the run must carry its completion
+evidence — ``runs/<run_id>/COMPLETE.json`` plus ``runs/<run_id>/RUN_MANIFEST.jsonl`` whose
+bytes hash to the digest recorded in the marker — and the per-run file records must equal
+the run's records in the append-only global manifest. A run without that evidence, or with a
+tampered marker/manifest, is REFUSED (rc 3) and nothing is restored.
 
 Reads the append-only manifest, selects the ``file``/``dir`` records of one backup run,
 and for every file:
@@ -18,7 +26,6 @@ the manifest or a backup file is reported as a check-failure, never skipped sile
 
 Usage:
     python restore.py --config opsa_config.json --run <run_id> --to <target_dir> [--store ID ...]
-    python restore.py --config opsa_config.json --latest --to <target_dir>
     python restore.py --config opsa_config.json --run <run_id> --check-only
 """
 from __future__ import annotations
@@ -31,30 +38,61 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from opsa_common import (  # noqa: E402
-    RC_CHECK_FAILED, RC_OK, RequiredFieldError, read_jsonl,
-    require_non_empty_string, require_non_empty_string_field, resolve_confined_path,
-    sha256_file, utc_now_iso,
+    RC_CHECK_FAILED, RC_OK, RequiredFieldError, RunNotComplete, load_complete_marker,
+    read_jsonl, require_non_empty_string, require_non_empty_string_field,
+    resolve_confined_path, run_manifest_path, sha256_file, utc_now_iso,
 )
 
 RC_ERROR = 1
 
 
 def select_run(records: list[dict], run_id: str | None, store_filter: set[str] | None) -> tuple[str | None, list[dict]]:
-    """Pick the run's records. ``run_id=None`` means --latest (highest run_id string).
+    """Pick the run's ``file``/``dir`` records from the global manifest for an EXPLICIT run id.
 
-    Returns (resolved_run_id, records). Malformed manifest lines surface as
-    ``record == "_malformed"`` entries so callers report them instead of skipping.
+    ``run_id=None`` (the former ``--latest`` selection) is refused with ``ValueError``: the
+    newest run may be the interrupted one, so a run is only ever restored by its explicit id
+    and only after its completion evidence is verified by the caller.
+    Returns (run_id, records). Malformed manifest lines surface as ``record == "_malformed"``
+    entries so callers report them instead of skipping.
     """
+    if run_id is None:
+        raise ValueError("an explicit run id is required; latest-run selection was removed")
     run_ids = [r.get("run_id") for r in records
                if r.get("record") == "run_start" and r.get("run_id")]
     if not run_ids:
         return None, []
-    resolved = run_id if run_id is not None else max(run_ids)
     selected = [r for r in records
-                if r.get("run_id") == resolved
+                if r.get("run_id") == run_id
                 and (r.get("record") in ("file", "dir"))
                 and (not store_filter or r.get("store_id") in store_filter)]
-    return resolved, selected
+    return run_id, selected
+
+
+def verify_completion_evidence(run_dir: Path, run_id: str, global_records: list[dict]) -> dict:
+    """Refuse unless the run carries a valid COMPLETE.json + RUN_MANIFEST.jsonl pair whose
+    file records equal the global manifest's file records for the run (same rel/sha256/size
+    per store) and whose declared file count matches. Returns the marker payload."""
+    marker = load_complete_marker(run_dir, run_id)  # raises RunNotComplete
+    run_records = read_jsonl(run_manifest_path(run_dir))
+    if any(r.get("record") == "_malformed" for r in run_records):
+        raise RunNotComplete(f"run {run_id}: per-run manifest has malformed lines")
+    header = run_records[0] if run_records else {}
+    if header.get("record") != "run_manifest_header" or header.get("run_id") != run_id:
+        raise RunNotComplete(f"run {run_id}: per-run manifest header missing or names another run")
+    def _key(r: dict) -> tuple:
+        return (r.get("store_id"), r.get("rel"), r.get("sha256"), r.get("size"))
+    per_run_files = sorted(_key(r) for r in run_records if r.get("record") == "file")
+    global_files = sorted(_key(r) for r in global_records
+                          if r.get("record") == "file" and r.get("run_id") == run_id)
+    if per_run_files != global_files:
+        raise RunNotComplete(f"run {run_id}: per-run manifest file records differ from the global manifest")
+    declared = marker.get("files")
+    if not isinstance(declared, int) or isinstance(declared, bool) or declared != len(per_run_files):
+        raise RunNotComplete(f"run {run_id}: completion marker declares files={declared!r}, "
+                             f"per-run manifest lists {len(per_run_files)}")
+    if any(r.get("readback") != "match" for r in run_records if r.get("record") == "file"):
+        raise RunNotComplete(f"run {run_id}: per-run manifest carries a non-matching readback record")
+    return marker
 
 
 def verify_backup_file(record: dict, run_dir: Path) -> tuple[bool, str]:
@@ -88,7 +126,11 @@ def run_restore(config_path: Path, run_id: str | None, target: Path | None,
     malformed = [r for r in records if r.get("record") == "_malformed"]
     available_run_ids = {r.get("run_id") for r in records
                          if r.get("record") == "run_start" and r.get("run_id")}
-    if run_id is not None and run_id not in available_run_ids:
+    if run_id is None:
+        print("error: an explicit --run <run_id> is required (latest-run selection was removed)",
+              file=sys.stderr)
+        return RC_CHECK_FAILED
+    if run_id not in available_run_ids:
         print(f"error: run id not found in manifest: {run_id}", file=sys.stderr)
         return RC_CHECK_FAILED
     resolved, selected = select_run(records, run_id, store_filter)
@@ -123,10 +165,23 @@ def run_restore(config_path: Path, run_id: str | None, target: Path | None,
         print(f"error: unsafe manifest path for run {resolved}: {exc}", file=sys.stderr)
         return RC_CHECK_FAILED
 
+    # Completion evidence gate (WP-P0-26 repair): no COMPLETE.json / no RUN_MANIFEST.jsonl /
+    # tampered pair / records differing from the global manifest => refuse before any hash
+    # check or write. Field and confinement validation above already ran on the manifest.
+    try:
+        marker = verify_completion_evidence(run_dir, resolved, records)
+    except RunNotComplete as exc:
+        print(json.dumps({"status": "check_failed", "error": "run_not_complete",
+                          "detail": str(exc), "run_id": resolved}, ensure_ascii=False),
+              file=sys.stderr)
+        return RC_CHECK_FAILED
+
     mode = "check-only" if check_only else "restore"
     print(json.dumps({"mode": mode, "run_id": resolved, "manifest": str(manifest_path),
                       "target": str(target) if target else None,
                       "records_selected": len(selected),
+                      "completion_marker": "verified",
+                      "run_manifest_sha256": marker.get("run_manifest_sha256"),
                       "manifest_malformed_lines": len(malformed)}, ensure_ascii=False))
 
     errors: list[str] = [f"malformed manifest line {m.get('line_number')}" for m in malformed]
@@ -217,9 +272,9 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
         description="OPS-A restore from manifest with byte-hash verification (no delete path)")
     parser.add_argument("--config", required=True, help="backup config JSON")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--run", help="run_id to restore (from manifest)")
-    group.add_argument("--latest", action="store_true", help="use the newest run in the manifest")
+    # ``--latest`` no longer exists: a restore names one explicit COMPLETED run id.
+    parser.add_argument("--run", required=True,
+                        help="run_id to restore (explicit; must carry COMPLETE.json + RUN_MANIFEST.jsonl)")
     parser.add_argument("--to", help="target directory to restore into")
     parser.add_argument("--store", action="append", default=[],
                         help="restrict to this store id (repeatable)")

@@ -12,6 +12,11 @@ Guarantees (see opsa_common module docstring):
   compared to the source hash before the record is marked ``readback=match``.
 - **Honest partial-failure reporting.** A missing store, unreadable file or readback
   mismatch is recorded and reported, never silently skipped; the run exits rc 1.
+- **Completion evidence per run (WP-P0-26 completion-marker repair).** A run that finished
+  with every readback hash matching writes, inside its own run directory and exclusively
+  (never rewritten), the per-run ``RUN_MANIFEST.jsonl`` (header + every file/dir/skipped
+  record) and then ``COMPLETE.json`` (counts, timestamps, the manifest's SHA-256). A partial
+  or interrupted run leaves neither, and ``restore.py`` refuses it.
 
 Dry-run (``--dry-run``) walks and hashes the sources and prints the plan but writes
 nothing — no run directory, no manifest records.
@@ -29,6 +34,7 @@ a monolithic tar.gz cannot give without re-inventing a manifest inside the archi
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -37,8 +43,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from opsa_common import (  # noqa: E402
-    MANIFEST_SCHEMA, RC_CHECK_FAILED, RC_OK, append_jsonl, load_backup_config,
-    resolve_confined_path, run_id_for, sha256_file, utc_now, utc_now_iso,
+    MANIFEST_SCHEMA, RC_CHECK_FAILED, RC_OK, RUN_COMPLETE_SCHEMA, RUN_MANIFEST_SCHEMA,
+    append_jsonl, complete_marker_path, load_backup_config, resolve_confined_path,
+    run_id_for, run_manifest_path, sha256_file, utc_now, utc_now_iso, write_once_bytes,
+    write_once_json,
 )
 
 RC_ERROR = 1
@@ -111,6 +119,11 @@ def run_backup(config_path: Path, dry_run: bool = False, store_filter: set[str] 
     errors: list[str] = []
     files_copied = 0
     bytes_copied = 0
+    skipped = 0
+    # Per-run manifest records (file/dir/skipped) accumulate in memory and are written ONCE,
+    # exclusively, only when the run completed with every readback hash matching; a partial or
+    # interrupted run therefore never carries RUN_MANIFEST.jsonl or COMPLETE.json.
+    run_records: list[dict] = []
 
     for store in stores:
         store_id, store_class = store["id"], store.get("class", "unknown")
@@ -131,17 +144,22 @@ def run_backup(config_path: Path, dry_run: bool = False, store_filter: set[str] 
             if kind == "skipped":
                 _, path, rel, reason = item
                 print(f"SKIP  {store_id}/{rel} ({reason})")
+                skipped += 1
                 if not dry_run:
-                    append_jsonl(manifest_path, {"record": "skipped", "run_id": run_id,
-                                                 "store_id": store_id, "class": store_class,
-                                                 "rel": rel, "reason": reason})
+                    record = {"record": "skipped", "run_id": run_id,
+                              "store_id": store_id, "class": store_class,
+                              "rel": rel, "reason": reason}
+                    append_jsonl(manifest_path, record)
+                    run_records.append(record)
                 continue
             if kind == "dir":
                 _, path, rel = item
                 if not dry_run:
-                    append_jsonl(manifest_path, {"record": "dir", "run_id": run_id,
-                                                 "store_id": store_id, "class": store_class,
-                                                 "rel": rel})
+                    record = {"record": "dir", "run_id": run_id,
+                              "store_id": store_id, "class": store_class,
+                              "rel": rel}
+                    append_jsonl(manifest_path, record)
+                    run_records.append(record)
                 continue
 
             _, src_file, rel = item
@@ -181,27 +199,84 @@ def run_backup(config_path: Path, dry_run: bool = False, store_filter: set[str] 
                 errors.append(msg)
                 print(f"ERROR {msg}", file=sys.stderr)
 
-            append_jsonl(manifest_path, {
+            record = {
                 "record": "file", "run_id": run_id, "store_id": store_id,
                 "class": store_class, "src": str(src_file.resolve()), "rel": rel,
                 "size": size, "sha256": src_hash, "readback": readback,
                 "copied_at": utc_now_iso(),
-            })
+            }
+            append_jsonl(manifest_path, record)
+            run_records.append(record)
             files_copied += 1
             bytes_copied += size
             print(f"OK    {store_id}/{rel} size={size} sha256={src_hash[:16]}… readback={readback}")
 
     status = "ok" if not errors else "partial"
     finished_at = utc_now_iso()
+    completion = "none"
     if not dry_run:
         append_jsonl(manifest_path, {"record": "run_end", "run_id": run_id,
                                      "finished_at": finished_at, "files": files_copied,
                                      "bytes": bytes_copied, "errors": errors,
                                      "status": status})
+        if not errors:
+            completion = write_completion_evidence(
+                run_dir, run_id=run_id, started_at=started, finished_at=finished_at,
+                config_path=Path(config_path), records=run_records,
+                files=files_copied, bytes_total=bytes_copied, skipped=skipped, errors=errors)
+            if completion != "written":
+                status = "partial"
     print(json.dumps({"run_id": run_id, "status": status, "files": files_copied,
                       "bytes": bytes_copied, "errors": len(errors),
+                      "completion_marker": completion,
                       "finished_at": finished_at}, ensure_ascii=False))
-    return RC_OK if not errors else RC_ERROR
+    return RC_OK if not errors and status == "ok" else RC_ERROR
+
+
+def write_completion_evidence(run_dir: Path, *, run_id: str, started_at, finished_at: str,
+                              config_path: Path, records: list[dict], files: int,
+                              bytes_total: int, skipped: int, errors: list[str]) -> str:
+    """Write the immutable per-run ``RUN_MANIFEST.jsonl`` then ``COMPLETE.json``.
+
+    Called only when the run finished with zero errors (every readback hash matched). Both
+    files are created exclusively (never rewritten); the marker records the SHA-256 of the
+    manifest bytes so restore can prove the pair belongs together. Returns ``"written"`` or a
+    reason string — a marker that could not be written leaves the run WITHOUT completion
+    evidence, and the caller reports the run as partial.
+    """
+    if errors:
+        return "refused: run had errors"
+    manifest = run_manifest_path(run_dir)
+    marker = complete_marker_path(run_dir)
+    lines = [json.dumps({"record": "run_manifest_header", "schema": RUN_MANIFEST_SCHEMA,
+                         "run_id": run_id}, ensure_ascii=False, sort_keys=True)]
+    lines += [json.dumps(r, ensure_ascii=False, sort_keys=True) for r in records]
+    manifest_bytes = ("\n".join(lines) + "\n").encode("utf-8")
+    try:
+        write_once_bytes(manifest, manifest_bytes)
+    except FileExistsError:
+        return f"refused: {manifest.name} already exists for run {run_id}"
+    except OSError as exc:
+        return f"failed: cannot write {manifest.name}: {exc}"
+    written_hash = sha256_file(manifest)
+    if written_hash != hashlib.sha256(manifest_bytes).hexdigest():
+        return f"failed: {manifest.name} readback mismatch"
+    payload = {
+        "schema": RUN_COMPLETE_SCHEMA, "run_id": run_id,
+        "started_at": started_at.isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "finished_at": finished_at, "config": str(config_path.resolve()),
+        "files": files, "bytes": bytes_total, "skipped": skipped,
+        "dirs": sum(1 for r in records if r.get("record") == "dir"),
+        "run_manifest": manifest.name, "run_manifest_sha256": written_hash,
+        "readback": "all_match",
+    }
+    try:
+        write_once_json(marker, payload)
+    except FileExistsError:
+        return f"refused: {marker.name} already exists for run {run_id}"
+    except OSError as exc:
+        return f"failed: cannot write {marker.name}: {exc}"
+    return "written"
 
 
 def main(argv: list[str]) -> int:

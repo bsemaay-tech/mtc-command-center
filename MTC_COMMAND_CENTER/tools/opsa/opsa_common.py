@@ -38,6 +38,13 @@ MANIFEST_SCHEMA = "mtc.opsa_manifest/v1"
 HEARTBEAT_SCHEMA = "mtc.opsa_heartbeat/v1"
 WATCHDOG_EVENT_SCHEMA = "mtc.opsa_watchdog_event/v1"
 CONFIG_SCHEMA = "mtc.opsa_backup_config/v1"
+#: Per-run completion evidence (WP-P0-26 completion-marker repair, owner packet 2026-09-07 sections 4-5):
+#: every SUCCESSFUL backup run leaves an immutable per-run manifest plus a completion marker inside
+#: its run directory; a partial or interrupted run leaves neither, and restore refuses such a run.
+RUN_MANIFEST_SCHEMA = "mtc.opsa_run_manifest/v1"
+RUN_COMPLETE_SCHEMA = "mtc.opsa_run_complete/v1"
+RUN_MANIFEST_NAME = "RUN_MANIFEST.jsonl"
+COMPLETE_MARKER_NAME = "COMPLETE.json"
 
 #: Exit codes: 0 ok / 2 alert harvested from health_alerts.py's convention;
 #: 3 could-not-evaluate is this package's extension (honest-wording fix, audit R1 nit 5).
@@ -141,6 +148,71 @@ def append_jsonl(path: Path, record: dict) -> None:
         handle.write(line)
         handle.flush()
         os.fsync(handle.fileno())
+
+
+def write_once_bytes(path: Path, data: bytes) -> None:
+    """Create ``path`` exclusively and write ``data`` in one call, then flush + fsync.
+
+    ``O_EXCL`` semantics: an existing file is never rewritten or truncated (immutability of
+    the per-run manifest and completion marker). ``FileExistsError`` propagates to the caller.
+    No tmp file, no rename, no delete path.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "xb") as handle:
+        handle.write(data)
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def write_once_json(path: Path, payload: dict) -> None:
+    write_once_bytes(Path(path), json.dumps(payload, ensure_ascii=False, sort_keys=True,
+                                            indent=2).encode("utf-8") + b"\n")
+
+
+class RunNotComplete(ValueError):
+    """The run directory carries no valid completion evidence (marker or per-run manifest)."""
+
+
+def run_manifest_path(run_dir: Path) -> Path:
+    return Path(run_dir) / RUN_MANIFEST_NAME
+
+
+def complete_marker_path(run_dir: Path) -> Path:
+    return Path(run_dir) / COMPLETE_MARKER_NAME
+
+
+def load_complete_marker(run_dir: Path, run_id: str) -> dict:
+    """Return the completion marker of ``run_dir`` after verifying it belongs to ``run_id`` and
+    that the per-run manifest it names still hashes to the recorded digest.
+
+    Refuses (``RunNotComplete``) when the marker or the per-run manifest is absent, unreadable,
+    not a JSON object, of another schema/run, or when the manifest bytes no longer match the
+    marker's ``run_manifest_sha256``. Never repairs, never writes.
+    """
+    run_dir = Path(run_dir)
+    marker = complete_marker_path(run_dir)
+    manifest = run_manifest_path(run_dir)
+    if not marker.is_file():
+        raise RunNotComplete(f"run {run_id}: no completion marker ({COMPLETE_MARKER_NAME} absent)")
+    if not manifest.is_file():
+        raise RunNotComplete(f"run {run_id}: no per-run manifest ({RUN_MANIFEST_NAME} absent)")
+    try:
+        payload = json.loads(marker.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RunNotComplete(f"run {run_id}: completion marker unreadable: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise RunNotComplete(f"run {run_id}: completion marker is not a JSON object")
+    if payload.get("schema") != RUN_COMPLETE_SCHEMA:
+        raise RunNotComplete(f"run {run_id}: completion marker schema mismatch: {payload.get('schema')!r}")
+    if payload.get("run_id") != run_id:
+        raise RunNotComplete(f"run {run_id}: completion marker names run {payload.get('run_id')!r}")
+    recorded = payload.get("run_manifest_sha256")
+    actual = sha256_file(manifest)
+    if not isinstance(recorded, str) or recorded != actual:
+        raise RunNotComplete(f"run {run_id}: per-run manifest hash mismatch "
+                             f"(marker={str(recorded)[:16]}… actual={actual[:16]}…)")
+    return payload
 
 
 def read_jsonl(path: Path) -> list[dict]:

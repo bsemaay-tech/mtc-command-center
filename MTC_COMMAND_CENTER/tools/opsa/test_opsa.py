@@ -16,6 +16,7 @@ import hashlib
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -24,7 +25,7 @@ from datetime import timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from opsa_common import parse_utc_iso, utc_now  # noqa: E402
+from opsa_common import parse_utc_iso, utc_now, write_once_bytes  # noqa: E402
 import backup  # noqa: E402
 import heartbeat  # noqa: E402
 import restore  # noqa: E402
@@ -69,6 +70,20 @@ class BackupRestoreTests(unittest.TestCase):
     def _run_backup(self, **kw):
         return backup.run_backup(self.config, **kw)
 
+    def _run_ids(self) -> list[str]:
+        """Run ids in manifest order (the repair removed latest-run selection: tests name runs)."""
+        return [json.loads(line)["run_id"]
+                for line in self.manifest.read_text(encoding="utf-8").splitlines()
+                if line.strip() and json.loads(line).get("record") == "run_start"]
+
+    def _only_run_id(self) -> str:
+        ids = self._run_ids()
+        self.assertEqual(len(ids), 1)
+        return ids[0]
+
+    def _run_dir(self, run_id: str) -> Path:
+        return self.backup_root / "runs" / run_id
+
     def test_roundtrip_byte_identical(self):
         """Back up, damage the live copy, restore -> every file byte-identical."""
         self.assertEqual(self._run_backup(), 0)
@@ -76,7 +91,11 @@ class BackupRestoreTests(unittest.TestCase):
         (self.store / "ledger.jsonl").write_bytes(b"CORRUPTED")
         (self.store / "sub" / "blob.bin").write_bytes(b"")
         target = self.root / "restored"
-        rc = restore.run_restore(self.config, run_id=None, target=target)
+        run_id = self._only_run_id()
+        # Completion evidence exists for a clean run (WP-P0-26 repair).
+        self.assertTrue((self._run_dir(run_id) / "COMPLETE.json").is_file())
+        self.assertTrue((self._run_dir(run_id) / "RUN_MANIFEST.jsonl").is_file())
+        rc = restore.run_restore(self.config, run_id=run_id, target=target)
         self.assertEqual(rc, 0)
         self.assertEqual((target / "ledger_store" / "ledger.jsonl").read_bytes(),
                          b'{"row":1,"note":"alpha"}\r\n{"row":2,"note":"beta"}\r\n')
@@ -118,7 +137,7 @@ class BackupRestoreTests(unittest.TestCase):
         data = bytearray(victim.read_bytes())
         data[7] ^= 0xFF
         victim.write_bytes(bytes(data))
-        rc = restore.run_restore(self.config, run_id=None, target=self.root / "restored")
+        rc = restore.run_restore(self.config, run_id=self._only_run_id(), target=self.root / "restored")
         self.assertEqual(rc, 1)
         self.assertFalse((self.root / "restored" / "ledger_store" / "sub" / "blob.bin").exists())
 
@@ -129,7 +148,7 @@ class BackupRestoreTests(unittest.TestCase):
         victim.write_bytes(b"tampered")
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            rc = restore.run_restore(self.config, run_id=None, target=None, check_only=True)
+            rc = restore.run_restore(self.config, run_id=self._only_run_id(), target=None, check_only=True)
         self.assertEqual(rc, 1)
         self.assertFalse((self.root / "restored").exists())
         summary = json.loads(buf.getvalue().strip().splitlines()[-1])
@@ -137,19 +156,163 @@ class BackupRestoreTests(unittest.TestCase):
         # directories it did not create (old code reported the dir-record count).
         self.assertEqual(summary["dirs_recreated"], 0)
 
-    def test_latest_selects_newest_run(self):
-        """--latest restores the highest run_id, not an arbitrary one."""
+    def test_newest_run_is_restored_only_by_its_explicit_id(self):
+        """Two runs; the second (changed content) restores by its own id, never by 'latest'."""
         self.assertEqual(self._run_backup(store_filter={"ledger_store"}), 0)
         (self.store / "ledger.jsonl").write_bytes(b'{"row":1,"note":"CHANGED"}\r\n')
         self.assertEqual(self._run_backup(store_filter={"ledger_store"}), 0)
-        runs = sorted((self.backup_root / "runs").iterdir())
-        self.assertEqual(len(runs), 2)
+        first, second = self._run_ids()
         target = self.root / "restored"
-        rc = restore.run_restore(self.config, run_id=None, target=target)
-        self.assertEqual(rc, 0)
-        # Newest run must carry the CHANGED content (proves --latest, not --first).
+        self.assertEqual(restore.run_restore(self.config, run_id=second, target=target), 0)
         self.assertEqual((target / "ledger_store" / "ledger.jsonl").read_bytes(),
                          b'{"row":1,"note":"CHANGED"}\r\n')
+        older = self.root / "restored_first"
+        self.assertEqual(restore.run_restore(self.config, run_id=first, target=older), 0)
+        self.assertEqual((older / "ledger_store" / "ledger.jsonl").read_bytes(),
+                         b'{"row":1,"note":"alpha"}\r\n{"row":2,"note":"beta"}\r\n')
+
+    def test_restore_without_explicit_run_id_fails_closed(self):
+        """Falsification 4 (owner packet §5): no run id => refused; --latest no longer exists."""
+        self.assertEqual(self._run_backup(), 0)
+        target = self.root / "restored"
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(self.config, run_id=None, target=target)
+        self.assertEqual(rc, 3)
+        self.assertIn("explicit --run", stderr.getvalue())
+        self.assertFalse(target.exists())
+        with self.assertRaises(ValueError):
+            restore.select_run([{"record": "run_start", "run_id": "x"}], None, None)
+        result = subprocess.run(
+            [sys.executable, str(TOOLS_DIR / "restore.py"), "--config", str(self.config),
+             "--latest", "--to", str(target)],
+            cwd=TOOLS_DIR, capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 2)  # argparse: --latest unknown / --run missing
+        self.assertIn("--run", result.stderr)
+        self.assertFalse(target.exists())
+
+    def test_interrupted_run_has_no_completion_marker_and_restore_refuses(self):
+        """Falsification 1: a copy that dies mid-run leaves no COMPLETE.json; restore refuses it."""
+        real_copyfile = backup.shutil.copyfile
+        calls = {"n": 0}
+
+        def dying_copyfile(src, dst, *a, **kw):
+            calls["n"] += 1
+            if calls["n"] == 2:
+                raise OSError("simulated interruption during the second file copy")
+            return real_copyfile(src, dst, *a, **kw)
+
+        backup.shutil.copyfile = dying_copyfile
+        try:
+            rc = self._run_backup()
+        finally:
+            backup.shutil.copyfile = real_copyfile
+        self.assertEqual(rc, 1)
+        run_id = self._only_run_id()
+        self.assertFalse((self._run_dir(run_id) / "COMPLETE.json").exists())
+        self.assertFalse((self._run_dir(run_id) / "RUN_MANIFEST.jsonl").exists())
+        target = self.root / "restored"
+        for check_only in (False, True):
+            with self.subTest(check_only=check_only):
+                stderr = io.StringIO()
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+                    rc = restore.run_restore(self.config, run_id=run_id,
+                                             target=None if check_only else target,
+                                             check_only=check_only)
+                self.assertEqual(rc, 3)
+                report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+                self.assertEqual(report["error"], "run_not_complete")
+                self.assertIn("no completion marker", report["detail"])
+        self.assertFalse(target.exists())
+
+    def test_completed_run_restores_by_explicit_id_including_copied_run_directory(self):
+        """Falsification 2: a completed run (marker + per-run manifest) restores by explicit id, and
+        the run directory copied elsewhere still verifies (evidence is self-contained)."""
+        self.assertEqual(self._run_backup(), 0)
+        run_id = self._only_run_id()
+        run_dir = self._run_dir(run_id)
+        marker = json.loads((run_dir / "COMPLETE.json").read_text(encoding="utf-8"))
+        self.assertEqual(marker["schema"], "mtc.opsa_run_complete/v1")
+        self.assertEqual(marker["run_id"], run_id)
+        self.assertEqual(marker["files"], 2)
+        self.assertEqual(marker["readback"], "all_match")
+        self.assertEqual(marker["run_manifest_sha256"],
+                         hashlib.sha256((run_dir / "RUN_MANIFEST.jsonl").read_bytes()).hexdigest())
+        # Copy the whole backup root elsewhere: the copied run must still verify and restore.
+        copied_root = self.root / "copied_backups"
+        shutil.copytree(self.backup_root, copied_root)
+        (self.root / "cfg2").mkdir()
+        copied_config = write_config(self.root / "cfg2", copied_root,
+                                     [{"id": "ledger_store", "path": str(self.store),
+                                       "class": "protected"}])
+        target = self.root / "restored_from_copy"
+        rc = restore.run_restore(copied_config, run_id=run_id, target=target)
+        self.assertEqual(rc, 0)
+        self.assertEqual((target / "ledger_store" / "sub" / "blob.bin").read_bytes(),
+                         bytes(range(256)) * 4)
+        # The marker and per-run manifest are immutable: writing them again is refused.
+        with self.assertRaises(FileExistsError):
+            write_once_bytes(run_dir / "COMPLETE.json", b"{}")
+        with self.assertRaises(FileExistsError):
+            write_once_bytes(run_dir / "RUN_MANIFEST.jsonl", b"")
+
+    def test_tampered_marker_or_run_manifest_is_refused(self):
+        """Falsification 3: a tampered/mismatched marker or per-run manifest is refused; a hash
+        mismatch of a backed-up file is still refused behind the gate."""
+        self.assertEqual(self._run_backup(), 0)
+        run_id = self._only_run_id()
+        run_dir = self._run_dir(run_id)
+        target = self.root / "restored"
+
+        def refused(detail_fragment: str):
+            stderr = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+                rc = restore.run_restore(self.config, run_id=run_id, target=target)
+            self.assertEqual(rc, 3)
+            report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+            self.assertEqual(report["error"], "run_not_complete")
+            self.assertIn(detail_fragment, report["detail"])
+            self.assertFalse(target.exists())
+
+        manifest_path = run_dir / "RUN_MANIFEST.jsonl"
+        marker_path = run_dir / "COMPLETE.json"
+        good_manifest = manifest_path.read_bytes()
+        good_marker = marker_path.read_bytes()
+        # (a) per-run manifest tampered (one byte appended) -> marker hash mismatch
+        manifest_path.write_bytes(good_manifest + b"\n")
+        refused("per-run manifest hash mismatch")
+        manifest_path.write_bytes(good_manifest)
+        # (b) marker names another run
+        payload = json.loads(good_marker)
+        payload["run_id"] = "opsa-19000101T000000.000Z"
+        marker_path.write_bytes(json.dumps(payload).encode("utf-8"))
+        refused("names run")
+        # (c) marker unreadable
+        marker_path.write_bytes(b"not json")
+        refused("unreadable")
+        marker_path.write_bytes(good_marker)
+        # (d) per-run record differs from the global manifest (digest forged, marker re-hashed)
+        lines = good_manifest.decode("utf-8").splitlines()
+        rec = json.loads(lines[-1])
+        rec["sha256"] = "0" * 64
+        lines[-1] = json.dumps(rec, ensure_ascii=False, sort_keys=True)
+        forged = ("\n".join(lines) + "\n").encode("utf-8")
+        manifest_path.write_bytes(forged)
+        payload = json.loads(good_marker)
+        payload["run_manifest_sha256"] = hashlib.sha256(forged).hexdigest()
+        marker_path.write_bytes(json.dumps(payload, sort_keys=True).encode("utf-8"))
+        refused("differ from the global manifest")
+        manifest_path.write_bytes(good_manifest)
+        marker_path.write_bytes(good_marker)
+        # (e) intact evidence, but a backed-up file bit-rots -> hash mismatch still refuses (rc 1)
+        victim = run_dir / "ledger_store" / "ledger.jsonl"
+        data = bytearray(victim.read_bytes())
+        data[0] ^= 0xFF
+        victim.write_bytes(bytes(data))
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            rc = restore.run_restore(self.config, run_id=run_id, target=target)
+        self.assertEqual(rc, 1)
+        self.assertFalse((target / "ledger_store" / "ledger.jsonl").exists())
 
     def test_nonexistent_run_is_check_failure_not_empty_success(self):
         """D026: an explicit unknown run id must fail closed with rc 3."""
@@ -186,13 +349,35 @@ class BackupRestoreTests(unittest.TestCase):
                     rc = restore.run_restore(
                         self.config, run_id=run_id, target=target, check_only=check_only)
                 self.assertEqual(rc, 3)
-                self.assertIn("nothing to verify", stderr.getvalue())
-                summary = json.loads(stdout.getvalue().strip().splitlines()[-1])
-                self.assertEqual(summary["status"], "failed")
-                self.assertEqual(summary["verified_against_manifest"], 0)
-                self.assertEqual(summary["errors"], 1)
+                # WP-P0-26 repair: the completion gate refuses first (no COMPLETE.json for the
+                # hand-written partial run) — before any record is read for verification.
+                report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+                self.assertEqual(report["error"], "run_not_complete")
                 if target is not None:
                     self.assertFalse(target.exists())
+        # The older "nothing to verify" fence still stands behind the gate: forge complete-looking
+        # evidence for the same partial run (per-run manifest with the dir record only, marker
+        # declaring files=0) and the zero-file refusal must still fire.
+        run_dir = self.backup_root / "runs" / run_id
+        run_dir.mkdir(parents=True, exist_ok=True)
+        forged_lines = [json.dumps({"record": "run_manifest_header",
+                                    "schema": "mtc.opsa_run_manifest/v1",
+                                    "run_id": run_id}, sort_keys=True),
+                        json.dumps(lines[1], sort_keys=True)]
+        forged = ("\n".join(forged_lines) + "\n").encode("utf-8")
+        (run_dir / "RUN_MANIFEST.jsonl").write_bytes(forged)
+        (run_dir / "COMPLETE.json").write_text(json.dumps({
+            "schema": "mtc.opsa_run_complete/v1", "run_id": run_id, "files": 0,
+            "run_manifest_sha256": hashlib.sha256(forged).hexdigest()}), encoding="utf-8")
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(self.config, run_id=run_id, target=None, check_only=True)
+        self.assertEqual(rc, 3)
+        self.assertIn("nothing to verify", stderr.getvalue())
+        summary = json.loads(stdout.getvalue().strip().splitlines()[-1])
+        self.assertEqual(summary["status"], "failed")
+        self.assertEqual(summary["verified_against_manifest"], 0)
 
     def test_restore_rejects_plain_parent_store_id_before_any_outside_write(self):
         """D026: a malicious manifest store id cannot escape the restore target."""
