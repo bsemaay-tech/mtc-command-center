@@ -231,3 +231,46 @@ byte outputs), and no round-2 launcher script exists on disk because that round 
 | Codex `free`, `gpt-5.3-codex-spark`, low | P030 interface reconciliation; P012 outbound packet | both exit 0 in <1 min; 34/34 citations resolved; 1 of 33 quoted lines not verbatim (fixed by Lead) | Good for mechanical/doc work; still verify quotes. Multi-line prompt arg is word-split → one-line prompt. |
 | Codex `free`, `gpt-5.6-sol` xhigh | probe `ROUTE_OK` 17.9k tokens; P030 delta review (54 cmds, 8 min); P020 delta review (144 cmds, 13 min) | PASS / PASS, both with genuine RED/GREEN on pre-fix exports | Worked despite a stale 98%-used read — probe, never recall. Repo read-only via `--sandbox workspace-write -C <scratch>`. |
 | Gemini 3.7 via `Invoke-GeminiProReadOnly.ps1` | two delta corroborations (literal diff in prompt) | SUCCESS, PASS both, ~75 s / ~30 s | Needs cwd = canonical root and `-ExpectedBranch root/current-20260829`. |
+
+## 2026-09-15 — Claude Opus 5 Lead, session 4 of the P0 takeover (`tradingview-lab-clean-39`, 05:12Z–~08:00Z) — route assessments
+
+- **Codex Plus (gpt-5.6-sol xhigh review; gpt-5.5 high builders):** the day's first lanes were fine —
+  exact Sol executing review of the P020 derived plan (14 min, PASS-WITH-NITS, 0 REQUIRED; reproduced the
+  derivation byte-for-byte, five driver RED arms, RED/GREEN/RED on the N6-8 fence) and the P31FIX builder
+  (8 min, J-01..J-05 closed, commit blocked by the sandbox index lock as always). Then the WEEKLY cap:
+  P1FIX died after 85 s ("try again at Sep 19th 6:47 PM"); probes: `free` capped until Sep 19 11:10,
+  `third` until Oct 6. Planning fact: the Plus pool's weekly allowance was exhausted by Monday morning
+  after Sunday's ~10 lanes — the 5-hour bucket is not the binding limit any more; budget Codex per WEEK.
+- **Claude Opus 5 as builder (owner-authorized, disclosed):** with every Codex home capped the owner
+  ruled "A" — the Lead wrote P31FIX2 (one registrar-path RED test) and P1FIX (the capture-tool
+  correction: 11 Gemini + 6 Lead findings, 230/353 changed lines, 21 tests, full Bridge suite 1649 green)
+  in ~35 min; Gemini delta reviews came back PASS-WITH-NITS for both. Works, but the Lead then cannot
+  accept its own code — the exact Opus/Sol roster carries the acceptance; use only when the routes are
+  out and the owner says so.
+- **Gemini 3.7/3.8 flash-high (paid CLI, read-only wrapper):** five reviews, all real: P020 derived-plan
+  corroboration (PASS-WITH-NITS, 37/37 native reads, 153 s), P1CAP detection (REQUEST_CHANGES with two
+  genuine REQUIRED — run-id/signature unverifiable by construction; half-open window vs inclusive API —
+  both confirmed in the bytes), P031 delta (attempt 1 VOIDED by the CLI's own "output cut off" ERROR
+  status although the 20.6 KB report was complete — recovered from `%TEMP%\gemini_wrapper_failures`,
+  kept supplemental; attempt 2 with a 5000-word cap PASS-WITH-NITS, 185 s), P1CAP delta (PASS-WITH-NITS,
+  all 17 items RESOLVED, 35/35 native reads, 192 s). Two new traps: (1) the Claude Code HARNESS writes
+  `.git/info/exclude` whenever a session's shell cwd enters a worktree — that alone trips the wrapper
+  guard ("Filesystem changes were observed") and voided one attempt; rule: no `cd` into any worktree
+  while `agy.exe` runs, absolute paths only, and warn peer sessions; (2) 32k loose objects in the shared
+  `.git` make the wrapper's before/after object snapshot take ~3-5 min per call (a `git gc` when no lane
+  runs would pay for itself).
+- **SuperGrok:** `402 Grok Build usage balance exhausted` on a trivial probe (weekly, resets Sep 18) —
+  the owner ruled the P020 measurement WAITS for the Grok pre-screen rather than running with the slot
+  vacant. Lane brief prepared for Sep 18.
+- **OpenCode Go (glm-5.3-flash, plan agent):** hung >240 s on a trivial prompt, no output — unavailable
+  (monthly cap suspected; not diagnosed).
+- **Gemini coder wrapper:** needs PowerShell 7 (`pwsh` absent on this host) — dead route here.
+- **freellmapi (trial, 127.0.0.1:3001):** was dead after the night; restarted detached (HTTP 200);
+  still needs the owner's provider keys; no lane used it.
+- **Peer Claude session (outgoing Lead) as a helper:** valuable — did the owner-elevated cleanup of the
+  stray `C:/tmp/.git` (33 phantom Bridge failures gone) and recorded the harness `info/exclude` writer
+  in memory; cost: its shell cwd inside a worktree during my Gemini call was a live risk until we agreed
+  the cwd rule.
+- **Owner-in-the-loop step (wallet signature):** the offline sign page cannot see a wallet extension on
+  `file://` (browsers do not inject providers there); serving the same bytes on `127.0.0.1` for one
+  minute fixed it. The owner's `personal_sign` came back in ~15 min and verified offline.
