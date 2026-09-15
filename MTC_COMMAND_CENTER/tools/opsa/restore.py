@@ -71,8 +71,22 @@ def select_run(records: list[dict], run_id: str | None, store_filter: set[str] |
 def verify_completion_evidence(run_dir: Path, run_id: str, global_records: list[dict]) -> dict:
     """Refuse unless the run carries a valid COMPLETE.json + RUN_MANIFEST.jsonl pair whose
     file records equal the global manifest's file records for the run (same rel/sha256/size
-    per store) and whose declared file count matches. Returns the marker payload."""
+    per store), whose declared file count matches, AND whose run the append-only global
+    manifest itself closed successfully (exactly one ``run_end`` with ``status == "ok"`` and
+    no errors, declaring the same file count). A hand-made pair inside ``runs/<run_id>/`` can
+    never stand in for the backup tool's own terminal record. Returns the marker payload."""
     marker = load_complete_marker(run_dir, run_id)  # raises RunNotComplete
+    ends = [r for r in global_records
+            if r.get("record") == "run_end" and r.get("run_id") == run_id]
+    if len(ends) != 1:
+        raise RunNotComplete(f"run {run_id}: global manifest carries {len(ends)} run_end "
+                             "records for the run (exactly one successful run_end is required)")
+    end = ends[0]
+    if end.get("status") != "ok" or end.get("errors") != []:
+        raise RunNotComplete(f"run {run_id}: global manifest run_end is status="
+                             f"{end.get('status')!r} with {len(end.get('errors') or [])} "
+                             "error(s); only a run the backup tool closed successfully "
+                             "may be restored")
     run_records = read_jsonl(run_manifest_path(run_dir))
     if any(r.get("record") == "_malformed" for r in run_records):
         raise RunNotComplete(f"run {run_id}: per-run manifest has malformed lines")
@@ -90,6 +104,9 @@ def verify_completion_evidence(run_dir: Path, run_id: str, global_records: list[
     if not isinstance(declared, int) or isinstance(declared, bool) or declared != len(per_run_files):
         raise RunNotComplete(f"run {run_id}: completion marker declares files={declared!r}, "
                              f"per-run manifest lists {len(per_run_files)}")
+    if end.get("files") != declared:
+        raise RunNotComplete(f"run {run_id}: global manifest run_end declares files="
+                             f"{end.get('files')!r}, completion marker declares {declared}")
     if any(r.get("readback") != "match" for r in run_records if r.get("record") == "file"):
         raise RunNotComplete(f"run {run_id}: per-run manifest carries a non-matching readback record")
     return marker

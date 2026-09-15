@@ -227,6 +227,81 @@ class BackupRestoreTests(unittest.TestCase):
                 self.assertIn("no completion marker", report["detail"])
         self.assertFalse(target.exists())
 
+    def test_hand_made_completion_evidence_cannot_revive_a_run_the_tool_did_not_close(self):
+        """Gemini detection F-01 (2026-09-15): a COMPLETE.json + RUN_MANIFEST.jsonl pair written by
+        hand into runs/<run_id>/ -- internally consistent, digest-bound, matching the global file
+        records -- must still be refused when the global manifest holds no successful run_end for
+        the run: (1) an interrupted run whose run_end says partial; (2) a crashed run with no
+        run_end at all. RED on the slice-2 restore: it restored arm 1 with rc 0."""
+        real_copyfile = backup.shutil.copyfile
+        calls = {"n": 0}
+
+        def dying_copyfile(src, dst, *a, **kw):
+            calls["n"] += 1
+            if calls["n"] == 2:
+                raise OSError("simulated interruption during the second file copy")
+            return real_copyfile(src, dst, *a, **kw)
+
+        backup.shutil.copyfile = dying_copyfile
+        try:
+            self.assertEqual(self._run_backup(), 1)
+        finally:
+            backup.shutil.copyfile = real_copyfile
+        run_id = self._only_run_id()
+        records = [json.loads(line) for line in
+                   self.manifest.read_text(encoding="utf-8").splitlines()]
+        run_records = [r for r in records if r.get("run_id") == run_id
+                       and r.get("record") in ("file", "dir", "skipped")]
+        files = [r for r in run_records if r["record"] == "file"]
+        self.assertEqual(len(files), 1)  # the copy died on the second file
+
+        def forge(run_dir: Path) -> None:
+            lines = [json.dumps({"record": "run_manifest_header",
+                                 "schema": "mtc.opsa_run_manifest/v1", "run_id": run_id},
+                                sort_keys=True)]
+            lines += [json.dumps(r, sort_keys=True) for r in run_records]
+            manifest_bytes = ("\n".join(lines) + "\n").encode("utf-8")
+            (run_dir / RUN_MANIFEST_NAME).write_bytes(manifest_bytes)
+            marker = {"schema": "mtc.opsa_run_complete/v1", "run_id": run_id,
+                      "files": len(files), "readback": "all_match",
+                      "run_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest()}
+            (run_dir / COMPLETE_MARKER_NAME).write_text(json.dumps(marker, sort_keys=True),
+                                                        encoding="utf-8")
+
+        def assert_refused(config: Path, arm: str) -> None:
+            target = self.root / f"restored_{arm}"
+            for check_only in (True, False):
+                with self.subTest(arm=arm, check_only=check_only):
+                    stderr = io.StringIO()
+                    with contextlib.redirect_stdout(io.StringIO()), \
+                            contextlib.redirect_stderr(stderr):
+                        rc = restore.run_restore(config, run_id=run_id,
+                                                 target=None if check_only else target,
+                                                 check_only=check_only)
+                    self.assertEqual(rc, 3)
+                    report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+                    self.assertEqual(report["error"], "run_not_complete")
+                    self.assertIn("run_end", report["detail"])
+            self.assertFalse(target.exists())
+
+        # arm 1: interrupted run -- the tool wrote run_end with status partial and one error
+        forge(self._run_dir(run_id))
+        assert_refused(self.config, "interrupted")
+
+        # arm 2: crashed run -- same run directory, global manifest without any run_end
+        crashed_root = self.root / "crashed_backups"
+        (crashed_root / "runs").mkdir(parents=True)
+        shutil.copytree(self._run_dir(run_id), crashed_root / "runs" / run_id)
+        (crashed_root / "manifest.jsonl").write_text(
+            "".join(json.dumps(r) + "\n" for r in records if r.get("record") != "run_end"),
+            encoding="utf-8")
+        cfg_dir = self.root / "crashed_cfg"
+        cfg_dir.mkdir()
+        crashed_config = write_config(cfg_dir, crashed_root,
+                                      [{"id": "ledger_store", "path": str(self.store),
+                                        "class": "protected"}])
+        assert_refused(crashed_config, "crashed")
+
     def test_completed_run_restores_by_explicit_id_including_copied_run_directory(self):
         """Falsification 2: a completed run (marker + per-run manifest) restores by explicit id, and
         the run directory copied elsewhere still verifies (evidence is self-contained)."""
@@ -357,24 +432,48 @@ class BackupRestoreTests(unittest.TestCase):
                 self.assertEqual(report["error"], "run_not_complete")
                 if target is not None:
                     self.assertFalse(target.exists())
-        # The older "nothing to verify" fence still stands behind the gate: forge complete-looking
-        # evidence for the same partial run (per-run manifest with the dir record only, marker
-        # declaring files=0) and the zero-file refusal must still fire.
-        run_dir = self.backup_root / "runs" / run_id
-        run_dir.mkdir(parents=True, exist_ok=True)
-        forged_lines = [json.dumps({"record": "run_manifest_header",
-                                    "schema": "mtc.opsa_run_manifest/v1",
-                                    "run_id": run_id}, sort_keys=True),
-                        json.dumps(lines[1], sort_keys=True)]
-        forged = ("\n".join(forged_lines) + "\n").encode("utf-8")
-        (run_dir / "RUN_MANIFEST.jsonl").write_bytes(forged)
-        (run_dir / "COMPLETE.json").write_text(json.dumps({
-            "schema": "mtc.opsa_run_complete/v1", "run_id": run_id, "files": 0,
-            "run_manifest_sha256": hashlib.sha256(forged).hexdigest()}), encoding="utf-8")
+        # Forge complete-looking evidence for the same partial run (per-run manifest with the dir
+        # record only, marker declaring files=0): the gate refuses on the global run_end
+        # (status partial, one error) before anything else -- Gemini F-01, slice 3.
+        def forge(run_dir: Path, dir_record: dict, run: str) -> None:
+            run_dir.mkdir(parents=True, exist_ok=True)
+            forged_lines = [json.dumps({"record": "run_manifest_header",
+                                        "schema": "mtc.opsa_run_manifest/v1",
+                                        "run_id": run}, sort_keys=True),
+                            json.dumps(dir_record, sort_keys=True)]
+            forged = ("\n".join(forged_lines) + "\n").encode("utf-8")
+            (run_dir / "RUN_MANIFEST.jsonl").write_bytes(forged)
+            (run_dir / "COMPLETE.json").write_text(json.dumps({
+                "schema": "mtc.opsa_run_complete/v1", "run_id": run, "files": 0,
+                "run_manifest_sha256": hashlib.sha256(forged).hexdigest()}), encoding="utf-8")
+
+        forge(self.backup_root / "runs" / run_id, lines[1], run_id)
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(self.config, run_id=run_id, target=None, check_only=True)
+        self.assertEqual(rc, 3)
+        report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+        self.assertEqual(report["error"], "run_not_complete")
+        self.assertIn("run_end is status='partial'", report["detail"])
+
+        # The older "nothing to verify" fence still stands behind the gate: a run the tool
+        # closed successfully with ZERO files (run_end ok, files 0, no errors) plus the same
+        # forged pair passes the gate and must still be refused for having nothing to verify.
+        empty_run = "opsa-20260825T000100.000Z"
+        empty_dir_record = {"record": "dir", "run_id": empty_run, "store_id": "ledger_store",
+                            "rel": "empty_dir"}
+        with self.manifest.open("a", encoding="utf-8") as handle:
+            for line in ({"record": "run_start", "schema": "mtc.opsa_manifest/v1",
+                          "run_id": empty_run},
+                         empty_dir_record,
+                         {"record": "run_end", "run_id": empty_run, "status": "ok",
+                          "files": 0, "errors": []}):
+                handle.write(json.dumps(line) + "\n")
+        forge(self.backup_root / "runs" / empty_run, empty_dir_record, empty_run)
         stdout = io.StringIO()
         stderr = io.StringIO()
         with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-            rc = restore.run_restore(self.config, run_id=run_id, target=None, check_only=True)
+            rc = restore.run_restore(self.config, run_id=empty_run, target=None, check_only=True)
         self.assertEqual(rc, 3)
         self.assertIn("nothing to verify", stderr.getvalue())
         summary = json.loads(stdout.getvalue().strip().splitlines()[-1])

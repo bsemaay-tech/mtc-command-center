@@ -211,21 +211,25 @@ def run_backup(config_path: Path, dry_run: bool = False, store_filter: set[str] 
             bytes_copied += size
             print(f"OK    {store_id}/{rel} size={size} sha256={src_hash[:16]}… readback={readback}")
 
-    status = "ok" if not errors else "partial"
     finished_at = utc_now_iso()
     completion = "none"
     if not dry_run:
-        append_jsonl(manifest_path, {"record": "run_end", "run_id": run_id,
-                                     "finished_at": finished_at, "files": files_copied,
-                                     "bytes": bytes_copied, "errors": errors,
-                                     "status": status})
+        # Completion evidence first, terminal record second: the global manifest's run_end may
+        # say "ok" only for a run whose COMPLETE.json + RUN_MANIFEST.jsonl exist on disk. A
+        # failed evidence write becomes an error of the run and the run_end says "partial".
         if not errors:
             completion = write_completion_evidence(
                 run_dir, run_id=run_id, started_at=started, finished_at=finished_at,
                 config_path=Path(config_path), records=run_records,
                 files=files_copied, bytes_total=bytes_copied, skipped=skipped, errors=errors)
             if completion != "written":
-                status = "partial"
+                errors.append(f"completion evidence not written: {completion}")
+    status = "ok" if not errors else "partial"
+    if not dry_run:
+        append_jsonl(manifest_path, {"record": "run_end", "run_id": run_id,
+                                     "finished_at": finished_at, "files": files_copied,
+                                     "bytes": bytes_copied, "errors": errors,
+                                     "status": status})
     print(json.dumps({"run_id": run_id, "status": status, "files": files_copied,
                       "bytes": bytes_copied, "errors": len(errors),
                       "completion_marker": completion,

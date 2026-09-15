@@ -189,6 +189,13 @@ def load_complete_marker(run_dir: Path, run_id: str) -> dict:
     Refuses (``RunNotComplete``) when the marker or the per-run manifest is absent, unreadable,
     not a JSON object, of another schema/run, or when the manifest bytes no longer match the
     marker's ``run_manifest_sha256``. Never repairs, never writes.
+
+    This is the pair-integrity half only. Field-level validation of the marker (``files`` as a
+    non-bool int equal to the per-run file records), the ``readback`` records, and the
+    cross-check against the global manifest (file records and the successful ``run_end``)
+    live in ``restore.verify_completion_evidence`` — the single gate every restore path,
+    including the P0-30 adapter, passes through. Callers must not treat this loader alone as
+    proof that a run may be restored.
     """
     run_dir = Path(run_dir)
     marker = complete_marker_path(run_dir)

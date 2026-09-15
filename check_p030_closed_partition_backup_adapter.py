@@ -1376,6 +1376,9 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                 "".join(json.dumps(record, sort_keys=True) + "\n" for record in records),
                 encoding="utf-8",
             )
+            # Since the WP-P0-26 repair (slice 3) the bare P026 check-only refuses this partial
+            # run itself (global run_end is not a successful one); the adapter's own envelope
+            # fence below still refuses BEFORE any restore call is made.
             self.assertEqual(
                 subject.restore.run_restore(
                     config_path,
@@ -1384,7 +1387,7 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                     check_only=True,
                     store_filter={self.STORE_ID},
                 ),
-                subject.RC_OK,
+                subject.restore.RC_CHECK_FAILED,
             )
             target = root / "restore-target"
             target.mkdir()
