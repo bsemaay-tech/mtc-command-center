@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -198,9 +199,8 @@ def test_outputs_are_deterministic_write_once_and_clock_free(tmp_path: Path):
         raw = (tmp_path / "one" / name).read_bytes()
         assert (tmp_path / "two" / name).read_bytes() == raw
         assert (tmp_path / "one" / (name + ".sha256")).read_text().strip() == d1[name]
-        assert (
-            b"2026-09-15T" not in raw or name == "binding_packet_draft.json"
-        )  # no wall clock; only venue stamps
+        # no wall clock in any output: every timestamp prefix is the capture window's own day (venue stamps)
+        assert set(re.findall(rb"\d{4}-\d{2}-\d{2}T", raw)) <= {b"2026-09-14T"}, name
 
 
 def test_main_end_to_end(tmp_path: Path, capsys):
