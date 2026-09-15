@@ -63,3 +63,10 @@ Effects (recorded as rows in `DECISIONS.md`):
 5. `OD-20260915-P014-KEEP-OPEN-1` — WP-P0-14 stays OPEN; the read-only report of 2026-09-14 stands; nothing built.
 6. `OD-20260915-FREELLMAPI-NOTYET-1` — freellmapi keys not yet added; the route stays unprobed beyond the one `401` call; no spend.
 Not answered (asked after the six, 14:25Z): item 7 (P0-26 README `--latest` lines) → default B (untouched); item 8 (forward the demo-run e-mail) → optional.
+
+## Q7 — WP-P0-29 DD-06 testnet falsification (asked ~13:05Z; answered ~13:10Z)
+Lead proposal (chat): "DD-06 — test it instead of reading about it. We have a provisioned Hyperliquid testnet account (Sep 14). Approve an agent key there, let it try to withdraw, watch it get refused. ... Testnet only, no real money. Needs your word ... 'testnet agent-withdraw test: go' so tonight's session prepares the D026-style test packet (it runs only after you approve the exact steps)."
+
+Owner chat, verbatim: `testnet agent-withdraw test: go`.
+
+Effect: `OD-20260915-P029-DD06-TESTNET-PROBE-PREP-1` — preparation authority only (script, tests, packet, Gemini review); execution needs a second word on the exact steps and happens on TESTNET from the P4-03 environment (owner's hands / G9), never on mainnet.
