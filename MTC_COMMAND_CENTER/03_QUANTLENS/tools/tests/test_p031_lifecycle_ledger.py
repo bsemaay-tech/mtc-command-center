@@ -2943,6 +2943,62 @@ class LifecycleLedgerTests(unittest.TestCase):
                 catalog_backed=True,
             )
 
+    def test_registrar_refresh_with_catalog_backed_claim_requires_evaluation_hash(
+        self,
+    ) -> None:
+        # The pre-fix ledger APPENDED a registrar deployment refresh that claimed
+        # catalog backing without any evaluation hash (registrar events carry none),
+        # because the writer-class chain never reached the catalog check for that
+        # path; the refusal must fire before the writer-class chain.
+        ledger = self.new_ledger(
+            "registrar-catalog-backed-no-hash",
+            accepted_evaluation_catalog=(EVALUATION_A,),
+        )
+        candidate_id = "QLC-20260913-registrar-catalog-backed"
+        self.append_frozen_fixture(ledger, candidate_id, "registrar-catalog-backed")
+        self.append_authority_event(
+            ledger,
+            candidate_id=candidate_id,
+            event_id="registrar-catalog-backed-shadow",
+            event_type="SHADOW_ELIGIBLE",
+            previous_state="FROZEN",
+            next_state="SHADOW",
+            writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
+            writer_id="admission-1",
+            check_set_version="shadow-eligibility.v1",
+            evaluation_run_hash=EVALUATION_A,
+            catalog_backed=True,
+        )
+        self.assertEqual(observed_state(ledger.current_state(candidate_id)), "SHADOW")
+        registrar = Registrar(ledger, "registrar-1")
+
+        def refresh(event_id: str) -> Any:
+            return event(
+                event_id=event_id,
+                event_type="FROZEN",
+                previous_state="SHADOW",
+                next_state="FROZEN",
+                candidate_id=candidate_id,
+                package_hash=PACKAGE_A,
+                deployment_identity_hash=DEPLOYMENT_B,
+                evidence_references=("fixture://registrar-catalog-backed/refresh",),
+                timestamp=BASE_TIME + timedelta(seconds=5),
+            )
+
+        with self.assertRaisesRegex(
+            ValueError, "CATALOG_BACKED_WITHOUT_EVALUATION_HASH"
+        ):
+            registrar.append(
+                refresh("registrar-refresh-catalog-backed-no-hash-refused"),
+                catalog_backed=True,
+            )
+        self.assertEqual(observed_state(ledger.current_state(candidate_id)), "SHADOW")
+
+        registrar.append(refresh("registrar-refresh-without-catalog-claim"))
+        state = ledger.current_state(candidate_id)
+        self.assertEqual(observed_state(state), "FROZEN")
+        self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
+
     def test_deployment_refresh_registrar_path_is_available_at_every_deep_state(
         self,
     ) -> None:
