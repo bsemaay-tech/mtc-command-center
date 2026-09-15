@@ -14,16 +14,20 @@ Prepared by the Claude Opus 5 Lead (session 5, `03c6c8`). Plain language; every 
 6. freellmapi not yet → recorded.
 Plus the relayed "testnet agent-withdraw test: go" → the DD-06 probe is **prepared, not run** (script + 14 tests + step packet; two Gemini reads).
 
-## Asks (answer with the word in quotes; the default applies if you say nothing)
+## 18:25Z — you answered A-G early (F silent): all recorded (`67f2febf`)
+- **A DD-06 probe r1 (18:33Z): ABORTED at the control arm** — the venue rejected my control order (`Price must be divisible by tick size`); no transfer arm ran, nothing rests, no agent added, Bridge untouched. Cause = my rounding; fixed as slice 3 `1af85067` (Bridge's own `round_hl_price`; 16 tests; full suite 1614 passed), shipped to KVM2 and dry-run. **Needs your "r2 go"** for the re-run (packet §4).
+- **B** README fixed `e114ed31` (docs only); Wednesday lane 4 now reviews `e114ed31`.
+- **C** DD-01 closed as "proceed" (register pointer filled); HOLD FOR FIRST MAINNET DEPOSIT stays until DD-02..DD-09 close.
+- **D** Wednesday Opus lane 5 = T1 of PR #193 + #194 (after lane 4).
+- **E** P0-21: `gap_ratio_max = 0.0001` on `m2`, formula pin, `ds-v1` digest pin, divergence metric M-C — recorded as policy v1 (provisional).
+- **G** E-4 question filed for the P0-20 contract owner (options E1/E2/E3).
+
+## Asks that remain (answer with the word in quotes; the default applies if you say nothing)
 | # | Ask | Default |
 |---|---|---|
-| A | DD-06 testnet probe: say **"probe steps approved"** to let it run from KVM2 on testnet (≤ 6 USDC of faucet money at risk; refuses mainnet; the agent key, never a master key) | not run |
-| B | P0-26 README (`tools/opsa/README.md` lines 61/63 still show `restore.py --latest`, a flag the repair removes): **"A"** = I fix the two lines on the repair branch before the Wednesday Opus lane (disclosed, two-line docs change); **"B"** = leave it for the merge PR | B |
-| C | DD-01 (Hyperliquid Terms): **"HOLD stands"** or **"proceed"** | HOLD stands |
-| D | T1 reviews of PR #193 and PR #194 (both green, both unmerged): **"Wed Opus after lanes 1-4"** or **"Fri Sol"** | Wed Opus |
-| E | P0-21 S2: `P021_DECISION_3 = Z|T|L` (recommended T = 0.0001 on `m2`), B-17 pin the `m2` formula, B-13 the `ds-v1` digest, `P021_DIVERGENCE_METRIC = M-A|M-B|M-C` (recommended M-C) | nothing moves |
+| R2 | DD-06 probe re-run on slice 3 `1af85067`: **"r2 go"** (same steps; ≤ 6 test-USDC at risk; refuses mainnet) | not run |
+| H | P0-21 S1 catalogue slice (puts your S2 values into the rule catalogue): closing `gap_ratio_max` also mints a NEW hashed policy-set version — **"catalogue only"** (recommended: artifact waits for the whole-set ratification B-22) or **"ratify the new policy-set version too"** | catalogue only, built in a daytime slot |
 | F | Optional: forward the 08:18Z "Run failed: CI" demo-run e-mail to the connected mailbox if you want it archived beside the PR #193 one | skip |
-| G | P0-13 E-4 (one line, no rush): may the contract owner be asked whether `SimulatorClass` should stay a closed enum in `identity.py:263-265` while `stages_conservation_identity.py:55-56` keeps string twins? | ask later |
 
 ## Things I did without asking (all reversible, nothing deployed, nothing traded, no host contact)
 - Documents for P0-13/21/22/26/28/29/31 (gap tables, decision packets, fallback spec, docs-branch notes) — listed in `RUN_STATE.md` with paths.

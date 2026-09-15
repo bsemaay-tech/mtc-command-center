@@ -310,3 +310,16 @@
 | CT13 | `8e4f172c` pushed 17:08Z |
 
 **Executing provider workers at 17:10Z: 1 (Gemini chain, 1 root).**
+
+## 18:50Z (session 5 — after the owner's 18:25Z answers)
+| Lane | State |
+|---|---|
+| DD06 (A) | r1 EXECUTED 18:33Z → ABORTED at the control arm (tick-size rejection; no transfer arm ran; venue clean; service DISARMED); slice 3 `1af85067` shipped + dry-run on KVM2; **waiting for "r2 go"** |
+| P026 README (B) | DONE `e114ed31`; lane 4 re-pinned |
+| DD-01 (C) | CLOSED by "proceed" (`OD-20260915-P029-DD01-PROCEED-1`); HOLD disposition unchanged |
+| P027 T1 (D) | Wednesday lane 5 prepared (`P027CI/`), by hand after lane 4 |
+| P021 S2 (E) | values recorded (T / B-17 / B-13 / M-C); S1 catalogue slice optional tonight (feature branch, unmerged) |
+| P013 E-4 (G) | question filed |
+| CT13 | `67f2febf` pushed 18:47Z |
+
+**Executing provider workers at 18:50Z: 0.**
