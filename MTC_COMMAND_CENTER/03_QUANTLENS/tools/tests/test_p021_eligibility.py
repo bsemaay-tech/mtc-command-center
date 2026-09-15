@@ -93,7 +93,11 @@ class P021ContractTestCase(unittest.TestCase):
         data_quality = next(c for c in record["checks"] if c["check_id"] == "P021.DATA_QUALITY")
         self.assertEqual(data_quality["limits"]["gap_ratio_max"], 0.0001)
         self.assertEqual(data_quality["limits"]["gap_ratio_metric"], "m2_missing_bar_ratio")
-        self.assertTrue(data_quality["limits"]["gap_ratio_formula_id"].startswith("m2_missing_bar_ratio@data_gap_ratio.py v1"))
+        self.assertEqual(
+            data_quality["limits"]["gap_ratio_formula_id"],
+            "m2_missing_bar_ratio@data_gap_ratio.py v1 (fixed-step 24/7, half-open span, "
+            "leading/trailing absence excluded)",
+        )
         self.assertEqual(data_quality["limits"]["dataset_hash_contract"], "ds-v1")
         self.assertEqual(data_quality["missing_numbers"], [])
         self.assertEqual(data_quality["missing_rules"], ["accepted_corrected_engine.B01"])
@@ -102,7 +106,9 @@ class P021ContractTestCase(unittest.TestCase):
         self.assertNotIn("divergence_metric.B05", divergence["missing_rules"])
         self.assertEqual(record["policy_set"]["owner_decisions"]["P021_DECISION_3"], "T")
         self.assertEqual(record["policy_set"]["owner_decisions"]["P021_DIVERGENCE_METRIC"], "M-C")
-        self.assertEqual({n["name"] for n in record["closed_numbers"] if n["name"] == "gap_ratio_max"}, {"gap_ratio_max"})
+        closed = {n["name"]: n["value"] for n in record["closed_numbers"]}
+        self.assertIn("gap_ratio_max", closed)
+        self.assertEqual(closed["gap_ratio_max"], 0.0001)
         self.assertEqual(
             {item["name"] for item in record["open_numbers"]},
             _EXPECTED_OPEN_NUMBERS,
