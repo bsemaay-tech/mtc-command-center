@@ -1,0 +1,72 @@
+hyperliquid-python-sdk 0.24.0
+TESTNET_API_URL https://api.hyperliquid-testnet.xyz
+MAINNET_API_URL https://api.hyperliquid.xyz
+Exchange.__init__ (self, wallet: eth_account.signers.local.LocalAccount, base_url: Optional[str] = None, meta: Optional[hyperliquid.utils.types.Meta] = None, vault_address: Optional[str] = None, account_address: Optional[str] = None, spot_meta: Optional[hyperliquid.utils.types.SpotMeta] = None, perp_dexs: Optional[List[str]] = None, timeout: Optional[float] = None)
+Exchange.approve_agent (self, name: Optional[str] = None) -> Tuple[Any, str]
+Exchange.order (self, name: str, is_buy: bool, sz: float, limit_px: float, order_type: hyperliquid.utils.signing.OrderType, reduce_only: bool = False, cloid: Optional[hyperliquid.utils.types.Cloid] = None, builder: Optional[hyperliquid.utils.types.BuilderInfo] = None) -> Any
+Exchange.cancel (self, name: str, oid: int) -> Any
+Exchange.withdraw_from_bridge (self, amount: float, destination: str) -> Any
+Exchange.usd_transfer (self, amount: float, destination: str) -> Any
+Exchange.spot_transfer (self, amount: float, destination: str, token: str) -> Any
+Exchange.sub_account_transfer (self, sub_account_user: str, is_deposit: bool, usd: int) -> Any
+Exchange.usd_class_transfer (self, amount: float, to_perp: bool) -> Any
+Info.__init__ (self, base_url: Optional[str] = None, skip_ws: Optional[bool] = False, meta: Optional[hyperliquid.utils.types.Meta] = None, spot_meta: Optional[hyperliquid.utils.types.SpotMeta] = None, perp_dexs: Optional[List[str]] = None, timeout: Optional[float] = None)
+Info.user_state (self, address: str, dex: str = '') -> Any
+Info.extra_agents (self, user: str) -> Any
+Info.all_mids (self, dex: str = '') -> Any
+Info.meta (self, dex: str = '') -> hyperliquid.utils.types.Meta
+ClientError (self, status_code, error_code, error_message, header, error_data=None)
+ServerError (self, status_code, message)
+--- Exchange.approve_agent source ---
+    def approve_agent(self, name: Optional[str] = None) -> Tuple[Any, str]:
+        agent_key = "0x" + secrets.token_hex(32)
+        account = eth_account.Account.from_key(agent_key)
+        timestamp = get_timestamp_ms()
+        is_mainnet = self.base_url == MAINNET_API_URL
+        action = {
+            "type": "approveAgent",
+            "agentAddress": account.address,
+            "agentName": name or "",
+            "nonce": timestamp,
+        }
+        signature = sign_agent(self.wallet, action, is_mainnet)
+        if name is None:
+            del action["agentName"]
+
+        return (
+            self._post_action(
+                action,
+                signature,
+                timestamp,
+            ),
+            agent_key,
+        )
+
+--- Exchange.withdraw_from_bridge source ---
+    def withdraw_from_bridge(self, amount: float, destination: str) -> Any:
+        timestamp = get_timestamp_ms()
+        action = {"destination": destination, "amount": str(amount), "time": timestamp, "type": "withdraw3"}
+        is_mainnet = self.base_url == MAINNET_API_URL
+        signature = sign_withdraw_from_bridge_action(self.wallet, action, is_mainnet)
+        return self._post_action(
+            action,
+            signature,
+            timestamp,
+        )
+
+--- API._handle_exception source ---
+    def _handle_exception(self, response):
+        status_code = response.status_code
+        if status_code < 400:
+            return
+        if 400 <= status_code < 500:
+            try:
+                err = json.loads(response.text)
+            except JSONDecodeError:
+                raise ClientError(status_code, None, response.text, None, response.headers)
+            if err is None:
+                raise ClientError(status_code, None, response.text, None, response.headers)
+            error_data = err.get("data")
+            raise ClientError(status_code, err["code"], err["msg"], response.headers, error_data)
+        raise ServerError(status_code, response.text)
+

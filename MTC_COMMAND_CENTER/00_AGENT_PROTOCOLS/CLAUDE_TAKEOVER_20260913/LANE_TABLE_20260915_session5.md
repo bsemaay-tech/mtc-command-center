@@ -274,3 +274,15 @@
 | CT13 | commit pending (night outputs + session 4's two uncommitted P029 files) — after the Gemini window |
 
 **Executing provider workers at 14:30Z: 1 (Gemini attempt 2, agy.exe).**
+
+## Session 5 — 15:27Z update (owner "all" + DD-06 prep)
+| Lane | State |
+|---|---|
+| P027OPSACI (c) | DONE — PR #194 GREEN (`63b7bbe0`), RED demo PR #195 closed; T1 review pending |
+| DD06PREP (B0) | PREPARED — `69377d6b` (slice 2 after Gemini attempt 1's findings); step packet ready; morning ask "probe steps approved"; Gemini detection re-running |
+| O9FIX (a) | DONE — `153edee9`; Opus lane 3 re-pinned; Gemini delta queued |
+| P012INTAKE (b) | DONE (non-accepting half) — `004a0711`; design note with D-1..D-6; Gemini detection queued |
+| P027GEM | attempt 3 queued (last in the chain) |
+| CT13 | commit after the Gemini chain (records for c/B0/a/b + owner answers already committed as `fc5dfcac`) |
+
+**Executing provider workers at 15:27Z: 1 (Gemini chain, 4 roots, agy.exe).**

@@ -118,3 +118,5 @@ Also his acts, no question: formal acceptance of the P0-27 day-one scope; the T1
 NEW tonight (no rush, one line each):
 7. **P0-26 README follow-behind:** `tools/opsa/README.md` lines 61/63 still show `restore.py --latest` (flag removed by candidate `d81b07f6`; README outside the five-file ceiling). "A" = the Lead fixes the two lines + names the completion files in the same branch before the Wednesday Opus lane (disclosed; two-line docs change), "B" = leave it for the merge PR. Default: B (nothing touched).
 8. Optional: forward the 08:18 "Run failed: CI" e-mail (demo-run mail) if you want it archived beside the PR #193 one.
+
+## 13:10Z owner: "testnet agent-withdraw test: go" -> `OD-20260915-P029-DD06-TESTNET-PROBE-PREP-1` (PREPARE only). Morning ask: approve the exact execution steps of the DD-06 testnet probe packet ("probe steps approved"), or "changes: ...".

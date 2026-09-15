@@ -102,3 +102,24 @@ Rules for the night: no host contact, no deploy, no trading, no TESTNET/mainnet 
 
 ## 6. Redactions
 No credential, key, seed or password appears in any session-4 file. The wallet-key environment variable was removed from every child process and never printed. The GitHub notification e-mail was stored with its personal `email_token` values redacted. The owner's mainnet address is public; prose uses the short form. The owner's Gmail addresses appear only in the e-mail artifact header (needed for provenance) — do not copy them elsewhere.
+
+---
+
+## §2-delta — what moved during session 5 (Claude Opus 5 Lead `03c6c8`, 2026-09-15 13:48Z → 15:44Z; the table above is left as written at 12:20Z)
+| WP | Δ state | Evidence |
+|---|---|---|
+| P0-12 | intake adapter built as the **non-accepting half** (`feature/p012-funding-intake-adapter-20260915` `004a0711`; the export tool has no production mode — six decisions D-1..D-6 named in `QUEUED_PACKAGES_20260915/P012_FUNDING_INTAKE_20260915/P012_FUNDING_INTAKE_DESIGN_20260915.md`); real r1 dry run recorded; Gemini detection queued | `LEAD_VERIFICATION_P012_INTAKE.md` |
+| P0-13 | post-P020 note (Phase D flips at C-7; Phase B verified NOT done — P020 impl branch still `b9b72f85`; E-2 blobs unchanged) + E-1/E-5 prep + D-5/D-6 brief skeleton | `P013_POST_P020_NOTE_20260915.md`, `P013_E1_E5_PREP_20260915.md` |
+| P0-14 | owner "keep open" → `OD-20260915-P014-KEEP-OPEN-1` | DECISIONS |
+| P0-20 | launcher digests 4/4 re-verified; roster gate files present; Grok adjudication absent (Sep 18); shot unspent; validate dry-run refuses relocation by design | RUN_STATE 14:23Z |
+| P0-21 | gap table (design v1.5 × merged bytes; B-08/B-12/B-16 decided+implemented but the catalogue still lists them; unanswered 09-08 `gap_ratio_max` packet surfaced) + **options packet S2** (Z/T/L re-presented with the 93-file scan; B-17 formula pin; B-13 digest pin; B-05 metric options M-A/M-B/M-C) | `P021_GAP_TABLE_20260915.md`, `P021_OPTIONS_PACKET_S2_20260915.md` |
+| P0-22 | gap table (A-7d five parts × reduced slice; deferral table with owner decisions 98-103; next slices N1-N6) | `P022_GAP_TABLE_20260915.md` |
+| P0-26 | decision packet **draft 2**; Lead-found README `--latest` residual (owner item 7, default B); **Opus lane 4 brief HEAD line re-pinned to `d81b07f6`** (was stale → would have BLOCKed) | `P026_DEPLOYMENT_AND_DRILL_DECISION_PACKET_20260915_DRAFT2.md` |
+| P0-27 | **ACCEPTED at day-one scope** (`OD-20260915-P027-DAYONE-ACCEPT-1`, owner 14:41Z); G7 write-back done (CI_POLICY note, stage HANDOFF rotation); **PR #194** (OPS-A tests job, `63b7bbe0`, GREEN + RED demo #195 closed) beside PR #193 — both open for T1; Gemini corroboration of #193 + packet: two complete PASS-WITH-NITS reports, both voided by CLI 503 → counted run pending | `P027_ACCEPTANCE_PACKET_20260915.md`, `P027_OPSA_CI_20260915/`, `P027_CI_GEMINI/` |
+| P0-28 | fallback spec v1 (virtual-book mode designated by the read, not activated; venue fallback comparison + no-funds rehearsal outline) | `P028_FALLBACK_SPEC_V1_20260915.md` |
+| P0-29 | owner: Terms read (DD-01 fact half closed; **HOLD stands**), **OKX named** (DD-05 candidate, not accepted); docs branch `d43ad9c3` (runbook/treasury/addendum §D2 notes; the branch was merged up to master `fcac0ac6` first for guard freshness); **DD-06 testnet probe PREPARED** `69377d6b` (slice 2 after Gemini's two REQUIRED findings) — morning ask "probe steps approved" | `DECISIONS`, `P029/DD06_TESTNET_PROBE_20260915/` |
+| P0-30 | **O9FIX built** by the Lead (`153edee9` = `daf6a43b` + K-01..K-05 closed; 16/16 refusal-code tests; RED arm) → Opus lane 3 re-pinned; Gemini delta queued | `P030_O9FIX_20260915/DISPOSITION_O9FIX.md` |
+| P0-31 | M2 scope packet draft 1 (Track A = M1 completion seam vs Track B = SEED_IMPORT per plan + fold §4a-4c; six questions) | `P031_M2_SCOPE_PACKET_DRAFT_20260915.md` |
+| Owner one-liners answered 14:41Z | 1 Terms read (HOLD) · 2 OKX · 3 accept day-one · 4 all · 5 keep open · 6 not yet | `OWNER_ANSWERS_20260915.md` night section |
+| Still open for the owner | "probe steps approved" (DD-06); P0-26 README A/B (item 7); DD-01 decision word (HOLD/proceed); PR #193 + #194 T1 reviews (Wed Opus lane / Fri Sol) | `OWNER_DECISIONS_PENDING.md` |
+Route facts: Gemini 3.8 returned `503` after the report on every full call tonight (recover + count only a clean run); pytest basetemp must be ASCII and outside `C:/tmp`; no git while `agy.exe` runs (even `status`). CT13 commits: `401d2e11`, `fc5dfcac`, (session 4's) `7dafb908`, plus the night's second wave after the Gemini chain.
