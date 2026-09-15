@@ -109,6 +109,11 @@ jobs:
       PYTHONUTF8: "1"
       PYTHONDONTWRITEBYTECODE: "1"
     steps:
+      # The repository carries paths longer than Windows' 260-character default (QuantLens research
+      # intake archives); without this the checkout itself fails with "Filename too long".
+      - name: Enable long paths for the checkout
+        run: git config --system core.longpaths true
+
       - name: Check out repository
         uses: actions/checkout@v4
         with:
