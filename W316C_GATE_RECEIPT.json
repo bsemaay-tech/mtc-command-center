@@ -1,0 +1,8 @@
+{
+  "claim_label": "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_REFUSED",
+  "mode": "full-gate",
+  "refusal": {
+    "check_id": "EXPECTED_PROVENANCE_EXCEPTION_INVALID",
+    "detail": "record base=108ea066a710ff7ef5c09246903fe3d523da1d56 manifest base=5e8e579410ee55008bfd2d2d85054fd1d782f32c"
+  }
+}

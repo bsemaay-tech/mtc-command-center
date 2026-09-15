@@ -13,13 +13,7 @@ class PipelineReaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             strategy_id = "QL_ALPHA_LINK_8EMA_1H"
-            strategy_dir = (
-                Path(tmp)
-                / "01_MASTER TEMPLATE_V2"
-                / "06_QUANTLENS_LAB"
-                / "06_PROMOTED_TO_PARITY"
-                / strategy_id
-            )
+            strategy_dir = root / "03_QUANTLENS" / "06_PROMOTED_TO_PARITY" / strategy_id
             strategy_dir.mkdir(parents=True)
             triage_map = (
                 Path(tmp)
@@ -94,7 +88,7 @@ class PipelineReaderTests(unittest.TestCase):
                         "status": "PAPER_PLAN_ONLY",
                         "live_orders_enabled": False,
                         "webhook_enabled": False,
-                        "relative_path": "06_QUANTLENS_LAB/06_PROMOTED_TO_PARITY/QL_ALPHA_LINK_8EMA_1H/FORWARD_PAPER_TRADE_PLAN.md",
+                        "relative_path": "03_QUANTLENS/strategies/QL_ALPHA_LINK_8EMA_1H/FORWARD_PAPER_TRADE_PLAN.md",
                     }
                 ]
             }
@@ -158,14 +152,7 @@ class PipelineReaderTests(unittest.TestCase):
     def test_discovers_extra_quantlens_jsonl_candidates(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
-            extra_path = (
-                Path(tmp)
-                / "01_MASTER TEMPLATE_V2"
-                / "06_QUANTLENS_LAB"
-                / "research"
-                / "batch"
-                / "FINAL_LLM_KNOWLEDGE_BASE.jsonl"
-            )
+            extra_path = root / "03_QUANTLENS" / "research" / "batch" / "FINAL_LLM_KNOWLEDGE_BASE.jsonl"
             extra_path.parent.mkdir(parents=True)
             extra_path.write_text(
                 json.dumps(
@@ -201,22 +188,51 @@ class PipelineReaderTests(unittest.TestCase):
             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["stages"]["discovered"]["status"], "done")
             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["stages"]["backtested"]["status"], "na")
             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["source_url"], "https://www.youtube.com/watch?v=abc123")
-            self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["discovery_source"], "research\\batch\\FINAL_LLM_KNOWLEDGE_BASE.jsonl")
+            self.assertEqual(
+                rows["QLR_EXTRA_PULLBACK"]["discovery_source"],
+                str(Path("research") / "batch" / "FINAL_LLM_KNOWLEDGE_BASE.jsonl"),
+            )
             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["classification"]["kind"], "wiki")
             self.assertIn("QLR_BLOCKED", rows)
             self.assertEqual(rows["QLR_BLOCKED"]["stages"]["backtested"]["status"], "na")
             self.assertEqual(rows["QLR_BLOCKED"]["classification"]["kind"], "rejected")
 
+    def test_discovers_bom_prefixed_producer_spec(self) -> None:
+        # PowerShell-launched writers can emit a UTF-8 BOM. Plain "utf-8" decoding
+        # leaves the BOM character in the string, json.loads then raises
+        # JSONDecodeError on the "﻿{" prefix, and _iter_producer_specs' except
+        # clause silently skips the file, so the whole candidate row goes missing
+        # instead of just losing a field.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            spec_dir = root / "03_QUANTLENS" / "06_PROMOTED_TO_PARITY" / "QL_BOM_PROMOTED_SPEC"
+            spec_dir.mkdir(parents=True)
+            (spec_dir / "producer_spec.json").write_text(
+                "﻿"
+                + json.dumps(
+                    {
+                        "candidate_id": "QL_BOM_PROMOTED_SPEC",
+                        "title": "BOM promoted producer spec",
+                        "kind": "strategy",
+                        "direction": "long_only",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            pipeline = build_candidate_pipeline(root, {"candidates": [], "strategies": []}, {}, {}, {}, {})
+            rows = {row["id"]: row for row in pipeline["rows"]}
+
+            self.assertIn("QL_BOM_PROMOTED_SPEC", rows)
+            row = rows["QL_BOM_PROMOTED_SPEC"]
+            self.assertEqual(row["stages"]["promoted"]["status"], "done")
+            self.assertIsNotNone(row["producer_spec"])
+            self.assertEqual(row["producer_spec"]["title"], "BOM promoted producer spec")
+
     def test_discovers_promoted_producer_specs_without_registry_strategy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
-            spec_dir = (
-                Path(tmp)
-                / "01_MASTER TEMPLATE_V2"
-                / "06_QUANTLENS_LAB"
-                / "06_PROMOTED_TO_PARITY"
-                / "QL_NEW_PROMOTED_SPEC"
-            )
+            spec_dir = root / "03_QUANTLENS" / "06_PROMOTED_TO_PARITY" / "QL_NEW_PROMOTED_SPEC"
             spec_dir.mkdir(parents=True)
             _write_json(
                 spec_dir / "producer_spec.json",

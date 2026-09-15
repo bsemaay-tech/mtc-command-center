@@ -1,0 +1,13 @@
+{
+  "source_sha256": "d0686e8a00eabadddd9d55fd55ed5e1400635a1384250bee22c7ea590a1659a5",
+  "result": "PASS",
+  "checks": {
+    "MTC_production_path": "CANDIDATE_STAGING_UNSAFE",
+    "duplicate_nonfinite": "CANDIDATE_NONFINITE_VALUE",
+    "duplicate_json": "CANDIDATE_PACKET_INVALID",
+    "source_nan": "CANDIDATE_BINDING_INVALID",
+    "invalid_offset": "CANDIDATE_TIMESTAMP_INVALID",
+    "legal_offset_exact_candidate_bytes": true
+  },
+  "scope": "Five reproduced validation repairs only; synthetic fixtures; no production acceptance"
+}

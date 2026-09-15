@@ -1,0 +1,93 @@
+{
+  "scenario_id": "RULE2-04-GREEN",
+  "owning_def_ids": ["DEF-P012-04"],
+  "role": "GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; owner Reading Y (owner addendum 26, 2026-09-01) applied by lane W172",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.8",
+    "design_lines": "Design section 10, \"92`; the OPEN-06-contingent corrected projection\"; Design section 22.1, \"AMENDMENT-CHOICE (W320, owner decision 144, 2026-09-03) — §22.1\"; Design section 22.3, \"AMENDMENT-CHOICE (W320, owner decision 144, 2026-09-03) — §22.3\"; Design section 22.5, \"0)`. | Same conditional LONG/stop/no-target\"; Design section 22.5, \"0)`. | Same conditional LONG/stop/no-target\"; Design v1.8 section 23, \"vector value, owner answer, or\"",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "4. DEF-P012-04 / RULE2-04-GREEN",
+    "worksheet_section_v18": "v1.8 revision / RULE2-04-GREEN",
+    "worksheet_section_v15": "v1.5 revision / RULE2-04-GREEN"
+  },
+  "open_item_bindings": [
+    {"open_id": "OPEN-06", "source": "open_item_applicability_DRAFT.json items[OPEN-06] (draft_revision 3)", "owner_disposition": "APPLICABLE - P19 RETIRE, P20 RETAIN", "effect_on_this_scenario": "no value effect: neither the corrected gap-aware predicate nor the legacy close-only predicate fires on this bar, so both versions agree regardless of the disposition."},
+    {"open_id": "OPEN-EMBED-01", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (1a) - omitted initial equity is 1000", "effect_on_this_scenario": "Design section 22.5, \"both opens approve the named\" inherits the RULE2-04-RED candidate config, whose initial_capital was [OPEN-EMBED-01]. With 1000 bound, the prefix sizes to quantity 1 and the equity nodes become derivable."},
+    {"open_id": "OPEN-EMBED-02", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (2a) - RULE2-04 entry basis and fill are 100 via the Design section 22.5, \"both opens approve the named\" candidate entry/BE path", "effect_on_this_scenario": "the existing long's entry_fill_price is 100 and its active stop is 100 before the evaluation bar; neither predicate fires on open 105 / low 101, so the position survives unchanged."}
+  ],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "PROTECTIVE_STOP_EVALUATED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:13:00Z", "position_side": "LONG", "stop_price": 100, "predicate": "NO_TOUCH"}
+    ],
+    "fill_events": [],
+    "cash_events": [],
+    "fee_events": [],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": {"side": "LONG", "quantity": 1, "entry_fill_price": 100},
+    "trades": [],
+    "equity_curve": {"first": 999.955, "last": 999.955},
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-04-GREEN-V1",
+      "instrument_record_digest": "f71d1ab990f1da3d9c55e1960f79af91330908e0927c2b2e54f2020a9f596a11",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-04-GREEN-V1",
+      "cost_schedule_digest": "95ea0075173c08bd7f8c1ae3ea49b41432823e325abdf29f4fced10affac6272",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-04-GREEN-V1",
+      "funding_schedule_digest": "ba470d56e9468015f8b77a41bb0afa35dda930cb27e535bbb620e3a8abc10397"
+    }
+  },
+  "observation_window": {
+    "start_timestamp": "2000-01-01T00:13:00Z",
+    "end_timestamp": "2000-01-01T00:13:00Z",
+    "inclusivity": "CLOSED",
+    "authority": "Design section 22.5, \"qty `1`, active stop `100`, and no\" - the same evaluation-only observation window as RULE2-04-RED applies, excluding the setup fills."
+  },
+  "cash_ledger_join": "No fill occurs inside the window, so there is no in-window cash row and equity_curve.last equals equity_curve.first. The pre-window entry fill at 2000-01-01T00:11:00Z charged its own ENTRY fee of 0.045 (fee_notional 100 * 1 * 1), so the window opens at 1000 - 0.045 = 999.955. Re-derived under Design section 23.2, \"exactly `first` and `last`, and\", which now fixes the window-scoped reading V15-D02 flagged as unfixed; the design labels that scope an AMENDMENT-CHOICE (Design section 23.2, \"exactly `first` and `last`, and\"). V15-D02 CLOSED, value unchanged.",
+  "v15_filled_cells": [
+    {"pointer": "/RESULT_SURFACE/final_position/entry_fill_price", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": 100, "authority": "owner addendum 20 item 49 (2a) binds the RULE2-04 entry basis and fill to 100 via the Design section 22.5, \"reaches LONG qty `1`, active\" candidate path."},
+    {"pointer": "/RESULT_SURFACE/equity_curve", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "{first: 999.955, last: 999.955}", "authority": "owner addendum 20 (1a) initial equity 1000 minus the pre-window entry fee 0.045; no in-window cash row. Arithmetic in DERIVATIONS.md, v1.5 revision / RULE2-04-GREEN."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-04-GREEN-V1", "authority": "Design section 22.3, \"RULE2-08-GREEN consume the existing sealed\"."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "Design section 22.3, \"consume the existing sealed RULE2-07 cost records\", Design section 22.3, \"consume the existing sealed RULE2-07 cost records\"."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-COST-RULE2-04-GREEN-V1", "authority": "Design section 22.3, \"RULE2-08-GREEN consume the existing sealed\"."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-04-GREEN-V1", "authority": "Design section 22.3, \"RULE2-08-GREEN consume the existing sealed\"."}
+  ],
+  "cross_version_note": "The corrected pre-window entry fee is a version-specific added effect (Design section 6, \"138, 2026-09-03) - the two\"): 1.0.0 has no fee model (Design section 13, \"no v2 net field, and\"), so corrected equity 999.955 does not equal legacy equity 1000. The declared RULE2-04-GREEN cross-version projection is exit_events A:0, fill_events A:0 and final_position/quantity 1 (Design section 10, \"OPEN-06-contingent corrected projection selects gap/open\"), of which equity is not a member. Recorded as discrepancy V15-D03.",
+  "judgement_calls": [
+    {"pointer": "/RESULT_SURFACE/equity_curve/first", "value": 999.955, "basis": "Design section 23.2, \"and `last`, and both are\" now FIXES the scoping rule that V15-D02 recorded as missing: equity_curve.first and .last are window-scoped realized equity, first taken after every earlier cash event but before any cash event at the inclusive start timestamp. The design labels window scope an explicit AMENDMENT-CHOICE (Design section 23.2, \"and `last`, and both are\"), not a forced identity. Re-derived under that rule this revision; the value is unchanged. V15-D02 is CLOSED."}
+  ],
+  "v18_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "RE-DERIVED under the design 23.1 closed shape: flat members sequence/decision/kernel_semantics_version, per-reason event_timestamp presence, no lifecycle_id, exact per-reason payloads, section-3 order.", "authority": "Design section 22.2, \"intent/event timestamps are the timestamp\" (table Design section 22.2, \"intent/event timestamps are the timestamp\") and the tables-revision item 1 at Design section 23.4, \"about RESULT-member presence when no\"."},
+    {"pointer": "/EVENT_SURFACE/*/*/kernel_semantics_version", "change": "ADDED to every member of all six corrected event containers.", "authority": "Design section 22.2, \"intent/event timestamps are the timestamp\" (section-4 identity / GM28-F03) and tables-revision item 2 at Design section 23.4, \"about RESULT-member presence when no\"."},
+    {"pointer": "/EVENT_SURFACE/decision_events/1", "change": "Renamed PROTECTIVE_STOP_EVALUATED; the bar_* members are dropped and the null reference_source is REMOVED - on a no-trigger evaluation both reference_source and reference_price are absent, not null.", "authority": "Design section 22.2, \"bar, and corrected intent/event timestamps\" final sentence (GM28-F05 repair, change-log row Design section 23.1, \"held by the digest-bound `MarketEvent\")."},
+    {"pointer": "/RESULT_SURFACE/equity_curve", "change": "RE-DERIVED under design 23.2: no in-window cash event, so last == first = 1000 - 0.045 = 999.955. Unchanged.", "authority": "Design section 23.2, \"first` and `last`, and both\", Design section 23.4, \"exit_events[]` member of that lifecycle\"."}
+  ],
+  "w172_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "NO ROW ADDED under owner Reading Y. Same window fence as RULE2-04-RED (Design section 22.5, \". | If both opens approve\"): the entry is on the excluded state-building prefix, and no fill, cash or fee row exists in the compared window.", "authority": "Design section 22.5, \". | If both opens approve\", Design section 23.1, \"If neither predicate triggers, both\"."},
+    {"pointer": "/EVENT_SURFACE and /RESULT_SURFACE value tokens", "change": "LABELING PASS under G83-F06. Every tables-authored value token on the two comparison surfaces of this artifact is now named in authored_value_tokens with the design text that forces the fact and the statement that the spelling is tables-authored. Adds no node and moves no value.", "authority": "G83-F06; DERIVATIONS.md discrepancy W167-D02 (D-13 class)."}
+  ],
+  "authored_value_tokens": [
+    {"pointer": "/EVENT_SURFACE/decision_events/1/predicate", "value": "NO_TOUCH", "design_fact": "Design section 10, \"gap/open reference `90` and final\" - neither predicate holds, so there is no stop fill; Design section 23.1, \"reference members are absent. For\" then makes both reference members absent.", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/decision_events/1/position_side", "value": "LONG", "design_fact": "Design section 10, \"gap/open reference `90` and final\" (section 10 trigger table names the Long position) and Design section 14, \"the same snapshot rule and\".", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/RESULT_SURFACE/final_position/side", "value": "LONG", "design_fact": "Design section 10, \"gap/open reference `90` and final\" (section 10 table rows name the Long position) and Design section 14, \"at equity `1000`. `RULE2-08-GREEN\" (side_factor +1 for long).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
+  ],
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."}
+  ],
+  "derivable_empty_containers_note": "all five economic containers are derivably empty inside the observation window: Design section 10, \"90`. `RULE2-04-GREEN` uses `execution_profile_id=close_only_deterministic_v2\" states neither version exits on this bar, so there is no in-window fill and therefore no in-window fee cash event (Design section 3, \"for that fill; on an\"), and the row's FundingSchedule contains no in-window event (Design section 22.3, \"144, 2026-09-03) — §22.3 record-id grammar.\")."
+}

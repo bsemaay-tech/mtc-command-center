@@ -1,0 +1,310 @@
+{
+  "schema": 1,
+  "members": [
+    {
+      "path": "APPROVED_SCOPE.md",
+      "bytes": 9040,
+      "sha256": "a30326f1351fce4739e0e2883b5d3acf63c41e9bbd54e2ebf991ea40cd2ac788"
+    },
+    {
+      "path": "CANDIDATE.patch",
+      "bytes": 82405,
+      "sha256": "86bcddb24117763752508f8b91543ba3588162a12f597e73569671ebf9f61cc7"
+    },
+    {
+      "path": "evidence/ACCEPTANCE_CASES.md",
+      "bytes": 9457,
+      "sha256": "a5f82f8c359ef5bf956a85a291298276319f389f427cb2c91c644158a0c4db0d"
+    },
+    {
+      "path": "evidence/baseline_full.exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "evidence/baseline_full.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence/baseline_full.stdout.txt",
+      "bytes": 2162,
+      "sha256": "fb59c3e458e70f5d530113694e1cfdbbae22e526546b1095fac221d376a41ab3"
+    },
+    {
+      "path": "evidence/baseline_full.xml",
+      "bytes": 186315,
+      "sha256": "54fd7c2e0e03f095484b8818b9eee36027017ec1792e70611cf6c22cd2805bf5"
+    },
+    {
+      "path": "evidence/checkpoint_causality.exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "evidence/checkpoint_causality.log",
+      "bytes": 164,
+      "sha256": "b844ce7de7b80638a515ae3889d61df8aa3547d3c901f4c79585d92bf56ebc9e"
+    },
+    {
+      "path": "evidence/derivation.json",
+      "bytes": 43777,
+      "sha256": "c34e4b72eaa27512f7e5967b4724e5deb4535258f621641a79263874b8b30337"
+    },
+    {
+      "path": "evidence/final_focused.exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "evidence/final_focused.log",
+      "bytes": 346,
+      "sha256": "bf35b9c2635ed2a469fd0e1e85ca716d5d5867477e1e6ed984f08c27dcccde81"
+    },
+    {
+      "path": "evidence/final_focused.xml",
+      "bytes": 35522,
+      "sha256": "78e1be6eeed958c7e10fb284def95145db3bcbeeb6f74f817738b39e9899aba9"
+    },
+    {
+      "path": "evidence/final_full.exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "evidence/final_full.log",
+      "bytes": 2243,
+      "sha256": "f664ede64b4c6db74c4fe9bde56fdb7cd63bac2b86e1a6146145053421791eb4"
+    },
+    {
+      "path": "evidence/final_full.xml",
+      "bytes": 192303,
+      "sha256": "0874b7c1c6b08c142197054f91de6c571ef29e2c1945d3c958935bfcc017a94b"
+    },
+    {
+      "path": "evidence/future_target_green.exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "evidence/future_target_green.log",
+      "bytes": 100,
+      "sha256": "5dcaa386f42885f63e61bf5c21ef385b7027d0b2e89c58ea3e79543b884f5fca"
+    },
+    {
+      "path": "evidence/future_target_green.xml",
+      "bytes": 902,
+      "sha256": "e61b1d19a65f11b4b4c9f5e1b05e1eee98e39e6b10efc4c08917daf84e634d8c"
+    },
+    {
+      "path": "evidence/IMPLEMENTATION_REPORT.md",
+      "bytes": 15572,
+      "sha256": "822a8bba519e0245a89c540e87db670b3afdb4dcd97afa599310c21fe7c28e0f"
+    },
+    {
+      "path": "evidence/nonfinite_red.exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    {
+      "path": "evidence/nonfinite_red.log",
+      "bytes": 13710,
+      "sha256": "573a4c47d16df9500f3d79a8f0e25eec4991710b70add3c5a36805c5e9df9a97"
+    },
+    {
+      "path": "evidence/nonfinite_red.xml",
+      "bytes": 13874,
+      "sha256": "2fac39847382836371b475084268ca956e7cb415f67824c77a69392d9d2b3051"
+    },
+    {
+      "path": "evidence/persistence_mutant.exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    {
+      "path": "evidence/persistence_mutant.log",
+      "bytes": 2073,
+      "sha256": "b3e431a71c1875424e860adc4efe69f5147866d9cd35f020e2c90bcfac6abbbe"
+    },
+    {
+      "path": "evidence/persistence_mutant.xml",
+      "bytes": 2639,
+      "sha256": "61ddf7b00011077dc421266566b3dd95558951852e6f6316856ddf2f05f22e64"
+    },
+    {
+      "path": "evidence/precommit_guard.log",
+      "bytes": 1154,
+      "sha256": "0410eefd7b7b83747021c18f95718e5d0a1e82fd1804a3b17d3fb60ed1cbb248"
+    },
+    {
+      "path": "evidence/REPAIR_REPORT.md",
+      "bytes": 5430,
+      "sha256": "aa6c5d0e58610df7d53b393688046327e39fc6ef19cefaa5a21d63a683d199cc"
+    },
+    {
+      "path": "evidence/requirements.windows.lock",
+      "bytes": 115025,
+      "sha256": "57869f738f466c8a79f17776b710db022e71b5cf88b00f49d059bbda2de1f442"
+    },
+    {
+      "path": "evidence/retention_baseline_red.exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    {
+      "path": "evidence/retention_baseline_red.log",
+      "bytes": 933,
+      "sha256": "bcb6886709145fca8a22437c5c2f776a8bc5a3e4b0292eaa04219016805a9480"
+    },
+    {
+      "path": "evidence/retention_candidate_green.exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "evidence/retention_candidate_green.log",
+      "bytes": 1010,
+      "sha256": "07128934937623235fbfc0a6af6b70cf536e75fdf5d3c6ed6a32a8883f9cdb62"
+    },
+    {
+      "path": "evidence/staged_guard.log",
+      "bytes": 1695,
+      "sha256": "5726898f9732de8db81f0f14d6ede10628fdbb5df2c0e7a25072225a1b313f4b"
+    },
+    {
+      "path": "OWNER_APPROVAL.md",
+      "bytes": 1736,
+      "sha256": "4e93f348497de42fecdb2d5270354093a42f98405df744ce74f2967ee3a8471a"
+    },
+    {
+      "path": "PACKET.json",
+      "bytes": 3695,
+      "sha256": "87f46280e1c964d023a5f03afc33f7824985db5b568fa7952e59fb26caabbcd9"
+    },
+    {
+      "path": "probes/checkpoint_causality_probe.py",
+      "bytes": 682,
+      "sha256": "da33e5669493726f6775c6b4a683a886462634730740fdd7e1351b9222918e0d"
+    },
+    {
+      "path": "probes/make_mutant.py",
+      "bytes": 1212,
+      "sha256": "9c1064d0bce9a58330768b1946d23c5c28e4898810eb7859429923f8529f58e0"
+    },
+    {
+      "path": "probes/retention_probe.py",
+      "bytes": 3962,
+      "sha256": "860fca2652685407fdb0454962f515cad8b2343bbff681893fa38fead3c85796"
+    },
+    {
+      "path": "REVIEW_BRIEF.md",
+      "bytes": 5278,
+      "sha256": "f0d336ae035016a1faedef699d80220f590203dc5bf9a5b9d9ae4459adf92003"
+    },
+    {
+      "path": "SOURCE.tar",
+      "bytes": 1228800,
+      "sha256": "80a731031522f9e19403947cf678c548fe581f4074b4909e48fe1cc0ad968765"
+    },
+    {
+      "path": "tree/AGENTS.md",
+      "bytes": 4545,
+      "sha256": "7b1c23f1bebf7ec0983ec1cc6190cd74f750690f00a2ce3ca5d3a9e566a9fd1f"
+    },
+    {
+      "path": "tree/CONTEXT_MAP.md",
+      "bytes": 1275,
+      "sha256": "9f233e5c920d8343ab5542f675d245d0c72a67a7096db66aacf8972fc48d7c42"
+    },
+    {
+      "path": "tree/DECISIONS.md",
+      "bytes": 24796,
+      "sha256": "e0005e6c1227765fecc1992adfa4a757901ef765f3c1ec47a1255d81efc0df41"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/AGENTS.md",
+      "bytes": 1754,
+      "sha256": "b872cdf37e37c97b2bdb1a2208c134c79d9d254495916eefe3b04c1ae668bc47"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py",
+      "bytes": 105238,
+      "sha256": "4589e9f86d4c1477a9680d00bf06fd67892133f1bac8428e988059312ff7ee0f"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/bridge/engine/reconcile.py",
+      "bytes": 72910,
+      "sha256": "9bd2bd4c9ac3b019adaa8f425b187abf6b955c05ab12de31d51d6770952f6d8c"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/bridge/engine/types.py",
+      "bytes": 68607,
+      "sha256": "1fe4347a25ee6cc00bf48b8b2b1c908c18b7ff40b1cb2f63f42ba3d2f4ca4748"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/bridge/store/db.py",
+      "bytes": 457089,
+      "sha256": "017d4fdc2d6fd56825f366ffbd12e877e40fee2c117b5e2e0e21d2feeebbe089"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/docs/26_FULL_RECONCILIATION_CONTRACT.md",
+      "bytes": 33026,
+      "sha256": "24ed5c49ce82c454660507d0f1011aa7f670ad2a60ac7d5479ca7d542b8de4d8"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/INPUTS.md",
+      "bytes": 807,
+      "sha256": "cc7c038343dc0aa3e09dd6d22dbed1937c84c78c4a4dd7fefc006cb9ec669a5e"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/OUTPUTS.md",
+      "bytes": 633,
+      "sha256": "e5ab2467eb4f98d3fb073ec43ce497de5a5573966e35ae7ec71c8e9922840399"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/TESTS.md",
+      "bytes": 1298,
+      "sha256": "9c179f3111fe24a2bba8678fc413e93e704b24c3ca772aa76bda1a82231270d1"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/tests/test_funding_payload_retention.py",
+      "bytes": 29896,
+      "sha256": "718d09d0d03063908de82b065174fc303dcf931aef40ce0d292083a404e03985"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/tests/test_partial_fill_protection.py",
+      "bytes": 130452,
+      "sha256": "d7f1528ec1aac4e32d2b8c151ef5c1bb487728ded3f9a69ccd8c07ca7d72b42c"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/tests/test_reconciliation.py",
+      "bytes": 67411,
+      "sha256": "8397c38b9c910997ec662400627da8d16e02bdadd5477a7290cadaaff9fe3de5"
+    },
+    {
+      "path": "tree/IBKR_PAPER_BRIDGE/tests/test_store.py",
+      "bytes": 140299,
+      "sha256": "b4381263ace8541bd0f00edb4539c2b83b5cf3c7753d09f7fab8ba69cb81e41e"
+    },
+    {
+      "path": "tree/MTC_COMMAND_CENTER/_AI_MEMORY/P012_FUNDING_RETENTION_20260911.md",
+      "bytes": 7207,
+      "sha256": "409b29ccde37a24038cb978082b07044daf250069063d4a33e825ed03c2eed8b"
+    },
+    {
+      "path": "tree/MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AUTONOMY_AUTHORIZATION.md",
+      "bytes": 6593,
+      "sha256": "cb3ff6fa6e4e65fa620a9b6a07379c83cd7e46e75ddd3028d88633fad5a8e4ac"
+    },
+    {
+      "path": "tree/MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/REVIEW_POLICY.md",
+      "bytes": 6352,
+      "sha256": "83e1765fc061443104405a2dd57e27276ae448fbc8abce98a9b37224afdf5e8a"
+    },
+    {
+      "path": "tree/MTC_COMMAND_CENTER/02_TASKS/TASK_HISTORY.json",
+      "bytes": 44912,
+      "sha256": "acfb55e73553a0a20ae8586185df9b37b473508d7bcc38d3057006e3dd50886a"
+    }
+  ]
+}

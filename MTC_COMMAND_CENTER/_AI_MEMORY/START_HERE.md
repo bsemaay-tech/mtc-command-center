@@ -1,7 +1,5 @@
 # START_HERE — compatibility pointer
 
-The onboarding contract moved to root `AGENTS.md`, root `DECISIONS.md`, and root
-`CONTEXT_MAP.md` on 2026-08-25. Select exactly one stage and read its five local files.
-
-The former contents are preserved at
-`history/START_HERE_PRE_ROUTER_2026-08-25.md`; do not read them by default.
+Start with root `AGENTS.md`, `CONTEXT_MAP.md`, and exactly one stage's AGENTS. Follow the router's
+conditional INPUTS/TESTS/HANDOFF/OUTPUTS reads; search relevant DECISIONS rows. AI_RULES is a pointer,
+not another mandatory onboarding layer. History is search-on-demand, not current authority.

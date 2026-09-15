@@ -476,8 +476,12 @@ def test_v9_reopen_is_idempotent_and_future_target_is_rejected(tmp_path):
     reopened.initialize()
     assert reopened.get_meta("schema_version") == "9"
 
+    # P0-12 added v10 as a supported opt-in target, so the first *unsupported*
+    # future version is now 11. The assertion itself is unchanged: a target
+    # this code does not understand must still fail closed and leave the
+    # existing version alone.
     with pytest.raises(RuntimeError, match="Unsupported target_schema_version"):
-        reopened.initialize(target_schema_version=10)
+        reopened.initialize(target_schema_version=11)
     assert reopened.get_meta("schema_version") == "9"
 
 
@@ -3735,4 +3739,55 @@ def test_funding_is_never_subtracted_twice_from_the_equity_change(tmp_path):
     # value is retained as a diagnostic column and is NOT subtracted again.
     assert daily.daily_pnl == -50.0
     assert daily.funding_attributed_usdc == -25.0
+    store.close()
+
+
+def test_v10_funding_payload_is_an_opt_in_additive_capability(tmp_path):
+    """P0-12: v10 is reachable only on request and adds exactly one object."""
+    from bridge.store.db import (
+        SCHEMA_VERSION_FUNDING_PAYLOAD,
+        SCHEMA_VERSION_KILL_EVIDENCE,
+        SUPPORTED_TARGET_SCHEMA_VERSIONS,
+    )
+
+    assert SCHEMA_VERSION_FUNDING_PAYLOAD == 10
+    assert SCHEMA_VERSION_FUNDING_PAYLOAD in SUPPORTED_TARGET_SCHEMA_VERSIONS
+
+    db_path = tmp_path / "v10-capability.db"
+    store = Store(db_path)
+    store.initialize(target_schema_version=SCHEMA_VERSION_KILL_EVIDENCE)
+    before = store._all_table_census(exclude=())
+    store.close()
+
+    upgraded = Store(db_path)
+    upgraded.initialize(target_schema_version=SCHEMA_VERSION_FUNDING_PAYLOAD)
+    assert upgraded.get_meta("schema_version") == str(
+        SCHEMA_VERSION_FUNDING_PAYLOAD
+    )
+    after = upgraded._all_table_census(exclude=())
+    # Purely additive: one new empty table, every predecessor count unchanged.
+    assert set(after) - set(before) == {"funding_event_payloads"}
+    assert after["funding_event_payloads"] == 0
+    assert {name: after[name] for name in before} == before
+    # Every predecessor capability still reports itself as enabled.
+    assert upgraded.full_reconcile_enabled() is True
+    assert upgraded.durable_risk_controls_enabled() is True
+    assert upgraded.exposure_controls_enabled() is True
+    assert upgraded.kill_evidence_enabled() is True
+    assert upgraded.funding_payload_retention_enabled() is True
+    upgraded.close()
+
+    # The migration is idempotent and a lower target never downgrades.
+    again = Store(db_path)
+    again.initialize(target_schema_version=SCHEMA_VERSION_KILL_EVIDENCE)
+    assert again.get_meta("schema_version") == str(SCHEMA_VERSION_FUNDING_PAYLOAD)
+    assert again._all_table_census(exclude=()) == after
+    again.close()
+
+
+def test_unsupported_target_schema_versions_still_fail_closed(tmp_path):
+    """v10 is the highest supported target; v11 is still refused."""
+    store = Store(tmp_path / "v11.db")
+    with pytest.raises(RuntimeError):
+        store.initialize(target_schema_version=11)
     store.close()

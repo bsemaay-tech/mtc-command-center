@@ -1,49 +1,14 @@
-# 02 — Engineering Plan Review  (Gate 2)
+# Additional engineering plan — G2
 
-Use **before architecture changes, multi-file edits, or anything
-touching Pine / MTC / parity surfaces**. Skip for typo / single-line
-fixes.
+Use only when the scope brief leaves a consequential interface, architecture, data-flow or
+failure decision unresolved. Do not make a second plan for already-clear small work.
 
-## Inputs to provide
+Builder: read the accepted scope, selected INPUTS/TESTS, relevant module contracts and protected
+rules. Describe inputs -> existing modules -> observable outcome. Name the exact affected
+interfaces, failure cases, recovery/rollback and parity/Pine/MTC impact. Prefer one vertical slice
+with a working path. Preserve architecture unless a reproduced problem requires the scoped change.
 
-- The scope contract output from Gate 1.
-- Pointer to the relevant module(s).
-
-## Prompt
-
-```
-You are running Gate 2 (Engineering Plan Review) for
-Tradingview_LAB_CLEAN. Do not write code yet. Produce a plan.
-
-Actor: you are the **Implementer**. After producing this plan, pass it to
-the Lead for acceptance before Gate 3 may begin. The Lead decides whether
-to proceed, loop back to Gate 1, or escalate.
-
-Read:
-- The Gate 1 scope contract for this task.
-- MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md
-- MTC_COMMAND_CENTER/_AI_MEMORY/DO_NOT_TOUCH.md
-- MTC_COMMAND_CENTER/_AI_MEMORY/PROJECT_MEMORY.md
-- Any module-level README under the affected paths.
-
-Then output, in this exact order:
-
-1. DATA FLOW: textual description (or ASCII diagram) of inputs ->
-   transformations -> outputs.
-2. AFFECTED MODULES: file-level list, grouped by module.
-3. EDGE CASES: explicit list. Include parity edge cases if relevant.
-4. ROLLBACK PLAN: how we revert if this lands and breaks something.
-5. PARITY / PINE / MTC IMPACT: explicit statement. If "none", justify.
-6. TEST PLAN: what we will run in Gate 4.
-7. GATE DECISION: proceed to Gate 3 or loop back to Gate 1 — and why.
-8. APPROVAL NEEDED: if the change touches protected surfaces, name
-   what Barış must explicitly approve before Gate 3 can start.
-
-Refuse to skip any of the eight items.
-Refuse to start coding inside this gate.
-```
-
-## WRITE-BACK
-
-- Supply the accepted plan facts to the Lead for the selected stage's `HANDOFF.md` if they change
-  current state. Do not append a session journal or historical handoff.
+Add exact QA command/cwd/environment and independently expected behavior to the same brief.
+The Lead checks the plan against original authority before implementation; ask the owner only
+for a retained material gate. Further PRD polishing ends once scope and sufficient evidence are
+clear. Write-back only changed facts to the selected stage's current HANDOFF.

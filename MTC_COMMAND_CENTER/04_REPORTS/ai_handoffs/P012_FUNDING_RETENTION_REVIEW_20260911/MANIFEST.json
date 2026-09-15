@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "reviewed_head": "8fe2ede61ca8bf6cd6c564063680542e6101b276",
+  "basis": "Exact staged Git bytes for committed artifacts; working hashes preserve original copied bytes; self excluded",
+  "members": [
+    {
+      "path": "README.md",
+      "working_bytes": 4577,
+      "working_sha256": "bb81df4b5966d4e9f14d86d41d5b1ffa43b0a9ae549db80600e494d25d06d876",
+      "canonical_git_bytes": 4576,
+      "canonical_git_sha256": "0793785f15b94b1e4b9b79b90847b8d4511a4dd755fe3d96dd35fbddb8210775",
+      "git_blob": "8a361abbf92531c8fa8d0a74ce44b1f52f758eea"
+    },
+    {
+      "path": "OPUS.md",
+      "working_bytes": 8929,
+      "working_sha256": "cc72974d3a0231be0888543869c489dc2477a9eb6b19581eb22e191ddffc88a6",
+      "canonical_git_bytes": 8929,
+      "canonical_git_sha256": "cc72974d3a0231be0888543869c489dc2477a9eb6b19581eb22e191ddffc88a6",
+      "git_blob": "684ba85a4f4e617938c759376387edb8699ef74a"
+    },
+    {
+      "path": "SOL.md",
+      "working_bytes": 8402,
+      "working_sha256": "899b1abf5eb063d746f685993b1045aed69904d9f3f65cef3c7d0ed86b0f36dc",
+      "canonical_git_bytes": 8402,
+      "canonical_git_sha256": "899b1abf5eb063d746f685993b1045aed69904d9f3f65cef3c7d0ed86b0f36dc",
+      "git_blob": "cf547e7503ea4d543e992ab62121ccdb1898141f"
+    },
+    {
+      "path": "GEMINI.md",
+      "working_bytes": 8827,
+      "working_sha256": "b4cf76fc789fc91b49b3a195a9637d39138f9494b8efafd95b464890b31e15be",
+      "canonical_git_bytes": 8827,
+      "canonical_git_sha256": "b4cf76fc789fc91b49b3a195a9637d39138f9494b8efafd95b464890b31e15be",
+      "git_blob": "3afe9d2ca0af5a854bc0021d13c8b24db3f8c4a0"
+    },
+    {
+      "path": "GEMINI_QUALIFICATION.md",
+      "working_bytes": 1566,
+      "working_sha256": "f30790af7ef11adcf589eb5f3d36ef4a35d036b499421409c3d78bcc8c4d8364",
+      "canonical_git_bytes": 1565,
+      "canonical_git_sha256": "fd11c86b05779a2b0a82ac7f726027d5b3caa3e38b69584b1bb4bacc7a6ca93f",
+      "git_blob": "b2be6498a92840bc4588ec53cab09990948e3e87"
+    },
+    {
+      "path": "LEAD_VERIFICATION.json",
+      "working_bytes": 3818,
+      "working_sha256": "910b1d1b32a0ce76ba6547d55c2c5ca8d9851a97ed2bd504fd3035b244099bd2",
+      "canonical_git_bytes": 3719,
+      "canonical_git_sha256": "954c40346bc9dd2d03ea74f9a3cef01a81e280544b395374781a2796d615842d",
+      "git_blob": "3a94a1705ce4c87efc960a90c35c5a9ac479d2e5"
+    },
+    {
+      "path": "CANDIDATE_PACKET_MANIFEST.json",
+      "working_bytes": 10614,
+      "working_sha256": "16f14641b51ecc30a953605072f18784e665038c62fc3208a22d67850217c4a1",
+      "canonical_git_bytes": 10304,
+      "canonical_git_sha256": "b201515d0e8318ed348433cb51081587c58bbbbbffec0595b3201079f99b0e02",
+      "git_blob": "b7bdba6ee9731c020456311bf40975db0f3a0762"
+    }
+  ]
+}

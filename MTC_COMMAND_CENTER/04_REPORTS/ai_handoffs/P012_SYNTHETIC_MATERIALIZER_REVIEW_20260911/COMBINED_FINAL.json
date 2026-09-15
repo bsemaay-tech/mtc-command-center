@@ -1,0 +1,102 @@
+{
+  "checked_at_utc": "2026-09-11T19:31:55.9057254Z",
+  "scope": "D1 synthetic offline materializer only",
+  "candidate": "c5d9e4144449c09fffb607d09650329402d54bec",
+  "parent_rejected": "97489fde2c3e66e2cafc911553b1504f8da8b6a5",
+  "base": "4ce213184fe35313cafde45da8f59543db306086",
+  "lead_verdict": "PASS_LOCAL_D1_ONLY",
+  "reviewers": {
+    "gemini": "gemini-3.7-flash-high SUPPLEMENTAL_UNEXECUTED; guarded invocation exit0",
+    "opus": "claude-opus-5 xhigh PASS",
+    "sol": "gpt-5.6-sol xhigh PASS"
+  },
+  "closed_findings": [
+    "repository/MTC staging containment",
+    "duplicate nonfinite retained values",
+    "duplicate JSON members",
+    "nonfinite source-witness JSON",
+    "invalid RFC3339 offsets and calendar overflow"
+  ],
+  "focused": {
+    "passed": 161,
+    "documented_subprocess_cli": "PASS",
+    "skipped": 1
+  },
+  "full_bridge": {
+    "warnings": 1,
+    "passed": 1628,
+    "exit": 0,
+    "skipped": 1
+  },
+  "d026": {
+    "sol": "exact-old 23 behavioral failures /3 controls; current26PASS",
+    "opus": "same23 behavioral failures; mirror import failure reproduced old/new and excluded; real-tree161PASS1skip"
+  },
+  "source_hashes": [
+    {
+      "git_blob": "f12570e704821fdae26d2461e4b0ab6f2c6ca854",
+      "worktree_sha256": "d0686e8a00eabadddd9d55fd55ed5e1400635a1384250bee22c7ea590a1659a5",
+      "path": "IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py"
+    },
+    {
+      "git_blob": "c9e6c31d5529b639fddc352963d3932e9f6e961b",
+      "worktree_sha256": "e8b9c1f48868fcc6528d57c887429e662fd89ed8200e2d9488e183f2e1a84927",
+      "path": "IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export.py"
+    },
+    {
+      "git_blob": "759e7a82d369f27fb18031bcfc0902912706a16b",
+      "worktree_sha256": "5940075ff5217a6ea23015f93c1d90616fbef52299dfbf7e04ef9d0b35c5efe1",
+      "path": "IBKR_PAPER_BRIDGE/docs/26_FULL_RECONCILIATION_CONTRACT.md"
+    }
+  ],
+  "production_record_hashes_unchanged": {
+    "instruments/HYPERLIQUID-BTC-PERP-V1.3.json": "5abb99abbdb9735e95ad1084c706a3c5326fb6bb134e48a79e9bb0992b68316a",
+    "funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json": "8c6e8a1265686ad115f7cd2dc8a807f8a4ecea39b3d1a0664a2a968e329b09cd",
+    "costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json": "6ee6a34f0f1230973148e7392abdc11ec8409f06811d79fa6b65bcac104e3db5"
+  },
+  "lead_baseline": {
+    "source_sha256": "d0686e8a00eabadddd9d55fd55ed5e1400635a1384250bee22c7ea590a1659a5",
+    "source_unchanged": true,
+    "independent_expectations": {
+      "two_event_order_time_decimals_LONG": true,
+      "deterministic_exact_bytes_and_sha": true,
+      "source_witness_bytes_and_digest_separation": true,
+      "missing_source_bytes_refused": "CANDIDATE_COVERAGE_INVALID",
+      "tampered_source_bytes_refused": "CANDIDATE_BINDING_INVALID",
+      "unbound_old_clock_unavailable_row_refused": "CANDIDATE_INVENTORY_MISMATCH",
+      "partial_write_no_published_or_scratch_artifacts": "CANDIDATE_STAGING_FAILED: staging failed before publication and private scratch was removed: OSError",
+      "actual_production_consumer_refusal": true
+    },
+    "limitations": [
+      "Synthetic fixtures only; no venue completeness or billing claim"
+    ]
+  },
+  "lead_repairs": {
+    "source_sha256": "d0686e8a00eabadddd9d55fd55ed5e1400635a1384250bee22c7ea590a1659a5",
+    "result": "PASS",
+    "checks": {
+      "MTC_production_path": "CANDIDATE_STAGING_UNSAFE",
+      "duplicate_nonfinite": "CANDIDATE_NONFINITE_VALUE",
+      "duplicate_json": "CANDIDATE_PACKET_INVALID",
+      "source_nan": "CANDIDATE_BINDING_INVALID",
+      "invalid_offset": "CANDIDATE_TIMESTAMP_INVALID",
+      "legal_offset_exact_candidate_bytes": true
+    },
+    "scope": "Five reproduced validation repairs only; synthetic fixtures; no production acceptance"
+  },
+  "limitations": [
+    "Synthetic only; production consumer refuses candidate",
+    "Existing OS symlink-permission skip; actual Windows junction refusal separately verified",
+    "Optional unused diagnostic fields unchanged",
+    "No historical/actual billing/rounding or funding coverage fact established",
+    "Full WP-P0-12 remains NONACCEPTED",
+    "D1 publication and merges outside approved scope"
+  ],
+  "running_workers": 0,
+  "prior_evidence_reused": [
+    "accepted R34/R35/PR178",
+    "existing C10/funding and E capture packet",
+    "round1 unchanged executed tests and mutants",
+    "R29 final-production review packet"
+  ]
+}

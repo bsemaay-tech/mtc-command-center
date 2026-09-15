@@ -1,9 +1,62 @@
 # Dashboard handoff
 
-## Current state — 2026-08-25
+## Standing state (from 2026-08-25, kept current)
 
-- WP-P0-05 changes onboarding only; dashboard source and runtime are untouched.
-- The accepted shell remains vanilla HTML/JS/CSS, dark command-center style, and read-only.
-- OPEN-01 is still conditional: a bounded framework/build step may be considered only if WP-V2B-05
-  measures less custom table/freshness code without weakening private/read-only/security boundaries.
-- No build-step choice, deploy, network, broker, paper/live, or write capability is authorized here.
+- Shell stays vanilla HTML/JS/CSS, dark command-center style, read-only. OPEN-01 (bounded
+  framework/build step) remains conditional on WP-V2B-05 measurements; no build-step choice,
+  deploy, network, broker, paper/live, or write capability is authorized here.
+
+## [Claude lane W] 2026-09-07 — promoted-root reads (D18)
+
+- `pine_builder_reader.py::_compile_observations` and `liveops_reader.py::_paper_trade_plans`
+  now read `default_quantlens_root(mcc_root) / "strategies"` (glob `*/PINE_PARITY_PLAN.md`,
+  `*/FORWARD_PAPER_TRADE_PLAN.md`) instead of the pre-migration
+  `mtc_v2_root/"06_QUANTLENS_LAB"/"06_PROMOTED_TO_PARITY"`, matching the real
+  `03_QUANTLENS/strategies/<id>/` layout (3 strategies confirmed via `git ls-files`).
+  Schema unchanged; fail-closed on a missing `strategies` dir preserved. Suite: 133 passed
+  (129 + 4 new). Detail: `11_TRIAGE/OVERNIGHT_LANE_W_PROMOTED_ROOT_READS_2026-09-07.md`.
+
+## [Claude lane N] 2026-09-07 — MTC_V2 readiness root from path config (D12)
+
+- `mcc_readonly/mtc_v2_reader.py::build_mtc_v2_readiness` no longer computes
+  `mtc_root = root.parent / "01_MASTER TEMPLATE_V2"` unconditionally. It now
+  resolves `mtc_v2_root` via `load_path_config()` +
+  `resolve_configured_path(config, "mtc_v2_root")`, matching
+  `backtest_reader.py`/`registry_reader.py`/`pine_builder_reader.py`/
+  `liveops_reader.py`. When `mtc_v2_root` is unconfigured, `mtc_v2_root`,
+  `pine_path`, `architecture_path` render `""`, `pine_exists`/
+  `architecture_exists` render `false`, and `_read_mtc_v2_parity(None)`
+  returns `{"path": "", "exists": false, "total_cases": 0, "pass_cases": 0}`
+  — the same fail-closed shape it already returned for a missing directory.
+  Readiness rows are unaffected (they only depend on pipeline/audit
+  candidates). Schema keys and function signature unchanged.
+- Evidence: `tests/test_mtc_v2_reader.py` rewritten — one test now builds a
+  `00_CONFIG/paths.example.json` pointing `mtc_v2_root` at a temp migrated
+  dir and asserts `readiness["mtc_v2_root"]` equals that configured path
+  (RED against the pre-fix code: asserted the legacy sibling path instead;
+  GREEN after). A new negative test asserts the exact unconfigured
+  fail-closed shape above. Full suite (Linux, Python 3.12,
+  `PYTHONUTF8=1 -p no:cacheprovider`): 122 passed (121 baseline + net +1).
+  `ruff --select E9,F821,F811` clean on both changed files.
+- Scope: only `mtc_v2_reader.py:18`, per lane L's recommendation. `paths.py:27`
+  and the `mtc_v2_root/"06_QUANTLENS_LAB"` fallbacks in
+  registry/backtest/pine_builder/liveops readers were left untouched —
+  owner decision pending per
+  `11_TRIAGE/OVERNIGHT_LANE_L_DASHBOARD_LEGACY_FALLBACKS_2026-09-07.md`.
+- NEXT ACTION: none for this lane.
+- WAITING FOR OWNER: Nothing.
+
+## [Codex] 2026-09-07 — legacy fallbacks removed
+
+- Dashboard QuantLens readers now use only `03_QUANTLENS`; missing canonical data fails closed, while
+  `reports/optimization` stays unchanged and fail-closed. D026: RED 2 failed; GREEN full suite 137 passed.
+
+NEXT ACTION: Lead review and commit the unstaged lane diff.
+
+WAITING FOR OWNER: Nothing.
+
+## [Claude lane A] 2026-09-06 — test portability repair
+
+- Test-only (D1/D5): platform-neutral `discovery_source` expectation; `C:/TEMP` fixtures replaced
+  with `tempfile.TemporaryDirectory()`. RED 1 failed -> GREEN 121 (Linux); Windows suite confirmed
+  2026-09-07 (137 passed). NEXT ACTION: none. WAITING FOR OWNER: Nothing.

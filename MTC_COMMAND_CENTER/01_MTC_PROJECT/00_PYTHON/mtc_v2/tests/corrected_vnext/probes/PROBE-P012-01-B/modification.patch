@@ -1,0 +1,5 @@
+--- a/economics.py
++++ b/economics.py
+@@ -241 +241 @@
+-    if stop is not None and math.isfinite(stop):
++    if stop is not None:

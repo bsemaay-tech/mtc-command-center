@@ -1,1 +1,1 @@
-Read root `AGENTS.md`, root `DECISIONS.md`, root `CONTEXT_MAP.md`, then this stage's `AGENTS.md`, `INPUTS.md`, `OUTPUTS.md`, `TESTS.md`, and `HANDOFF.md`. The former detailed state was folded into the capped stage handoff on 2026-08-25.
+Start with root `AGENTS.md` and `CONTEXT_MAP.md`, then this stage's `AGENTS.md`. Follow the root task-triggered reading rules for inputs, tests, decisions and handoff. The former detailed state was folded into the capped stage handoff on 2026-08-25.

@@ -4,12 +4,11 @@ Codex is responsible for repo automation, Python/backtest/parity task execution 
 
 ## Startup Checklist
 
-1. Read `MTC Command Center ARCHITECTURE.md`.
-2. Read `START_HERE_FOR_AI.md`.
-3. Read `AI_OPERATING_RULES.md`.
-4. Read `02_TASKS/TASK_QUEUE.json`.
-5. Confirm the assigned task ID.
-6. Work only inside the approved scope.
+Follow repository-root `AGENTS.md` and its task-triggered reading contract. Select the stage
+for the assigned task, verify any task ID against its actual current tracker, and work only
+inside the approved scope. This legacy entry point adds no second onboarding chain or universal
+task queue. Review and acceptance follow `00_AGENT_PROTOCOLS/REVIEW_POLICY.md` under the command
+center, including its activation boundary.
 
 ## Safety
 

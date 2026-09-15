@@ -90,7 +90,7 @@ def write_seed_regions(path: Path, rows: list[dict[str, Any]], producer: str) ->
 
     lines = [
         "# Supertrend Seed Regions",
-        RESEARCH_WARNING,
+        f"# {RESEARCH_WARNING}",
         "",
         "regions:",
     ]
@@ -143,7 +143,7 @@ def write_rejected(path: Path, rows: list[dict[str, Any]]) -> None:
     rejected = [row for row in rows if str(row.get("status")) in {"REJECTED", "INSUFFICIENT_DATA"}]
     lines = [
         "# Supertrend Rejected Regions",
-        RESEARCH_WARNING,
+        f"# {RESEARCH_WARNING}",
         "",
         "rejected_or_caution_regions:",
         "  - region_id: smoke_schema_only_warning",

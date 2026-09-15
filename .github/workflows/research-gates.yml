@@ -1,0 +1,92 @@
+# Research-gate checkers for the WP-P0-20 surface.
+#
+# These modules are the only fence around the allocator, the UNSIMULATED_CONTROLS manifest,
+# the control-parity checklist, the statistical battery, the cost-model registry and the
+# evidence class -- and until this workflow existed they were run by hand. `CI` covers
+# IBKR_PAPER_BRIDGE only, so nothing here was exercised by CI at all.
+#
+# This workflow is deliberately NOT a required check. Ruleset 21444962 requires exactly
+# `Bridge suite (Python 3.12)`, and nothing in this file changes that. WP-P0-27 remains the
+# carrier for progressive CI activation and the mechanical delivery guards; this is a gap
+# stopped, not that package delivered.
+#
+# Every module here is stdlib-only, so the job installs nothing and stays hermetic.
+name: Research gates
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: research-gates-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checkers:
+    name: Research gate checkers (Python 3.12)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Each checker is self-confirming: it asserts its own mutation controls are still
+      # detected, so a pass is not merely the absence of a failure.
+      - name: Shared risk calculator
+        run: python check_shared_risk_calculator.py
+
+      - name: Market data collector
+        run: python check_market_data_collector.py
+
+      - name: UNSIMULATED_CONTROLS manifest
+        run: python check_unsimulated_controls.py
+
+      - name: Control-parity checklist v1
+        run: python check_control_parity_checklist.py
+
+      - name: Statistical battery v1
+        run: python check_statistical_battery.py
+
+      - name: Cost-model registry
+        run: python check_cost_model_registry.py
+
+      - name: Evidence class
+        run: python check_evidence_class.py
+
+      - name: Allocator import identity (self-test)
+        run: python check_allocator_import_identity.py --self-test
+
+      - name: Triage index is current
+        run: python MTC_COMMAND_CENTER/11_TRIAGE/generate_index.py --check
+
+      # The acceptance harness reports state; it is not a gate. It exits non-zero until
+      # every criterion is MET, which is correct and is not a CI failure -- making it one
+      # would leave this workflow permanently red and train everyone to ignore it.
+      - name: WP-P0-20 acceptance state (report only)
+        if: always()
+        continue-on-error: true
+        run: |
+          {
+            echo "## WP-P0-20 acceptance state"
+            echo ""
+            echo '```'
+            python check_p020_acceptance.py || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

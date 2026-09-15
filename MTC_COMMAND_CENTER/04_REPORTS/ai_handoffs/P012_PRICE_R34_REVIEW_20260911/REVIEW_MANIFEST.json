@@ -1,0 +1,61 @@
+{
+  "schema": "P012_R34_REVIEW_MANIFEST_V1",
+  "reviewed_head": "3faed08866e122158e93c626288873ec58a42e3d",
+  "base": "3e86faec032407c1af9a75f8b8852222d732f316",
+  "packet_manifest_sha256": "2f4ac4a45f3511a4dadb7426e2007b687284474bf95bd24f4ea123d1c7b480b8",
+  "core_tree_oid": "ca57ca5e0487f92e05fa68d8217fdde486877a2c",
+  "ratified_receipt_sha256": "cf82b102ba866fa08a86d8a6cb52ed43c2e2f2b71e35b081304e09e5aa368f11",
+  "reviewers": [
+    {
+      "model_evidence": "native firstParty canonicalModel confirmation",
+      "verdict": "PASS-WITH-NITS",
+      "model": "claude-opus-5",
+      "execution": "full-gate558/0 and focused113/0; nativeexit0",
+      "effort": "xhigh"
+    },
+    {
+      "model_evidence": "verified exact model/effort CLI dispatch; stream contains no separate model confirmation field",
+      "verdict": "PASS",
+      "model": "gpt-5.6-sol",
+      "execution": "full-gate558/0 and focused113/0; nativeexit0/turn.completed",
+      "effort": "xhigh"
+    },
+    {
+      "model_evidence": "guarded exact-model helper SUCCESS on same frozen packet excerpts",
+      "verdict": "PASS-WITH-NITS",
+      "model": "gemini-3.7-flash-high",
+      "execution": "SUPPLEMENTAL_UNEXECUTED"
+    }
+  ],
+  "lead_review_status": "ACCEPTED_BOUNDED_SYNTHETIC_PRICE_CORRECTION_REVIEW_ONLY",
+  "full_p012_accepted": false,
+  "production_accepted": false,
+  "files": [
+    {
+      "sha256": "86fa7c94d1870a99a547a8d10ede493f8f1241036b3de95635f48c9551cf3f09",
+      "path": "OPUS.md"
+    },
+    {
+      "sha256": "7b00d53ef0f262cfe006164bece2ac2d12691b61a638062f0c904c6b9e7e1370",
+      "path": "SOL.md"
+    },
+    {
+      "sha256": "700c7fba7c2673dd067052ca1b9e100aa95ccbada8870547e9efbfd2d74bca57",
+      "path": "SOL_DETAILED.md"
+    },
+    {
+      "sha256": "5ad0476d5f0092885885270700fa24c73e444db8c3bfd1c2d5c56e1de88dfa8e",
+      "path": "GEMINI.md"
+    },
+    {
+      "sha256": "c7e0c151ece777fe183549ab45e17cb80d248276feb2a98bdf70183cf1e15fb1",
+      "path": "LEAD_FULL_GATE.json"
+    },
+    {
+      "sha256": "513ee0d514214c2c662a928d56dcb047d10c7e903bd70dd429a778de7b8b867e",
+      "path": "LEAD_SOURCE_PROOF.json"
+    }
+  ],
+  "local_only_evidence": "Original raw provider logs, usage/account data, failed attempts and frozen baseline retained locally; not published.",
+  "generated_source_proof_encoding": "Public generated JSON normalized to LF; original local proof retained. Original reviewer report bytes are unchanged."
+}

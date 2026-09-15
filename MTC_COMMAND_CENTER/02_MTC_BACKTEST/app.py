@@ -11,6 +11,7 @@ import json
 import yaml
 import subprocess
 import sys
+import pandas as pd
 
 # Create required directories FIRST (before logging setup)
 Path("data").mkdir(exist_ok=True)

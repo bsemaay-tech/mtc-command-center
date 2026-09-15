@@ -22,7 +22,10 @@ from pathlib import Path
 THIS = Path(__file__).resolve()
 MCC_ROOT = THIS.parent.parent
 REPO_ROOT = MCC_ROOT.parent
-QLAB_ROOT = REPO_ROOT / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB"
+# Post-migration layout (see repo-root .gitignore header): 06_QUANTLENS_LAB/ ->
+# MTC_COMMAND_CENTER/03_QUANTLENS/. QuantLens now lives directly under MCC_ROOT,
+# not nested under 01_MTC_PROJECT.
+QLAB_ROOT = MCC_ROOT / "03_QUANTLENS"
 PROTO_DIR = QLAB_ROOT / "04_PYTHON_PROTOTYPES"
 PROMOTED_DIR = QLAB_ROOT / "06_PROMOTED_TO_PARITY"
 TOOLS_DIR = QLAB_ROOT / "tools"
@@ -502,7 +505,7 @@ def render_first_pass_exit(c: Candidate) -> str:
     return textwrap.indent(body, "    ")
 
 
-def materialize_candidate(c: Candidate, apply: bool) -> dict:
+def materialize_candidate(c: Candidate, apply: bool, *, allow_quantlens_writes: bool = False) -> dict:
     """Generate spec + prototype skeleton; return summary."""
     spec = {
         "candidate_id": c.id,
@@ -535,6 +538,16 @@ def materialize_candidate(c: Candidate, apply: bool) -> dict:
     spec_path = PROMOTED_DIR / c.id / "producer_spec.json"
     proto_path = PROTO_DIR / f"{c.id}_prototype.py"
     if apply:
+        # PROMOTED_DIR is the live 03_QUANTLENS/06_PROMOTED_TO_PARITY promotion/parity
+        # directory (owner-gated scope). Since the path constants were repointed from the
+        # dead legacy layout (D11), --apply would silently write there; refuse unless the
+        # caller passed the explicit --allow-quantlens-writes flag (Gate-5 finding G4-1).
+        if not allow_quantlens_writes:
+            raise PermissionError(
+                "refusing to write under the promoted-to-parity / prototype directories "
+                f"({PROMOTED_DIR}); rerun with --allow-quantlens-writes only under owner "
+                "task authority for this scope"
+            )
         spec_path.parent.mkdir(parents=True, exist_ok=True)
         spec_path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
         PROTO_DIR.mkdir(parents=True, exist_ok=True)
@@ -565,8 +578,11 @@ def write_runner_extension(apply: bool) -> Path | None:
     """Emit overnight_extended_run.py at the tools dir that imports all
     new prototypes + delegates to mega_walk_forward's existing infrastructure."""
     runner_path = TOOLS_DIR / "overnight_extended_run.py"
-    imports = "\n".join(
-        f"from PYTHON_PROTOTYPES import {c.id}_prototype  # noqa: F401"
+    # Join with newline + 8 spaces so every import line carries the same indent as
+    # the template body below; the f-string is interpolated BEFORE textwrap.dedent,
+    # and a single unindented line would stop dedent from stripping anything.
+    imports = "\n        ".join(
+        f"import {c.id}_prototype  # noqa: F401"
         for c in CANDIDATES
     )
     body = textwrap.dedent(f"""\
@@ -577,7 +593,7 @@ def write_runner_extension(apply: bool) -> Path | None:
         import sys
         from pathlib import Path
         ROOT = Path(__file__).resolve().parent.parent / "04_PYTHON_PROTOTYPES"
-        sys.path.insert(0, str(ROOT.parent))
+        sys.path.insert(0, str(ROOT))
 
         # Import the new candidates so the runner discovers them.
         {imports}
@@ -602,10 +618,16 @@ def main() -> int:
                    help="Materialize spec + prototype files (writes under QuantLens lab)")
     p.add_argument("--launch", action="store_true",
                    help="After --apply, also start the runner as a background process")
+    p.add_argument("--allow-quantlens-writes", action="store_true",
+                   help="Required with --apply: confirms owner task authority to write under "
+                        "03_QUANTLENS/06_PROMOTED_TO_PARITY and 04_PYTHON_PROTOTYPES (refused otherwise)")
     args = p.parse_args()
 
     print("=== Overnight orchestrator — 2026-05-30 ===\n")
-    summaries = [materialize_candidate(c, apply=args.apply) for c in CANDIDATES]
+    summaries = [
+        materialize_candidate(c, apply=args.apply, allow_quantlens_writes=args.allow_quantlens_writes)
+        for c in CANDIDATES
+    ]
 
     print(f"Candidates planned: {len(CANDIDATES)}")
     for s in summaries:

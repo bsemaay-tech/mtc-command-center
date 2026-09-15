@@ -1,0 +1,2042 @@
+{
+  "acceptance_blockers": [
+    {
+      "check_id": "EXPECTED_PATH_CHANGED_AFTER_BASE",
+      "detail": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/golden/corrected_vnext/RULE2-01-GREEN.json",
+      "pointer": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/golden/corrected_vnext/RULE2-01-GREEN.json"
+    },
+    {
+      "check_id": "PROBE_NOT_DETECTED",
+      "comparator_first_differing_node": "/RESULT_SURFACE/admitted",
+      "measured_failed_check": "CLOSED_SET_VIOLATION",
+      "scenario_id": "PROBE-P012-02-A"
+    },
+    {
+      "check_id": "PROBE_NOT_DETECTED",
+      "comparator_first_differing_node": "/RESULT_SURFACE/cumulative_funding",
+      "measured_failed_check": "CLOSED_SET_VIOLATION",
+      "scenario_id": "PROBE-P012-08-A"
+    },
+    {
+      "check_id": "CLOSED_SET_VIOLATION",
+      "detail": "missing member cumulative_funding",
+      "pointer": "/RESULT_SURFACE/cumulative_funding",
+      "scenario_id": "RULE2-08-RED"
+    },
+    {
+      "check_id": "CLOSED_SET_VIOLATION",
+      "detail": "missing member cumulative_funding",
+      "pointer": "/RESULT_SURFACE/cumulative_funding",
+      "scenario_id": "RULE2-08-GREEN"
+    },
+    {
+      "check_id": "CORRECTED_EXPECTATION_MISMATCH",
+      "pointer": "/EVENT_SURFACE/cash_events",
+      "scenario_id": "RULE2-08-RED"
+    },
+    {
+      "check_id": "RULE2_PROJECTION_COULD_NOT_EVALUATE",
+      "detail": "KeyError: 'cumulative_funding'",
+      "scenario_id": "RULE2-08-RED"
+    },
+    {
+      "check_id": "CORRECTED_EXPECTATION_MISMATCH",
+      "pointer": "/EVENT_SURFACE/decision_events",
+      "scenario_id": "RULE2-08-GREEN"
+    }
+  ],
+  "acceptance_reachable": true,
+  "blocked_node_skips": {
+    "count": 96,
+    "nodes": [
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/1/schedule_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/1/schedule_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/1/schedule_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-08-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-08-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-08-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-08-GREEN"
+      }
+    ]
+  },
+  "catalog_counts": {
+    "GREEN": 8,
+    "PROBE": 10,
+    "RED": 9
+  },
+  "claim_label": "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_REFUSED",
+  "comparison_claim_scope": "ALL_NON_BLOCKED_EXPECTED_NODES",
+  "computed_legacy_event_order_map_digest": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+  "expected_source_provenance": {
+    "check_id": "EXPECTED_PATH_CHANGED_AFTER_BASE",
+    "status": "MISMATCH"
+  },
+  "legacy_event_order_map": {
+    "RULE2-01-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-01-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-01-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-01-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-01-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-01-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-03-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-03-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-03-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-03-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-GREEN/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-RED/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-EQUAL-PRICE-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-EQUAL-PRICE-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-EQUAL-PRICE-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-EQUAL-PRICE-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-GREEN/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1"
+  },
+  "legacy_event_order_map_pin": {
+    "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+    "status": "MATCH"
+  },
+  "legacy_reproduction": {
+    "producer_id": "KERNEL_1",
+    "scenario_count": 17,
+    "status": "MATCH",
+    "surface_count": 34
+  },
+  "mode": "full-gate",
+  "probes": [
+    {
+      "base_scenario_id": "RULE2-01-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "dcad00109d4f0ceb49e01f644fbfb167b69fac5ef23f85ac4dd0c76a6b729643",
+      "modified_copy_digest": "bf3d60086b94fc6ac1987ac3be48d4043295c046b3bf965d8f0db1bc082c1d5f",
+      "probe_id": "PROBE-P012-01-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-01-GREEN",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "3721ff47900bb4d134827206009012b48d94e845c162ce18f3f852f15b289ba2",
+      "modified_copy_digest": "a68dd872f75977c85931c762d24f6525a53e978ee633aff023c14644e5ed9d8a",
+      "probe_id": "PROBE-P012-01-B",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-02-GREEN",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/RESULT_SURFACE/admitted",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "RULE2_GREEN_CROSS_VERSION_EXPECTATION",
+      "expected_first_changed_node": "/RESULT_SURFACE/admitted",
+      "expected_node_changed": true,
+      "measured_failed_check": "CLOSED_SET_VIOLATION",
+      "measured_matches_expected": false,
+      "modification_manifest_digest": "f37e6d9f3443292d9458ec5de609c1b4854fa2b4f67a3289b64ff9fdf91036c8",
+      "modified_copy_digest": "0e51bd03658fa54a255560459038abfadd030aac8e65b703dcfaedf9aa15f316",
+      "probe_id": "PROBE-P012-02-A",
+      "status": "NOT_DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-03-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "RECORD_IDENTITY_PREFLIGHT",
+      "expected_first_changed_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+      "expected_node_changed": true,
+      "measured_failed_check": "RECORD_IDENTITY_PREFLIGHT",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "d2ec9000ed503947e4b86893b2a9b0cc258c765cecfb5b638a99840cb9dd1ebe",
+      "modified_copy_digest": "35193efcfc568ec582e430b0acdc35fa4bcc3e7866313ad9f4798fd2e4e0d304",
+      "probe_id": "PROBE-P012-03-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-04-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "24f70876403398f1663a659bdc1a63b44af355f5d4118c02ed4e95c94b7c0d72",
+      "modified_copy_digest": "c35479033870e5c1811626ce623ca67a4a779bf3dea66f03375d2f8fa4022f9c",
+      "probe_id": "PROBE-P012-04-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-05-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "44251938704af7f92d1e880b4dd3b4239c21ac927daae4db3840fc23c19643d5",
+      "modified_copy_digest": "59eff888dbb654e8cda576132fe4244aa7f2a3f7d55f7501e620a716586838ac",
+      "probe_id": "PROBE-P012-05-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-05-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "709a543786be9a07e77d1b81f6676d6c95c5bd027248e0aa85ea4dad78198661",
+      "modified_copy_digest": "41844cf3db3790a028cd6bf71f7859ec90db94bb83083fb07785b76497090365",
+      "probe_id": "PROBE-P012-05-B",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-06-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/exit_id",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "39c8af08f17c7bf3f8d7c689b8ce0db7d3d1ee8504aa5fedf5d401c0149e5380",
+      "modified_copy_digest": "2fe755a71836585361592e9bd3b913f843ccb3a9c0ba523a44e1d65561048869",
+      "probe_id": "PROBE-P012-06-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-07-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/1/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fee_events/1/liquidity_role",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "57fee87191150d2afb983017339e1cec1a63faed80694155af803313afd40f37",
+      "modified_copy_digest": "b65811b6d77e376d34ffad34b7210cf6a0f983ee3bdf9c5efd0c2e88c4ca2e9c",
+      "probe_id": "PROBE-P012-07-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-08-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/RESULT_SURFACE/cumulative_funding",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/funding_events/0/funding_cash_delta",
+      "expected_node_changed": false,
+      "measured_failed_check": "CLOSED_SET_VIOLATION",
+      "measured_matches_expected": false,
+      "modification_manifest_digest": "96aaa32930b1bfff487fadb7cdea34e14408e62fe939787c0c5e162ddb35c47d",
+      "modified_copy_digest": "98e73b51a0ee3ac05a285a8a0710f73ea0a9e621171317b4806cf0eb335c04c1",
+      "probe_id": "PROBE-P012-08-A",
+      "status": "NOT_DETECTED"
+    }
+  ],
+  "refusals": [
+    {
+      "check_id": "SEMANTIC_COVERAGE_REVIEW_MISSING",
+      "detail": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.json"
+    },
+    {
+      "check_id": "EXPECTED_PATH_CHANGED_AFTER_BASE",
+      "detail": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/golden/corrected_vnext/RULE2-01-GREEN.json",
+      "pointer": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/golden/corrected_vnext/RULE2-01-GREEN.json"
+    },
+    {
+      "check_id": "PROBE_NOT_DETECTED",
+      "comparator_first_differing_node": "/RESULT_SURFACE/admitted",
+      "measured_failed_check": "CLOSED_SET_VIOLATION",
+      "scenario_id": "PROBE-P012-02-A"
+    },
+    {
+      "check_id": "PROBE_NOT_DETECTED",
+      "comparator_first_differing_node": "/RESULT_SURFACE/cumulative_funding",
+      "measured_failed_check": "CLOSED_SET_VIOLATION",
+      "scenario_id": "PROBE-P012-08-A"
+    },
+    {
+      "check_id": "CLOSED_SET_VIOLATION",
+      "detail": "missing member cumulative_funding",
+      "pointer": "/RESULT_SURFACE/cumulative_funding",
+      "scenario_id": "RULE2-08-RED"
+    },
+    {
+      "check_id": "CLOSED_SET_VIOLATION",
+      "detail": "missing member cumulative_funding",
+      "pointer": "/RESULT_SURFACE/cumulative_funding",
+      "scenario_id": "RULE2-08-GREEN"
+    },
+    {
+      "check_id": "CORRECTED_EXPECTATION_MISMATCH",
+      "pointer": "/EVENT_SURFACE/cash_events",
+      "scenario_id": "RULE2-08-RED"
+    },
+    {
+      "check_id": "RULE2_PROJECTION_COULD_NOT_EVALUATE",
+      "detail": "KeyError: 'cumulative_funding'",
+      "scenario_id": "RULE2-08-RED"
+    },
+    {
+      "check_id": "CORRECTED_EXPECTATION_MISMATCH",
+      "pointer": "/EVENT_SURFACE/decision_events",
+      "scenario_id": "RULE2-08-GREEN"
+    }
+  ],
+  "scenarios": [
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "c17b1145d9666da81bf7fd33cd68bbc58c31d1ec65a4b1e2d02a99fcf5522253",
+            "kernel_1_sha256": "c17b1145d9666da81bf7fd33cd68bbc58c31d1ec65a4b1e2d02a99fcf5522253",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "1a560a3431c30942419b211900ac125e6bfd520a7917288e9a0b604762b24f64",
+            "kernel_1_sha256": "1a560a3431c30942419b211900ac125e6bfd520a7917288e9a0b604762b24f64",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:5",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:10",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:5",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:10",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/final_position/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:2000",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/order_notional"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-01-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "kernel_1_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "kernel_1_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/final_position/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/order_notional"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-01-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/RESULT_SURFACE/refusals/0/code",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "1ff3247cf3e3380687a34b55d1c6d84a443edec4edbe6eb04ae28ee556f2ca6e",
+            "kernel_1_sha256": "1ff3247cf3e3380687a34b55d1c6d84a443edec4edbe6eb04ae28ee556f2ca6e",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "88265f6601ebfb6c91b18fbc0849b7433cb7b28aed00fcd4e5fb1657da89d856",
+            "kernel_1_sha256": "88265f6601ebfb6c91b18fbc0849b7433cb7b28aed00fcd4e5fb1657da89d856",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "S:20:UkVGVVNFRF9NSU5fTk9USU9OQUw=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/RESULT_SURFACE/refusals/0/code"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "A:1",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "O:2",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/final_position"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-02-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "1ff3247cf3e3380687a34b55d1c6d84a443edec4edbe6eb04ae28ee556f2ca6e",
+            "kernel_1_sha256": "1ff3247cf3e3380687a34b55d1c6d84a443edec4edbe6eb04ae28ee556f2ca6e",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "88265f6601ebfb6c91b18fbc0849b7433cb7b28aed00fcd4e5fb1657da89d856",
+            "kernel_1_sha256": "88265f6601ebfb6c91b18fbc0849b7433cb7b28aed00fcd4e5fb1657da89d856",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "B:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "B:1",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/admitted"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/final_position/quantity"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-02-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/RESULT_SURFACE/refusals/0/code",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "kernel_1_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "kernel_1_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "S:41:UkVGVVNFRF9JTlNUUlVNRU5UX09WRVJSSURFX09OX0VWQUxVQVRJT04=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/RESULT_SURFACE/refusals/0/code"
+        },
+        {
+          "corrected": {
+            "canonical_value": "S:41:UkVGVVNFRF9JTlNUUlVNRU5UX09WRVJSSURFX09OX0VWQUxVQVRJT04=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/decision_events/1/decision"
+        },
+        {
+          "corrected": {
+            "refusal_code": "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION",
+            "tag": "REFUSAL"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "refusal_code": "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION",
+            "tag": "REFUSAL"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "F:0x1.0000000000000p-2",
+            "tag": "PRESENT"
+          },
+          "selector": "consumed price_tick"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-03-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "kernel_1_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "kernel_1_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/refusals"
+        },
+        {
+          "corrected": {
+            "canonical_value": "F:0x1.0000000000000p-1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "F:0x1.0000000000000p-1",
+            "tag": "PRESENT"
+          },
+          "selector": "consumed price_tick"
+        },
+        {
+          "corrected": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/final_position"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-03-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fill_events/0/reference_price",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "53fa011b7fa52b29925335c7bf56499d3ed521019dd692f7761ed218c3fd74bb",
+            "kernel_1_sha256": "53fa011b7fa52b29925335c7bf56499d3ed521019dd692f7761ed218c3fd74bb",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "4e3a0b6adf448508eaef830979433411cf0493aff5473e78aaa1e77ee1ccbf37",
+            "kernel_1_sha256": "4e3a0b6adf448508eaef830979433411cf0493aff5473e78aaa1e77ee1ccbf37",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:92",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/reference_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:92",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "S:8:R0FQX09QRU4=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/fill_trigger"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-04-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "dfd9aa6ccef1b8719c0269a115b1e846420c8f0d16fb0adddf6d812c9bd645ef",
+            "kernel_1_sha256": "dfd9aa6ccef1b8719c0269a115b1e846420c8f0d16fb0adddf6d812c9bd645ef",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "a8407de7b796dc0796012694a7959e2f0be2f681c1a2551450794c440dcabc62",
+            "kernel_1_sha256": "a8407de7b796dc0796012694a7959e2f0be2f681c1a2551450794c440dcabc62",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/exit_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/final_position/quantity"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-04-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fill_events/0/reference_price",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "kernel_1_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "kernel_1_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/reference_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/slippage_impact"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:101",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/slippage_application_count"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-05-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "kernel_1_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "kernel_1_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-05-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fill_events/0/exit_id",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "a0faf4ecb30034e9dc75856622ae3cb6293cbedead6dd28a482e8f43dcbbedd5",
+            "kernel_1_sha256": "a0faf4ecb30034e9dc75856622ae3cb6293cbedead6dd28a482e8f43dcbbedd5",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "3f99afe847e05a982e82f48ebc4abdd62f851c644fb537bd34dcb0601a5ec624",
+            "kernel_1_sha256": "3f99afe847e05a982e82f48ebc4abdd62f851c644fb537bd34dcb0601a5ec624",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "S:11:VEFSR0VULU5FQVI=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "S:4:U1RPUA==",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/exit_id"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:2",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "A:1",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:105",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:110",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/1/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:2",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:15",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:-20",
+            "tag": "PRESENT"
+          },
+          "selector": "lifecycle gross realized PnL"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-06-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fill_events/0/exit_id",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "a0faf4ecb30034e9dc75856622ae3cb6293cbedead6dd28a482e8f43dcbbedd5",
+            "kernel_1_sha256": "a0faf4ecb30034e9dc75856622ae3cb6293cbedead6dd28a482e8f43dcbbedd5",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "3f99afe847e05a982e82f48ebc4abdd62f851c644fb537bd34dcb0601a5ec624",
+            "kernel_1_sha256": "3f99afe847e05a982e82f48ebc4abdd62f851c644fb537bd34dcb0601a5ec624",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "S:10:VEFSR0VULUZBUg==",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "S:4:U1RPUA==",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/exit_id"
+        },
+        {
+          "corrected": {
+            "canonical_value": "S:11:VEFSR0VULU5FQVI=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/1/exit_id"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:2",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "A:1",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:105",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:105",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/1/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:2",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:10",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:-20",
+            "tag": "PRESENT"
+          },
+          "selector": "lifecycle gross realized PnL"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-06-EQUAL-PRICE-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "04cd5c95b928b15aa160ca677b61c358f5ff353a0e92e9b8f66bdbeedd4d8216",
+            "kernel_1_sha256": "04cd5c95b928b15aa160ca677b61c358f5ff353a0e92e9b8f66bdbeedd4d8216",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "35fe6bf4840235c92a4823d445b881008bf46d808243f67c16711e0929b00348",
+            "kernel_1_sha256": "35fe6bf4840235c92a4823d445b881008bf46d808243f67c16711e0929b00348",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "S:4:U1RPUA==",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "S:4:U1RPUA==",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/exit_id"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:2",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:2",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:-20",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:-20",
+            "tag": "PRESENT"
+          },
+          "selector": "lifecycle gross realized PnL"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-06-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fee_events",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "46ab4596b6fd1e3fa3723e9485db44187e582d3f987c8a9177127adfb1e54b8a",
+            "kernel_1_sha256": "46ab4596b6fd1e3fa3723e9485db44187e582d3f987c8a9177127adfb1e54b8a",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "7366eb2992ada346b850a1bfbe08ba88a3d447fbf84ae1e17040184bbbba77f2",
+            "kernel_1_sha256": "7366eb2992ada346b850a1bfbe08ba88a3d447fbf84ae1e17040184bbbba77f2",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "A:2",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/EVENT_SURFACE/fee_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "F:-0x1.999999999999ap-3",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/RESULT_SURFACE/trades/0/net_trade_pnl"
+        },
+        {
+          "corrected": {
+            "canonical_value": "S:16:R1JPU1MtTUlOVVMtRkVFUw==",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/RESULT_SURFACE/guards/guard_pnl_basis"
+        },
+        {
+          "corrected": {
+            "canonical_value": "F:-0x1.999999999999ap-3",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "selector": "/RESULT_SURFACE/guards/last_closed_guard_pnl"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:0",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/guards/consecutive_loss_count"
+        },
+        {
+          "corrected": {
+            "canonical_value": "B:1",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "B:0",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/guards/guard_blocked_raw"
+        },
+        {
+          "corrected": {
+            "canonical_value": "F:0x1.f3e6666666666p+9",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/equity_curve/last"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-07-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "kernel_1_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "kernel_1_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/equity_curve/last"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:0",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/guards/consecutive_loss_count"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/final_position"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-07-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "STOP_MISMATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": "/EVENT_SURFACE/cash_events",
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "341863fc107fb7745891f0e7725934f483d1d5bc4c878916440359b68901a771",
+            "kernel_1_sha256": "341863fc107fb7745891f0e7725934f483d1d5bc4c878916440359b68901a771",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "5de06464fc6841a611ca951b8b7c5cf91e530c0a100193311eb100694abce221",
+            "kernel_1_sha256": "5de06464fc6841a611ca951b8b7c5cf91e530c0a100193311eb100694abce221",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [],
+      "role": "RED",
+      "scenario_id": "RULE2-08-RED",
+      "status": "STOP_COULD_NOT_EVALUATE"
+    },
+    {
+      "corrected_expectation": "STOP_MISMATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": "/EVENT_SURFACE/decision_events",
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "e09c6d17fa1861e35eb4ee50818e563366196dd4b040c496961d59590fdacbe6",
+            "kernel_1_sha256": "e09c6d17fa1861e35eb4ee50818e563366196dd4b040c496961d59590fdacbe6",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "fc1b9c2ff44ba4d62efcc3395719e8b6b1aaeabf7f121d0ae5d13324a7d100e2",
+            "kernel_1_sha256": "fc1b9c2ff44ba4d62efcc3395719e8b6b1aaeabf7f121d0ae5d13324a7d100e2",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/equity_curve/last"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "selector": "/RESULT_SURFACE/final_position"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-08-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    }
+  ],
+  "sealed_producer_identities": {
+    "baseline_driver_sha256": "b7648f71cc089d683f54fe9a82c7dc95302bc2cb3481288c2c99313944f56d53",
+    "catalog_sha256": "bdfb42e7058df08cd57ea9c57434784e452676be16ea61be7324f2f866148742",
+    "design_file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+    "design_file_sha256": "1f506c923c700df3a2a757ab3d49efabcd4d06bf39c251f8965c55bc10de8b75",
+    "design_total_lines": 1419,
+    "expected_seal_sha256": "e4ffde6a420202d2c9f3872f99c5527c1af7e7b83341764ec874d774f8aaa531",
+    "implementation_anchor_sha256": "0433a420ce446e7b0f629ce71de576a6460235497db141ec512d536fbf961852"
+  }
+}

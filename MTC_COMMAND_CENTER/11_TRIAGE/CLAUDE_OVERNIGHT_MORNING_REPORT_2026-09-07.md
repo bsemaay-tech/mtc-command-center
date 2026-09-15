@@ -1,0 +1,446 @@
+# Claude Overnight Lane — Morning Report (2026-09-07)
+
+**Recorded:** drafted 2026-09-06 22:58 +03; finalized 2026-09-07 05:05 +03 (§8 close-out)
+**Class:** T3 factual report; self-verified; no acceptance, promotion, or live implication
+**Branch:** `claude/overnight-autonomous-work-e94x3q` from `origin/master`
+`afe52ea89473300e25555325def111cac599bdf1`
+**Checkpoint record:** `CLAUDE_OVERNIGHT_CHECKPOINTS_2026-09-06.md` (same directory)
+**Executor:** Claude remote Linux container (claude.ai/code). The owner's
+`HANDOFF_CLAUDE_P0_20260906_2200/HANDOFF.md`, every `C:/` packet, `pwsh`, the Codex launcher and
+the Gemini launcher are on the Windows host and were unreachable; nothing in this report derives
+from them.
+
+## 1. Owner decisions needed (read this first)
+
+Nothing is blocking. The branch is a self-contained candidate; decide these in the office session:
+
+1. **Route the branch through the gate.** `claude/overnight-autonomous-work-e94x3q` (70 commits over
+   `afe52ea`, 70 files, +6,576/−221 measured at the final head `b82d02df`; an earlier draft of this
+   line said 67/69/+6,362) carries 17 NONACCEPTED code commits plus T3 records. The exact
+   T0–T2 audits (`claude-opus-5` / `gpt-5.6-sol` / Gemini) were unreachable from the container, so
+   dispatch them on the Windows host before any PR; the protected `Bridge suite (Python 3.12)` is
+   green on the head as non-root. Suggested split if you prefer smaller PRs: (a) T3 records +
+   index tool, (b) dashboard fixes (D1, D5, D12, D14, D15, D18), (c) mtc_cli (D9 + nits),
+   (d) QuantLens/triage tooling (D2, D3, D4, D11, D16, D17), (e) Bridge one-line import + notes.
+2. **Protected-scope proposals (patches only, nothing changed):** D7 `02_MTC_BACKTEST/app.py`
+   `NameError` on "Generate Run Plan"; D8 MTC_V2 `runner.py` unimported constant on `debug_mode`;
+   Bridge lane-J proposals (naive `datetime.now()` on the dry-run mock, `db.py:3174` unused
+   `new_submitted_ts`, float `==` on qty/px).
+3. **Dashboard path model:** lane V packet — keep `reports/optimization` readers fail-closed until a
+   producer writes `metrics.json` (option B), and choose remove-vs-log for the remaining
+   `06_QUANTLENS_LAB` fallbacks (`paths.py:27` + 4 call sites).
+4. **Stale July PRs #20/#21/#22/#26:** rebase-or-close (three conflict; #26 names a superseded
+   auditor).
+5. **`generate_morning_report.py:34`:** dead `strong` variable vs. a new STRONG_PASS table — intent.
+6. **`_deepseek_driver` `_BANNED_ATTRS`** duplicate `"remove"`: which attribute was intended.
+
+## 2. Verified facts
+
+| # | Fact | Evidence |
+|---|---|---|
+| F1 | `master` head `afe52ea` passes the protected `Bridge suite (Python 3.12)` on GitHub (run 76, `33998308281`, SUCCESS) and locally as a non-root user: **1393 passed, exit 0**, 63 s, Python 3.12.3, hash-locked deps (`pip --require-hashes`, exit 0), `compileall` exit 0. | checkpoint 2; `ci_run3` log |
+| F2 | The same tree run **as root** fails exactly 3 tests in `tests/test_wal_state_bundle.py` (1390 passed). Cause: SQLite 3.45.1's unix VFS calls `fchown(fd, 0, 0)` on `-wal`/`-shm` when `geteuid()==0` (strace), and `chown` always refreshes `ctime`; `_stable_metadata()` includes `ctime_ns`, so the arrival→before snapshot shows `wal` drift (+4 ms ctime, no content/mtime/size/inode change) and `create` fails closed with `source_changed_during_capture`. | checkpoint 1–2 |
+| F3 | F2 has no documented operational path: Linux units run as `User=mtc-bridge`; the Stage E capture runs on the old Windows writer. Failure direction is safe. | `deploy/linux/systemd/*.template`, `deploy/linux/COMMANDS.md` |
+| F4 | Pine Defang Guard: `PASS files=21 matches=0 allowlist=0`. | checkpoint 1 |
+| F5 | All other executable, non-protected Python suites pass: `mtc_cli` 8, `_deepseek_driver` 20, `tools_v2/observability` 19, `tools_v2/analysis_package` 11, `contracts` 50 (+ `ruff==0.16.4` clean), 25 QuantLens strategy test dirs (all green). Dashboard API: 120 passed, 1 failed (D1). | checkpoint 2 |
+| F6 | Not executed by policy: `02_MTC_BACKTEST`, `12_PARITY_PINETS`, any backtest/optimization/server/launcher. | AGENTS.md invariants |
+| F7 | Governance/link hygiene: 0 broken links in 66 root/governance/_AI_MEMORY docs and 43 stage-contract files; all 8 stages carry their five files; every stage `HANDOFF.md` ≤ 4 KiB. | checkpoint 1 |
+| F8 | `11_TRIAGE/INDEX.md` was 73 files stale (last generated 2026-08-25). Regenerated on this branch with a validated Python port of `generate_index.ps1` (reproduces all 1,374 prior rows and their order byte-for-byte; deterministic across two runs). Rows added only. | commit `93828d9` |
+| F9 | Credential-pattern sweep: only labelled fakes in fixtures/tests. EOL: 0 mixed. 120 tracked `.sh` parse except 4 intentional `sec102_r7` malformed fixtures. 2,202/2,203 JSON and 108/115 YAML tracked files parse (exceptions are D3/D4). | checkpoint 2 |
+| F10 | Open PRs at start, untouched: #26 (draft), #22, #21, #20 — all last updated July 2026. GitHub reports `mergeable_state: unknown`. Measured locally on the full (unshallowed) history: #26 `feature/two-tier-policy` merge-base `008e065e`, 1 ahead / 1,014 behind, **conflicts**; #22 `feature/exit-aware-gauntlet` merge-base `8721bce0`, 10 ahead / 1,023 behind, merges clean (`git merge-tree`); #21 and #20 merge-base `8721bce0`, 1 ahead / 1,023 behind, **conflicts**. #26 also names the superseded auditor `claude-opus-4-8` (D022 fixed `claude-opus-5`). All predate the 2026-08-23 Map 97 fold; rebase-or-close candidates. (An earlier draft of this row was measured on a shallow clone and wrongly said "no merge base"; corrected here.) | local `git merge-base` / `merge-tree` |
+| F11 | Static sweeps: `ast.parse` over all 1,003 tracked `.py` files finds one syntax error (D2 artifact); `ruff --select F821,F811,F823,E9` over every Python tree (protected trees read-only, `--no-cache`) finds product hits D6, D7, D8 below, plus two benign local re-imports in `tests/test_engine_dryrun.py:3798` (F811); `shellcheck 0.11.0 -S warning` on `deploy/linux/{install,package,rollback,verify}.sh` is clean. | checkpoint 3 |
+
+| F12 | Relative Markdown links across 1,971 non-history docs: 7 broken, all legacy references in owner-gated scopes — `02_MTC_BACKTEST/README.md` → `../00_MASTER_TEMPLATE/`, `../20_MODULES_REUSABLE/`; `02_MTC_BACKTEST/parity_suite_350/{OPTIMIZATION_EXECUTION_SUMMARY,SUPERTREND_OPTIMIZATION_GUIDE}.md` → `../../src/modules/signals/supertrend.py#L110/#L147`; `04_SHARED/modules/#00 README_Pine_Module_Pack_v2.md` → `../../.github/copilot-instructions.md`, `../20_MODULES_REUSABLE/LIB_ConfirmationLayer.pine`. T2 doc repairs for those stages; untouched here. | link sweep |
+| F13 | Read-only dashboard commands `mcc_readonly {health,read-model,snapshot,parity-status,backtest-status}` and `mtc_cli --help` all run without traceback against this checkout (snapshot: 2.2 MB JSON, exit 0). `mtc_cli audit repo` exits 2 by design of its stale path list (D9). | checkpoint 3 |
+## 3. What this lane changed (work branch only; nothing pushed elsewhere, no PR)
+
+After the owner's 23:05 +03 instruction ("authorized for everything to keep the work running",
+4–6 lanes until 06:30), non-protected findings were repaired by isolated worker lanes and
+integrated by the lead with `cherry-pick -x` after diff inspection and re-testing. Every code
+commit is a NONACCEPTED candidate: the exact T0–T2 audits (Codex/Gemini launchers) were
+unreachable from this container and remain required before merge.
+
+| Commit | Scope | What | Lead re-verification |
+|---|---|---|---|
+| `6a25e23a` | dashboard tests (D1, D5) | Path-built expectation; temp-dir fixtures | 121 passed, no stray `C:` dir |
+| `5c617b3f` | `11_TRIAGE/overnight_orchestrator.py` + regenerated `03_QUANTLENS/tools/overnight_extended_run.py` (D2) | dedent-safe import join; artifact regenerated (no run) | `py_compile` + ruff E9/F821 clean |
+| `91ccbba6` | `01_MTC_PROJECT/tools/extract_parameter_library_seeds.py` + 7 YAML (D3) | warning emitted as `# ` comment | 8/8 YAML parse |
+| `151e1700` | `03_QUANTLENS/tools/night_runs/AGGREGATE_night_2026-06-02.{json→md}` (D4) | `git mv`, bytes unchanged | content starts `# OVERNIGHT AGGREGATED REPORT` |
+| `361b6451` | `mtc_cli/commands/audit.py`, `mtc_cli/tests/test_audit.py` (D9) | required-file list = router-era current-state files; NEXT_STEPS check → governance `HANDOFF.md` NEXT ACTION / WAITING FOR OWNER check; `run(repo_root=…)` for fixtures | 13 tests pass; `python -m mtc_cli audit repo` → OK, exit 0 |
+| `f4455150` | `00_CONFIG/paths.example.json`, `paths.local.example.json` (D10) | canonical `C:/LAB/Tradingview_LAB_CLEAN/…` layout; every value backed by an existing repo dir (`01_MTC_PROJECT`, `12_PARITY_PINETS`, `12_PARITY_PINETS/TW_EXPORT_CASES_V2`, `04_REPORTS`) | JSON parses; dashboard suite 121 passed |
+| `f8fa3caf` | `IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py` (+1 import line, D6), `TESTS.md` Linux note, `HANDOFF.md` | import-only; no behavior change; T0 audit still required | ruff F821 clean; full suite as non-root on `63de031a`: **1393 passed, exit 0** |
+| `63de031a` | `11_TRIAGE/overnight_orchestrator.py` (D11) | `QLAB_ROOT = MCC_ROOT / "03_QUANTLENS"` (was legacy `01_MASTER TEMPLATE_V2/06_QUANTLENS_LAB`) | `TOOLS_DIR.exists()` True; py_compile + ruff clean; dry emit compiles |
+| `31e975f1` | `04_SHARED/modules/#00 README_Pine_Module_Pack_v2.md` | two legacy links repaired (one target never existed → plain text) | 0 unresolved links in the file |
+| `a216b61f` | `11_TRIAGE/generate_index.py`, `test_generate_index.py` (new tool) | stdlib port of `generate_index.ps1` with `--check`; .NET sort/extension semantics | 31 tests pass; ruff clean; output byte-identical to the lead's validated port; `--check` OK after regeneration |
+| `79c77050` | `mcc_readonly/mtc_v2_reader.py` + tests (D12) | MTC_V2 readiness root from path config; fail-closed empty shape when unconfigured | dashboard 122 passed |
+| `68a2d601` | `_deepseek_driver/ds_agent.py` + tests (D13) | default report path under the system temp dir; parent dir created | 25 tests pass |
+| `ec80222d` | `mcc_readonly/registry_reader.py` + tests (D15) | repaired CSV row must match header width, else skipped as malformed | dashboard 125 passed |
+| `44b11300` | four dashboard readers + tests (D14) | 20 read sites `utf-8` → `utf-8-sig`; one BOM regression test per reader | dashboard 129 passed |
+| `1dc4e47b` | `03_QUANTLENS/tools/heavy_night_report.py` + test (D16) | emit the computed pass-cell count | 2 tests pass |
+| `aeaef767` | `11_TRIAGE/overnight_orchestrator.py`, regenerated runner, new template test (D17) | prototypes imported from their directory | 38 triage tests pass; runner compiles |
+| `234c7188` | `mtc_cli/commands/audit.py` + tests (R1 nits) | no-ask tokens `none/(none)/n/a/-/—/empty`; label-anchored NEXT ACTION check; newest-first documented | 32 tests pass; `audit repo` OK |
+| `a508fc77` | `mcc_readonly/{pine_builder_reader,liveops_reader}.py` + tests (D18) | promoted-strategy plans read from the QuantLens strategies root | dashboard 133 passed |
+| `0322fd43` | `mcc_readonly/{pine_builder_reader,liveops_reader}.py` + tests (D18 follow-up) | plan reads ungated from `mtc_v2_root`; dead locals/imports removed | dashboard 135 passed |
+| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q,R1,S,T,V,W,X}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
+
+Still owner-gated and NOT changed: D7 (`02_MTC_BACKTEST`), D8 (MTC_V2), plus anything Pine,
+parity, adapters, schemas. Read-only review lanes (J Bridge static hunt, K non-protected static hunt, L dashboard legacy
+fallbacks, M independent branch audit) were in flight at this draft; §8 lists what landed.
+
+## 4. Findings with verified patches (not applied)
+
+Each patch was applied to a scratch copy only. RED/GREEN below means: RED = current tree
+behaviour reproduced by execution; GREEN = patched copy passes; mutant = patched assertion still
+fails on a deliberately wrong output (discriminating power, per `00_AGENT_PROTOCOLS/TESTS.md`).
+
+### D1 — dashboard test hard-codes a Windows path separator (T1, `08_DASHBOARD_APP`)
+
+RED: `test_pipeline_reader.py::test_discovers_extra_quantlens_jsonl_candidates` fails on Linux
+(`'research/batch/…' != 'research\\batch\\…'`). Product code returns native
+`str(path.relative_to(root))`, so only the assertion is platform-bound. GREEN: 1 passed with the
+patch. Mutant: reader prefixed with `"X/"` → 1 failed with the patch (assertion still bites).
+
+```diff
+--- a/MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/tests/test_pipeline_reader.py
++++ b/MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/tests/test_pipeline_reader.py
+@@ -201,7 +201,10 @@
+             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["stages"]["discovered"]["status"], "done")
+             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["stages"]["backtested"]["status"], "na")
+             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["source_url"], "https://www.youtube.com/watch?v=abc123")
+-            self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["discovery_source"], "research\\batch\\FINAL_LLM_KNOWLEDGE_BASE.jsonl")
++            self.assertEqual(
++                rows["QLR_EXTRA_PULLBACK"]["discovery_source"],
++                str(Path("research") / "batch" / "FINAL_LLM_KNOWLEDGE_BASE.jsonl"),
++            )
+             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["classification"]["kind"], "wiki")
+             self.assertIn("QLR_BLOCKED", rows)
+             self.assertEqual(rows["QLR_BLOCKED"]["stages"]["backtested"]["status"], "na")
+```
+
+### D2 — overnight runner generator emits an unimportable file (T1, `11_TRIAGE`)
+
+RED: importing the real `overnight_orchestrator.py` and calling `write_runner_extension(True)`
+into a scratch dir emits a file whose line 1 is `        """Auto-generated…` →
+`compile()` raises `SyntaxError: unexpected indent (line 1)`; the committed
+`03_QUANTLENS/tools/overnight_extended_run.py` is byte-identical to that output apart from the
+timestamp, which is why `compileall` fails on it today. GREEN: with the patch the emitted runner
+compiles and carries all 19 `from PYTHON_PROTOTYPES import …` lines. Regenerating the committed
+artifact is a separate, execution-gated step (it is a runner for a backtest sweep).
+
+```diff
+--- a/MTC_COMMAND_CENTER/11_TRIAGE/overnight_orchestrator.py
++++ b/MTC_COMMAND_CENTER/11_TRIAGE/overnight_orchestrator.py
+@@ -565,7 +565,10 @@
+     """Emit overnight_extended_run.py at the tools dir that imports all
+     new prototypes + delegates to mega_walk_forward's existing infrastructure."""
+     runner_path = TOOLS_DIR / "overnight_extended_run.py"
+-    imports = "\n".join(
++    # Indent every generated line to the template depth so textwrap.dedent
++    # below can strip the common prefix; a bare multi-line block would leave
++    # the whole runner indented and unimportable (IndentationError).
++    imports = "\n        ".join(
+         f"from PYTHON_PROTOTYPES import {c.id}_prototype  # noqa: F401"
+         for c in CANDIDATES
+     )
+```
+
+### D3 — parameter-library YAML files are not parseable (T1, `01_MTC_PROJECT`)
+
+RED: 7 of 8 files under `optimization/parameter_library/**/*.yml` fail `yaml.safe_load`
+(`mapping values are not allowed here`, line 4) because line 2 is the bare, unquoted research
+warning sentence; the 8th file (`range_filter/range_filter_seed_regions.yml`) already uses the
+intended commented form `# Research seeds only; …` and parses. GREEN: prefixing line 2 with `# `
+in each of the 7 files makes all of them parse (top keys `regions`, `rejected_or_caution_regions`,
+`purpose`…). No tracked consumer parses these files as YAML today (`run_12h_backtesting_session.py`
+only writes CSV), so impact is latent. Writer fix: in
+`01_MTC_PROJECT/tools/extract_parameter_library_seeds.py` lines 93, 146 and 171 emit
+`f"# {RESEARCH_WARNING}"` instead of the bare `RESEARCH_WARNING`; the five hand-written
+`*.template.yml` files and the two generated `supertrend_*` files need the same one-line change.
+
+### D4 — Markdown report stored under a `.json` name (T3, `03_QUANTLENS`)
+
+`03_QUANTLENS/tools/night_runs/AGGREGATE_night_2026-06-02.json` (40,534 B) begins with
+`# OVERNIGHT AGGREGATED REPORT — cross-iteration…`; `write_overnight_morning_report.py` refers to
+the aggregate as `AGGREGATE_night_<id>.md`. Proposed: `git mv` to `.md` (history-preserving), or
+delete if it duplicates an existing `.md`. No content change.
+
+### D5 — dashboard test writes a fixture to a fixed absolute path (T1, `08_DASHBOARD_APP`)
+
+`tests/test_audit_reader.py::test_audit_classifies_duplicate_blocked_and_eligible_rows` creates
+`Path("C:/TEMP/MTC_COMMAND_CENTER/11_TRIAGE/strategies")` and writes `_stg_code_map.json` there,
+then passes `Path("C:/TEMP/MTC_COMMAND_CENTER")` as the root. On Windows that is a real write
+outside both the repo and pytest's temp dir; on Linux it created a literal
+`08_DASHBOARD_APP/apps/api/C:/TEMP/…` directory inside the checkout during this lane's run
+(inspected: one 24 KB generated JSON; removed, never staged). Sibling tests already use
+`tempfile.TemporaryDirectory()`; the same pattern fixes this one. Discovered after the dashboard
+suite run, so it is reported without a scratch-verified patch.
+
+### D6 — `Any` used without import in the Hyperliquid broker (T1, `IBKR_PAPER_BRIDGE`, latent)
+
+`bridge/broker/hyperliquid.py:1643` annotates a local `rich_rows: dict[str, dict[str, Any]]` but
+the module never imports `Any` (ruff F821). With `from __future__ import annotations` (line 7) and
+because local-variable annotations are never evaluated at runtime (verified on 3.12.3), there is
+no runtime effect today; it becomes a `NameError` only if the annotation is ever evaluated
+(e.g. by `typing.get_type_hints`) or the future import is dropped. One-line fix: add `Any` to the
+module's `typing` import. Protected-adjacent Bridge scope; owner-gated.
+
+### D7 — Streamlit operator page raises `NameError` on "Generate Run Plan" (T1, `02_MTC_BACKTEST`, protected)
+
+`02_MTC_BACKTEST/app.py:190` inside `show_operator_page()` evaluates `pd.Timestamp.now()` when the
+"Generate Run Plan" button is pressed, but `pandas` is imported only locally inside other
+functions (lines 308, 391, 661, 682, 830) and never at module scope or in this function
+(ruff F821, confirmed by reading the enclosing `def`). Static finding only; the app was not
+launched (owner-gated scope, no server execution). One-line fix: `import pandas as pd` at module
+scope or at the top of the button branch.
+
+### D8 — MTC_V2 runner references an unimported constant when `debug_mode` is on (T1, `MTC_V2`, protected)
+
+`01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py:1052` builds `_debug_metadata` with
+`EXECUTION_PROFILE_RAW_CLOSE_ONLY`, but the module imports only `SIGNAL_MODE_RANGE_FILTER`,
+`SIGNAL_MODE_SUPERTREND`, `resolve_config` from `mtc_v2.core.config` (line 8), where the constant
+is defined. The branch runs only when `config["debug_mode"]` is true (default `False`,
+`config.py:36`); no tracked test or config enables it, so production numerics are untouched, but
+`debug_mode=True` raises `NameError` at the first bar. The portable copy
+`handoff/MTC_V2_PORTABLE_HANDOFF/.../runner.py` carries the same line (files otherwise differ at
+line 1197). Static finding only; nothing in MTC_V2 was executed. Fix is an import-list addition.
+
+Related lint-only (no runtime effect, annotation strings under `from __future__ import
+annotations`): `mtc_v2/core/gates.py:524,569` reference `"datetime"` without a `TYPE_CHECKING`
+import; same class as D6.
+
+### D9 — `mtc_cli audit repo` has failed on every `master` since the 2026-08-25 routing fold (T1, `mtc_cli`)
+
+`python -m mtc_cli audit repo` (the D002 agent-native, read-only health command) returns
+`[audit repo] FAIL`, exit 2, with `missing: MTC_COMMAND_CENTER/_AI_MEMORY/GLOBAL_HANDOFF.md`
+and `missing: …/_AI_MEMORY/NEXT_STEPS.md`. `mtc_cli/commands/audit.py:27-28,97` still requires
+those paths, but commit `552a41ec` (2026-08-25, "feat(context): add stage-local routing") moved
+both files to `_AI_MEMORY/history/` (255 KB and 344 KB there today), as root `AGENTS.md` records.
+The 8 `mtc_cli` tests pass because they use fixtures. Whether the audit should read the history
+files, the router files (`AGENTS.md`/`DECISIONS.md`/stage `HANDOFF.md`), or be retired is a
+D002-level decision; the command is unusable until one is made.
+
+### D10 — dashboard path examples still point at the frozen legacy checkout (T2, `08_DASHBOARD_APP`)
+
+`00_CONFIG/paths.example.json` and `paths.local.example.json` (10 values) resolve every root to
+`C:/LAB/tradingview-lab/…` and the pre-migration `01_MASTER TEMPLATE_V2` layout. Root `AGENTS.md`
+declares that checkout frozen and forbids reading it, and `PATHS_RESOLUTION.md` loads the example
+first, so `mcc_readonly health` on a machine without `paths.local.json` reports
+`mtc_v2_root_reachable: false` against the legacy path (observed here: `overall_ok: false`).
+Read-only run; no config was written. Fix is a values-only update to the canonical
+`C:/LAB/Tradingview_LAB_CLEAN/…` layout (or relative roots), owner-confirmed.
+
+### D11 — orchestrator default `TOOLS_DIR` still names the legacy layout (T1, `11_TRIAGE`)
+
+Found by lane B while regenerating the runner: `11_TRIAGE/overnight_orchestrator.py` derives
+`TOOLS_DIR` from `REPO_ROOT / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB" / "tools"`, a
+pre-migration path that does not exist in this checkout (migrated to
+`MTC_COMMAND_CENTER/03_QUANTLENS/tools`). Any real `--apply` run would create the legacy tree
+instead of writing into QuantLens. Out of D2's scope; queued as a refill lane.
+
+### D12 — MTC_V2 readiness reader ignores the path config (T1, `08_DASHBOARD_APP`)
+
+Found by lane L's read-only review: `mcc_readonly/mtc_v2_reader.py::build_mtc_v2_readiness` computes
+`mtc_root = root.parent / "01_MASTER TEMPLATE_V2"` unconditionally (pre-migration layout), while
+every other reader resolves `mtc_v2_root` from `00_CONFIG/paths*.json` via
+`resolve_configured_path`. It cannot reach the frozen sibling repo (different top-level directory),
+but on a machine with a leftover legacy folder it would silently render stale data, and on a clean
+canonical checkout it always reports the parity tracker as unavailable. Lane L's record also maps the
+remaining `06_QUANTLENS_LAB` fallbacks (`paths.py:27` and four call sites) with an owner-decidable
+option A (remove) / option B (log) proposal. Lane N was dispatched to fix the reader root only.
+
+### D13 — `_deepseek_driver/ds_agent.py` defaulted its report path to `C:\tmp` (T1, supplemental tool)
+
+Lane K finding: with `report_out` absent the agent wrote its report to a hard-coded Windows path,
+which on POSIX became a literal relative `C:\tmp/...` segment; the write failure was only logged,
+so a run "succeeded" without its report. Repaired by lane O (`68a2d601`): a pure
+`default_report_path(slug)` under `tempfile.gettempdir()/mtc_ds_reports`, parent created before
+writing, explicit `report_out` unchanged; RED 4 failed → GREEN 25 passed. The duplicate `"remove"`
+in `_BANNED_ATTRS` (a set literal, no runtime effect) was left alone: the intended second attribute
+is unknown and is the owner's call.
+
+### D14 — dashboard readers split on UTF-8 BOM handling (T1, `08_DASHBOARD_APP`)
+
+Lane K finding: `heartbeat_reader.py`/`mtc_v2_reader.py` read with `utf-8-sig` while
+`pipeline_reader.py`, `audit_reader.py`, `optimization_reader.py`, `backtest_reader.py` use plain
+`utf-8`, so a PowerShell-written BOM-prefixed JSON/CSV artifact is treated as malformed/missing by
+half the readers. Repaired by lane P (`44b11300`): 20 read sites now `utf-8-sig`, one BOM regression test per
+reader (RED 4 failed → GREEN), no write sites exist in those modules.
+
+### D15 — registry CSV row repair can misalign columns (T1, `08_DASHBOARD_APP`)
+
+Lane K finding: `registry_reader.py:180-189` repairs malformed rows and then `zip(header, repaired)`
+without a length check, silently dropping or shifting columns when the repair does not land on the
+header width. Repaired by lane Q (`ec80222d`): `_candidate_csv_row` returns `None` on width mismatch and the
+row is skipped like the reader's other malformed records; RED showed a reviewer value leaking into
+`candidate_folder`, GREEN 3 new tests.
+
+### D16 — QuantLens night-report scripts compute summaries they never write (T1, `03_QUANTLENS/tools`)
+
+Lane K finding; lane S decision (`1dc4e47b`): `heavy_night_report.py` builds `passcells` in both
+branches and reports every sibling collection's count except that one — unambiguous omission, so
+one line `- pass cells (PASS+STRONG_PASS): **N**` was added with a synthetic-run regression test
+(RED 1 failed → GREEN 2 passed; no real run data touched). `generate_morning_report.py:34` computes
+`strong` whose length already appears in the classification table, so the intent (dead code vs. a
+new STRONG_PASS detail table) is the owner's call; left unchanged with the options in the lane record.
+
+### Read-only review lanes (records in `11_TRIAGE/OVERNIGHT_LANE_{J,K,L,M}_*`)
+
+- **J (Bridge static hunt):** 13 ruff hits → 2 real, 2 latent, 9 style; all proposals owner-gated
+  (T0). Notables: `store/db.py:3174-3177` computes `new_submitted_ts` but never compares it in a
+  duplicate-intent migration identity check; `broker/mock.py` uses naive `datetime.now()` on the
+  dry-run path only; seven float `==` comparisons on qty/px in matching code; ~50 `except Exception`
+  blocks reviewed, none swallowing a money-path error silently.
+- **K (non-protected static hunt):** 134 hits → 6 real/latent-serious, 5 latent, rest style;
+  the actionable ones became D13–D15; two QuantLens report scripts compute summaries they never
+  write (`generate_morning_report.py:34`, `heavy_night_report.py:77,80`) and
+  `build_all_gate_evidence.py:126-127` computes `symbol`/`timeframe` it never uses — reported,
+  not changed (intent unclear).
+- **L (dashboard legacy fallbacks):** 14 hits; none can read the frozen sibling repo; the real
+  bug was D12 (fixed); remaining `06_QUANTLENS_LAB` fallbacks (`paths.py:27` + four call sites)
+  have an owner-decidable option A (remove, ~7 tests change) / option B (log when fallback fires).
+- **M (independent branch audit at `c306d1cc`):** all 10 checks PASS — no protected path touched,
+  Bridge delta is exactly one import line, whitespace/encoding clean, handoffs ≤ 4 KiB with
+  NEXT ACTION / WAITING FOR OWNER, index `--check` OK, links resolve, Python compiles, trailers
+  present, no secrets, §3 claims match the commits.
+
+### D17 — generated overnight runner imported a non-existent package (T1, `11_TRIAGE` template)
+
+Lane R1 nit, fixed by lane T (`aeaef767`): the template inserted `ROOT.parent` into `sys.path` and
+emitted `from PYTHON_PROTOTYPES import <id>_prototype`, but the directory is literally
+`04_PYTHON_PROTOTYPES` (not an importable name), so the runner could never load a prototype. Now
+`sys.path.insert(0, str(ROOT))` and bare `import <id>_prototype`; all 19 candidate ids map to
+existing files; static `find_spec` probe RED (0/19) → GREEN (19/19); 7 new template tests; runner
+regenerated (no execution). This runner remains a backtest-sweep launcher: running it is owner-gated.
+
+### D18 — two dashboard panels always read a pre-migration promoted-strategy path (T1, `08_DASHBOARD_APP`)
+
+Lane V's decision packet (`OVERNIGHT_LANE_V_*`, 31 derived locations mapped) found four live gaps
+under the canonical layout. Two are always-firing with no fallback: `pine_builder_reader.py:47` and
+`liveops_reader.py:59` read only `mtc_v2_root/06_QUANTLENS_LAB/06_PROMOTED_TO_PARITY`, so the Pine
+Builder compile-status join and the LiveOps paper-trade-plan list are permanently empty even though
+the plan files exist under `03_QUANTLENS/strategies/<id>/…`. Repaired by lane W (`a508fc77`): both now read
+`default_quantlens_root(mcc_root) / "strategies"`; RED 4 failed → GREEN, dashboard suite 133 passed.
+Follow-up by lane X (`0322fd43`): the reads are no longer gated on `mtc_v2_root`;
+`generated_at` now reflects discovered plans even when that root is unconfigured; dashboard 135 passed. The other two gaps
+(`backtest_reader.py:114`, `optimization_reader.py:27` → `mtc_v2_root/reports/optimization`) have no
+producer anywhere in the repo yet (`metrics.json` absent), so lane V recommends keeping them
+documented fail-closed until a producer exists — owner decision, packet options A/B/C per reader.
+
+### Independent adversarial review of the code commits (lane R1, record `OVERNIGHT_LANE_R1_*`)
+
+Fourteen code commits reviewed with targeted probes and scratch mutants: **no REQUEST_CHANGES**;
+9 PASS, 5 PASS-WITH-NITS. Nits and pre-existing defects it surfaced: the generated overnight runner
+imports a non-existent `PYTHON_PROTOTYPES` package (template defect predating tonight → D17, lane T
+dispatched); `mtc_cli audit` treats `none`/`(none)` as real owner asks and uses a substring
+`NEXT ACTION` check (lane U dispatched); the dashboard readers derive `reports/optimization` and
+`06_QUANTLENS_LAB` under `mtc_v2_root`, which do not exist under `01_MTC_PROJECT` — a pre-existing
+mismatch now visible with canonical example paths (owner decision, same domain as lane L's option
+A/B); `generate_index.py` differs from the PowerShell original only on undecodable/UTF-16-surrogate
+inputs that no current file triggers; `ds_agent._dump` now also creates the parent directory for an
+explicit `report_out` (benign). Acceptance still requires the exact T0–T2 audits.
+
+## 5. Suggested Bridge-stage doc note (T2, optional)
+
+`IBKR_PAPER_BRIDGE/TESTS.md`: "On Linux run the suite as a non-root user; as root SQLite
+`fchown`s the WAL/SHM on read-only open, which the capture drift guard correctly reports."
+The existing "two recorded baseline failures may exist" sentence did not reproduce on Linux
+(both named tests pass); it is conditional wording and was left alone.
+
+## 6. Reproduction commands (Linux, from repo root)
+
+```bash
+/usr/bin/python3.12 -m venv .venv312 && .venv312/bin/python -m pip install --require-hashes -r IBKR_PAPER_BRIDGE/requirements.lock
+PYTHONUTF8=1 .venv312/bin/python -m compileall -q IBKR_PAPER_BRIDGE
+PYTHONUTF8=1 .venv312/bin/python -m pytest IBKR_PAPER_BRIDGE/tests -q          # as non-root: 1393 passed
+# root-only RED, three WAL tests:
+strace -f -e trace=fchown .venv312/bin/python -c 'import sqlite3;sqlite3.connect("file:<db>?mode=ro",uri=True).execute("select name from sqlite_master limit 1")'
+python3 MTC_COMMAND_CENTER/tools/check_no_pine_alerts.py
+```
+
+## 7. Appendix — index generator port used for F8
+
+Cross-platform equivalent of `11_TRIAGE/generate_index.ps1` (row format, dotfile extension
+semantics, and .NET word-sort order all validated against the committed index). Kept out of the
+tree because adding a tool is not authorized; reproduce from here if needed.
+
+```python
+"""Python port of MTC_COMMAND_CENTER/11_TRIAGE/generate_index.ps1 (row generation only)."""
+import os, re, sys, subprocess
+ROOT = 'MTC_COMMAND_CENTER/11_TRIAGE'
+def clean(v, limit):
+    if v is None: return ''
+    c = re.sub(r'\s+', ' ', v.replace('|', '\\|')).strip()
+    return c[:limit-3] + '...' if len(c) > limit else c
+def fdate(name):
+    m = re.search(r'(20\d{2})[-_](\d{2})[-_](\d{2})', name)
+    if m: return f"{m[1]}-{m[2]}-{m[3]}"
+    m = re.search(r'(20\d{2})(\d{2})(\d{2})', name)
+    if m: return f"{m[1]}-{m[2]}-{m[3]}"
+    return '-'
+TEXT = {'.md','.txt','.json','.ps1','.py','.sh','.yaml','.yml'}
+def row(rel):
+    full = os.path.join(ROOT, rel)
+    name = os.path.basename(rel)
+    stem, ext = os.path.splitext(name)
+    if name.startswith('.') and name.count('.') == 1:
+        stem, ext = '', name  # .NET GetExtension semantics for dotfiles
+    topic = re.sub(r'[_-]+', ' ', stem)
+    if not topic.strip(): topic = name
+    summary = f"{ext.lstrip('.').upper()} file"
+    if ext in TEXT:
+        try:
+            with open(full, encoding='utf-8-sig', errors='strict') as fh:
+                content = fh.read().splitlines()
+            heading = next((l for l in content if re.match(r'^#{1,6}\s+\S', l)), None)
+            if heading: topic = re.sub(r'^#{1,6}\s+', '', heading)
+            body = None
+            for l in content:
+                v = l.strip()
+                if v and not re.match(r'^(#|>|\||```|---$)', v):
+                    body = l; break
+            if body: summary = body
+        except Exception as e:
+            summary = f"Unreadable during index generation: {type(e).__name__}"
+    return '| `' + clean(rel,180) + '` | ' + fdate(name) + ' | ' + clean(topic,120) + ' | ' + clean(summary,180) + ' |'
+# --- driver ---
+def net(x):
+    t = x.replace('-', '')
+    return ([(0, c) if c in '_/\\.' else (1, c) if c.isdigit() else (2, c.lower()) for c in t], x)
+files = [f for f in subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard'], cwd=ROOT, text=True).split('\n') if f and f != 'INDEX.md']
+files.sort(key=net)
+lines = ['# 11_TRIAGE index', '', '> Generated search index. Do not read triage history by default; grep this file, then open at most the relevant record.', '', '| Path | Date | Topic | One-line summary |', '|---|---|---|---|']
+lines += [row(f) for f in files]
+out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'INDEX.md')
+with open(out, 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write('\n'.join(lines) + '\n')
+print(f"Indexed {len(files)} files into {out}")
+```
+
+## 8. Close-out (2026-09-07 05:05 +03)
+
+- **Timeline:** start 22:38; six lanes launched 23:06; provider usage limit stopped everything
+  23:13–00:02 and again ~03:19–05:02 (no work lost either time; every lane was worktree-isolated);
+  17 code commits + 16 lane records integrated by 01:27; idle heartbeats afterwards; final audit
+  lane R2 dispatched 05:03; this close-out written 05:05. The owner's PC cannot be powered off from
+  the remote container; everything is pushed instead.
+- **Lanes:** A–I, N, O, P, Q, S, T, U, W, X repaired; J, K, L, M, R1, V read-only; R2 final audit
+  (verdict appended below when it lands). Worker lanes ran on Sonnet after the first outage; the
+  lead kept the exact-model session for integration and re-tests.
+- **Verification on the final head:** dashboard API 135 passed; `mtc_cli` 32; `_deepseek_driver`
+  25; triage/QuantLens tool tests 40; Bridge suite as non-root 1393 passed (lead run on `63de031a`;
+  R2 re-runs on the final head); Pine defang guard PASS on every push; `generate_index.py --check`
+  OK; lane M audit 10/10 PASS at `c306d1cc`; lane R1 adversarial review 0 REQUEST_CHANGES.
+- **Incidents:** lane P briefly edited the main checkout (restored, never committed); two checkpoint
+  headings were clock-estimate errors and are corrected in place with the commit times.
+- **Where to look in the office session:** this report (§1 decisions, §3 commit table, §4
+  findings), `CLAUDE_OVERNIGHT_CHECKPOINTS_2026-09-06.md` (timeline), the `OVERNIGHT_LANE_*`
+  records (per-change evidence), and the governance `00_AGENT_PROTOCOLS/HANDOFF.md`.
+- **NEXT ACTION (owner):** dispatch the exact audits on the Windows host, then PR the branch (or
+  the split above) through `Bridge suite (Python 3.12)`; triage §1 items 2–6.
+- **WAITING FOR OWNER:** Nothing for this lane; the six decisions above.
+- **R2 verdict (05:13 +03, record `OVERNIGHT_LANE_R2_FINAL_BRANCH_AUDIT_2026-09-07.md`):** 9/10
+  PASS on `93446d28`; the one FAIL was cosmetic — 64 trailing-whitespace blank lines in four lane
+  records (O, Q, W, X), no code/test/schema file affected — stripped by the lead in the same
+  integration commit, after which `git diff --check afe52ea HEAD` is clean. R2 re-ran every suite
+  on the head: Bridge non-root 1393 passed, dashboard 135, `mtc_cli` 32, `_deepseek_driver` 25,
+  tool tests 40; index `--check` OK; trailers, links, secrets, scope and §3 cross-check all PASS.

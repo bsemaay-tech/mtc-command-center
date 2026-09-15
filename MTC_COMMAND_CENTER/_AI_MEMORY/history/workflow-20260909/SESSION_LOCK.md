@@ -1,0 +1,334 @@
+# SESSION_LOCK — checked write-lane mirror and history
+
+> **Not the collision guard.** Every write task records its branch, worktree, exact paths, and live-
+> dependency status. This file mirrors checked claims and preserves history. The former mandatory
+> GitHub-issue claim was retired by owner decision 6 on 2026-08-26 because it was not enforced.
+> WP-P0-27's mechanical ownership/liveness verification is planned and unbuilt; until it exists,
+> any `UNKNOWN` is a STOP.
+
+Rewritten 2026-08-11. The old file was a single unused "Status: unlocked" line; it did not
+prevent the 2026-08-10 concurrent-session collision on the transport set
+(`11_TRIAGE/WPI_BLOCKS_DRAFT/CONCURRENT_SESSION_NOTICE_2026-08-10_2130.md`). This version
+is retained as the checked mirror/history required by the current root and governance-stage contracts.
+
+## Protocol
+
+1. **Before the first write**, create or verify the write-lane record and mirror its branch,
+   worktree, exact paths, owner, timestamp, and live-dependency status here when applicable. Work
+   reaches `master` only through a PR whose up-to-date head has green `Bridge suite (Python 3.12)`
+   under ruleset 21444962, which has no bypass actors.
+2. **One writable owner per workstream.** Everyone else is read-only on that workstream's
+   files. Auditing (read-only review, reports written to your OWN workstream row or a new
+   file) is always allowed.
+3. **Release at handoff only after reconciliation**: compare current `master`, the work branch,
+   and durable tracker state; then mark the write-lane record released and mirror the reconciled
+   outcome here.
+4. **No age/cleanliness takeover:** Git cleanliness, pushed state, commit age, or mtime cannot prove
+   liveness. Unknown ownership, checkout purpose, or process/scheduled-task dependency blocks
+   takeover, move, or cleanup until resolved.
+5. **On finding a foreign uncommitted edit** in a workstream you own: stop writing there, preserve
+   it untouched, record a dated notice, and ask the owner which session should proceed. Never
+   revert, overwrite, stash, or silently commit another lane's work.
+
+## Ownership table
+
+| Workstream | Files (primary home) | Owner | Since |
+|---|---|---|---|
+| Workflow and memory reconciliation | Documentation paths and disjoint worker allocation in `11_TRIAGE/WORKFLOW_MEMORY_RECONCILIATION_2026-09-09.md`; no product/runtime writes | ACTIVE — Lead `/root`; branch `feature/workflow-memory-20260909`; new isolated worktree `C:/WF_MEMORY_20260909`; base `e69c7d7`; no live/scheduled dependency in this newly created lane. Existing rows retain their recorded status; none is taken over. | 2026-09-09 |
+| WP-P0-12 metadata re-seal #22 | `MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/{semantic_coverage_review.schema.md,semantic_coverage_review.schema.json,CONTRACT_TABLES_MANIFEST.json}`; `MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md` | **ACTIVE — Codex `gpt-5.6-sol` implementer `/root/p012_reseal22_impl`**; branch `feature/wp-p0-12-corrected-vnext-20260831`, worktree `C:\WP012BUILD`; exact four-file owner-authorized whitelist; no live/scheduled dependency; takeover evidence at claim: clean tree at `b17a12d524b1ef03702eea618692a20dbbf06b29` and no matching active process | 2026-09-05 10:46:46 +03:00 |
+| W299 KERNEL probe re-pin | `MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/probes/{PROBE-P012-01-A,PROBE-P012-01-B,PROBE-P012-02-A,PROBE-P012-04-A,PROBE-P012-05-A,PROBE-P012-05-B,PROBE-P012-06-A,PROBE-P012-07-A,PROBE-P012-08-A}/{kernel/**,modification_manifest.json,modified_tree_manifest.json}`; `W299_PROBE_REPIN_REPORT.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md` | **RELEASED 2026-09-02 after reconciliation** - substantive commit `28606f2f7a32bc87b8fe8fe4b2f94e688f97a49e`; branch `feature/wp-p0-12-corrected-vnext-20260831`, worktree `C:\WP012BUILD`; local/remote `master` `4ca0e5e8`, branch 95 ahead / 1 behind, merge-base `108ea066`; no tracked-file live/scheduled dependency; Lead step 3 waits for independent recomputation from the committed trees; core/Pine/catalog/contracts/patch/baseline/golden/input/expected/harness semantics unchanged; nothing pushed | 2026-09-02 |
+| WP-P0-11 row arm part 3 | `MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/{row_arm.py,LANE_REPORT.md,evidence/row_arm_remeasure.py,evidence/row_arm_contract_mutations.json,evidence/structural_mutations.py,evidence/structural_mutations.json,evidence/remeasure.py,evidence/f3_raw_gated_divergence.json,evidence/row_arm/{row_results.jsonl,row_corroboration.json,batch_manifest.json,unresolved_rows.json}}`; `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/{SESSION_LOCK.md,history/00_AGENT_PROTOCOLS_HANDOFF.md}` | **RELEASED 2026-08-28 after reconciliation** - Codex implementer `/root`; independent read-only Lead `/root/p011_g2_lead`; accepted substantive SHA `4d2581e4` by `gpt-5.6-sol` PASS and `claude-opus-5` PASS-WITH-NITS; final pushed HEAD is the Gate-7 close-out commit containing this record; branch `feature/wp-p0-11-kernel-legacy-compatible-20260825`, worktree `C:\WPP011_20260825`; `origin/master` `85c3e17f`, 0 master-only commits; no tracked-file live dependency; Stage-1 pin and every frozen/protected/runtime/economic surface unchanged; gate STOP with seven unresolved applicable rows | 2026-08-28 |
+| Supplemental provider-routing policy | `DECISIONS.md`; `00_AGENT_PROTOCOLS/AGENTS.md`; `_AI_MEMORY/AI_RULES.md`; `_AI_MEMORY/AI_ACCOUNT_AND_MODEL_ROUTING.md`; `_AI_MEMORY/PARALLEL_AGENT_PROMPTS/CLAUDE_PROVIDER_ROUTING_2026-08-29.md`; `11_TRIAGE/AI_PROVIDER_ROUTING_RECOMMENDATION_2026-08-29.md` | **RELEASED 2026-08-29 after isolated documentation update** — branch `feature/gemini-parallel-auditor-policy`, worktree `C:\GEMINI_AUDIT_POLICY_20260829`; no live dependency, credential, provider, launcher, or product-scope mutation | 2026-08-29 |
+| Owner-decision documentation pack | `AGENTS.md`; `DECISIONS.md`; `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md`; `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/OUTPUTS.md`; `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md`; `MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md`; `MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/07_handoff_update.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/LIVE_TRADING_GATE.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md`; `MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`; `MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`; `MTC_COMMAND_CENTER/11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md`; `MTC_COMMAND_CENTER/11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md`; `MTC_COMMAND_CENTER/11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`; `mtc_cli/INPUTS.md` | **RELEASED 2026-08-28 after reconciliation** — substantive repair `f78f501d`; final branch tip is the Gate-7 close-out commit; branch `fix/owner-decisions-docpack-20260828`, worktree `C:\WPD_20260828`; local/remote `master` `cd3b8486`; no tracked-file live dependency; the path list is the complete 17-file set derived from `git diff --name-only origin/master...HEAD` | 2026-08-28 |
+| RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
+| RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **Codex Lead `019fe77c`** — preserved partial repair; serialized writer only | 2026-08-14 10:30 +03 |
+| Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
+| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
+| Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
+| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
+| Routed context / shared memory | root `AGENTS.md`, `CONTEXT_MAP.md`, `DECISIONS.md`; stage context sets; `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md`; `_AI_MEMORY/SESSION_LOCK.md` | **RELEASED / SUPERSEDED 2026-08-28** — historical WP-P0-05 record; its dispatch supplied no GitHub issue identifier, and its formerly live overlap is closed by the owner-decision documentation-pack reconciliation | 2026-08-25 |
+| Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
+| Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-17 00:54 +03; foreign partial preserved | — |
+| Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released cleanly at Gate 7 | 2026-08-17 03:54 +03 |
+| Worktree cleanup + Phase Watch V3 review | `11_TRIAGE/WORKTREE_*`, `11_TRIAGE/PHASE_WATCH_V3_*`, worktree registry | **UNCLAIMED** — claimed and released same run by Fable Lead cleanup session, 2026-08-18 (work complete, records committed) | — |
+| P0-20 definition artifacts and acceptance harness | `DECISIONS.md`; `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/{SESSION_LOCK.md,history/00_AGENT_PROTOCOLS_HANDOFF_20260907_2339.md}`; `MTC_COMMAND_CENTER/11_TRIAGE/{INDEX.md,WP_P0_20_DEPENDENT_TOOL_DISPOSITION.md,WP_P0_20_ALLOCATOR_STAGES_2026-09-07/LANE_REPORT.md}`; root `{control_parity_checklist,check_control_parity_checklist,statistical_battery,check_statistical_battery,cost_model_registry,check_cost_model_registry,evidence_class,check_evidence_class,check_p020_acceptance}.py` | **RELEASED 2026-09-07 after reconciliation** — Claude Lead, remote Linux container, no worktree; branch `claude/oauth-token-expired-bocby8` at `e201a82` plus this close-out; `origin/master` `fe35b7c`, 0 master-only commits; run under OD-20260907-1/-2; **no protected scope touched, no acceptance claimed, no exact audit run**; 8 checkers exit 0, 70 mutation controls DETECTED, index --check GREEN; no tracked-file live dependency | 2026-09-07 22:51 +03 → released 23:39 +03 |
+| Governance handoff + P0-20 allocator stages | `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF_20260907_2251.md`; `MTC_COMMAND_CENTER/11_TRIAGE/{P020_P030_CONTAINER_QA_REVERIFICATION_2026-09-07.md,WP_P0_20_ALLOCATOR_STAGES_2026-09-07/LANE_REPORT.md,INDEX.md}`; root `{shared_risk_calculator.py,check_shared_risk_calculator.py,unsimulated_controls.py,check_unsimulated_controls.py,check_allocator_import_identity.py}` | **RELEASED 2026-09-07 after reconciliation** — Claude Lead, remote Linux container, no worktree; branch `claude/oauth-token-expired-bocby8`, final head `61ac1d0` plus this close-out commit, pushed; `origin/master` `fe35b7c` with 0 master-only commits at release; records the owner-approved #161 merge, the post-merge QA re-verification, and three non-accepting P0-20 candidates; **no protected scope touched, no acceptance claimed**; no tracked-file live dependency; `repo_guard.ps1` not runnable here (no `pwsh`) — read-only git equivalents used and recorded | 2026-09-07 22:51 +03 → released 2026-09-08 |
+
+**All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
+clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
+next session should record the rows it intends to write before its first write** — and note that
+tonight's four Claude Pro audit lanes are READ-ONLY on the block workstreams (each writes only
+its own verdict file), so they do not require ownership of RP6/RP7/transport/pathscope.
+
+Workstreams not listed: add a row before writing.
+
+| Final Wayfinder red-team planning run | GitHub queue 8/8 and settled-map administration; `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md`, `11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, operator/final-red-team fold records | **RELEASED — complete 2026-08-24**; queue #118–#124 closed; final six-file fold candidate `7fa6a66c`; no implementation/live/destructive authority | 2026-08-24 00:22 +03 → released Gate 7 |
+| Master architecture planning documents (kernel fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/WAYFINDER_KERNEL_FOLD_2026-08-23.md` | **RELEASED** - map #67 kernel fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-map67-20260823` (worktree C:\WFFOLD67, from master `3d6a621c`) | 2026-08-23 |
+| Master architecture planning documents (Map #96 fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/WAYFINDER_SAFETY_OPERATIONS_FOLD_2026-08-23.md` | **RELEASED** — issue #111; substantive fold-content commit `d20ed55f`, closeout branch tip `5db04f68`, both ancestors of current master; implementation authorized: NO | 2026-08-23 |
+| Master architecture planning documents (Map #97 fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/WAYFINDER_REPOSITORY_CONTEXT_DELIVERY_FOLD_2026-08-23.md` | **RELEASED** — issue #117; substantive fold-content commit `2bc11fd8`, closeout branch tip `57b4a7f6`, both ancestors of current master; implementation authorized: NO | 2026-08-23 |
+| Master architecture planning documents (lifecycle fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/WAYFINDER_LIFECYCLE_FOLD_2026-08-23.md` | **RELEASED** — map #54 lifecycle fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-map54-20260823` (worktree C:\WFFOLD54, based on the #37 fold branch) | 2026-08-23 |
+| Master architecture planning documents (fold branch) | `11_TRIAGE/MASTER_*_2026-08-2*.md`, `11_TRIAGE/WAYFINDER_DECISION_FOLD_2026-08-23.md` | **RELEASED** — wayfinder fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-20260823` (worktree C:\WFOLD) | 2026-08-23 |
+
+## Log
+
+- **2026-08-24 (final Wayfinder red-team, queue 8/8):** Codex Lead reconciled the accepted
+  Map-#95 content without merging its divergent branch, closed settled parent maps #54/#67/#78/
+  #79/#95, and completed GitHub queue #118–#124. The final six-file planning candidate is
+  `7fa6a66c` with record `11_TRIAGE/WAYFINDER_FINAL_RED_TEAM_FOLD_2026-08-24.md`.
+  Counts and identities reproduce at 60 = 44 OWNER + 16 DERIVED and 76 unchanged package IDs;
+  D-12 remains binding. The single GLM-5.2 T2 helper failed before model execution because its
+  local CredentialManager module is absent; no install or substitute review ran, no model verdict
+  is claimed, and Lead direct checks passed. OPEN-01 remains `[OPEN]`. Both final-planning and
+  shared-memory claims are released here; no implementation or operational action was authorized.
+
+- **2026-08-23 (repository/context/delivery fold, map #97):** Codex Lead claimed and
+  released the Map-#97 planning and shared-memory rows. Tickets #114–#116 were folded into
+  the brief, work-package plan, traceability register and
+  `11_TRIAGE/WAYFINDER_REPOSITORY_CONTEXT_DELIVERY_FOLD_2026-08-23.md`; substantive commit
+  `2bc11fd8` on `feature/wayfinder-fold-map97-20260823`. Counts remain 60 requirements and
+  76 packages; no implementation or operational action was authorized. The sole T2 reviewer
+  reproduced the fixed point, exact four-file scope, clean diff and substantive content but
+  was stopped after 52 minutes by the owner's explicit instruction before returning a
+  verdict; no accepting model verdict is claimed. Lead verification and repo guard passed.
+
+- **2026-08-23 (safety/operations fold, map #96):** Codex Lead claimed and released the
+  Map-#96 planning and shared-memory rows. Tickets #107–#110 were folded into the brief,
+  work-package plan, traceability register and canonical fourteen-category live-readiness
+  register, plus `11_TRIAGE/WAYFINDER_SAFETY_OPERATIONS_FOLD_2026-08-23.md`. The substantive
+  fold is `d20ed55f` on `feature/wayfinder-fold-map96-20260823`. Counts remain 60 requirements
+  and 76 packages; overall live readiness is NOT READY; nothing operational was authorized.
+  GLM failed before review and the fallback Codex reviewer was stopped under explicit owner
+  override; Lead verification passed and no accepting model verdict is claimed.
+
+- **2026-08-23 (kernel fold, map #67):** Claude Fable 5 claimed and released the kernel-fold
+  row for the owner-decided map #67 fold (fold task GH #77): new brief section 9.7 (kernel &
+  economic-honesty governance), two rows added to the section-6.5 admission-mechanics block,
+  amendment paragraphs on WP-P0-20 (seed named + acceptance additions) and WP-P0-30 (collector =
+  earliest deliverable, most-time-critical wave-1 flag), plus fold record
+  `11_TRIAGE/WAYFINDER_KERNEL_FOLD_2026-08-23.md` (control-parity checklist v1, statistical-battery
+  definition v1, known-divergence register, corrections incl. VEN-C/VEN-E label). Branch
+  `feature/wayfinder-fold-map67-20260823` from master `3d6a621c`; main checkout untouched.
+  Requirements 60; packages 75; owner docs untouched; nothing authorized (D-12). MATERIAL -
+  fresh G1 round recommended.
+
+- **2026-08-23 (lifecycle fold, map #54):** Claude Fable 5 claimed and released the
+  lifecycle-fold row for the owner-decided map #54 fold (fold task GH #66): eight anchored
+  amendments to the brief (§6.3 banner, §6.4 brownfield carrier, §6.5 admission mechanics,
+  §6.6 succession sentence, new §6.9 tail/re-entry/succession, §11.5 one-ledger paragraph,
+  A-18 re-worded, §17.2/§17.2b cohort cross-refs) plus fold record
+  `11_TRIAGE/WAYFINDER_LIFECYCLE_FOLD_2026-08-23.md` (mapping table, worthiness checklist
+  v0.1 DRAFT, record-type register, registry-retirement deferral note). Work happened ONLY on
+  branch `feature/wayfinder-fold-map54-20260823` stacked on `feature/wayfinder-fold-20260823`
+  (`46fb8159`); the main checkout untouched. Requirement count stays 60; package count stays
+  75; no owner document edited; nothing authorized (D-12). Amendments declared MATERIAL —
+  fresh G1 round recommended before G1-IA on affected packages.
+
+- **2026-08-23 (wayfinder fold):** Claude Fable 5 claimed and released the planning-documents
+  row for the owner-decided wayfinder fold (decision map GH #37, ticket #49): six packages
+  added (WP-P0-26…30, WP-V4-09), thirteen amended in place, the brief's §17.2 ghost
+  dependencies re-pointed, package count 69→75; fold record
+  `11_TRIAGE/WAYFINDER_DECISION_FOLD_2026-08-23.md`. Work happened ONLY on branch
+  `feature/wayfinder-fold-20260823` from accepted base `764da27f` — the main checkout and its
+  foreign uncommitted edits were not touched, and no other branch's SESSION_LOCK state is
+  overwritten by this branch-local record. No owner outcome reworded; requirement count stays
+  60; nothing authorized. A fresh G1 acceptance round over the amended set is recommended
+  before G1-IA on affected packages.
+- **2026-08-18 ~17:10 +03:** Fable Lead cleanup session claimed-and-released the
+  new "Worktree cleanup + Phase Watch V3 review" row in a single run: 124
+  worktrees deregistered (115 clean, 9 ACL husks), 36 rescue branches pushed,
+  Phase Watch V3 ledger verified + GLM-5.2 REQUEST_CHANGES supplemental verdict
+  recorded, T0 pair live-probed capacity-blocked. The concurrent "Bridge V2
+  continuation" session was notified of the lane split before any shared write.
+  All records committed from `C:\WTCLEAN_CTRL` (`chore/worktree-cleanup-20260818`).
+
+- **2026-08-17 03:54 +03:** Codex Lead `01a00921` completed a clean Gate-7
+  release of the Shared memory layer and Bridge Help / System Map rows. The
+  accepted local Help feature is committed at `d71bc073`, its acceptance record
+  at `7697c07b`, and the consolidated seven-workstream status/disposition at
+  `511298f0`. Nothing was deployed and no host or economic action occurred.
+  The dirty six-file memory rotation and dirty `docs/30` working copy remain
+  preserved, unaccepted, and unchanged.
+
+- **2026-08-17 00:55 +03:** After receiving the prior cap report, Barış
+  explicitly instructed the overnight session to continue all safe work without
+  waiting for further approvals. Codex Lead `01a00921` reclaimed the Help/Wiki
+  and shared-memory rows and opened a materially fresh T1 truth-only cycle for
+  the two recorded source-truth defects. This does not authorize runtime,
+  trading, host, deployment, credential, broker, or economic changes.
+
+- **2026-08-17 00:54 +03:** Codex Lead `01a00921` released the Help/Wiki,
+  design-record, and shared-memory rows at a clean stop. The seven-workstream
+  owner roadmap is committed. The complete Help implementation remains
+  uncommitted and preserved in `C:\BRIDGE_HELP_IMPL` because the fresh round-2
+  flagship review found two documentation truth defects and exhausted the T1
+  two-round cap. `NEXT_STEPS.md` records the exact repair and explicit cap-waiver
+  boundary. The unrelated design-record partial remains preserved and was not
+  included, overwritten, or accepted.
+
+- **2026-08-16 22:38 +03:** Codex Lead `01a00921` claimed the Bridge Help /
+  System Map row for the owner-requested interactive Wiki and diagram update.
+  Product scope remains the frozen T1 non-economic Help-only contract; no
+  runtime, API, trading, host, deployment, credential, or economic change.
+
+- **2026-08-16 22:21 +03:** Codex Lead `01a00921` claimed the design-record and
+  shared-memory rows after Gemini 3.7 Flash High produced isolated draft
+  `e8e8ce7f`. Codex will transfer only independently verified content, correcting
+  the draft's V1 service-model error and premature technology choices. No
+  product, host, network, credential, control, or economic action is authorized.
+
+- **2026-08-16 22:19 +03:** Codex Lead `01a00ad1` released the Gemini and shared-memory
+  rows. Direct headless terminal commands remained permission-denied under bounded grants, so
+  the dangerous bypass was not used and the route was restored to explicit terminal denial.
+  Allowlisted file coding remains operational. Gemini produced the requested same-VPS decision
+  draft in `C:\GEMINI`, committed as `e8e8ce7f`; the owning thread will inspect and transfer it.
+  This session did not touch the canonical Bridge design-decision file.
+
+- **2026-08-16 22:08 +03:** Owner authorized terminal access for Gemini inside its dedicated
+  `C:\GEMINI` worktree. Codex Lead `01a00ad1` claimed the Gemini and shared-memory rows for a
+  bounded sandboxed command allowlist, read-only-at-rest config, one short live probe, and
+  concise handoff. Git mutation, network/install/deploy commands, credentials, protected paths,
+  and canonical/frozen checkout access remain excluded.
+
+- **2026-08-16 22:06 +03:** Codex Lead `01a00921` released the Dashboard V2
+  design-record and shared-memory rows. Exact Claude was session-limit blocked;
+  no design-record byte changed. The owner-approved content and fresh KVM2
+  read-only result are queued in `NEXT_STEPS.md` and `GLOBAL_HANDOFF.md`.
+
+- **2026-08-16 22:03 +03:** Codex Lead `01a00921` claimed the Dashboard V2
+  design-record and shared-memory rows for the owner's requested hosting/access
+  decision only. Scope: record VPS-hosted Bridge dashboard, private-first access,
+  current KVM2 not-installed status, and current/planned distinction. No product,
+  host, deployment, network, credential, control, or economic action is writable.
+
+- **2026-08-16 21:52 +03:** Codex Lead `01a00921` released the Help/Wiki and
+  shared-memory rows after commit `838adb95` added the full Exchange-plane and
+  Observation/Control-plane requirements to the frozen implementation package.
+  Product implementation remains blocked until the exact counterpart capacity
+  reset; no dashboard source or live surface changed.
+
+- **2026-08-16 21:47 +03:** Codex Lead `01a00921` reclaimed the Help/Wiki and
+  shared-memory rows only to add the owner's Exchange-plane explanation and the
+  truthful current-versus-future Observation/Control access boundary to the
+  frozen implementation contract. No dashboard source, runtime, host, network,
+  broker, credential, ARM, or economic action is writable under this claim.
+
+- **2026-08-16 21:39 +03:** Codex Lead `01a00ad1` released the Gemini and shared-memory
+  rows after the isolated coder pilot passed. The separate launcher allows only explicitly
+  named unprotected files in `C:\GEMINI`; its one-file live edit passed, Codex reviewed it,
+  the temporary file was removed, and the worktree is clean. The requested Help/System Map
+  drawings and SQLite+WAL black-box/logbook sentence was added to `NEXT_STEPS.md`; no Help or
+  dashboard implementation file was touched.
+
+- **2026-08-16 21:30 +03:** Owner authorized a separate Gemini CLI coder route without a
+  long audit cycle. Codex Lead `01a00ad1` claimed the Gemini and shared-memory rows for a
+  dedicated isolated worktree, explicit file scope, one harmless live edit, Codex review,
+  and concise handoff. The existing read-only route remains unchanged; protected trading,
+  credentials, deployment, commit, push, and merge remain excluded.
+
+- **2026-08-16 21:45 +03:** Codex Lead `01a00921` released the Help/Wiki and
+  shared-memory rows after recording the clean counterpart-capacity blocker.
+  Gate 1 and the exact prompt are committed; no dashboard source was partially
+  edited. Resume after the exact Claude capacity reset.
+
+- **2026-08-16 21:40 +03:** Codex Lead `01a00921` claimed the shared-memory
+  row only to record the clean Help/Wiki capacity blocker and immediate resume
+  instruction. No product or protected runtime surface is writable under this
+  claim.
+
+- **2026-08-16 21:30 +03:** Codex Lead `01a00921` claimed the new Bridge Help /
+  System Map workstream for the owner-requested interactive, explanatory Wiki.
+  Scope is static Help UI, its tests, and a shared AI-readable knowledge source.
+  Trading logic, strategy/risk/order behavior, APIs, configuration, deployment,
+  credentials, hosts, and economic actions remain excluded.
+
+- **2026-08-16 20:59 +03:** Codex Lead `01a00921` released the design-record
+  and shared-memory rows after A11, A12, the change log, source links, and Gate-7
+  handoff were complete. Fresh read-only T2 `gpt-5.6-sol` medium review returned
+  PASS with no findings or nits. No implementation or live surface changed.
+
+- **2026-08-16 20:58 +03:** Codex Lead `01a00921` claimed the shared-memory row
+  only for the required final handoff and next-step record for the accepted A11
+  documentation change. No source, configuration, host, deployment, or trading
+  surface is writable under this claim.
+
+- **2026-08-16 20:44 +03:** Codex Lead `01a00921` reclaimed only the
+  Backend/Dashboard V2 design-record row for the owner-requested documentation
+  of MTC_V2 versus Bridge order/exit lifecycle ownership. No implementation,
+  configuration, host, deployment, broker, trading, or economic surface is writable.
+
+- **2026-08-16 20:31 +03:** Codex Lead `01a00921` released the
+  Backend/Dashboard V2 design-record row after the owner-requested B7 sourcing
+  decision was added and a fresh read-only T2 review returned PASS. No code,
+  configuration, credential, host, deployment, trading, or economic surface changed.
+
+- **2026-08-16 20:22 +03:** Codex Lead `01a00921` claimed only the
+  Backend/Dashboard V2 design record for the owner-requested documentation of
+  Dashboard Codex-subscription use versus VPS LLM-gate API use. No implementation,
+  configuration, credential, host, deployment, trading, or economic surface is writable.
+
+- **2026-08-16 20:20 +03:** Codex Lead `01a00ad1` released the shared-memory and Gemini
+  adviser rows at the owner's requested safe stop. Gemini CLI 1.1.13 is installed and the
+  pinned read-only helper preflight passes for `gemini-3.7-flash-high`; the overlong final
+  independent audit was interrupted at owner direction, so no final dual-flagship acceptance
+  is claimed and coding access remains disabled.
+
+- **2026-08-16 18:55 +03:** Owner authorized a new bounded cycle to make Gemini a safe
+  read-only repo adviser now; coding access remains future-only and disabled. Codex Lead
+  `01a00ad1` reclaimed only the shared-memory row for hardening, QA, and acceptance records.
+
+- **2026-08-16 18:33 +03:** Codex Lead `01a00ad1` released the shared-memory row. The
+  Gemini route is installed and live probes pass, but final T0 Codex round 3 returned
+  `REQUEST_CHANGES`, exhausting the three-round cap. Claude acceptance was not run and
+  the route remains not repo-ready pending explicit owner direction.
+
+- **2026-08-16 17:23 +03:** Owner explicitly directed Codex to perform the implementation
+  instead of waiting for Claude. Codex Lead `01a00ad1` reclaimed only the shared-memory
+  row for that narrow override; independent T0 acceptance requirements remain unchanged.
+
+- **2026-08-16 17:16 +03:** Codex Lead `01a00ad1` released the shared-memory row.
+  Google AI Pro authentication and the external synthetic probes succeeded, but the
+  required Claude Opus counterpart hit its session limit before Gate 2 and resets at
+  18:10 Europe/Chisinau. No helper, Antigravity project config, Toolbox row, routing
+  index, trading source, or protected surface was changed.
+
+- **2026-08-16 17:09 +03:** Codex Lead `01a00ad1` claimed only the shared-memory row
+  for the owner-requested Google AI Pro / Gemini 3.7 Flash read-only CLI route. Scope is
+  local routing metadata and handoff only; no trading, Pine, parity, MTC, Bridge, host,
+  deployment, broker, credential-value, or economic surface is writable.
+
+- **2026-08-16 09:53 +03:** Codex Lead claimed only the shared-memory row to register
+  the owner-requested AI-memory continuity audit/repair task, committed the task and
+  handoff at `3996e810`, and released the row. No other workstream was touched.
+
+- **2026-08-14 10:30 +03:** Codex Lead `019fe77c` claimed RP7, Pathscope, and
+  Audit-2 readiness. The existing uncommitted `RP7-WPI-RO.sh` edit is the
+  preserved partial from this same Lead's quota-interrupted Claude repair lane;
+  it will not be reset, stashed, overwritten, or exposed to a second writer.
+  Pathscope and RP7 writers will be serialized.
+
+- **2026-08-13 ~09:00: all rows remain UNCLAIMED — released** by the Fable overnight session
+  (2026-08-12 20:50 → 2026-08-13 09:00). Honest note: that session wrote to RP6/RP7/transport/
+  pathscope/prereg/Audit-2 workstreams via dispatched lanes without first claiming rows (it was
+  the only active Lead; no collision occurred — the RP7 auditor detected the Lead's own
+  concurrent commits and attributed them correctly). Everything committed and pushed through
+  the rows-1-9 r3 repair. In-flight at release: the Lead's verbatim r19/r17 RP6 fence runs
+  (results go to the next session; see FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md §7 tail).
+
+- 2026-08-11: file rewritten from stub to ownership mechanism after the 2026-08-10
+  transport collision (two sessions writing the same artifact family; detected, work
+  dropped by one session, no data lost — see the concurrent-session notice).
+- **2026-08-12 20:45: all rows RELEASED** by the Fable session "sabaha kadar çalışma planı" at
+  its clean stop. That session held every WP-I row for the 2026-08-12 day run (~11 hours,
+  ~45 commits). No foreign uncommitted edits were found in any owned workstream at release.
+  One process note worth carrying: **two dispatched lanes independently refused Lead
+  instructions that would have overwritten a prior lane's committed record** — once on the
+  D026 recheck file, once on a GLM verdict path. Both surfaced instead of overwriting. That is
+  the ownership discipline working, and it argues for keeping the "write exactly one NEW file"
+  convention rather than naming existing paths in kickoffs.
+- 2026-08-11 14:15: Fable overnight Lead `7e05aabf` (session "Sabaha kadar otonom çalışma
+  planı" successor) claimed all five WP-I rows. Verified via session listing that the rule
+  author ("Codex gece çalışması değerlendirmesi" session) committed `15d48088` at 13:46:53
+  as its final act and is no longer running — exactly one active Lead loop exists.
+- 2026-08-23 evening: Fable Lead (wayfinder session) claimed + released the map-#78 explorer fold workstream on branch feature/wayfinder-fold-map78-20260823 (worktree C:\WF86, base ab35ca66); scope: brief SEC 11.6 + 12.2 + KLineChart row, plan WP-P0-14/P0-18/V3-01/V3-11 amendment text, fold doc WAYFINDER_EXPLORER_FOLD_2026-08-23.md. Single-session fold, no other workstream touched.
+- 2026-08-23 evening: Codex Lead claimed + released the map-#79 execution-critique fold workstream on branch feature/wayfinder-fold-map79-20260823 (worktree C:\WF93, base a01de9c5); scope: brief execution-doctrine/carrier/v9 amendments, plan WP-P0-31 plus named carrier amendments, traceability count/mapping note, fold doc WAYFINDER_EXECUTION_CRITIQUE_FOLD_2026-08-23.md. Documentation-only fold; no protected runtime or owner outcome file touched.
+- 2026-08-23 evening: Codex Lead claimed + released the map-#95 operator-surface fold workstream on branch feature/wayfinder-fold-map95-20260823 (worktree C:\WF104, base 577e36eb); scope: brief operator-display/control/chart/mobile doctrine, existing work-package carrier amendments, traceability mapping note, fold doc WAYFINDER_OPERATOR_SURFACE_FOLD_2026-08-23.md. Documentation-only fold candidate; left unmerged for separate owner acceptance, with no protected runtime or owner outcome file touched.

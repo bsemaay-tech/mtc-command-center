@@ -31,7 +31,6 @@ def main():
 
     bh_meta = data.get("bh_meta", {})
     passes = [r for r in results if r.get("classification") in {"PASS","STRONG_PASS"}]
-    strong = [r for r in passes if r.get("classification") == "STRONG_PASS"]
     # Tier 1: survives all three gates (walk-forward + honest BH-FDR + DSR)
     robust_final = [r for r in passes if r.get("robust_final")]
     robust_final.sort(key=lambda r: r["summary"]["lockbox_oos"]["net_return_pct"], reverse=True)

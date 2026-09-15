@@ -75,6 +75,7 @@ def main(argv=None):
         L.append(f"- classification: " + ", ".join(f"{k}={v}" for k, v in sorted(cls.items())))
         L.append(f"- robust_final: **{robust}** | DSR p≥0.50: **{dsr_ge_50}**")
         passcells = [r for r in rows if r.get("classification") in ("PASS", "STRONG_PASS")]
+        L.append(f"- pass cells (PASS+STRONG_PASS): **{len(passcells)}**")
     else:
         L.append("- MEGA results: **MISSING**")
         passcells = []

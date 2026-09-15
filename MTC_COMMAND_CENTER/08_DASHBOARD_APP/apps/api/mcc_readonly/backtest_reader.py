@@ -27,15 +27,12 @@ def build_backtest_status(mcc_root: str | Path | None = None) -> dict[str, Any]:
     if mtc_v2_root is None:
         return _empty_status("mtc_v2_root_not_configured")
 
-    # Resolve the QuantLens root the same way registry_reader does: prefer the
-    # in-repo 03_QUANTLENS, falling back to the legacy mtc_v2_root/06_QUANTLENS_LAB.
     quantlens_root = default_quantlens_root(root)
-    if not quantlens_root.exists():
-        quantlens_root = mtc_v2_root / "06_QUANTLENS_LAB"
 
     runs: list[dict[str, Any]] = []
     runs.extend(_collect_quantlens_results(quantlens_root))
     runs.extend(_collect_detached_statuses(quantlens_root))
+    # reports/optimization has no producer yet (no metrics.json in the repo); stays fail-closed by owner decision 2026-09-07.
     runs.extend(_collect_optimization_metrics(mtc_v2_root))
     runs.sort(key=lambda item: item.get("_sort_mtime", 0.0), reverse=True)
     discovered_runs = len(runs)
@@ -353,7 +350,7 @@ def _timestamp(epoch_seconds: float) -> str:
 
 
 def _read_json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
 def _run_id_from_results_path(path: Path) -> str:

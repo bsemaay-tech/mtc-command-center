@@ -1,0 +1,772 @@
+{
+  "acceptance_reachable": false,
+  "blocked_node_skips": {
+    "count": 100,
+    "nodes": [
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/1/schedule_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/1/schedule_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/0/schedule_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/fee_events/1/schedule_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/funding_events/0/schedule_digest",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/funding_events/0/source_event_digest",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-OPEN-EMBED-05",
+        "pointer": "/RESULT_SURFACE/equity_curve/first",
+        "scenario_id": "RULE2-08-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-OPEN-EMBED-05",
+        "pointer": "/RESULT_SURFACE/equity_curve/last",
+        "scenario_id": "RULE2-08-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-08-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest",
+        "scenario_id": "RULE2-08-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest",
+        "scenario_id": "RULE2-08-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest",
+        "scenario_id": "RULE2-08-GREEN"
+      }
+    ]
+  },
+  "claim_label": "NON_ACCEPTING_OBSERVED_ARTIFACTS",
+  "comparison_claim_scope": "ALL_NON_BLOCKED_EXPECTED_NODES",
+  "legacy_provenance": {
+    "baseline_root": "C:\\tmp\\P012_BASELINE_RUN\\out",
+    "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862"
+  },
+  "mode": "observe",
+  "scenarios": [
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-01-RED.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-01-RED.json"
+      },
+      "projection_count": 3,
+      "projection_error": null,
+      "role": "RED",
+      "scenario_id": "RULE2-01-RED"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-01-GREEN.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-01-GREEN.json"
+      },
+      "projection_count": 3,
+      "projection_error": null,
+      "role": "GREEN",
+      "scenario_id": "RULE2-01-GREEN"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-02-RED.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-02-RED.json"
+      },
+      "projection_count": 3,
+      "projection_error": null,
+      "role": "RED",
+      "scenario_id": "RULE2-02-RED"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-02-GREEN.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-02-GREEN.json"
+      },
+      "projection_count": 3,
+      "projection_error": null,
+      "role": "GREEN",
+      "scenario_id": "RULE2-02-GREEN"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-03-RED.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-03-RED.json"
+      },
+      "projection_count": 3,
+      "projection_error": null,
+      "role": "RED",
+      "scenario_id": "RULE2-03-RED"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-03-GREEN.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-03-GREEN.json"
+      },
+      "projection_count": 3,
+      "projection_error": null,
+      "role": "GREEN",
+      "scenario_id": "RULE2-03-GREEN"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-04-RED.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-04-RED.json"
+      },
+      "projection_count": 3,
+      "projection_error": null,
+      "role": "RED",
+      "scenario_id": "RULE2-04-RED"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-04-GREEN.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-04-GREEN.json"
+      },
+      "projection_count": 3,
+      "projection_error": null,
+      "role": "GREEN",
+      "scenario_id": "RULE2-04-GREEN"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-05-RED.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-05-RED.json"
+      },
+      "projection_count": 4,
+      "projection_error": null,
+      "role": "RED",
+      "scenario_id": "RULE2-05-RED"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-05-GREEN.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-05-GREEN.json"
+      },
+      "projection_count": 1,
+      "projection_error": null,
+      "role": "GREEN",
+      "scenario_id": "RULE2-05-GREEN"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-RED.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-RED.json"
+      },
+      "projection_count": 6,
+      "projection_error": null,
+      "role": "RED",
+      "scenario_id": "RULE2-06-RED"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-EQUAL-PRICE-RED.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-EQUAL-PRICE-RED.json"
+      },
+      "projection_count": 6,
+      "projection_error": null,
+      "role": "RED",
+      "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-GREEN.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-GREEN.json"
+      },
+      "projection_count": 3,
+      "projection_error": null,
+      "role": "GREEN",
+      "scenario_id": "RULE2-06-GREEN"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-07-RED.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-07-RED.json"
+      },
+      "projection_count": 7,
+      "projection_error": null,
+      "role": "RED",
+      "scenario_id": "RULE2-07-RED"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": null,
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-07-GREEN.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-07-GREEN.json"
+      },
+      "projection_count": 4,
+      "projection_error": null,
+      "role": "GREEN",
+      "scenario_id": "RULE2-07-GREEN"
+    },
+    {
+      "corrected_expectation": "STOP_MISMATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": "/EVENT_SURFACE/cash_events",
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-08-RED.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-08-RED.json"
+      },
+      "projection_count": 4,
+      "projection_error": null,
+      "role": "RED",
+      "scenario_id": "RULE2-08-RED"
+    },
+    {
+      "corrected_expectation": "STOP_MISMATCH",
+      "declared_projection": "MATCH",
+      "first_corrected_mismatch": "/RESULT_SURFACE/run_manifest/cost_schedule_digest",
+      "first_projection_mismatch": null,
+      "legacy_side_source": "DESIGN_DERIVED",
+      "observed_paths": {
+        "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-08-GREEN.json",
+        "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-08-GREEN.json"
+      },
+      "projection_count": 2,
+      "projection_error": null,
+      "role": "GREEN",
+      "scenario_id": "RULE2-08-GREEN"
+    }
+  ]
+}

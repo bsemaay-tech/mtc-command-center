@@ -1,0 +1,1973 @@
+{
+  "acceptance_blockers": [],
+  "blocked_node_skips": {
+    "count": 20,
+    "nodes": [
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-01-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-01-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-02-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-02-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-03-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-03-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-04-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-04-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-05-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-05-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-06-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-06-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-07-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-07-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-MISSING-RECORD-BYTES",
+        "pointer": "/EVENT_SURFACE/funding_events/0/source_event_digest",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-08-RED"
+      },
+      {
+        "expected_marker": "BLOCKED-OPEN-EMBED-05",
+        "pointer": "/RESULT_SURFACE/equity_curve/first",
+        "scenario_id": "RULE2-08-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-OPEN-EMBED-05",
+        "pointer": "/RESULT_SURFACE/equity_curve/last",
+        "scenario_id": "RULE2-08-GREEN"
+      },
+      {
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "scenario_id": "RULE2-08-GREEN"
+      }
+    ]
+  },
+  "catalog_counts": {
+    "GREEN": 8,
+    "PROBE": 10,
+    "RED": 9
+  },
+  "claim_label": "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_ACCEPTED",
+  "comparison_claim_scope": "ALL_NON_BLOCKED_EXPECTED_NODES",
+  "computed_legacy_event_order_map_digest": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+  "contract_selftest_suite": {
+    "failed_count": 0,
+    "failing_test_ids": [],
+    "passed_count": 558,
+    "ran": true,
+    "returncode": 0
+  },
+  "declared_field_validation": {
+    "authorized_by": "HIST-2026-0030",
+    "enforced": false,
+    "mode": "REPORT_ONLY",
+    "note": "Report-only by owner ruling. These refusals do NOT contribute to acceptance_blockers and do NOT change claim_label. A non-empty refusal list is a finding to act on, not a failed build.",
+    "ran": true,
+    "refusal_count": 5,
+    "refusal_counts_by_code": {
+      "CHAIN_UNVERIFIABLE": 4,
+      "SECTION16_STATUS_CONSISTENT": 1
+    },
+    "refusals": [
+      {
+        "code": "CHAIN_UNVERIFIABLE",
+        "detail": "new_core_tree_oid_at_base='c7f4aa1b46792c67c171237cea62c06497aa35ea' but old_core_tree_oid_at_base is absent from entry 1, so this transition cannot be checked in either direction",
+        "path": "anchor.base_repin_history.core_tree.0->1"
+      },
+      {
+        "code": "CHAIN_UNVERIFIABLE",
+        "detail": "new_core_tree_oid_at_base='efac978355c89fc38f7592d68556b7c5d7bc9eef' but old_core_tree_oid_at_base is absent from entry 2, so this transition cannot be checked in either direction",
+        "path": "anchor.base_repin_history.core_tree.1->2"
+      },
+      {
+        "code": "CHAIN_UNVERIFIABLE",
+        "detail": "new_core_tree_oid_at_base='efac978355c89fc38f7592d68556b7c5d7bc9eef' but old_core_tree_oid_at_base is absent from entry 3, so this transition cannot be checked in either direction",
+        "path": "anchor.base_repin_history.core_tree.2->3"
+      },
+      {
+        "code": "CHAIN_UNVERIFIABLE",
+        "detail": "new_core_tree_oid_at_base='efac978355c89fc38f7592d68556b7c5d7bc9eef' but old_core_tree_oid_at_base is absent from entry 4, so this transition cannot be checked in either direction",
+        "path": "anchor.base_repin_history.core_tree.3->4"
+      },
+      {
+        "code": "SECTION16_STATUS_CONSISTENT",
+        "detail": "declared='PENDING' while a validating semantic_coverage_review.json is installed",
+        "path": "manifest.section_16_review.status"
+      }
+    ]
+  },
+  "expected_source_provenance": {
+    "expected_path_change_count": 0,
+    "implementation_base_sha": "1aab804d3383b87871811560c5fa58b41608a402",
+    "method": "INDEPENDENT_DERIVATION",
+    "observed_build_sha": "3faed08866e122158e93c626288873ec58a42e3d",
+    "owner_declared_exception_paths": [],
+    "status": "MATCH",
+    "unused_owner_declared_exception_paths": [
+      "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/golden/corrected_vnext/RULE2-01-GREEN.json"
+    ]
+  },
+  "legacy_event_order_map": {
+    "RULE2-01-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-01-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-01-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-01-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-01-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-01-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-02-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-03-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-03-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-03-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-03-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-GREEN/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-RED/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-04-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-05-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-EQUAL-PRICE-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-EQUAL-PRICE-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-EQUAL-PRICE-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-EQUAL-PRICE-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-06-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-07-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-GREEN/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+    "RULE2-08-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1"
+  },
+  "legacy_event_order_map_pin": {
+    "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+    "status": "MATCH"
+  },
+  "legacy_reproduction": {
+    "producer_id": "KERNEL_1",
+    "scenario_count": 17,
+    "status": "MATCH",
+    "surface_count": 34
+  },
+  "mode": "full-gate",
+  "observed_artifact_pins": {
+    "count": 34,
+    "pins": [
+      {
+        "committed_sha256": "17b6c62e837b71754fa99f0373d6874583fba86c0120410b6c309f7c10ade3d7",
+        "live_run_sha256": "17b6c62e837b71754fa99f0373d6874583fba86c0120410b6c309f7c10ade3d7",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-01-RED.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-01-RED",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "fbd5992e00068c3eb93b381a227e5a02a86b781fad6d88095e006b056d0789af",
+        "live_run_sha256": "fbd5992e00068c3eb93b381a227e5a02a86b781fad6d88095e006b056d0789af",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-01-RED.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-01-RED",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "87eb63912e6ee20688fed3c0a89aff6feb4cc2c3b9d3379f2929d619ca7e3a90",
+        "live_run_sha256": "87eb63912e6ee20688fed3c0a89aff6feb4cc2c3b9d3379f2929d619ca7e3a90",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-01-GREEN.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-01-GREEN",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "1113f66d7d88f797b3323a1b57b837c4d4aa5f6dd6f62d20228888887f4c3e0b",
+        "live_run_sha256": "1113f66d7d88f797b3323a1b57b837c4d4aa5f6dd6f62d20228888887f4c3e0b",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-01-GREEN.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-01-GREEN",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "4fb71f522b9c572b084a1ddd2979ca77d22eebf679301904c883b408659c22d6",
+        "live_run_sha256": "4fb71f522b9c572b084a1ddd2979ca77d22eebf679301904c883b408659c22d6",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-02-RED.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-02-RED",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "ba2754f634ad9cb4863bf4bb64f0934625fd7c8baa32a479a34d6849620974dc",
+        "live_run_sha256": "ba2754f634ad9cb4863bf4bb64f0934625fd7c8baa32a479a34d6849620974dc",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-02-RED.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-02-RED",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "a0d248f3b743fcf16aa8adc30ec7dee0c3aa921456daa37ff7189dc19c1e09b3",
+        "live_run_sha256": "a0d248f3b743fcf16aa8adc30ec7dee0c3aa921456daa37ff7189dc19c1e09b3",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-02-GREEN.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-02-GREEN",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "9917fc19e532b8270627ac3441b57595de8860f4514029a9165a404982a816f7",
+        "live_run_sha256": "9917fc19e532b8270627ac3441b57595de8860f4514029a9165a404982a816f7",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-02-GREEN.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-02-GREEN",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "908611f184d39f14c2a0e5d5bac2676942c067feb6e346905ddb5bb04f1cc30c",
+        "live_run_sha256": "908611f184d39f14c2a0e5d5bac2676942c067feb6e346905ddb5bb04f1cc30c",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-03-RED.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-03-RED",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "a1264b700be7d1f802b76e7aa30547e7b172889c6db82a532e33f42f7d9ac1f2",
+        "live_run_sha256": "a1264b700be7d1f802b76e7aa30547e7b172889c6db82a532e33f42f7d9ac1f2",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-03-RED.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-03-RED",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "881666b1121994efedf6223c3029f0faf4aaed5cc907ee1fbe3012883b1c780c",
+        "live_run_sha256": "881666b1121994efedf6223c3029f0faf4aaed5cc907ee1fbe3012883b1c780c",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-03-GREEN.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-03-GREEN",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "aa83ed9e5a890e29e44f096122dd7979bc907c7c7b4428e192842c1129411fa1",
+        "live_run_sha256": "aa83ed9e5a890e29e44f096122dd7979bc907c7c7b4428e192842c1129411fa1",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-03-GREEN.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-03-GREEN",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "a2de179a98790cced40081a339d0597ad77b55b5a56b9c9fe1728eb27982b273",
+        "live_run_sha256": "a2de179a98790cced40081a339d0597ad77b55b5a56b9c9fe1728eb27982b273",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-04-RED.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-04-RED",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "b83fe9503e45a4edba569d54293ef9923f8b03669e6e258830a53cea3eb1c838",
+        "live_run_sha256": "b83fe9503e45a4edba569d54293ef9923f8b03669e6e258830a53cea3eb1c838",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-04-RED.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-04-RED",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "56ce32e633318108a2a8818e40edabcd3b1a368332a30f53057fb44aacf78cde",
+        "live_run_sha256": "56ce32e633318108a2a8818e40edabcd3b1a368332a30f53057fb44aacf78cde",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-04-GREEN.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-04-GREEN",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "4db68f72f05d8838b91f797c20aedee7f8c21a4e6e14716db381bba91dc94263",
+        "live_run_sha256": "4db68f72f05d8838b91f797c20aedee7f8c21a4e6e14716db381bba91dc94263",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-04-GREEN.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-04-GREEN",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "74b3a00ae616e2f3695cf2bc002a26e2636487f5cc7bdc5ac3c9a581ea193770",
+        "live_run_sha256": "74b3a00ae616e2f3695cf2bc002a26e2636487f5cc7bdc5ac3c9a581ea193770",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-05-RED.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-05-RED",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "68aba58f34e5c27bd0bdbaa6380eecb5a2077dcbd510ca8f9831083372f98d2c",
+        "live_run_sha256": "68aba58f34e5c27bd0bdbaa6380eecb5a2077dcbd510ca8f9831083372f98d2c",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-05-RED.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-05-RED",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "80ba0a807f0297a050a6e9108b811df2309a5e2a060289c521716b536d94c125",
+        "live_run_sha256": "80ba0a807f0297a050a6e9108b811df2309a5e2a060289c521716b536d94c125",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-05-GREEN.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-05-GREEN",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "cc0e13be73973452f5c6fe4a62f32ed632cfcee44ad7bce08009bde7dca7718c",
+        "live_run_sha256": "cc0e13be73973452f5c6fe4a62f32ed632cfcee44ad7bce08009bde7dca7718c",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-05-GREEN.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-05-GREEN",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "a6bb6f4494d61cfdc1a1580a168d2f3132a2a2b4ea8c51e21bef24e359a0321b",
+        "live_run_sha256": "a6bb6f4494d61cfdc1a1580a168d2f3132a2a2b4ea8c51e21bef24e359a0321b",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-06-RED.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-06-RED",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "8b3bdd331a59b840ae0daf1609398d5b646df8fdd3631c5461ffe0d5f5d5220a",
+        "live_run_sha256": "8b3bdd331a59b840ae0daf1609398d5b646df8fdd3631c5461ffe0d5f5d5220a",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-06-RED.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-06-RED",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "9359db82501e0c7afb241dd8c0380edb15f92d06ae8e80426ea0cf88e1527daf",
+        "live_run_sha256": "9359db82501e0c7afb241dd8c0380edb15f92d06ae8e80426ea0cf88e1527daf",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-06-EQUAL-PRICE-RED.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "b5c32398b8ece4b52629a9160079c4424b11620149e4afdfda61556b63fd06e0",
+        "live_run_sha256": "b5c32398b8ece4b52629a9160079c4424b11620149e4afdfda61556b63fd06e0",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-06-EQUAL-PRICE-RED.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-06-EQUAL-PRICE-RED",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "83bf72adae56c27cbad59f085fde295480d79b47ab7e9a027bf524faec7f35cf",
+        "live_run_sha256": "83bf72adae56c27cbad59f085fde295480d79b47ab7e9a027bf524faec7f35cf",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-06-GREEN.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-06-GREEN",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "92d682444581bad9861e405af836583737b1c4a537616a39e1a45b044ebb6f7c",
+        "live_run_sha256": "92d682444581bad9861e405af836583737b1c4a537616a39e1a45b044ebb6f7c",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-06-GREEN.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-06-GREEN",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "6b241a6e10aa1b02185d2a71389178ef68ddf78ddd3c294214163e7813589668",
+        "live_run_sha256": "6b241a6e10aa1b02185d2a71389178ef68ddf78ddd3c294214163e7813589668",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-07-RED.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-07-RED",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "ae1ffc99de661571d4c575c062f1ab6fea185e018d61c29f275867829b02df92",
+        "live_run_sha256": "ae1ffc99de661571d4c575c062f1ab6fea185e018d61c29f275867829b02df92",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-07-RED.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-07-RED",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "90bdd44db8c79daf9587953d6dc7498cb567e5d8d3420a53942810a6c487ef94",
+        "live_run_sha256": "90bdd44db8c79daf9587953d6dc7498cb567e5d8d3420a53942810a6c487ef94",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-07-GREEN.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-07-GREEN",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "f1b0a077548e253522d3bc743ed88e4418708fd834e644003ec4eaf59ba8d749",
+        "live_run_sha256": "f1b0a077548e253522d3bc743ed88e4418708fd834e644003ec4eaf59ba8d749",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-07-GREEN.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-07-GREEN",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "e262c5175cf573e99771b3a562e96a44a47ef37b2502ca2f7635ced7aaebd13f",
+        "live_run_sha256": "e262c5175cf573e99771b3a562e96a44a47ef37b2502ca2f7635ced7aaebd13f",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-08-RED.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-08-RED",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "108440dd6173f8f9132c90bfc19884b8eb880267282a0f0489bbfd9d3bab0197",
+        "live_run_sha256": "108440dd6173f8f9132c90bfc19884b8eb880267282a0f0489bbfd9d3bab0197",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-08-RED.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-08-RED",
+        "semantics_version": "2.0.0"
+      },
+      {
+        "committed_sha256": "9376e95905a57c740fd17b2da5b717987b313b47fcbe257f7ae1166372e30771",
+        "live_run_sha256": "9376e95905a57c740fd17b2da5b717987b313b47fcbe257f7ae1166372e30771",
+        "path": "tests/corrected_vnext/observed/1.0.0/RULE2-08-GREEN.json",
+        "producer_id": "KERNEL_1",
+        "scenario_id": "RULE2-08-GREEN",
+        "semantics_version": "1.0.0"
+      },
+      {
+        "committed_sha256": "b5a96a61089ae3ca8aa20a8013e3843804d0386e3955d3fa75e6f6091b19b847",
+        "live_run_sha256": "b5a96a61089ae3ca8aa20a8013e3843804d0386e3955d3fa75e6f6091b19b847",
+        "path": "tests/corrected_vnext/observed/2.0.0/RULE2-08-GREEN.json",
+        "producer_id": "KERNEL_2",
+        "scenario_id": "RULE2-08-GREEN",
+        "semantics_version": "2.0.0"
+      }
+    ],
+    "stale_count": 0
+  },
+  "probes": [
+    {
+      "base_scenario_id": "RULE2-01-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\tmp\\P012_PRICE_20260910\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "2e5eb58e2002ede17e87ce83cb5b1301680bdaca1f1ed55538bd2ffdd5d05dd1",
+      "modified_copy_digest": "402aa75b77782f03ce2f0d98750c13b27a7217ff7f19821abdf0fa55b0b32b37",
+      "probe_id": "PROBE-P012-01-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-01-GREEN",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\tmp\\P012_PRICE_20260910\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "8e2cdc1d5d511f9767edc018a7bb5de9cf7e0efda75d71d43d48a65993743dde",
+      "modified_copy_digest": "2d01ee7cb708ebd31505f94a028f06390e1696b42d611c44cb5a99a77e329484",
+      "probe_id": "PROBE-P012-01-B",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-02-GREEN",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\tmp\\P012_PRICE_20260910\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/RESULT_SURFACE/admitted",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "aac3f4bfa8c2a8e41cacba8075b15b738ba29a9eb24cf5044b4e7926e19d7cd4",
+      "modified_copy_digest": "5a8809d48aff70d4b53535cf91ef29e1c94c7c4b63f618cc85b759b403d73856",
+      "probe_id": "PROBE-P012-02-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-03-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\tmp\\P012_PRICE_20260910\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "RECORD_IDENTITY_PREFLIGHT",
+      "expected_first_changed_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+      "expected_node_changed": true,
+      "measured_failed_check": "RECORD_IDENTITY_PREFLIGHT",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "1768d0fd9a226ddf30775191cc5a5ca640663bc24d637aad01d6c3c5ed79edf8",
+      "modified_copy_digest": "35193efcfc568ec582e430b0acdc35fa4bcc3e7866313ad9f4798fd2e4e0d304",
+      "probe_id": "PROBE-P012-03-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-04-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\tmp\\P012_PRICE_20260910\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "732e1ce6ee882065dec12c7b974e6c72354c149b0607eb97c9d353d00438f185",
+      "modified_copy_digest": "84790d5c59406774eec9338084a17801c129f76772a2a064ef1d2e2a398cec94",
+      "probe_id": "PROBE-P012-04-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-05-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\tmp\\P012_PRICE_20260910\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "34d847b75cec5d3ce2153704b593946f02a2e6da5f18434d3ddea340cfd8c3ff",
+      "modified_copy_digest": "e97d2e1f3662a51ec8650eda8b8586cadf6521f148ca0f8761c3894ebe72a536",
+      "probe_id": "PROBE-P012-05-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-05-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\tmp\\P012_PRICE_20260910\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "e1b332f5fbb847c8c953a07e0e3b3feea88bfb0a9b1844e76b6a5e8fa8f35208",
+      "modified_copy_digest": "4c2caea299754aaa414e9a66815b7275f25fb9652876165461ba246cddd3d3c8",
+      "probe_id": "PROBE-P012-05-B",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-06-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\tmp\\P012_PRICE_20260910\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/exit_id",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "fb0cc6eb694302350e1bfa0a628dab0e1fcaf4da7d40fcad2c63381212b357e6",
+      "modified_copy_digest": "7e759622de20af0a06100033c4ecef2851a88076eb29d636b12bdcf395838cf7",
+      "probe_id": "PROBE-P012-06-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-07-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/1/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\tmp\\P012_PRICE_20260910\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fee_events/1/liquidity_role",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "f5f6b2a468a090dd24755174bb051ec50b6754b516cfb288feb47ffcba0b4b6a",
+      "modified_copy_digest": "4f7d0f7e21719c4bcbf0fe7a82f4cfb5a5830d1da4aa57d5b0bbda2ba6706bfd",
+      "probe_id": "PROBE-P012-07-A",
+      "status": "DETECTED"
+    },
+    {
+      "base_scenario_id": "RULE2-08-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\tmp\\P012_PRICE_20260910\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/funding_events/0/funding_cash_delta",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "8fbd6aa58281962cbcf581684de18ec5d7e6c676a66dacd3a38869df9cccf1c9",
+      "modified_copy_digest": "7f20d3ce401c4dfd5d140c09470b7cb02765d8591c86c5269391cd641d2db614",
+      "probe_id": "PROBE-P012-08-A",
+      "status": "DETECTED"
+    }
+  ],
+  "scenarios": [
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "c17b1145d9666da81bf7fd33cd68bbc58c31d1ec65a4b1e2d02a99fcf5522253",
+            "kernel_1_sha256": "c17b1145d9666da81bf7fd33cd68bbc58c31d1ec65a4b1e2d02a99fcf5522253",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "1a560a3431c30942419b211900ac125e6bfd520a7917288e9a0b604762b24f64",
+            "kernel_1_sha256": "1a560a3431c30942419b211900ac125e6bfd520a7917288e9a0b604762b24f64",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:5",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:10",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:5",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:10",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/final_position/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:2000",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/order_notional"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-01-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "kernel_1_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "kernel_1_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/final_position/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/order_notional"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-01-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/RESULT_SURFACE/refusals/0/code",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "1ff3247cf3e3380687a34b55d1c6d84a443edec4edbe6eb04ae28ee556f2ca6e",
+            "kernel_1_sha256": "1ff3247cf3e3380687a34b55d1c6d84a443edec4edbe6eb04ae28ee556f2ca6e",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "88265f6601ebfb6c91b18fbc0849b7433cb7b28aed00fcd4e5fb1657da89d856",
+            "kernel_1_sha256": "88265f6601ebfb6c91b18fbc0849b7433cb7b28aed00fcd4e5fb1657da89d856",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "S:20:UkVGVVNFRF9NSU5fTk9USU9OQUw=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/refusals/0/code"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "A:1",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "S:20:UkVGVVNFRF9NSU5fTk9USU9OQUw=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/decision_events/2/decision"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-02-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "1ff3247cf3e3380687a34b55d1c6d84a443edec4edbe6eb04ae28ee556f2ca6e",
+            "kernel_1_sha256": "1ff3247cf3e3380687a34b55d1c6d84a443edec4edbe6eb04ae28ee556f2ca6e",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "88265f6601ebfb6c91b18fbc0849b7433cb7b28aed00fcd4e5fb1657da89d856",
+            "kernel_1_sha256": "88265f6601ebfb6c91b18fbc0849b7433cb7b28aed00fcd4e5fb1657da89d856",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "B:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "B:1",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/admitted"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/final_position/quantity"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-02-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/RESULT_SURFACE/refusals/0/code",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "kernel_1_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "kernel_1_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "S:41:UkVGVVNFRF9JTlNUUlVNRU5UX09WRVJSSURFX09OX0VWQUxVQVRJT04=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/refusals/0/code"
+        },
+        {
+          "corrected": {
+            "canonical_value": "S:41:UkVGVVNFRF9JTlNUUlVNRU5UX09WRVJSSURFX09OX0VWQUxVQVRJT04=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/decision_events/1/decision"
+        },
+        {
+          "corrected": {
+            "refusal_code": "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION",
+            "tag": "REFUSAL"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "F:0x1.0000000000000p-2",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "consumed price_tick"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-03-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "kernel_1_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "kernel_1_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "F:0x1.0000000000000p-1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "F:0x1.0000000000000p-1",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/decision_events/1/runtime_value"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/refusals"
+        },
+        {
+          "corrected": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/final_position"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-03-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fill_events/0/reference_price",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "53fa011b7fa52b29925335c7bf56499d3ed521019dd692f7761ed218c3fd74bb",
+            "kernel_1_sha256": "53fa011b7fa52b29925335c7bf56499d3ed521019dd692f7761ed218c3fd74bb",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "4e3a0b6adf448508eaef830979433411cf0493aff5473e78aaa1e77ee1ccbf37",
+            "kernel_1_sha256": "4e3a0b6adf448508eaef830979433411cf0493aff5473e78aaa1e77ee1ccbf37",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:92",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/reference_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:92",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "S:8:R0FQX09QRU4=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/fill_trigger"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-04-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "dfd9aa6ccef1b8719c0269a115b1e846420c8f0d16fb0adddf6d812c9bd645ef",
+            "kernel_1_sha256": "dfd9aa6ccef1b8719c0269a115b1e846420c8f0d16fb0adddf6d812c9bd645ef",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "a8407de7b796dc0796012694a7959e2f0be2f681c1a2551450794c440dcabc62",
+            "kernel_1_sha256": "a8407de7b796dc0796012694a7959e2f0be2f681c1a2551450794c440dcabc62",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/exit_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/final_position/quantity"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-04-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fill_events/0/reference_price",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "kernel_1_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "kernel_1_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/reference_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/slippage_impact"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:101",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/slippage_application_count"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-05-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "kernel_1_sha256": "395fa4cb6ade60ed6e8667eadb851ac731b47894a583a05ea0d7e45cfa69c6d4",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "kernel_1_sha256": "43925542e12ce06b59f0f26ac2c5b2eb4c7551f771bf6d50f39ea1e90eccf162",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:100",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-05-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fill_events/0/exit_id",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "a0faf4ecb30034e9dc75856622ae3cb6293cbedead6dd28a482e8f43dcbbedd5",
+            "kernel_1_sha256": "a0faf4ecb30034e9dc75856622ae3cb6293cbedead6dd28a482e8f43dcbbedd5",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "3f99afe847e05a982e82f48ebc4abdd62f851c644fb537bd34dcb0601a5ec624",
+            "kernel_1_sha256": "3f99afe847e05a982e82f48ebc4abdd62f851c644fb537bd34dcb0601a5ec624",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "S:11:VEFSR0VULU5FQVI=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "node_kind": "S",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/exit_id"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:2",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "A:1",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:105",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:110",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/1/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:2",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:15",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:-20",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/trades/0/gross_realized_pnl"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-06-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fill_events/0/exit_id",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "a0faf4ecb30034e9dc75856622ae3cb6293cbedead6dd28a482e8f43dcbbedd5",
+            "kernel_1_sha256": "a0faf4ecb30034e9dc75856622ae3cb6293cbedead6dd28a482e8f43dcbbedd5",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "3f99afe847e05a982e82f48ebc4abdd62f851c644fb537bd34dcb0601a5ec624",
+            "kernel_1_sha256": "3f99afe847e05a982e82f48ebc4abdd62f851c644fb537bd34dcb0601a5ec624",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "S:10:VEFSR0VULUZBUg==",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "node_kind": "S",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/exit_id"
+        },
+        {
+          "corrected": {
+            "canonical_value": "S:11:VEFSR0VULU5FQVI=",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/1/exit_id"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:2",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "A:1",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:105",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:2",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:10",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:-20",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/trades/0/gross_realized_pnl"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-06-EQUAL-PRICE-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "04cd5c95b928b15aa160ca677b61c358f5ff353a0e92e9b8f66bdbeedd4d8216",
+            "kernel_1_sha256": "04cd5c95b928b15aa160ca677b61c358f5ff353a0e92e9b8f66bdbeedd4d8216",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "35fe6bf4840235c92a4823d445b881008bf46d808243f67c16711e0929b00348",
+            "kernel_1_sha256": "35fe6bf4840235c92a4823d445b881008bf46d808243f67c16711e0929b00348",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:90",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:2",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:2",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events/0/quantity"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:-20",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:-20",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/trades/0/gross_realized_pnl"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-06-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fee_events",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "46ab4596b6fd1e3fa3723e9485db44187e582d3f987c8a9177127adfb1e54b8a",
+            "kernel_1_sha256": "46ab4596b6fd1e3fa3723e9485db44187e582d3f987c8a9177127adfb1e54b8a",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "7366eb2992ada346b850a1bfbe08ba88a3d447fbf84ae1e17040184bbbba77f2",
+            "kernel_1_sha256": "7366eb2992ada346b850a1bfbe08ba88a3d447fbf84ae1e17040184bbbba77f2",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "A:2",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fee_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "F:-0x1.999999999999ap-3",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/trades/0/net_trade_pnl"
+        },
+        {
+          "corrected": {
+            "canonical_value": "S:16:R1JPU1MtTUlOVVMtRkVFUw==",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/guards/guard_pnl_basis"
+        },
+        {
+          "corrected": {
+            "canonical_value": "F:-0x1.999999999999ap-3",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/guards/last_closed_guard_pnl"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:1",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:0",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/guards/consecutive_loss_count"
+        },
+        {
+          "corrected": {
+            "canonical_value": "B:1",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "B:0",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/guards/guard_blocked_raw"
+        },
+        {
+          "corrected": {
+            "canonical_value": "F:0x1.f3e6666666666p+9",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/equity_curve/last"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-07-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "kernel_1_sha256": "6b66c880f1d2462f3901e1c5a719b725c3ed9ac145b4d19213af15a0f042cc6f",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "kernel_1_sha256": "01e4ee6c62a7c4438b4b3cb0fc5430bed55e1c71e3b4bda552e862eef4f3bfb5",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/equity_curve/last"
+        },
+        {
+          "corrected": {
+            "canonical_value": "I:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "I:0",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/guards/consecutive_loss_count"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/final_position"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-07-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": "/EVENT_SURFACE/fee_events",
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "341863fc107fb7745891f0e7725934f483d1d5bc4c878916440359b68901a771",
+            "kernel_1_sha256": "341863fc107fb7745891f0e7725934f483d1d5bc4c878916440359b68901a771",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "5de06464fc6841a611ca951b8b7c5cf91e530c0a100193311eb100694abce221",
+            "kernel_1_sha256": "5de06464fc6841a611ca951b8b7c5cf91e530c0a100193311eb100694abce221",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fee_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "A:1",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/funding_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "F:0x1.f3e6666666666p+9",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "canonical_value": "I:1000",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/equity_curve/last"
+        },
+        {
+          "corrected": {
+            "canonical_value": "F:-0x1.999999999999ap-4",
+            "tag": "PRESENT"
+          },
+          "equal": false,
+          "legacy": {
+            "tag": "ABSENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/cumulative_funding"
+        }
+      ],
+      "role": "RED",
+      "scenario_id": "RULE2-08-RED",
+      "status": "REFUSED_DECLARED_DIVERGENCE"
+    },
+    {
+      "corrected_expectation": "MATCH",
+      "first_changed_node": null,
+      "first_corrected_mismatch": null,
+      "legacy_reproduction": {
+        "producer_id": "KERNEL_1",
+        "status": "MATCH",
+        "surfaces": [
+          {
+            "baseline_bytes_sha256": "e09c6d17fa1861e35eb4ee50818e563366196dd4b040c496961d59590fdacbe6",
+            "kernel_1_sha256": "e09c6d17fa1861e35eb4ee50818e563366196dd4b040c496961d59590fdacbe6",
+            "status": "MATCH",
+            "surface_id": "EVENT_SURFACE"
+          },
+          {
+            "baseline_bytes_sha256": "fc1b9c2ff44ba4d62efcc3395719e8b6b1aaeabf7f121d0ae5d13324a7d100e2",
+            "kernel_1_sha256": "fc1b9c2ff44ba4d62efcc3395719e8b6b1aaeabf7f121d0ae5d13324a7d100e2",
+            "status": "MATCH",
+            "surface_id": "RESULT_SURFACE"
+          }
+        ]
+      },
+      "legacy_side_source": "DESIGN_DERIVED",
+      "projections": [
+        {
+          "corrected": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "A:0",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/EVENT_SURFACE/fill_events"
+        },
+        {
+          "corrected": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "equal": true,
+          "legacy": {
+            "canonical_value": "N",
+            "tag": "PRESENT"
+          },
+          "legacy_side_source": "DESIGN_DERIVED",
+          "selector": "/RESULT_SURFACE/final_position"
+        }
+      ],
+      "role": "GREEN",
+      "scenario_id": "RULE2-08-GREEN",
+      "status": "GREEN_SHARED_PROJECTION_EQUAL"
+    }
+  ],
+  "sealed_producer_identities": {
+    "baseline_driver_sha256": "71a24b739b2faefbe9fcac80d75f65ecc236c499ccc2a125d2ea3087c8d79436",
+    "catalog_sha256": "d8b37780a3e3c25f69b5e58bc5a0a88b59f59f0cc292becad0a7ba3abcd95e02",
+    "design_file": "C:\\tmp\\P012_PRICE_DESIGN_20260910\\P012_PRICE_DESIGN_V1_27.md",
+    "design_file_sha256": "12943ca7ba1e276188ff332cea8eb87b7ca46e3ab60579437311d951e9b8a195",
+    "design_total_lines": 2110,
+    "expected_seal_sha256": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
+    "implementation_anchor_sha256": "9b58661ec4bd476eb584b41f9f6e2691e430da5d2374de83ec33fd3a389a22f9"
+  }
+}

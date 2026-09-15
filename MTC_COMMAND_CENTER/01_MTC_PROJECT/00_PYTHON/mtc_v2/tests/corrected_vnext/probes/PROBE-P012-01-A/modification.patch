@@ -1,0 +1,5 @@
+--- a/economics.py
++++ b/economics.py
+@@ -240 +240 @@
+-    multiplier = instrument.contract_multiplier if corrected else 1.0
++    multiplier = 1.0

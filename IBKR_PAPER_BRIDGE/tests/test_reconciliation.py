@@ -1682,3 +1682,163 @@ def test_capture_without_durable_run_lineage_fails_closed(tmp_path):
     assert broker.full_calls == [], "no broker I/O without a provable window"
     assert store.reconcile_coverage_upper_bound_ms() is None
     store.close()
+
+
+def v10_cycle(store: Store, broker: MockBroker, clock: FrozenClock):
+    """``run_cycle`` plus the durable policies every v8+ acceptance requires."""
+    risk = RiskEngine()
+    broker.full_clock = clock.now
+    return asyncio.run(
+        FullReconciler(
+            store=store,
+            broker=broker,
+            run_id="run-recon",
+            clock=clock.now,
+            monotonic=clock.monotonic,
+            risk_policy=risk.policy,
+            exposure_policy=risk.exposure_policy,
+        ).run_cycle()
+    )
+
+
+def test_v10_retains_normalized_funding_evidence_across_restart(tmp_path):
+    """P0-12: a restart keeps the normalized values, not just the digest.
+
+    Same mock exchange, fixtures and cycle as the existing funding tests; the
+    only difference is the opt-in v10 store. The synthetic ``userFunding``
+    rows carry ``fundingRate`` / ``szi`` / ``nSamples``, and after a close and
+    reopen those values are recoverable instead of being lost to the
+    non-invertible ledger digest.
+    """
+    from bridge.store.db import SCHEMA_VERSION_FUNDING_PAYLOAD
+
+    db_path = tmp_path / "bridge-v10.db"
+    store = open_store(db_path, version=SCHEMA_VERSION_FUNDING_PAYLOAD)
+    seed_owned_order(store)
+    broker = healthy_broker()
+    broker.full_funding_history = [
+        funding_row(event_hash="0xfund1"),
+        funding_row(event_hash="0xfund1"),   # exact duplicate
+        funding_row(event_hash="0xfund2", usdc=0.75),
+    ]
+    clock = FrozenClock()
+    result = v10_cycle(store, broker, clock)
+    assert result.accepted is True, result.reason_code
+    assert len(store.list_funding_events()) == 2
+    ledger = {
+        str(row["event_id"]): dict(row) for row in store.list_funding_events()
+    }
+    store.close()
+
+    reopened = open_store(db_path, version=SCHEMA_VERSION_FUNDING_PAYLOAD)
+    assert {
+        str(row["event_id"]): dict(row)
+        for row in reopened.list_funding_events()
+    } == ledger
+    assert reopened.funding_total(symbol="BTC") == pytest.approx(-0.5)
+
+    payload = reopened.get_funding_event_payload("0xfund1")
+    # The normalized values the mock exchange reported are still here.
+    assert payload["funding_rate"] == pytest.approx(0.0000125)
+    assert payload["position_szi"] == pytest.approx(0.1)
+    assert payload["n_samples"] == 1
+    assert payload["event_id"] == "0xfund1"
+    assert payload["amount_usdc"] == pytest.approx(-1.25)
+
+    # A replayed cycle after the restart adds no second event or payload.
+    clock.advance(30.0)
+    replay = v10_cycle(reopened, healthy_broker_with(broker), clock)
+    assert replay.accepted is True
+    assert len(reopened.list_funding_events()) == 2
+    assert len(
+        reopened._rows("SELECT * FROM funding_event_payloads")
+    ) == 2
+    assert reopened.funding_total(symbol="BTC") == pytest.approx(-0.5)
+    reopened.close()
+
+
+def test_v10_conflicting_funding_identity_retains_nothing(tmp_path):
+    """The existing identity refusal still holds, and retains no payload."""
+    from bridge.store.db import SCHEMA_VERSION_FUNDING_PAYLOAD
+
+    db_path = tmp_path / "bridge-v10-conflict.db"
+    store = open_store(db_path, version=SCHEMA_VERSION_FUNDING_PAYLOAD)
+    seed_owned_order(store)
+    broker = healthy_broker()
+    broker.full_funding_history = [
+        funding_row(event_hash="0xfund1", usdc=-1.0),
+        funding_row(event_hash="0xfund1", usdc=-9.0),  # same identity, new amount
+    ]
+    result = v10_cycle(store, broker, FrozenClock())
+
+    assert result.state is ReconcileAttemptState.CONFLICTING
+    assert result.accepted is False
+    assert store.list_funding_events() == []
+    assert store._rows("SELECT * FROM funding_event_payloads") == []
+    store.close()
+
+
+def test_v10_payload_failure_does_not_advance_the_checkpoint(tmp_path, monkeypatch):
+    """A failed retention write must not leave a half-accepted cycle behind.
+
+    Distinct from migration rollback: the first cycle is accepted normally, and
+    only the *second* cycle's payload insert is forced to fail. Afterwards the
+    new event, its payload, and the checkpoint pointer advance must all be
+    absent, and the store must reopen on the earlier accepted checkpoint.
+    """
+    from bridge.store.db import (
+        SCHEMA_VERSION_FUNDING_PAYLOAD,
+        ReconcileConflictError,
+        Store,
+    )
+
+    db_path = tmp_path / "bridge-v10-rollback.db"
+    store = open_store(db_path, version=SCHEMA_VERSION_FUNDING_PAYLOAD)
+    seed_owned_order(store)
+    broker = healthy_broker()
+    broker.full_funding_history = [funding_row(event_hash="0xfund1")]
+    clock = FrozenClock()
+    first = v10_cycle(store, broker, clock)
+    assert first.accepted is True, first.reason_code
+    pointer_before = store.get_meta("reconcile_checkpoint_latest")
+    assert pointer_before
+
+    def boom(self, **kwargs):
+        raise RuntimeError("synthetic payload write failure")
+
+    monkeypatch.setattr(Store, "_append_funding_payload_locked", boom)
+    later = healthy_broker_with(broker)
+    later.full_funding_history = [
+        funding_row(event_hash="0xfund1"),
+        # Inside the *new* coverage window, so this cycle really does try to
+        # insert a second event — and therefore really does try to retain it.
+        funding_row(
+            event_hash="0xfund2",
+            usdc=0.75,
+            time_ms=int(BASE_TS.timestamp() * 1000) + 10_000,
+        ),
+    ]
+    clock.advance(30.0)
+    second = v10_cycle(store, later, clock)
+    assert second.accepted is False
+    monkeypatch.undo()
+
+    assert store.get_meta("reconcile_checkpoint_latest") == pointer_before
+    assert [str(row["event_id"]) for row in store.list_funding_events()] == [
+        "0xfund1"
+    ]
+    assert [
+        str(row["event_id"])
+        for row in store._rows("SELECT * FROM funding_event_payloads")
+    ] == ["0xfund1"]
+    store.close()
+
+    reopened = open_store(db_path, version=SCHEMA_VERSION_FUNDING_PAYLOAD)
+    assert reopened.get_meta("reconcile_checkpoint_latest") == pointer_before
+    assert len(reopened.list_funding_events()) == 1
+    # The rolled-back event does not exist at all — not as a payloadless row.
+    with pytest.raises(ReconcileConflictError) as excinfo:
+        reopened.get_funding_event_payload("0xfund2")
+    assert excinfo.value.code == "FUNDING_PAYLOAD_EVENT_UNKNOWN"
+    assert len(reopened._rows("SELECT * FROM funding_event_payloads")) == 1
+    reopened.close()

@@ -1,5 +1,5 @@
 # Supertrend Seed Regions
-Research seed only; not Pine default; not production parameter.
+# Research seed only; not Pine default; not production parameter.
 
 regions:
   - region_id: supertrend_BTCUSDT_15m_smoke_region_v1

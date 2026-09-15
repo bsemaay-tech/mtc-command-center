@@ -4,11 +4,11 @@ Claude is responsible for Pine builder workflows, Pine review, documentation imp
 
 ## Startup Checklist
 
-1. Read `MTC Command Center ARCHITECTURE.md`.
-2. Read `START_HERE_FOR_AI.md`.
-3. Read `AI_OPERATING_RULES.md`.
-4. Read the assigned task only.
-5. Produce report-first output before proposing code changes.
+Follow repository-root `AGENTS.md` and its task-triggered reading contract. This legacy
+entry point does not add an architecture-document chain or require another plan for work
+the owner already authorized. Select the stage for the actual task; read only its relevant
+contracts. Review and acceptance follow `00_AGENT_PROTOCOLS/REVIEW_POLICY.md` under the
+command center, including its activation boundary.
 
 ## Safety
 

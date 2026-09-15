@@ -299,6 +299,22 @@ reopenable but can never authorize v8 risk.
 SCHEMA_VERSION_KILL_EVIDENCE = 9
 """Additive TS-P1-009 durable kill episode/action/evidence ledger."""
 
+SCHEMA_VERSION_FUNDING_PAYLOAD = 10
+"""Additive P0-12 retained funding payload; opt-in, never automatic.
+
+The v6 ``funding_events`` ledger keeps the identity digest but not the
+normalized ``funding_rate`` / ``position_szi`` / ``n_samples`` values that went
+into it, and a digest cannot be inverted. v10 adds one append-only table that
+retains the canonical JSON of the *existing*
+:meth:`FundingEventRecord.authoritative` domain beside its ledger row, so those
+already-observed normalized values survive a restart. It adds no new event
+identity, no new venue fact and no reinterpretation: the retained bytes must
+reproduce the ledger's own immutable ``payload_digest``. Reaching v10 requires
+an explicit ``initialize(target_schema_version=10)`` through the proven
+v4->...->v9 chain; the operational baseline stays
+:data:`SCHEMA_VERSION_BASELINE`.
+"""
+
 SUPPORTED_TARGET_SCHEMA_VERSIONS = (
     SCHEMA_VERSION_BASELINE,
     SCHEMA_VERSION_PARTIAL_FILL,
@@ -306,6 +322,7 @@ SUPPORTED_TARGET_SCHEMA_VERSIONS = (
     SCHEMA_VERSION_DURABLE_RISK,
     SCHEMA_VERSION_EXPOSURE_CONTROLS,
     SCHEMA_VERSION_KILL_EVIDENCE,
+    SCHEMA_VERSION_FUNDING_PAYLOAD,
 )
 
 RECONCILE_CHECKPOINT_POINTER_KEY = "reconcile_checkpoint_latest"
@@ -314,6 +331,7 @@ RECONCILE_CHECKPOINT_POINTER_KEY = "reconcile_checkpoint_latest"
 RISK_CONTROLS_MIGRATION_FAILURE_KEY = "risk_controls_migration_failure"
 EXPOSURE_CONTROLS_MIGRATION_FAILURE_KEY = "exposure_controls_migration_failure"
 KILL_EVIDENCE_MIGRATION_FAILURE_KEY = "kill_evidence_migration_failure"
+FUNDING_PAYLOAD_MIGRATION_FAILURE_KEY = "funding_payload_migration_failure"
 KILL_REQUEST_ACTIVE_KEY = "kill_request_active"
 KILL_EPOCH_ACTIVE_KEY = "kill_epoch_active"
 
@@ -790,6 +808,21 @@ class Store:
             "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"
         )
         existing = self.get_meta("schema_version")
+        if existing == str(SCHEMA_VERSION_FUNDING_PAYLOAD):
+            if not self._has_any_funding_payload_object():
+                # A meta row alone is not proof of a version; v10 without its
+                # own table is corrupt metadata, exactly like v6/v8/v9.
+                raise RuntimeError(
+                    f"Unsupported schema_version={existing!r}; "
+                    "cannot initialize safely"
+                )
+            self._initialize_v5_idempotent()
+            self._initialize_v6_idempotent()
+            self._initialize_v7_idempotent()
+            self._initialize_v8_idempotent()
+            self._initialize_v9_idempotent()
+            self._initialize_v10_idempotent()
+            return
         if existing == str(SCHEMA_VERSION_KILL_EVIDENCE):
             if not self._has_any_kill_evidence_object():
                 raise RuntimeError(
@@ -801,6 +834,8 @@ class Store:
             self._initialize_v7_idempotent()
             self._initialize_v8_idempotent()
             self._initialize_v9_idempotent()
+            if target_schema_version >= SCHEMA_VERSION_FUNDING_PAYLOAD:
+                self._migrate_v9_to_v10()
             return
         if existing == str(SCHEMA_VERSION_EXPOSURE_CONTROLS):
             if not self._has_any_durable_risk_object():
@@ -816,6 +851,8 @@ class Store:
             self._initialize_v8_idempotent()
             if target_schema_version >= SCHEMA_VERSION_KILL_EVIDENCE:
                 self._migrate_v8_to_v9()
+            if target_schema_version >= SCHEMA_VERSION_FUNDING_PAYLOAD:
+                self._migrate_v9_to_v10()
             return
         if existing == str(SCHEMA_VERSION_DURABLE_RISK):
             if not self._has_any_durable_risk_object():
@@ -830,6 +867,8 @@ class Store:
                 self._migrate_v7_to_v8()
             if target_schema_version >= SCHEMA_VERSION_KILL_EVIDENCE:
                 self._migrate_v8_to_v9()
+            if target_schema_version >= SCHEMA_VERSION_FUNDING_PAYLOAD:
+                self._migrate_v9_to_v10()
             return
         if existing == str(SCHEMA_VERSION_FULL_RECONCILE):
             if not self._has_any_full_reconcile_object():
@@ -849,6 +888,8 @@ class Store:
                 self._migrate_v7_to_v8()
             if target_schema_version >= SCHEMA_VERSION_KILL_EVIDENCE:
                 self._migrate_v8_to_v9()
+            if target_schema_version >= SCHEMA_VERSION_FUNDING_PAYLOAD:
+                self._migrate_v9_to_v10()
             return
         if existing == str(SCHEMA_VERSION_PARTIAL_FILL):
             self._initialize_v5_idempotent()
@@ -860,6 +901,8 @@ class Store:
                 self._migrate_v7_to_v8()
             if target_schema_version >= SCHEMA_VERSION_KILL_EVIDENCE:
                 self._migrate_v8_to_v9()
+            if target_schema_version >= SCHEMA_VERSION_FUNDING_PAYLOAD:
+                self._migrate_v9_to_v10()
             return
         if existing is None:
             self._initialize_v4_fresh()
@@ -888,6 +931,8 @@ class Store:
             self._migrate_v7_to_v8()
         if target_schema_version >= SCHEMA_VERSION_KILL_EVIDENCE:
             self._migrate_v8_to_v9()
+        if target_schema_version >= SCHEMA_VERSION_FUNDING_PAYLOAD:
+            self._migrate_v9_to_v10()
 
     def _initialize_v4_fresh(self) -> None:
         self._create_tables_v4()
@@ -2198,6 +2243,7 @@ class Store:
         if self.get_meta("schema_version") not in {
             str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
             str(SCHEMA_VERSION_KILL_EVIDENCE),
+            str(SCHEMA_VERSION_FUNDING_PAYLOAD),
         }:
             raise MigrationError(
                 "v8 topology requires schema_version=8 or additive successor"
@@ -2700,10 +2746,21 @@ class Store:
 
     def _initialize_v9_idempotent(self) -> None:
         self._validate_kill_evidence_schema_v9()
-        if self.get_meta("schema_version") != str(SCHEMA_VERSION_KILL_EVIDENCE):
-            raise MigrationError("v9 reopen requires schema_version=9")
+        if self.get_meta("schema_version") not in {
+            str(SCHEMA_VERSION_KILL_EVIDENCE),
+            str(SCHEMA_VERSION_FUNDING_PAYLOAD),
+        }:
+            raise MigrationError(
+                "v9 reopen requires schema_version=9 or additive successor"
+            )
 
-    def _all_table_census(self) -> dict[str, int]:
+    def _all_table_census(
+        self, exclude: Sequence[str] | None = None
+    ) -> dict[str, int]:
+        """Row counts of every table except the ones a migration is adding."""
+        skipped = set(
+            self._KILL_EVIDENCE_OBJECTS if exclude is None else exclude
+        )
         result: dict[str, int] = {}
         rows = self.conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' "
@@ -2711,7 +2768,7 @@ class Store:
         ).fetchall()
         for row in rows:
             name = str(row["name"])
-            if name in self._KILL_EVIDENCE_OBJECTS:
+            if name in skipped:
                 continue
             result[name] = int(
                 self.conn.execute(f'SELECT COUNT(*) FROM "{name}"').fetchone()[0]
@@ -2765,6 +2822,243 @@ class Store:
                     (
                         KILL_EVIDENCE_MIGRATION_FAILURE_KEY,
                         f"KILL_EVIDENCE_MIGRATION_FAILED:{type(exc).__name__}",
+                    ),
+                )
+                self.conn.commit()
+            except Exception:
+                self.conn.rollback()
+            raise
+
+    # ------------------------------------------------------------------
+    # P0-12 v10 retained funding payload
+    # ------------------------------------------------------------------
+
+    _FUNDING_PAYLOAD_OBJECTS = ("funding_event_payloads",)
+
+    _FUNDING_PAYLOAD_FIELDS = (
+        "amount_usdc",
+        "effective_ts",
+        "event_id",
+        "funding_rate",
+        "n_samples",
+        "position_szi",
+        "source",
+        "symbol",
+    )
+    """Exactly the existing ``FundingEventRecord.authoritative()`` domain."""
+
+    def _has_any_funding_payload_object(self) -> bool:
+        placeholders = ",".join("?" for _ in self._FUNDING_PAYLOAD_OBJECTS)
+        return self.conn.execute(
+            f"SELECT 1 FROM sqlite_master WHERE name IN ({placeholders}) LIMIT 1",
+            self._FUNDING_PAYLOAD_OBJECTS,
+        ).fetchone() is not None
+
+    def _create_funding_payload_tables_v10(self) -> None:
+        """Purely additive DDL for the single approved v10 object.
+
+        One retained payload per immutable ``funding_events`` row.
+        ``payload_digest`` repeats the ledger's own digest, so retained bytes
+        that stop reproducing it can never be presented as the event's
+        authoritative content. The append-only triggers mirror the ledger's.
+        """
+        self.conn.execute("""
+            CREATE TABLE funding_event_payloads (
+              event_id TEXT PRIMARY KEY
+                REFERENCES funding_events(event_id),
+              payload_json TEXT NOT NULL CHECK(payload_json != ''),
+              payload_digest TEXT NOT NULL
+                CHECK(length(payload_digest) = 64
+                      AND NOT payload_digest GLOB '*[^0-9a-f]*'),
+              recorded_ts TEXT NOT NULL CHECK(recorded_ts != '')
+            )""")
+        self.conn.execute("""
+            CREATE TRIGGER trg_funding_payload_no_update
+            BEFORE UPDATE ON funding_event_payloads
+            BEGIN
+              SELECT RAISE(ABORT, 'FUNDING_PAYLOAD_APPEND_ONLY');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER trg_funding_payload_no_delete
+            BEFORE DELETE ON funding_event_payloads
+            BEGIN
+              SELECT RAISE(ABORT, 'FUNDING_PAYLOAD_APPEND_ONLY');
+            END""")
+
+    @staticmethod
+    def _decode_funding_payload(
+        *,
+        event_id: str,
+        payload_json: str,
+        payload_digest: str,
+        ledger_digest: str,
+    ) -> dict[str, Any]:
+        """Return the retained payload only when it still proves itself.
+
+        The ledger digest is the authority: retained bytes are accepted only if
+        they parse, carry exactly the authoritative domain, re-serialize to the
+        same canonical bytes and re-hash to the ledger's immutable digest.
+        """
+        if payload_digest != ledger_digest:
+            raise ReconcileConflictError(
+                "FUNDING_PAYLOAD_DIGEST_MISMATCH",
+                f"retained payload digest disagrees with the ledger for {event_id}",
+            )
+        try:
+            parsed = json.loads(payload_json)
+        except (TypeError, ValueError) as exc:
+            raise ReconcileConflictError(
+                "FUNDING_PAYLOAD_MALFORMED",
+                f"retained payload for {event_id} is not parseable JSON",
+            ) from exc
+        if not isinstance(parsed, dict) or tuple(sorted(parsed)) != (
+            Store._FUNDING_PAYLOAD_FIELDS
+        ):
+            raise ReconcileConflictError(
+                "FUNDING_PAYLOAD_DOMAIN_MISMATCH",
+                f"retained payload for {event_id} is not the authoritative domain",
+            )
+        try:
+            canonical_payload = canonical_reconcile_json(parsed)
+        except (TypeError, ValueError) as exc:
+            raise ReconcileConflictError(
+                "FUNDING_PAYLOAD_MALFORMED",
+                f"retained payload for {event_id} is not canonical JSON",
+            ) from exc
+        if canonical_payload != payload_json:
+            raise ReconcileConflictError(
+                "FUNDING_PAYLOAD_MALFORMED",
+                f"retained payload for {event_id} is not canonical",
+            )
+        if reconcile_digest(parsed) != ledger_digest:
+            raise ReconcileConflictError(
+                "FUNDING_PAYLOAD_DIGEST_MISMATCH",
+                f"retained payload for {event_id} does not reproduce its digest",
+            )
+        if str(parsed["event_id"]) != str(event_id):
+            raise ReconcileConflictError(
+                "FUNDING_PAYLOAD_IDENTITY_MISMATCH",
+                f"retained payload identity disagrees with its row {event_id}",
+            )
+        return parsed
+
+    def _validate_funding_payload_rows_v10(self) -> None:
+        """Re-prove every retained payload against its immutable ledger row."""
+        for row in self._rows(
+            "SELECT p.event_id AS event_id, p.payload_json AS payload_json, "
+            "p.payload_digest AS payload_digest, "
+            "e.payload_digest AS ledger_digest "
+            "FROM funding_event_payloads AS p "
+            "LEFT JOIN funding_events AS e ON e.event_id = p.event_id "
+            "ORDER BY p.event_id"
+        ):
+            if row["ledger_digest"] is None:
+                raise MigrationError("v10 retained payload has no ledger row")
+            try:
+                Store._decode_funding_payload(
+                    event_id=str(row["event_id"]),
+                    payload_json=str(row["payload_json"]),
+                    payload_digest=str(row["payload_digest"]),
+                    ledger_digest=str(row["ledger_digest"]),
+                )
+            except ReconcileConflictError as exc:
+                raise MigrationError(
+                    f"v10 retained payload invalid: {exc.code}"
+                ) from exc
+
+    def _validate_funding_payload_schema_v10(self) -> None:
+        """Same technique as v6/v9: canonical DDL plus independent topology."""
+        reference = Store(Path(":memory:"))
+        reference._conn = sqlite3.connect(":memory:")
+        reference._conn.row_factory = sqlite3.Row
+        reference._conn.execute("PRAGMA foreign_keys=ON")
+        reference._conn.execute(
+            "CREATE TABLE funding_events (event_id TEXT PRIMARY KEY)"
+        )
+        Store._create_funding_payload_tables_v10(reference)
+
+        tables = set(self._FUNDING_PAYLOAD_OBJECTS)
+
+        def signature(
+            conn: sqlite3.Connection,
+        ) -> dict[tuple[str, str], tuple[str, str]]:
+            rows = conn.execute(
+                "SELECT type,name,tbl_name,sql FROM sqlite_master "
+                "WHERE sql IS NOT NULL"
+            ).fetchall()
+            return {
+                (str(row["type"]), str(row["name"])): (
+                    str(row["tbl_name"]),
+                    " ".join(str(row["sql"]).split()).upper(),
+                )
+                for row in rows
+                if str(row["tbl_name"]) in tables
+            }
+
+        expected = signature(reference.conn)
+        actual = signature(self.conn)
+        reference.close()
+        if actual != expected:
+            raise MigrationError("v10 funding-payload topology is incomplete")
+        if self.conn.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+            raise MigrationError("v10 integrity_check failed")
+        if self.conn.execute("PRAGMA foreign_key_check").fetchall():
+            raise MigrationError("v10 foreign_key_check failed")
+        self._validate_funding_payload_rows_v10()
+
+    def _initialize_v10_idempotent(self) -> None:
+        self._validate_funding_payload_schema_v10()
+        if self.get_meta("schema_version") != str(SCHEMA_VERSION_FUNDING_PAYLOAD):
+            raise MigrationError("v10 reopen requires schema_version=10")
+
+    def _migrate_v9_to_v10(self) -> None:
+        """Additive v9 -> v10 bump in one rollback-clean transaction.
+
+        Historical events keep their exact ledger bytes and stay explicitly
+        unavailable: the migration creates the table and fabricates no payload
+        for anything already recorded.
+        """
+        if self.get_meta("schema_version") == str(SCHEMA_VERSION_FUNDING_PAYLOAD):
+            self._initialize_v10_idempotent()
+            return
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if self.get_meta("schema_version") != str(SCHEMA_VERSION_KILL_EVIDENCE):
+                raise MigrationError("v9-to-v10 requires schema_version=9")
+            self._initialize_v9_idempotent()
+            if self._has_any_funding_payload_object():
+                raise MigrationError(
+                    "v9-to-v10 aborted: pre-existing object in payload topology"
+                )
+            before = self._all_table_census(exclude=self._FUNDING_PAYLOAD_OBJECTS)
+            self._create_funding_payload_tables_v10()
+            self._validate_funding_payload_schema_v10()
+            after = self._all_table_census(exclude=self._FUNDING_PAYLOAD_OBJECTS)
+            if before != after:
+                raise MigrationError("v9-to-v10 altered predecessor evidence")
+            retained = self.conn.execute(
+                "SELECT COUNT(*) FROM funding_event_payloads"
+            ).fetchone()[0]
+            if int(retained) != 0:
+                raise MigrationError("v9-to-v10 must not backfill retained payloads")
+            cursor = self.conn.execute(
+                "UPDATE meta SET value=? WHERE key='schema_version' AND value=?",
+                (
+                    str(SCHEMA_VERSION_FUNDING_PAYLOAD),
+                    str(SCHEMA_VERSION_KILL_EVIDENCE),
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise MigrationError("v9-to-v10 version update rowcount mismatch")
+            self.conn.commit()
+        except Exception as exc:
+            self.conn.rollback()
+            try:
+                self.conn.execute(
+                    "INSERT OR IGNORE INTO meta(key,value) VALUES (?,?)",
+                    (
+                        FUNDING_PAYLOAD_MIGRATION_FAILURE_KEY,
+                        f"FUNDING_PAYLOAD_MIGRATION_FAILED:{type(exc).__name__}",
                     ),
                 )
                 self.conn.commit()
@@ -5094,7 +5388,10 @@ class Store:
     # ------------------------------------------------------------------
 
     def kill_evidence_enabled(self) -> bool:
-        return self.get_meta("schema_version") == str(SCHEMA_VERSION_KILL_EVIDENCE)
+        return self.get_meta("schema_version") in {
+            str(SCHEMA_VERSION_KILL_EVIDENCE),
+            str(SCHEMA_VERSION_FUNDING_PAYLOAD),
+        }
 
     def _require_kill_schema(self) -> None:
         if not self.kill_evidence_enabled():
@@ -7943,6 +8240,7 @@ class Store:
             str(SCHEMA_VERSION_DURABLE_RISK),
             str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
             str(SCHEMA_VERSION_KILL_EVIDENCE),
+            str(SCHEMA_VERSION_FUNDING_PAYLOAD),
         }
 
     def durable_risk_controls_enabled(self) -> bool:
@@ -7950,13 +8248,15 @@ class Store:
             str(SCHEMA_VERSION_DURABLE_RISK),
             str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
             str(SCHEMA_VERSION_KILL_EVIDENCE),
+            str(SCHEMA_VERSION_FUNDING_PAYLOAD),
         }
 
     def exposure_controls_enabled(self) -> bool:
-        """True on opt-in schema v8 and its additive v9 successor."""
+        """True on opt-in schema v8 and its additive v9/v10 successors."""
         return self.get_meta("schema_version") in {
             str(SCHEMA_VERSION_EXPOSURE_CONTROLS),
             str(SCHEMA_VERSION_KILL_EVIDENCE),
+            str(SCHEMA_VERSION_FUNDING_PAYLOAD),
         }
 
     def _require_full_reconcile(self) -> None:
@@ -8794,6 +9094,40 @@ class Store:
                 _to_iso(recorded_ts),
             ),
         )
+        if self.funding_payload_retention_enabled():
+            # Same transaction as the ledger row: a retained payload can never
+            # become visible without its event, or the other way round. Only a
+            # newly inserted event is retained — an exact replay returned above
+            # and a pre-v10 event stays explicitly unavailable.
+            self._append_funding_payload_locked(
+                event=event, digest=digest, recorded_ts=recorded_ts
+            )
+
+    def _append_funding_payload_locked(
+        self,
+        *,
+        event: FundingEventRecord,
+        digest: str,
+        recorded_ts: datetime,
+    ) -> None:
+        """Retain the normalized authoritative payload beside its ledger row."""
+        payload = event.authoritative()
+        payload_json = canonical_reconcile_json(payload)
+        payload_digest = reconcile_digest(payload)
+        if payload_digest != digest:
+            raise ReconcileConflictError(
+                "FUNDING_PAYLOAD_DIGEST_MISMATCH",
+                f"retained payload digest disagrees with the ledger for "
+                f"{event.event_id}",
+            )
+        self.conn.execute(
+            """
+            INSERT INTO funding_event_payloads(
+              event_id, payload_json, payload_digest, recorded_ts
+            ) VALUES (?, ?, ?, ?)
+            """,
+            (event.event_id, payload_json, payload_digest, _to_iso(recorded_ts)),
+        )
 
     def resolve_interrupted_reconcile_attempts(
         self, *, observed_ts: datetime, reason_code: str = "RESTART_INTERRUPTED"
@@ -9543,6 +9877,51 @@ class Store:
             "SELECT * FROM funding_events WHERE event_id = ?", (str(event_id),)
         ).fetchone()
         return None if row is None else dict(row)
+
+    def funding_payload_retention_enabled(self) -> bool:
+        """True only on the opt-in v10 capability."""
+        return self.get_meta("schema_version") == str(
+            SCHEMA_VERSION_FUNDING_PAYLOAD
+        )
+
+    def get_funding_event_payload(self, event_id: str) -> dict[str, Any] | None:
+        """The retained normalized payload for one funding event, or ``None``.
+
+        ``None`` means *explicitly unavailable*: the event exists in the ledger
+        but carries no retained payload because it was recorded before this
+        capability. Nothing is reconstructed, inferred or re-fetched — the
+        digest is not invertible. Retained bytes that no longer prove
+        themselves against the immutable ledger digest are refused, never
+        returned. Optional values stay exactly as observed: ``None`` is never
+        turned into ``0``.
+        """
+        if not self.funding_payload_retention_enabled():
+            raise ReconcileConflictError(
+                "FUNDING_PAYLOAD_SCHEMA_INACTIVE",
+                "retained funding payloads require schema v10",
+            )
+        key = str(event_id)
+        ledger = self.conn.execute(
+            "SELECT payload_digest FROM funding_events WHERE event_id = ?", (key,)
+        ).fetchone()
+        if ledger is None:
+            raise ReconcileConflictError(
+                "FUNDING_PAYLOAD_EVENT_UNKNOWN",
+                f"no funding ledger row for {key}",
+            )
+        row = self.conn.execute(
+            "SELECT payload_json, payload_digest FROM funding_event_payloads "
+            "WHERE event_id = ?",
+            (key,),
+        ).fetchone()
+        if row is None:
+            return None
+        return Store._decode_funding_payload(
+            event_id=key,
+            payload_json=str(row["payload_json"]),
+            payload_digest=str(row["payload_digest"]),
+            ledger_digest=str(ledger["payload_digest"]),
+        )
 
     def funding_total(
         self,

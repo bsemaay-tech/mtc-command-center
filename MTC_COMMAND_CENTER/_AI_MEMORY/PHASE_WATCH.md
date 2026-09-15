@@ -1,7 +1,12 @@
 # PHASE_WATCH — deployment Phase 1 / Phase 2 daily monitoring
 
+> **Task-triggered only.** This file is not onboarding or evidence of current host
+> state. Read it only for an explicitly authorized phase-watch task, after the root
+> router and governance stage. The STATUS block below was last recorded on
+> 2026-08-16 and has not been live-verified by the 2026-09-09 memory review.
+>
 > Owner request 2026-08-16: Phase 1 and Phase 2 of the post-deployment plan must be
-> monitored daily. Any AI session doing daily work reads this file; a Hermes agent
+> monitored daily. A Hermes agent
 > cron checks it every 4 hours (see "Hermes cron" below). Update the STATUS block
 > whenever state changes. **Name the host in every status row**
 > (see memory rule "two hosts, never conflate": GATEA-STAGING = local Hyper-V VM,
@@ -120,12 +125,14 @@ promotable strategy (Phase 3, QuantLens research) and its own gate. No shortcut.
 - `WATCH_ACTIVE: YES` → runs Hermes (`hermes -z … --provider deepseek -m deepseek-chat --cli`;
   verified 2026-08-16 — the default provider returns "no final response", DeepSeek works)
   against `STATUS_SOURCE`, appends a ≤10-line OK/WARN/FAIL report to the same log.
-- Daily AI sessions: read the last ~6 log entries, escalate any WARN/FAIL into
-  `NEXT_STEPS.md`, tick the day's boxes above.
+- For an explicitly authorized phase-watch task, read the relevant recent log entries and
+  record any WARN/FAIL in the selected stage's `HANDOFF.md`. Update boxes only from actual
+  authorized observations; retired `NEXT_STEPS.md` is not a write target.
 - Hermes is read-only here: it never ARMs, never touches keys, never edits repo
-  files. Post-activation KVM2 contact is limited to the approved read-only checks
-  above and its final shape (Hermes-driven vs deterministic collector) is a
-  pending T0-review question — see the cron-scope paragraph.
+  files. Owner decision 2026-08-17 selected the deterministic collector design;
+  verify its actual implementation and T0 acceptance before activation; this memory review
+  establishes neither. Until those gates are evidenced, the watch stays inactive and no KVM2 contact
+  follows from this file.
 - **Notifications: Telegram notifier code present but DEPLOYMENT HELD — owner
   classified watcher + credential/network handling as T0; review pending
   (`11_TRIAGE/PHASE_WATCH_NOTIFIER_T0_REVIEW_PENDING_2026-08-16.md`).** Route

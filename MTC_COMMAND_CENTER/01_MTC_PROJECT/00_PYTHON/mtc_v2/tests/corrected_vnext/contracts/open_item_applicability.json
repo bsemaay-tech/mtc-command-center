@@ -1,0 +1,235 @@
+{
+  "schema": "P012_OPEN_ITEM_APPLICABILITY_V1",
+  "design": "P012_FRESH_DESIGN_V1.md v1.4 (section 19, OPEN-01..OPEN-10)",
+  "authored_by": "Lead (claude-fable-5), faithful transcription with owner-decision references (verbatim owner lines live in the cited addenda); G56 census 5/5 findings folded in rev-2. DRAFT staged in C:\\tmp - the build lane places it at tests/corrected_vnext/contracts/open_item_applicability.json under the granted Gate-2 paths; rev-4: Lead added the addendum-20 OPEN-EMBED block (no OPEN-01..10 row changed)",
+  "owner_decision_references": [
+    "OWNER_DECISIONS_2026-08-29_EVENING.md addendum 15 (2026-08-31 ~10:00, verbatim ten-row reply) @ commit 866ae923",
+    "OWNER_DECISIONS_2026-08-29_EVENING.md addendum 16 (2026-08-31 ~13:05, verbatim 'all approved, fees a, design a, retain all.') @ commit 8591bf76"
+  ],
+  "note": "Rows cite closure evidence per the design's section-19 closure column. Where evidence is a prepared package, the owner's addendum-16 'all approved' is the approval act. Fixture obligations flagged 'build_obligation' are enforced by the build's RULE-2/RED-GREEN machinery, not by this file.",
+  "items": [
+    {
+      "id": "OPEN-01",
+      "disposition": "APPLICABLE",
+      "owner_decision": "Hyperliquid perpetual BTC, effective from the frozen current document set onward (addendum 15 row 36); record APPROVED (addendum 16 row 42)",
+      "closure_evidence": [
+        "C:\\tmp\\LANE_PROMPTS_20260828\\P012_OPEN01_INSTRUMENT_RECORD_V1.md (v1.3)",
+        "C:\\tmp\\VENUE_FETCH_HL_20260831\\instrument_record_btc_perp_CANDIDATE.json (digested)",
+        "C:\\tmp\\VENUE_FETCH_HL_20260831\\FETCH_MANIFEST.md (8 manifest rows: 7 usable frozen source files + 1 SUPERSEDED bad-slug file, all SHA-256)"
+      ],
+      "open_residuals": [
+        "minimum_quantity: venue publishes none (recorded)",
+        "section-16 human review by owner at build acceptance"
+      ],
+      "consuming_build_paths": [
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/instrument.py",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/**",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py"
+      ],
+      "consuming_scenarios": [
+        "all RULE2 scenarios (instrument identity governs every admitted run)"
+      ]
+    },
+    {
+      "id": "OPEN-02",
+      "disposition": "APPLICABLE",
+      "owner_decision": "STOP_FIRST is the mandatory same-bar policy for acceptance-bearing 2.0.0 runs (addendum 15 row 32)",
+      "closure_evidence": [
+        "owner decision reference; design section-12 table row STOP_FIRST"
+      ],
+      "consuming_build_paths": [
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economics.py",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py"
+      ],
+      "consuming_scenarios": [
+        "RULE2-06-RED",
+        "RULE2-06-EQUAL-PRICE-RED",
+        "RULE2-06-GREEN"
+      ]
+    },
+    {
+      "id": "OPEN-03",
+      "disposition": "APPLICABLE",
+      "owner_decision": "fee table v1.1 APPROVED with the ADOPTED CLASS MAPPING (addendum 16 row 43): market entries = taker; market exits = taker; TP/SL protective executions = taker (venue text: automatically market orders); stop-triggered entries = option (a) Stop Market semantics = taker; base tier-0 schedule perps taker 0.045% / maker 0.015% (tier and staking alternatives transcribed in the package)",
+      "closure_evidence": [
+        "C:\\tmp\\LANE_PROMPTS_20260828\\P012_OPEN03_FEE_TABLE_V1.md (v1.1: tier-0 base perps taker 0.045%/maker 0.015%, complete class table, venue quotes + digests)"
+      ],
+      "open_residuals": [
+        "margin-call/liquidation fill class: CANNOT MAP - frozen venue bytes publish no liquidation fee semantics; cost record for that class is BLOCKED until a sourced decision",
+        "fee rounding / minimum-fee fields: NOT stated by frozen bytes; cost records carry only sourced fields"
+      ],
+      "consuming_build_paths": [
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economics.py",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/**",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/results.py"
+      ],
+      "consuming_scenarios": [
+        "RULE2-07-RED/GREEN (fee vectors)",
+        "every fill-bearing scenario"
+      ]
+    },
+    {
+      "id": "OPEN-04",
+      "disposition": "APPLICABLE",
+      "owner_decision": "option (i): slippage model BPS_OF_REFERENCE_V1 with slippage_bps = 0 - the owner's explicit zero-slippage assumption (addendum 15 row 38). Provenance class: OWNER-DECLARED EXPLICIT ZERO ASSUMPTION - no measurement claimed, no venue source claimed; 'a measured model remains possible later by separate decision' (addendum 15 row 38, carried verbatim)",
+      "closure_evidence": [
+        "addendum 15 row 38 (owner decision = the provenance for the explicit zero); design section 11 model id BPS_OF_REFERENCE_V1"
+      ],
+      "consuming_build_paths": [
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economics.py",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/**"
+      ],
+      "consuming_scenarios": [
+        "RULE2-05-RED/GREEN (slippage vectors)",
+        "RULE2-01..04 (zero-impact records)"
+      ]
+    },
+    {
+      "id": "OPEN-05",
+      "disposition": "APPLICABLE",
+      "owner_decision": "funding rules APPROVED (addendum 16 row 42) + SAME-TIMESTAMP SNAPSHOT ELIGIBILITY = INCLUDE (addendum 17 row 46, owner verbatim 'include'): a fill at the exact funding timestamp counts for that payment",
+      "closure_evidence": [
+        "C:\\tmp\\LANE_PROMPTS_20260828\\P012_OPEN05_FUNDING_RULES_V1.md (v1: hourly 1/8 of 8h rate, spot oracle price, interval-end snapshot, long-pays-positive; venue quotes + digests)"
+      ],
+      "open_residuals": [],
+      "consuming_build_paths": [
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economics.py",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/**",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py"
+      ],
+      "consuming_scenarios": [
+        "RULE2-08-RED/GREEN (funding vectors)"
+      ],
+      "build_obligation": "RED/GREEN boundary fixture: fill at exact funding timestamp -> position included in that payment, under the INCLUDE rule"
+    },
+    {
+      "id": "OPEN-06",
+      "disposition": "APPLICABLE",
+      "owner_decision": "RETAIN ALL owner-choice rows P01-P03/P05-P18/P24-P26; forced rows P04 RETIRE, P19 RETIRE, P20 RETAIN, P21 RETIRE-implicitness; P22 = STOP_FIRST; P23 not-applicable-under-STOP_FIRST (addendum 16 row 45)",
+      "closure_evidence": [
+        "C:\\tmp\\LANE_PROMPTS_20260828\\P012_OPEN06_RETAINED_RETIRED_PROPOSAL_V1.md (v2, A8-cleared 26-row table with per-row migration fixtures)"
+      ],
+      "build_obligation": "every row's migration fixture per the proposal's fixture column",
+      "consuming_build_paths": [
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_manager.py"
+      ],
+      "consuming_scenarios": [
+        "RULE2-04/06 families + every migration fixture named per proposal row"
+      ]
+    },
+    {
+      "id": "OPEN-07",
+      "disposition": "APPLICABLE",
+      "owner_decision": "read approved; mapping APPROVED as closure evidence; unmapped fields + deployed-v4 non-materialization are RECORDED INTEGRATION OBLIGATIONS (addendum 15 row 41; addendum 16 row 42)",
+      "closure_evidence": [
+        "C:\\tmp\\LANE_PROMPTS_20260828\\P012_OPEN07_BRIDGE_MAPPING_V1.md (v1.1, G51-repaired, repo-verified cites)"
+      ],
+      "open_residuals": [
+        "16/18 fields without direct Bridge source — later integration work package; no Bridge change implied"
+      ],
+      "consuming_build_paths": [
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/types.py (funding_events schema)",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/results.py"
+      ],
+      "consuming_scenarios": [
+        "RULE2-08 (funding event surface shape)"
+      ]
+    },
+    {
+      "id": "OPEN-08",
+      "disposition": "APPLICABLE",
+      "owner_decision": "no additional bounds — explicit no-additional-bound decision (addendum 15 row 33)",
+      "closure_evidence": [
+        "owner decision reference (design closure column permits exactly this explicit decision)"
+      ],
+      "consuming_build_paths": [
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/instrument.py validation",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py validation"
+      ],
+      "consuming_scenarios": [
+        "record-refusal probes (PROBE family)"
+      ]
+    },
+    {
+      "id": "OPEN-09",
+      "disposition": "APPLICABLE",
+      "owner_decision": "additive result/event schema APPROVED (protected-scope approval, addendum 15 row 34); separate build authorization = the addendum-16 T0 path grant on the Gate-2 plan v2 (addendum 16 row 42)",
+      "closure_evidence": [
+        "owner decision references; P012_GATE2_PLAN_AND_PATHLIST_V1.md v2 (A7-cleared)"
+      ],
+      "consuming_build_paths": [
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/types.py",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/results.py"
+      ],
+      "consuming_scenarios": [
+        "every scenario's RESULT_SURFACE/EVENT_SURFACE"
+      ]
+    },
+    {
+      "id": "OPEN-10",
+      "disposition": "APPLICABLE",
+      "owner_decision": "option (a): guards keep GROSS-MINUS-FEES (D017 extended to 2.0.0) for daily-loss, consecutive-loss, time-stop; no per-control divergence (addendum 15 row 35)",
+      "closure_evidence": [
+        "owner decision reference"
+      ],
+      "build_obligation": "RED/GREEN guard fixtures per control under the gross-minus-fees rule",
+      "consuming_build_paths": [
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py guard readers",
+        "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economics.py guard basis"
+      ],
+      "consuming_scenarios": [
+        "RULE2-07-RED guard fixture + per-control RED/GREEN build fixtures"
+      ]
+    }
+  ],
+  "draft_revision": 4,
+  "open_embed_items": [
+    {
+      "id": "OPEN-EMBED-01",
+      "disposition": "CLOSED",
+      "owner_decision": "1a (addendum 20, verbatim '1a 2a 3a 4a 5a', 2026-08-31 ~20:55, commit 58d51841): omitted initial equity = 1000 for the RULE2-03/04/05/06 families",
+      "consuming_scenarios": [
+        "RULE2-03-*",
+        "RULE2-04-*",
+        "RULE2-05-*",
+        "RULE2-06-*"
+      ]
+    },
+    {
+      "id": "OPEN-EMBED-02",
+      "disposition": "CLOSED",
+      "owner_decision": "2a (addendum 20): RULE2-04 entry basis/fill = 100 via the candidate entry/BE path",
+      "consuming_scenarios": [
+        "RULE2-04-RED",
+        "RULE2-04-GREEN"
+      ]
+    },
+    {
+      "id": "OPEN-EMBED-03",
+      "disposition": "CLOSED",
+      "owner_decision": "3a (addendum 20): the RULE2-06-EQUAL-PRICE equal-target book is constructed by the corrected (2.0.0) target-book test machinery only; the legacy engine is untouched and that scenario is recorded honestly as not-runnable-on-legacy for the book",
+      "consuming_scenarios": [
+        "RULE2-06-EQUAL-PRICE-RED"
+      ]
+    },
+    {
+      "id": "OPEN-EMBED-04",
+      "disposition": "CLOSED",
+      "owner_decision": "4a (addendum 20): RULE2-08-RED pre-event entry basis/fill = 100",
+      "consuming_scenarios": [
+        "RULE2-08-RED"
+      ]
+    },
+    {
+      "id": "OPEN-EMBED-05",
+      "disposition": "CLOSED",
+      "owner_decision": "5a (addendum 20): RULE2-08-GREEN closed lifecycle built with ordinary price bars before the observation window (real mechanism, nothing injected)",
+      "consuming_scenarios": [
+        "RULE2-08-GREEN"
+      ]
+    }
+  ],
+  "open_embed_note": "Design v1.5 section 22.8 embedding questions, closed by owner addendum 20. These are test-only values under the design's synthetic-vector rule (section 5); production records remain governed by the OPEN-01..10 rows above. Transcribed by the Lead 2026-08-31 evening (G72-F04 fold: rev-3 could not be committed verbatim while the Gate-2 delta note required this block)."
+}

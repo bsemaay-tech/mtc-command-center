@@ -21,19 +21,7 @@ def default_mcc_root() -> Path:
 
 def default_quantlens_root(mcc_root: str | Path | None = None) -> Path:
     root = canonicalize(mcc_root or default_mcc_root())
-    candidates = [
-        root / "03_QUANTLENS",
-        root / "06_QUANTLENS_LAB",
-        root.parent / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB",
-    ]
-    existing = [c for c in candidates if c.exists()]
-    for candidate in existing:
-        try:
-            if any(candidate.iterdir()):
-                return candidate
-        except OSError:
-            continue
-    return existing[0] if existing else candidates[0]
+    return root / "03_QUANTLENS"
 
 
 def canonicalize(path: str | Path) -> Path:

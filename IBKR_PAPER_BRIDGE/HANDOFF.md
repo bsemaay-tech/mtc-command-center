@@ -1,31 +1,20 @@
 # Bridge handoff
 
-## Current state — 2026-08-30
+## Current local acceptance — 2026-09-11
 
-- W72 focused repair ran in worktree `C:\WBRIDGE_FC` on branch
-  `feature/bridge-fail-closed-20260830`. Code commits are
-  `2302bb56735f5d2a8578955a376931ac277b6c85` and
-  `bbb13fcb72bf9ea80c8f2942da0e4a974ce6a958`; independent T0 acceptance remains pending.
-- W72 write paths are `.gitattributes`, `bridge/config_contract.py`, `bridge/api/routes.py`,
-  `bridge/static/app.js`, `docs/31_HELP_SYSTEM_MAP_INDEX.md`, `tests/test_config_contract.py`,
-  `tests/test_api.py`, `tests/test_dashboard_static.py`, and this handoff. Live-dependency status:
-  none contacted or changed.
-- Startup now refuses an absent required V2 leaf as `MISSING_REQUIRED` before app-state or engine
-  construction, with only the designed dry-run notional leaf exempted for its internal mode
-  override. Nonnumeric schema state retains its specific STOP reason, and both policy-ID leaves
-  reject whitespace-only explicit values before construction.
-- The dashboard reads the validated risk metadata object's `.value`; absent raw-only coin and
-  leverage leaves render unavailable and disabled. The retired `bridge_config` state alias is
-  removed, and the AI-facing help index describes only `ValidatedRuntimeSettings.effective_view()`.
-- The dashboard's canonical AI-readable Help data remains `bridge/static/help_map.json`; the
-  historical `help_map.json retired-KILL-claim correction` marker is retained for the existing
-  onboarding/evidence guard.
-- The owner-approved shipped config remains 324 bytes and byte-identical to the approved candidate,
-  SHA-256 `a96fecd10d6966c3e93a829ec4d75869a0851f0136a06e85ab45c255ee0f5842`; the Git path is now
-  marked `-text` and the working/HEAD blob identities agree.
-- Local self-QA passed 77 scoped config/API/dashboard tests and the exact routed full Bridge suite:
-  1,423 passed, one Starlette/httpx deprecation warning, exit 0. Persistent probes are under
-  `C:\tmp\W72_VARIANTS`.
-- No push, PR, merge, deployment, host contact, service action, credential access, TESTNET/mainnet
-  action, ARM, order, broker/exchange endpoint, or live action occurred.
-- Durable repair report: `C:\tmp\LANE_PROMPTS_20260828\W72_REPAIR_REPORT.md`.
+D1 synthetic offline funding materializer has local T0 PASS at source c5d9e4144449c09fffb607d09650329402d54bec, base4ce213184fe35313cafde45da8f59543db306086. Owner's "all are approved" covered its exact implementation/tests/reviews and D2 publication; D1 publication and merges were then excluded — superseded 2026-09-12 solely for release by owner's "Approve the exact release proposal" (OD-20260912-P012-RELEASE-1), which adds no production acceptance.
+
+The offline CLI reads an existing quiescent schema10 snapshot and explicit synthetic source-byte/binding/coverage witnesses, then stages deterministic SYNTHETIC_ONLY candidate bytes outside every Git repository and MTC tree. It never activates a schema, captures venue data, supplies missing economic facts or admits a production record. The supplied snapshot must contain exactly the selected-symbol bound interval inventory; no local-time filtering. Existing retained-payload behavior and production records remain unchanged.
+
+Fresh exact Opus5 xhigh and Sol xhigh independently PASS; mandatory Gemini3.7 corroboration is guarded and SUPPLEMENTAL_UNEXECUTED. Lead full1628passed/1pre-existing skip/1existing warning; focused161passed/1skip and actual subprocess CLI PASS. Five previously reproduced validation defects are closed with23 exact-old RED failures/3controls and26GREEN. Eight baseline expectations, corrected refusals, exact bytes and actual production consumer refusal were independently checked. Receipt: MTC_COMMAND_CENTER/04_REPORTS/ai_handoffs/P012_SYNTHETIC_MATERIALIZER_REVIEW_20260911/README.md. No required finding remains for this local unit.
+
+Owned worktree C:/tmp/P012_MATERIALIZER_20260911, feature/p012-synthetic-funding-materializer-20260911. Lead owns all Git and independent verification; reviewed product bytes are frozen. No persistent workers; this update was written by a temporary bounded writer. No live/scheduled dependency. Sprint window 2026-09-11T20:57:41Z to 2026-09-12T08:57:41Z. Current actual HEAD 6a7d65bac5e2643bb74caa86378da1b7986385f9 contains a clean conflict-free base merge; no product bytes changed. D2 PR179 merged normally 2026-09-11T21:00:23Z into master54959b40ee5a47cb21bb7f236e9538e2fbb5001f after required checks passed; it is no longer open. D1 is published: https://github.com/bsemaay-tech/mtc-command-center/pull/180 . Its final current-head CI and merge remain pending — do not treat as complete. Accepted source c5d9e4144449c09fffb607d09650329402d54bec, exact Opus5/Sol xhigh PASS and guarded Gemini3.7 supplemental are reused; Lead confirmed all three Git blob/raw hashes and production-record hashes unchanged, plus 25/25 delivery checksums and original bundle hash match. No suite rerun yet in this sprint; existing 1628pass/1skip remains dated accepted evidence. Live Claude Max auth is first-party max; /usage at sprint startup: session 100% used (resets 2026-09-12 01:50 Europe/Chisinau), all-model week 97% (resets 2026-09-12 08:00 local), Fable week 100% same reset — remaining allowance is shared and time-sensitive; no purchase/reset/routing change.
+
+## Carry-forward boundaries
+
+Full WP-P0-12 remains NONACCEPTED with10production OPEN rows,27risks,5residual obligations. E current official frontend fee/referral mapping is incorporated with capture-only limits. Historical/account applicability, actual billing/rounding, required instrument and funding event/coverage facts remain missing. Reuse the prepared unsent targeted funding request; the inspected public sample has no payments. Do not repeat that investigation or reopen STOP_FIRST, explicit zero slippage, retained profiles, no additional bounds or approved guard basis. Final evidence-backed records, eligible human reviews and R29 semantic redo stay at final production acceptance.
+
+Earlier retention handoff remains at base Git version. This unit does not close older W72/first-release/production gates. Preserve canonical dashboard Help data and historical compatibility marker: help_map.json retired-KILL-claim correction. No runtime, host, order, ARM, deployment or production database action occurred.
+
+NEXT ACTION: complete PR180 current-head protected checks, then approved integration (normal protected merge per OD-20260912-P012-RELEASE-1).
+WAITING FOR OWNER: Nothing for this release; external venue facts and final ratification remain required. Full P012 stays NONACCEPTED: 10 production OPEN rows, 27 risks, 5 residual obligations; venue instrument quantity, applicable historical billing/rounding, funding payment/coverage and final eligible reviews remain missing. Foreign canonical checkout untouched.

@@ -1,19 +1,20 @@
 # Governance stage outputs
 
-- G1 scope contract with whitelist, forbidden paths, acceptance criteria, and audit tier.
-- G2 implementation plan when required; G3 minimal diff; G4 commands and real output.
-- Evidence package compact enough for a fresh independent reviewer.
-- Current state in this stage's `HANDOFF.md`; sticky owner decisions in root `DECISIONS.md`.
-- `_AI_MEMORY/PROJECT_MEMORY.md` if a stable repo fact changed.
-- Git commits with exact staged paths—never `git add .`; push only when authorized; never merge from
-  an implementer lane unless the task explicitly grants it.
+Read before delivering. Reuse the existing task brief and selected stage's records:
 
-Handoff sections use `## [MODEL_NAME] YYYY-MM-DD — Topic`. Current tasks identify an executor as
-`[AI: Claude|DeepSeek|Any|Barış]` when the tracker supports those tags. A completed work unit ends
-with practical next actions, exact paths/commands, unresolved authorization, test evidence, and SHA.
-At every close-out, rotate stale detail to the stage's grep-on-demand history and keep `HANDOFF.md`
-current-only and at or below its 4 KiB hard cap.
+- Scope/plan/QA brief: intended outcome, exact allowed/forbidden paths, dependencies, review tier,
+  completion example, repeatable command/cwd/environment, expected and observed evidence.
+- Minimal actual diff and compact evidence packet for any required fresh reviewer. Distinguish
+  implemented, verified, accepted, blocked and not run; state actual failed commands unchanged.
+- Current stage `HANDOFF.md` <=4096 bytes: refs, outcome, evidence links, limits, next action and
+  owner decision needed. Factual progress/blockers may be recorded before acceptance. The Lead
+  records ACCEPTED only after the exact review contract and independent evidence are satisfied.
+- Root `DECISIONS.md` only for a sticky owner decision; stable project facts/working-set tracker
+  only if changed. Archive superseded detail byte-exact before material shortening; history is
+  search-on-demand and never an instruction override. Do not recreate retired session journals.
+- Owner close-out: actual result in plain English, checks and practical limits, `NEXT ACTION`,
+  `WAITING FOR OWNER` (`Nothing` when applicable). Never require reading a long log to find status.
 
-Before releasing the write-lane claim, reconcile current `master`, the work branch, and the durable
-tracker. Preserve rescue refs until explicitly dispositioned. Never infer liveness from clean Git,
-push state, age, or mtime.
+Ordinary owned local commits follow `AUTONOMY_AUTHORIZATION.md`; exact staged paths, normal hooks
+and guard, no bypass. Push/PR/merge retain separate authority and protected CI. Before releasing
+the lane reconcile current master, work branch and tracker; clean Git or age proves no liveness.

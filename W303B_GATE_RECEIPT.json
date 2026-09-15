@@ -1,0 +1,8 @@
+{
+  "claim_label": "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_REFUSED",
+  "mode": "full-gate",
+  "refusal": {
+    "check_id": "IMPLEMENTATION_ANCHOR_SEAL_MISMATCH",
+    "detail": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2"
+  }
+}

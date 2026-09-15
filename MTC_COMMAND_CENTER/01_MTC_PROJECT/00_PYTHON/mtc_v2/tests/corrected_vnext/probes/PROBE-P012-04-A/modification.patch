@@ -1,0 +1,5 @@
+--- a/economics.py
++++ b/economics.py
+@@ -544 +544 @@
+-                    touched.append((candidate, market.open))
++                    touched.append((candidate, candidate.price))

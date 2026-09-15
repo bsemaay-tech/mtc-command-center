@@ -1,0 +1,120 @@
+{
+  "scenario_id": "RULE2-06-GREEN",
+  "owning_def_ids": ["DEF-P012-06"],
+  "role": "GREEN",
+  "execution_profile_id": "raw_close_only_v1",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; owner Reading Y (owner addendum 26, 2026-09-01) applied by lane W172",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.8",
+    "design_lines": "Design section 12, \"90` on the named collision/fill\"; Design section 22.1, \"AMENDMENT-CHOICE (W320, owner decision 144, 2026-09-03) — §22.1\"; Design section 22.3, \"AMENDMENT-CHOICE (W320, owner decision 144, 2026-09-03) — §22.3\"; Design section 22.5, \"0)`. | Same conditional LONG/stop/no-target\"; Design v1.8 section 23, \"vector value, owner answer, or\"",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "6. DEF-P012-06 / RULE2-06-GREEN",
+    "worksheet_section_v18": "v1.8 revision / RULE2-06-GREEN",
+    "worksheet_section_v15": "v1.5 revision / RULE2-06-GREEN"
+  },
+  "open_item_bindings": [
+    {"open_id": "OPEN-02", "source": "open_item_applicability_DRAFT.json items[OPEN-02] (draft_revision 3); owner addendum 18 (OWNER_DECISIONS_2026-08-29_EVENING.md:329-334)", "owner_disposition": "APPLICABLE - STOP_FIRST mandatory for acceptance-bearing 2.0.0 runs; addendum 18 keeps the two synthetic RULE2-06 test cases on their design-declared TARGET_FIRST input", "effect_on_this_scenario": "no value effect: Design section 12, \"quantity at stop `90` on\" states that when only stop or only targets touch, all three policies select the sole class, so the sealed values hold under STOP_FIRST, TARGET_FIRST and SUBBAR_UNKNOWN alike."},
+    {"open_id": "OPEN-EMBED-01", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (1a) - omitted initial equity is 1000", "effect_on_this_scenario": "Design section 22.5, \"ids and uses stated fractions\" inherits the RULE2-06-RED config, whose initial_capital was [OPEN-EMBED-01]. With 1000 bound, the real prelude sizes to quantity 2 and the absolute equity nodes become derivable."}
+  ],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "PROTECTIVE_STOP_EVALUATED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "position_side": "LONG", "stop_price": 90, "predicate": "LOW_TOUCH", "reference_source": "STOP_LEVEL", "reference_price": 90},
+      {"sequence": 2, "decision": "COLLISION_RESOLVED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "collision": false, "same_bar_collision_policy_id": "TARGET_FIRST", "touched_exit_ids": ["STOP"], "ordered_chosen_exit_ids": ["STOP"], "reference_quantity": 2, "stop_remainder_quantity": 2}
+    ],
+    "fill_events": [
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "side": "SELL", "exit_id": "STOP", "fill_trigger": "STOP_TOUCH", "reference_price": 90, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "FLOOR", "final_fill_price": 90, "quantity": 2, "liquidity_role": "TAKER"}
+    ],
+    "cash_events": [
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-1", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.081},
+      {"sequence": 1, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-GROSS-1", "kind": "GROSS_REALIZATION", "fill_id": "F0", "signed_delta": -20}
+    ],
+    "fee_events": [
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-06-GREEN-V1", "schedule_digest": "7d8510ce6ee3101754fb6d7ffb55fa09109c3d3dda07b7b4d01c0d99a7913abf", "rate": 0.00045, "fixed_component": 0, "fee_notional": 180, "fee_amount": 0.081, "fee_cash_delta": -0.081, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-1"}
+    ],
+    "funding_events": [],
+    "exit_events": [
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "exit_id": "STOP", "reason": "PROTECTIVE_STOP", "fill_id": "F0", "quantity": 2, "final_fill_price": 90, "fill_trigger": "STOP_TOUCH", "gross_realized_pnl": -20}
+    ]
+  },
+  "RESULT_SURFACE": {
+    "final_position": null,
+    "trades": [
+      {"entry_fill_price": 100, "quantity": 2, "exit_ids": ["STOP"], "gross_realized_pnl": -20, "fee_total": -0.17099999999999999, "funding_total": 0, "net_trade_pnl": -20.171}
+    ],
+    "equity_curve": {"first": 999.91, "last": 979.829},
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "raw_close_only_v1",
+      "same_bar_collision_policy_id": "TARGET_FIRST",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-06-GREEN-V1",
+      "instrument_record_digest": "3039159a5b35c7bbae8f481abbe99b9a6bb6d376b86bd0e71129edddde249d64",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-06-GREEN-V1",
+      "cost_schedule_digest": "7d8510ce6ee3101754fb6d7ffb55fa09109c3d3dda07b7b4d01c0d99a7913abf",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-06-GREEN-V1",
+      "funding_schedule_digest": "f3df84929ce109d51f6b4ea82924ee0850404d3f4c1abc6885642fa5eeb1b313"
+    }
+  },
+  "observation_window": {
+    "start_timestamp": "2000-01-01T00:12:00Z",
+    "end_timestamp": "2000-01-01T00:12:00Z",
+    "inclusivity": "CLOSED",
+    "authority": "Design section 22.5, \"TP1/TP2 mechanically to the stated\" - the same evaluation-only observation window as RULE2-06-RED applies, excluding the setup fills."
+  },
+  "touch_derivation": "Bar open=100, high=104, low=85, close=95 with stop 90, TARGET-NEAR 105, TARGET-FAR 110 under raw_close_only_v1. Long: high 104 < 105 so neither target touches; low 85 <= 90 so the stop touches. Design section 12, \"same position, quantity step, stop\" - only one class touches, so all three policies select it. Reference price: open 100 is not <= stop 90, low 85 <= 90, so the reference is the stop level 90 (design 10 table row 2, reproduced by the legacy raw evaluator at exits.py:400-406). Sell with slippage_bps 0: floor_to_price_tick(90, 1) = 90.",
+  "cash_ledger_join": "Design section 2.1, \"Gross realization appears only in\", Design section 3, \"event rule: entry reference, gap/open\" step 11 and Design section 13, \"0`, lifecycle net is `-0.2\". The in-window ledger is FEE(F0) -0.081 (fee_notional abs(90 * 2 * 1) = 180) then GROSS(F0) -20. The pre-window entry fill at 2000-01-01T00:11:00Z charged its own ENTRY fee of 0.09 (fee_notional 100 * 2 * 1), so equity_curve.first = 1000 - 0.09 = 999.91 and equity_curve.last = 999.91 - 0.081 - 20 = 979.829. Re-derived under Design section 23.2, \"exactly `first` and `last`, and\", which now fixes the window-scoped reading V15-D02 flagged as unfixed; the design labels that scope an AMENDMENT-CHOICE (Design section 23.2, \"exactly `first` and `last`, and\"). V15-D02 CLOSED, value unchanged.",
+  "v15_filled_cells": [
+    {"pointer": "/EVENT_SURFACE/fill_events/0/liquidity_role", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "TAKER", "authority": "Design section 22.3, \"the existing sealed RULE2-07 cost records by\" and Design section 22.5, \"targets `105/110`; corrected aliases TP1/TP2\"."},
+    {"pointer": "/EVENT_SURFACE/cash_events", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "FEE -0.081 then GROSS_REALIZATION -20", "authority": "Design section 3, \"event rule: entry reference, gap/open\" step 11 plus the bound schedule."},
+    {"pointer": "/EVENT_SURFACE/fee_events", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "one PROTECTIVE_STOP_EXIT fee row, fee_amount 0.081", "authority": "Design section 22.3, \"consume the existing sealed RULE2-07\"; arithmetic in DERIVATIONS.md, v1.5 revision section R-0."},
+    {"pointer": "/RESULT_SURFACE/trades/0/net_trade_pnl", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": -20.171, "authority": "Design section 13, \"legacy has no v2 net\" - gross -20 plus every linked fee cash delta (-0.09, -0.081)."},
+    {"pointer": "/RESULT_SURFACE/equity_curve", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "{first: 999.91, last: 979.829}", "authority": "owner addendum 20 (1a) initial equity 1000; arithmetic in DERIVATIONS.md, v1.5 revision / RULE2-06-GREEN."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-06-GREEN-V1", "authority": "Design section 22.3, \"consume the existing sealed RULE2-07 cost records\"."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "Design section 22.3, \"consume the existing sealed RULE2-07 cost records\", Design section 22.3, \"consume the existing sealed RULE2-07 cost records\"."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-COST-RULE2-06-GREEN-V1", "authority": "Design section 22.3, \"records: RULE2-08-RED and RULE2-08-GREEN consume the existing\"."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-06-GREEN-V1", "authority": "Design section 22.3, \"records: RULE2-08-RED and RULE2-08-GREEN consume the existing\"."}
+  ],
+  "cross_version_note": "gross_realized_pnl -20 is identical on both versions and remains the declared GREEN member (Design section 12, \"for DEF-P012-06 because it has\"). The fee lineage, net_trade_pnl and equity are version-specific added effects (Design section 6, \"added ledger/container nodes remain version-specific\"): 1.0.0 has no fee model (Design section 13, \"equity remains `1000`. The\"), so corrected equity 979.829 does not equal legacy equity 980. equity_curve and net_trade_pnl must NOT be added to this GREEN projection. Recorded as discrepancy V15-D03.",
+  "judgement_calls": [
+    {"pointer": "/EVENT_SURFACE/exit_events/0/gross_realized_pnl", "basis": "RESOLVED-AT-V1.5. Previously sealed under the shipped cm-default (discrepancy D-06); Design section 22.5, \"named values, the real path\" and Design section 22.3, \"For cost records: RULE2-08-RED and\" now make instrument_contract_multiplier = 1 an explicit scenario input. (90-100)*2*1 = -20 is unchanged and byte-identical, and is identical on both versions."},
+    {"pointer": "/RESULT_SURFACE/equity_curve/first", "value": 999.91, "basis": "Design section 23.2, \"and `last`, and both are\" now FIXES the scoping rule that V15-D02 recorded as missing: equity_curve.first and .last are window-scoped realized equity, first taken after every earlier cash event but before any cash event at the inclusive start timestamp. The design labels window scope an explicit AMENDMENT-CHOICE (Design section 23.2, \"and `last`, and both are\"), not a forced identity. Re-derived under that rule this revision; the value is unchanged. V15-D02 is CLOSED."},
+    {"pointer": "/EVENT_SURFACE/fee_events/0/lifecycle_id", "value": 1, "basis": "Design section 13, \"field, and equity remains `1000\" requires linkage to position_lifecycle_id; Design section 22.6, \"AMENDMENT-CHOICE. RULE2-08-GREEN row: C consumes\" binds lifecycle id start 1."},
+    {"pointer": "/EVENT_SURFACE/fee_events/0/event_timestamp", "value": "2000-01-01T00:12:00Z", "basis": "Design section 22.5, \"approve the named values, the\" places the evaluation bar at 2000-01-01T00:12:00Z; Design section 22.2, \"intent/event timestamps are the timestamp\" (M-06)."}
+  ],
+  "v18_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "RE-DERIVED under the design 23.1 closed shape: flat members sequence/decision/kernel_semantics_version, per-reason event_timestamp presence, no lifecycle_id, exact per-reason payloads, section-3 order.", "authority": "Design section 22.2, \"timestamp,bar_index,open,high,low\" (table Design section 22.2, \"timestamp,bar_index,open,high,low\") and the tables-revision item 1 at Design section 23.4, \"closed `COLLISION_RESOLVED` decision in section\"."},
+    {"pointer": "/EVENT_SURFACE/*/*/kernel_semantics_version", "change": "ADDED to every member of all six corrected event containers.", "authority": "Design section 22.2, \"timestamp,bar_index,open,high,low\" (section-4 identity / GM28-F03) and tables-revision item 2 at Design section 23.4, \"closed `COLLISION_RESOLVED` decision in section\"."},
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "Folded into one COLLISION_RESOLVED row. collision is the JSON boolean false - the policy evaluated a sole touched class - and the member REMAINS PRESENT on the sole-class receipt rather than varying the closed member set. target_ordering_rule and tie_break_applied are absent because no target ordering and no tie were evaluated.", "authority": "Design section 22.2, \"and corrected intent/event timestamps are\" (DS35-F02, change-log row Design section 23.4, \"closed `COLLISION_RESOLVED` decision in section\"); Design section 12, \"full bar `open=100, high=104, low=85\" supplies the sole-class rule."},
+    {"pointer": "/EVENT_SURFACE/fill_events/0/fill_trigger and /EVENT_SURFACE/exit_events/0/fill_trigger", "change": "ADDED, value STOP_TOUCH. The design makes fill_trigger REQUIRED on a PROTECTIVE_STOP_EXIT fill and on its exit row, and section 10 row 2 supplies the outcome (open 100 is not <= stop 90; low 85 <= 90, so the trigger is the stop-level touch, not the gap). The design names only the GAP_OPEN token, so STOP_TOUCH is a tables-authored spelling for the non-gap branch - recorded as discrepancy W167-D02.", "authority": "Design section 23.3, \"PROTECTIVE_STOP_EXIT` and is the section-10\", Design section 23.4, \"closed `COLLISION_RESOLVED` decision in section\", design 10 table Design section 10, \"the OPEN-06-contingent corrected projection selects\"; tables-revision item 5 at Design section 23.4, \"closed `COLLISION_RESOLVED` decision in section\"."},
+    {"pointer": "/RESULT_SURFACE/collision", "change": "REMOVED; the closed COLLISION_RESOLVED decision is the single receipt.", "authority": "Design section 23.4, \"the economic rule but does\", Design section 23.4, \"the economic rule but does\"."},
+    {"pointer": "/RESULT_SURFACE/equity_curve", "change": "RE-DERIVED under design 23.2: first = 1000 - 0.09 = 999.91; last = 999.91 - 0.081 - 20 = 979.829. Unchanged.", "authority": "Design section 23.2, \"first` and `last`, and both\", Design section 23.4, \"the economic rule but does\"."}
+  ],
+  "w172_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events/1", "change": "ADDED PROTECTIVE_STOP_EVALUATED under owner Reading Y, and COLLISION_RESOLVED renumbered from sequence 1 to sequence 2. Section 3 step 2 Design section 3, \"list contains the applicable entry/market/stop\" records which stop and targets touched before any winner is chosen, and the independence row Design section 23.1, \"target prices require the `exit_id\" states that sections 3, 10 and 12 separate stop evaluation from same-bar policy resolution, so the two are distinct closed reasons on a DEF-P012-06 row. The prior kernel name SOLE_EXIT_CLASS maps to PROTECTIVE_STOP_EVALUATED in that same row. Order: step 2 precedes step 3, so the stop evaluation is sequence 1 and the policy resolution sequence 2. Payload: position_side LONG (Design section 12, \"stop touches, so both versions\"); stop_price 90 (Design section 12, \"stop touches, so both versions\" and Design section 22.5, \"real path reaches LONG qty\"); predicate from the section-10 table Design section 10, \"92`; the OPEN-06-contingent corrected projection\" on the stated evaluation bar open 100 / high 104 / low 85 / close 95 - open 100 <= stop 90 is FALSE, otherwise low 85 <= stop 90 is TRUE. reference_source and reference_price ARE present because a fill reference was selected (Design section 23.1, \"target prices require the `exit_id\"): the stop is the sole touched class, Design section 12, \"stop touches, so both versions\" states that both versions choose and fill the full quantity at stop 90, and Design section 10, \"92`; the OPEN-06-contingent corrected projection\" makes the stop level the reference. reference_price 90 is the value this artifact already seals on the stop fill. event_timestamp 2000-01-01T00:12:00Z (Design section 22.5, \"named values, the real path\"; M-06 Design section 22.2, \"bar_index,open,high,low,close,volume)`.\"). NO ECONOMIC VALUE MOVED.", "authority": "Design section 22.2, \"bar_index,open,high,low,close,volume)`.\" (a reason is emitted when its named decision is actually evaluated, never to equalize row counts), applied to the tables family by the owner's Reading Y ruling on W167-D04 (owner addendum 26, 2026-09-01). Section 23.1's table at Design section 23.1, \"target prices require the `exit_id\" fixes the member set; Design section 3, \"list contains the applicable entry/market/stop\" fixes the order."},
+    {"pointer": "/EVENT_SURFACE/decision_events/1/predicate and /reference_source", "change": "LOW_TOUCH and STOP_LEVEL are tables-authored and new in this lane. The design enumerates the branch (Design section 10, \"close `92`; the OPEN-06-contingent corrected\") and the reference source (Design section 3, \"applied after stops and targets\", Design section 10, \"close `92`; the OPEN-06-contingent corrected\") but names no token for either - the same gap W167 recorded as W167-D02 when it authored STOP_TOUCH for this exact branch on this exact row's fill_trigger. Recorded as W172-D02.", "authority": "Design section 3, \"applied after stops and targets\", Design section 10, \"close `92`; the OPEN-06-contingent corrected\"; DERIVATIONS.md W167-D02 and W172-D02."},
+    {"pointer": "/EVENT_SURFACE and /RESULT_SURFACE value tokens", "change": "LABELING PASS under G83-F06. Every tables-authored value token on the two comparison surfaces of this artifact is now named in authored_value_tokens with the design text that forces the fact and the statement that the spelling is tables-authored. Adds no node and moves no value.", "authority": "G83-F06; DERIVATIONS.md discrepancy W167-D02 (D-13 class)."}
+  ],
+  "authored_value_tokens": [
+    {"pointer": "/EVENT_SURFACE/decision_events/1/predicate", "value": "LOW_TOUCH", "design_fact": "Design section 10, \". Legacy fills at close\" - long, second branch: open <= stop is false, otherwise low <= stop triggers.", "spelling": "TABLES-AUTHORED AND NEW IN LANE W172: the design enumerates the branch but names no token for it, exactly as for the STOP_TOUCH fill_trigger authored by W167 for the same branch (W167-D02). Recorded as W172-D02."},
+    {"pointer": "/EVENT_SURFACE/decision_events/1/reference_source", "value": "STOP_LEVEL", "design_fact": "Design section 10, \". Legacy fills at close\" (reference fill before slippage is the stop) and Design section 3, \"rule: entry reference, gap/open stop\" (section 3 step 4 enumerates 'stop level' as a reference source).", "spelling": "TABLES-AUTHORED AND NEW IN LANE W172: the design enumerates the reference source but names no token. Recorded as W172-D02."},
+    {"pointer": "/EVENT_SURFACE/decision_events/1/position_side", "value": "LONG", "design_fact": "Design section 10, \". Legacy fills at close\" (section 10 trigger table names the Long position) and Design section 14, \"funding cashflow and remains at\".", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/fill_events/0/fill_trigger", "value": "STOP_TOUCH", "design_fact": "Design section 10, \"fills at close `92`; the\" - the non-gap long branch, low <= stop with the stop as reference.", "spelling": "TABLES-AUTHORED by lane W167 (W167-D02); already labeled in v18_revised_nodes and repeated here so the ledger is complete."},
+    {"pointer": "/EVENT_SURFACE/exit_events/0/fill_trigger", "value": "STOP_TOUCH", "design_fact": "Design section 10, \"fills at close `92`; the\" and Design section 23.4, \"names cumulative funding but is\" (fill_trigger required on a PROTECTIVE_STOP_EXIT exit row).", "spelling": "TABLES-AUTHORED by lane W167 (W167-D02); repeated here for completeness."},
+    {"pointer": "/EVENT_SURFACE/fill_events/0/price_tick_alignment", "value": "FLOOR", "design_fact": "Design section 3, \"fill; on an exit, append\" (section 3 step 6, sells use floor) and Design section 11, \"101`; legacy fill is `100\" (floor_to_price_tick for a sell).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/fill_events/0/side", "value": "SELL", "design_fact": "Design section 3, \"that fill; on an exit\" (section 3 step 5 names the sell action in lower case prose).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/cash_events/*/kind", "value": "FEE", "design_fact": "Design section 2.1, \"GROSS_REALIZATION, FUNDING}`. A fee\" (section 2.1 cash-event kinds).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/cash_events/*/kind", "value": "GROSS_REALIZATION", "design_fact": "Design section 2.1, \"GROSS_REALIZATION, FUNDING}`. A fee\" and Design section 3, \"that fill; on an exit\" (section 3 step 11 appends gross realized PnL as a cash event).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
+  ],
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."}
+  ]
+}

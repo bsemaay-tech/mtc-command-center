@@ -1,0 +1,8 @@
+{
+  "claim_label": "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_REFUSED",
+  "mode": "full-gate",
+  "refusal": {
+    "check_id": "EXPECTED_MEMBER_DIGEST_MISMATCH",
+    "detail": "golden/corrected_vnext/RULE2-08-GREEN.json"
+  }
+}

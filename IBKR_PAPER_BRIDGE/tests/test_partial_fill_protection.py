@@ -2426,7 +2426,7 @@ def test_future_or_corrupt_schema_version_fails_closed(tmp_path, version):
         reopened.initialize(target_schema_version=5)
 
 
-@pytest.mark.parametrize("target", [3, 10, True, "5", 4.0])
+@pytest.mark.parametrize("target", [3, 11, True, "5", 4.0])
 def test_unsupported_migration_target_fails_closed(tmp_path, target):
     store = Store(tmp_path / "bridge.db", clock=Clock())
     with pytest.raises(RuntimeError, match="Unsupported target_schema_version"):

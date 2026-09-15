@@ -1,0 +1,93 @@
+{
+  "scenario_id": "RULE2-01-RED",
+  "owning_def_ids": ["DEF-P012-01"],
+  "role": "RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; owner Reading Y (owner addendum 26, 2026-09-01) applied by lane W172",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.8",
+    "design_lines": "Design section 7, \"event. `RULE2-01-GREEN` uses `execution_profile_id=close_only_deterministic_v2`, sizing\"; Design section 22.1, \"AMENDMENT-CHOICE (W320, owner decision 144, 2026-09-03) — §22.1\"; Design section 22.3, \"AMENDMENT-CHOICE (W320, owner decision 144, 2026-09-03) — §22.3\"; Design section 22.4, \"minimum notional and RULE2-03-RED price\"; Design v1.8 section 23, \"vector value, owner answer, or\"",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "1. DEF-P012-01 / RULE2-01-RED",
+    "worksheet_section_v18": "v1.8 revision / RULE2-01-RED",
+    "worksheet_section_v15": "v1.5 revision / RULE2-01-RED"
+  },
+  "open_item_bindings": [],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "SIZING_COMPUTED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "selector": "RISK", "contract_multiplier": 2, "order_notional": 1000},
+      {"sequence": 2, "decision": "MIN_NOTIONAL_ADMITTED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "order_notional": 1000, "required_min_notional": 0}
+    ],
+    "fill_events": [
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "fill_id": "F0", "event_class": "ENTRY", "side": "BUY", "reference_price": 100, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "CEIL", "final_fill_price": 100, "quantity": 5, "liquidity_role": "TAKER"}
+    ],
+    "cash_events": [
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.45}
+    ],
+    "fee_events": [
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-01-RED-V1", "schedule_digest": "39e569711f4059329430402adc50543c392c4d358bd6ec8e78489718b185a3ce", "rate": 0.00045, "fixed_component": 0, "fee_notional": 1000, "fee_amount": 0.45, "fee_cash_delta": -0.45, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
+    ],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": {"side": "LONG", "quantity": 5, "entry_fill_price": 100},
+    "order_notional": 1000,
+    "trades": [],
+    "equity_curve": {"first": 1000, "last": 999.55},
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-01-RED-V1",
+      "instrument_record_digest": "e3612111ca302bc86dfac316efb80d08aac12a8312287e7117b0115f289e1e5d",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-01-RED-V1",
+      "cost_schedule_digest": "39e569711f4059329430402adc50543c392c4d358bd6ec8e78489718b185a3ce",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-01-RED-V1",
+      "funding_schedule_digest": "742910b2fc30c9d8c4f6ba447661230fad1ef7f71470c9f8aea846b0d06200c1"
+    }
+  },
+  "cash_ledger_join": "Design section 2.1, \"signed delta must equal the\" and Design section 13, \"is `-0.2`, and corrected equity\" - fee_events/0.fee_cash_delta = -0.45 equals the joined cash_events/0.signed_delta (CE-FEE-0). Only cash_events are applied to equity. The M-06 observation window is the full bar span 2000-01-01T00:10:00Z..2000-01-01T00:11:00Z, so equity_curve.first is the seeded 1000 and equity_curve.last = 1000 + (-0.45) = 999.55.",
+  "v15_filled_cells": [
+    {"pointer": "/EVENT_SURFACE/fill_events/0/liquidity_role", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "TAKER", "authority": "Design section 22.3, \"SYNTH-{INSTRUMENT|COST|FUNDING}-<scenario_id>-V1\" - every section-22 CostSchedule maps ENTRY, MARKET_EXIT, PROTECTIVE_STOP_EXIT and TARGET_EXIT to TAKER."},
+    {"pointer": "/EVENT_SURFACE/fee_events", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "one ENTRY fee row, fee_amount 0.45", "authority": "Design section 22.3, \"SYNTH-{INSTRUMENT|COST|FUNDING}-<scenario_id>-V1\" binds the complete synthetic CostSchedule (taker 0.00045, fixed 0, minimum 0, EXACT_IDENTITY_V1, settlement TEST-USD). Arithmetic in DERIVATIONS.md, v1.5 revision / RULE2-01-RED."},
+    {"pointer": "/EVENT_SURFACE/cash_events", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "one FEE cash row, signed_delta -0.45", "authority": "Design section 3, \"all linked fee and funding\" step 11 plus the bound schedule."},
+    {"pointer": "/RESULT_SURFACE/equity_curve/last", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": 999.55, "authority": "1000 + (-0.45); binary64 exactness shown in DERIVATIONS.md, v1.5 revision section R-0."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-01-RED-V1", "authority": "Design section 22.3, \"SYNTH-{INSTRUMENT|COST|FUNDING}-<scenario_id>-V1\" - record ids are the MECHANICAL string SYNTH-{INSTRUMENT|COST|FUNDING}-<scenario_id>-V1."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "Design section 22.3, \"and `SYNTH-COST-RULE2-07-GREEN-V1` respectively; sha256 values\" plus the closed effective-interval member set at Design section 22.3, \"and `SYNTH-COST-RULE2-07-GREEN-V1` respectively; sha256 values\"."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-COST-RULE2-01-RED-V1", "authority": "Design section 22.3, \"SYNTH-COST-RULE2-07-RED-V1` and `SYNTH-COST-RULE2-07-GREEN-V1` respectively; sha256\"."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-01-RED-V1", "authority": "Design section 22.3, \"SYNTH-COST-RULE2-07-RED-V1` and `SYNTH-COST-RULE2-07-GREEN-V1` respectively; sha256\"."}
+  ],
+  "judgement_calls": [
+    {"pointer": "/EVENT_SURFACE/fee_events/0/lifecycle_id", "value": 1, "basis": "Design section 13, \"cash delta are `0`, legacy\" requires linkage to position_lifecycle_id and the RULE2-01 vector states none. Design section 22.6, \"zero slippage; the corrected equity\" binds lifecycle id start 1 for the RULE2-07 row; this row's entry opens the run's first lifecycle, so the same start applies. Recorded as a judgement call, not a design-stated value."},
+    {"pointer": "/EVENT_SURFACE/fee_events/0/event_timestamp", "value": "2000-01-01T00:11:00Z", "basis": "Design section 22.2, \"bar_index,open,high,low,close,volume)`.\" (M-04) places ENTRY100 at 2000-01-01T00:11:00Z and Design section 22.2, \"bar_index,open,high,low,close,volume)`.\" (M-06) sets a corrected event timestamp to the timestamp of the bar that supplies its reference price."}
+  ],
+  "v18_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "RE-DERIVED under the design 23.1 closed shape: flat members sequence/decision/kernel_semantics_version, per-reason event_timestamp presence, no lifecycle_id, exact per-reason payloads, section-3 order.", "authority": "Design section 22.2, \"low,close,volume)`. | `98\" (table Design section 22.2, \"low,close,volume)`. | `98\") and the tables-revision item 1 at Design section 23.4, \"quantity is recoverable from `exit_events[]\"."},
+    {"pointer": "/EVENT_SURFACE/*/*/kernel_semantics_version", "change": "ADDED to every member of all six corrected event containers.", "authority": "Design section 22.2, \"low,close,volume)`. | `98\" (section-4 identity / GM28-F03) and tables-revision item 2 at Design section 23.4, \"from `exit_events[]` and is not\"."},
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "SIZING_MULTIPLIER_IDENTITY + SIZING_SELECTOR folded into one SIZING_COMPUTED row carrying selector RISK, contract_multiplier 2 and order_notional 1000; stop_price, stop_distance and risk_amount are not members of the closed set and are dropped.", "authority": "Design section 22.2, \"bar_index,open,high,low,close,volume)`.\" and the independence row Design section 22.2, \"bar_index,open,high,low,close,volume)`.\". Arithmetic: qty 5 * final entry fill 100 * cm 2 = 1000, equal to the already-sealed /RESULT_SURFACE/order_notional."}
+  ],
+  "w172_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events/2", "change": "ADDED MIN_NOTIONAL_ADMITTED under owner Reading Y. Section 3 step 8 Design section 3, \"stops and targets were already\" applies the min_notional check to every fill-producing entry and Design section 8, \"floored quantity `1`. The\" makes it admit iff order_notional >= min_notional. This row opens (fill F0, final_position LONG quantity 5), so the predicate is actually evaluated. order_notional = floored quantity 5 * final entry fill 100 * contract_multiplier 2 = 1000 (Design section 8, \"floored quantity `1`. The\"), equal byte for byte to the already-sealed /RESULT_SURFACE/order_notional. required_min_notional = 0: Design section 7, \"quantity, order notional, later position\" and Design section 22.4, \"quantity is sizing-derived; I overrides\" bind instrument_min_notional = 0 and Design section 22.4, \"is sizing-derived; I overrides `contract_multiplier=2\" replaces the same member of the InstrumentRecord. 1000 >= 0 admits; Design section 8, \"floored quantity `1`. The\" makes equality pass. event_timestamp is REQUIRED and is ENTRY100 = 2000-01-01T00:11:00Z (M-04 Design section 22.2, \"bar_index,open,high,low,close,volume)`.\", M-06 Design section 22.2, \"bar_index,open,high,low,close,volume)`.\"). Placed after SIZING_COMPUTED because section 3 orders sizing at step 7 and admission at step 8, and the independence row Design section 23.1, \"when equal target prices require\" states that section 8 makes admission a separate predicate after sizing. NO ECONOMIC VALUE MOVED: both payload numbers restate already-sealed inputs. /RESULT_SURFACE/admitted is NOT added - Design section 23.4, \"order_notional` | DEF-P012-01, DEF-P012-02, or DEF-P012-05\" scopes that member to the DEF-P012-02 predicate.", "authority": "Design section 22.2, \"bar_index,open,high,low,close,volume)`.\" (a reason is emitted when its named decision is actually evaluated, never to equalize row counts), applied to the tables family by the owner's Reading Y ruling on W167-D04 (owner addendum 26, 2026-09-01). Section 23.1's table at Design section 23.1, \"when equal target prices require\" fixes the member set; Design section 3, \"stops and targets were already\" fixes the order."},
+    {"pointer": "/EVENT_SURFACE and /RESULT_SURFACE value tokens", "change": "LABELING PASS under G83-F06. Every tables-authored value token on the two comparison surfaces of this artifact is now named in authored_value_tokens with the design text that forces the fact and the statement that the spelling is tables-authored. Adds no node and moves no value.", "authority": "G83-F06; DERIVATIONS.md discrepancy W167-D02 (D-13 class)."}
+  ],
+  "authored_value_tokens": [
+    {"pointer": "/EVENT_SURFACE/decision_events/1/selector", "value": "RISK", "design_fact": "Design section 7, \"projection: quantity, order notional, later\" - a finite stop with stop_distance > 0 selects risk_raw_qty.", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/fill_events/0/price_tick_alignment", "value": "CEIL", "design_fact": "Design section 3, \"plus all linked fee and\" (section 3 step 6, buys use ceiling) and Design section 11, \"ceil_to_price_tick(unrounded_fill) for a buy\" (ceil_to_price_tick for a buy).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/fill_events/0/side", "value": "BUY", "design_fact": "Design section 3, \"plus all linked fee and\" (section 3 step 5 names the buy action in lower case prose).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/cash_events/0/kind", "value": "FEE", "design_fact": "Design section 2.1, \"fee, and funding deltas, each\" (section 2.1: cash_events contains gross-realization, fee and funding deltas).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/RESULT_SURFACE/final_position/side", "value": "LONG", "design_fact": "Design section 10, \"close=92`. Legacy fills at\" (section 10 table rows name the Long position) and Design section 14, \"signed −0.1. The corrected equity\" (side_factor +1 for long).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
+  ],
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "Design section 15.3, \"position/state, lifecycle trade rows, equity\" names a metrics member of RESULT_SURFACE but fixes no metric node set."}
+  ]
+}

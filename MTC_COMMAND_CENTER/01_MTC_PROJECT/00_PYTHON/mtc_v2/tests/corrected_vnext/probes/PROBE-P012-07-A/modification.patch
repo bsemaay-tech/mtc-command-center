@@ -1,0 +1,5 @@
+--- a/economics.py
++++ b/economics.py
+@@ -299 +299 @@
+-    role = str(roles[event_class])
++    role = "MAKER" if event_class == "MARKET_EXIT" else str(roles[event_class])
