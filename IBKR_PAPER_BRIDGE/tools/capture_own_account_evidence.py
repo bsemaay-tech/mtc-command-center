@@ -3,6 +3,15 @@
 This tool only uses ``hyperliquid.info.Info`` read methods. It refuses when an
 API wallet key is present, imports no exchange client, and writes raw response
 bytes plus SHA-256 sidecars before creating derived views.
+
+Window semantics: the requested interval is half-open ``[start, end)`` in
+milliseconds (the intake rule); the Info API's ``endTime`` is inclusive, so a row
+at exactly ``end`` is stored in the original bytes but excluded from the derived
+view and the identity sets. Rows outside the requested range are refused.
+
+Ownership evidence: ``--ownership-signature`` requires ``--run-id`` (the signed
+message names the run id) and is verified before any network object exists or any
+file is written.
 """
 
 from __future__ import annotations
@@ -35,15 +44,27 @@ REFUSED_MALFORMED = "CAPTURE_REFUSED_MALFORMED"
 REFUSED_BAD_ADDRESS = "CAPTURE_REFUSED_BAD_ADDRESS"
 REFUSED_BAD_SIDECAR = "CAPTURE_REFUSED_SIDECAR_MISMATCH"
 REFUSED_BAD_SIGNATURE = "CAPTURE_REFUSED_OWNERSHIP_SIGNATURE"
+REFUSED_RUN_ID_REQUIRED = "CAPTURE_REFUSED_RUN_ID_REQUIRED"
+
+# The intake declares one complete half-open interval [start_inclusive, end_exclusive);
+# the Hyperliquid Info API treats endTime as inclusive, so rows at exactly end_ms are
+# legitimately returned and are EXCLUDED here (never refused).
+WINDOW_SEMANTICS = "half_open_start_inclusive_end_exclusive_ms"
+
+RAW_SOURCE_HTTP = "http_response_content"
+RAW_SOURCE_TEST_DOUBLE = "reserialized_parsed_json_TEST_DOUBLE_ONLY"
 
 ADDRESS_RE = re.compile(r"^0x[0-9a-fA-F]{40}$")
 
 
 class CaptureRefused(RuntimeError):
-    def __init__(self, code: str, detail: str = "") -> None:
+    def __init__(
+        self, code: str, detail: str = "", error_capture: RawCapture | None = None
+    ) -> None:
         super().__init__(f"{code}: {detail}" if detail else code)
         self.code = code
         self.detail = detail
+        self.error_capture = error_capture
 
 
 @dataclass(frozen=True)
@@ -51,6 +72,7 @@ class RawCapture:
     endpoint: str
     body: dict[str, Any]
     raw: bytes
+    source: str = RAW_SOURCE_HTTP
 
 
 class CapturingInfo(Info):
@@ -110,16 +132,27 @@ def json_bytes(value: Any) -> bytes:
 
 
 def write_once(path: Path, data: bytes) -> str:
-    if path.exists():
-        raise CaptureRefused(REFUSED_MALFORMED, f"refusing to overwrite {path.name}")
     digest = sha256_bytes(data)
-    path.write_bytes(data)
-    path.with_name(path.name + ".sha256").write_text(digest + "\n", encoding="utf-8", newline="\n")
+    try:
+        with path.open("xb") as handle:
+            handle.write(data)
+    except FileExistsError as exc:
+        raise CaptureRefused(REFUSED_MALFORMED, f"output exists: {path.name}") from exc
+    sidecar = path.with_name(path.name + ".sha256")
+    try:
+        with sidecar.open("x", encoding="utf-8", newline="\n") as handle:
+            handle.write(digest + "\n")
+    except FileExistsError as exc:
+        raise CaptureRefused(
+            REFUSED_MALFORMED, f"output exists: {sidecar.name}"
+        ) from exc
     return digest
 
 
 def info_base_url(network: str) -> str:
-    return constants.TESTNET_API_URL if network == "testnet" else constants.MAINNET_API_URL
+    return (
+        constants.TESTNET_API_URL if network == "testnet" else constants.MAINNET_API_URL
+    )
 
 
 def sdk_version() -> str:
@@ -137,11 +170,20 @@ def make_info(base_url: str) -> Info:
     return CapturingInfo(base_url)
 
 
-def consume_capture(info: Any, parsed: Any, endpoint: str, body: dict[str, Any]) -> RawCapture:
+def consume_capture(
+    info: Any, parsed: Any, endpoint: str, body: dict[str, Any]
+) -> RawCapture:
+    """Return the pre-parse HTTP bytes captured by ``CapturingInfo``.
+
+    The fallback (re-serialised parsed JSON) exists only for test doubles without
+    ``pop_capture``; it is labelled as such in every manifest entry so a reviewer
+    can never mistake it for original response bytes. ``make_info`` always returns
+    a ``CapturingInfo`` on the real path.
+    """
     pop = getattr(info, "pop_capture", None)
     if callable(pop):
         return pop()
-    return RawCapture(endpoint, body, json_bytes(parsed))
+    return RawCapture(endpoint, body, json_bytes(parsed), RAW_SOURCE_TEST_DOUBLE)
 
 
 def call_info(
@@ -154,12 +196,16 @@ def call_info(
     before = len(getattr(info, "_captures", []))
     try:
         parsed = getattr(info, method_name)(*args)
-    except Exception as exc:  # noqa: BLE001
-        captures = getattr(info, "_captures", [])
-        if len(captures) > before:
-            raw = info.pop_capture()
-            raise CaptureRefused(REFUSED_QUERY_FAILED, type(exc).__name__) from exc
-        raise CaptureRefused(REFUSED_QUERY_FAILED, type(exc).__name__) from exc
+    except Exception as exc:
+        detail = type(exc).__name__
+        status = getattr(exc, "status_code", None)
+        if status is not None:
+            detail = f"{detail} status={status}"
+        error_capture = None
+        if len(getattr(info, "_captures", [])) > before:
+            # keep the error response bytes: the caller records them before refusing
+            error_capture = info.pop_capture()
+        raise CaptureRefused(REFUSED_QUERY_FAILED, detail, error_capture) from exc
     return parsed, consume_capture(info, parsed, endpoint, body)
 
 
@@ -194,14 +240,23 @@ def fill_identity(row: Any) -> str:
     return f"hash-oid-time:{h}:{oid}:{t}"
 
 
+def funding_coin(row: dict[str, Any]) -> Any:
+    delta = row.get("delta") if isinstance(row.get("delta"), dict) else {}
+    return row.get("coin", delta.get("coin"))
+
+
 def funding_identity(row: Any) -> str:
     if not isinstance(row, dict):
         raise CaptureRefused(REFUSED_MALFORMED, "funding row is not an object")
     h = row.get("hash")
     t = row.get("time")
+    coin = funding_coin(row)
     if not isinstance(h, str) or isinstance(t, bool) or not isinstance(t, int):
         raise CaptureRefused(REFUSED_MALFORMED, "funding identity is malformed")
-    return f"hash-time:{h}:{t}"
+    if not isinstance(coin, str) or not coin:
+        # two coins can settle in the same block: hash+time alone would collide
+        raise CaptureRefused(REFUSED_MALFORMED, "funding identity has no coin")
+    return f"hash-time-coin:{h}:{t}:{coin}"
 
 
 def request_body(kind: str, address: str, start_ms: int, end_ms: int) -> dict[str, Any]:
@@ -213,7 +268,12 @@ def request_body(kind: str, address: str, start_ms: int, end_ms: int) -> dict[st
             "endTime": end_ms,
             "aggregateByTime": False,
         }
-    return {"type": "userFunding", "user": address, "startTime": start_ms, "endTime": end_ms}
+    return {
+        "type": "userFunding",
+        "user": address,
+        "startTime": start_ms,
+        "endTime": end_ms,
+    }
 
 
 def record_response(
@@ -233,6 +293,7 @@ def record_response(
             "file": rel,
             "request": {"endpoint": capture.endpoint, "body": capture.body},
             "response_sha256": digest,
+            "raw_bytes_source": capture.source,
             "byte_length": len(capture.raw),
             "wall_clock_utc_start": started.isoformat().replace("+00:00", "Z"),
             "wall_clock_utc_end": ended.isoformat().replace("+00:00", "Z"),
@@ -264,14 +325,25 @@ def paged_query(
     rows_by_id: dict[str, dict[str, Any]] = {}
     while True:
         page += 1
+        name = f"{kind}_{pass_name}_page{page:03d}"
         body = request_body(kind, address, cursor, end_ms)
         started = datetime.now(UTC)
-        parsed, raw = call_info(info, method, (address, cursor, end_ms), "/info", body)
+        parsed, raw = recorded_call(
+            info,
+            method,
+            (address, cursor, end_ms),
+            body,
+            out_dir=out_dir,
+            manifest=manifest,
+            name=name,
+            base_url=base_url,
+            started=started,
+        )
         ended = datetime.now(UTC)
         digest = record_response(
             out_dir,
             manifest,
-            name=f"{kind}_{pass_name}_page{page:03d}",
+            name=name,
             capture=raw,
             base_url=base_url,
             started=started,
@@ -282,7 +354,21 @@ def paged_query(
         page_max = cursor
         for index, row in enumerate(parsed):
             ident = identity(row)
-            page_max = max(page_max, row_time(row))
+            t = row_time(row)
+            # the API is asked for [cursor, end_ms] (endTime inclusive); anything outside
+            # the requested range is a malformed response, never silently admitted
+            if t < start_ms:
+                raise CaptureRefused(
+                    REFUSED_MALFORMED, f"{kind} row before requested start ({ident})"
+                )
+            if t > end_ms:
+                raise CaptureRefused(
+                    REFUSED_MALFORMED, f"{kind} row after requested end ({ident})"
+                )
+            page_max = max(page_max, t)
+            if t >= end_ms:
+                # half-open window: a row at exactly end_ms is outside [start, end)
+                continue
             existing = rows_by_id.get(ident)
             enriched = {
                 "identity": ident,
@@ -292,7 +378,9 @@ def paged_query(
             }
             if existing is not None:
                 if existing["row"] != row:
-                    raise CaptureRefused(REFUSED_MALFORMED, f"{kind} identity conflict")
+                    raise CaptureRefused(
+                        REFUSED_MALFORMED, f"{kind} identity conflict ({ident})"
+                    )
                 continue
             rows_by_id[ident] = enriched
         if len(parsed) < limit:
@@ -300,6 +388,39 @@ def paged_query(
         if page_max <= cursor:
             raise CaptureRefused(REFUSED_TRUNCATED, f"{kind} cursor stalled")
         cursor = page_max
+
+
+def recorded_call(
+    info: Any,
+    method_name: str,
+    args: tuple[Any, ...],
+    body: dict[str, Any],
+    *,
+    out_dir: Path,
+    manifest: list[dict[str, Any]],
+    name: str,
+    base_url: str,
+    started: datetime,
+) -> tuple[Any, RawCapture]:
+    """``call_info`` that stores the error response bytes (with sidecar and manifest
+    entry ``<name>_ERROR``) before re-raising, so a failed query is never evidence-free."""
+    try:
+        return call_info(info, method_name, args, "/info", body)
+    except CaptureRefused as exc:
+        if exc.error_capture is not None:
+            record_response(
+                out_dir,
+                manifest,
+                name=f"{name}_ERROR",
+                capture=exc.error_capture,
+                base_url=base_url,
+                started=started,
+                ended=datetime.now(UTC),
+            )
+            raise CaptureRefused(
+                exc.code, f"{exc.detail}; error bytes kept as {name}_ERROR.json"
+            ) from exc
+        raise
 
 
 def account_state_query(
@@ -312,7 +433,17 @@ def account_state_query(
 ) -> None:
     body = {"type": "clearinghouseState", "user": address, "dex": ""}
     started = datetime.now(UTC)
-    parsed, raw = call_info(info, "user_state", (address,), "/info", body)
+    parsed, raw = recorded_call(
+        info,
+        "user_state",
+        (address,),
+        body,
+        out_dir=out_dir,
+        manifest=manifest,
+        name="account_state",
+        base_url=base_url,
+        started=started,
+    )
     ended = datetime.now(UTC)
     if not isinstance(parsed, dict):
         raise CaptureRefused(REFUSED_MALFORMED, "account state is not an object")
@@ -386,7 +517,9 @@ def read_signature(path: Path) -> str:
     return raw
 
 
-def ownership_result(address: str, run_id: str, signature_path: Path | None) -> dict[str, Any]:
+def ownership_result(
+    address: str, run_id: str, signature_path: Path | None
+) -> dict[str, Any]:
     if signature_path is None:
         return {"status": "OWNERSHIP_EVIDENCE: NOT_PROVIDED"}
     signature = read_signature(signature_path)
@@ -401,13 +534,34 @@ def ownership_result(address: str, run_id: str, signature_path: Path | None) -> 
 
 
 def verify_sidecars(out_dir: Path) -> None:
-    manifest = json.loads((out_dir / "CAPTURE_MANIFEST.json").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (out_dir / "CAPTURE_MANIFEST.json").read_text(encoding="utf-8")
+    )
     for entry in manifest["responses"]:
         path = out_dir / entry["file"]
         actual = sha256_bytes(path.read_bytes())
-        sidecar = path.with_name(path.name + ".sha256").read_text(encoding="utf-8").strip()
+        sidecar = (
+            path.with_name(path.name + ".sha256").read_text(encoding="utf-8").strip()
+        )
         if actual != sidecar or actual != entry["response_sha256"]:
             raise CaptureRefused(REFUSED_BAD_SIDECAR, entry["file"])
+
+
+def requery_check(
+    kind: str, first: list[dict[str, Any]], second: list[dict[str, Any]]
+) -> None:
+    """Both passes must return the same identities AND the same row content."""
+    rows_1 = {item["identity"]: item["row"] for item in first}
+    rows_2 = {item["identity"]: item["row"] for item in second}
+    for ident in sorted(set(rows_1) | set(rows_2)):
+        if ident not in rows_1 or ident not in rows_2:
+            raise CaptureRefused(
+                REFUSED_REQUERY_MISMATCH, f"{kind} identity only in one pass: {ident}"
+            )
+        if rows_1[ident] != rows_2[ident]:
+            raise CaptureRefused(
+                REFUSED_REQUERY_MISMATCH, f"{kind} row content differs: {ident}"
+            )
 
 
 def run_capture(args: argparse.Namespace) -> dict[str, Any]:
@@ -419,11 +573,22 @@ def run_capture(args: argparse.Namespace) -> dict[str, Any]:
     end = parse_utc(args.end)
     if end < start:
         raise CaptureRefused(REFUSED_MALFORMED, "end before start")
+    signature_path = getattr(args, "ownership_signature", None)
+    run_id = getattr(args, "run_id", None)
+    if signature_path is not None and not run_id:
+        # the owner signs a message that names the run_id; a defaulted run_id could never verify
+        raise CaptureRefused(
+            REFUSED_RUN_ID_REQUIRED, "--run-id is required with --ownership-signature"
+        )
+    if not run_id:
+        run_id = datetime.now(UTC).strftime("p012-path1-%Y%m%dT%H%M%SZ")
+    # ownership evidence is verified BEFORE any network object exists and before any file
+    # is written: a wrong signature leaves nothing behind
+    ownership = ownership_result(args.address, run_id, signature_path)
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     base_url = info_base_url(args.network)
     info = make_info(base_url)
-    run_id = args.run_id or datetime.now(UTC).strftime("p012-path1-%Y%m%dT%H%M%SZ")
     manifest_entries: list[dict[str, Any]] = []
     start_ms = ms(start)
     end_ms = ms(end)
@@ -449,7 +614,9 @@ def run_capture(args: argparse.Namespace) -> dict[str, Any]:
         end_ms=end_ms,
         base_url=base_url,
     )
-    account_state_query(info, out_dir, manifest_entries, address=args.address, base_url=base_url)
+    account_state_query(
+        info, out_dir, manifest_entries, address=args.address, base_url=base_url
+    )
     fills_2 = paged_query(
         info,
         out_dir,
@@ -472,10 +639,8 @@ def run_capture(args: argparse.Namespace) -> dict[str, Any]:
         end_ms=end_ms,
         base_url=base_url,
     )
-    if {row["identity"] for row in fills_1} != {row["identity"] for row in fills_2}:
-        raise CaptureRefused(REFUSED_REQUERY_MISMATCH, "fills")
-    if {row["identity"] for row in funding_1} != {row["identity"] for row in funding_2}:
-        raise CaptureRefused(REFUSED_REQUERY_MISMATCH, "funding")
+    requery_check("fills", fills_1, fills_2)
+    requery_check("funding", funding_1, funding_2)
     extraction = {
         "label": "DERIVED_VIEW_NOT_ORIGINAL_BYTES",
         "fills": fill_derived(fills_1),
@@ -491,8 +656,11 @@ def run_capture(args: argparse.Namespace) -> dict[str, Any]:
         "window": {
             "start": start.isoformat().replace("+00:00", "Z"),
             "end": end.isoformat().replace("+00:00", "Z"),
+            "start_ms": start_ms,
+            "end_ms": end_ms,
+            "semantics": WINDOW_SEMANTICS,
         },
-        "ownership_evidence": ownership_result(args.address, run_id, args.ownership_signature),
+        "ownership_evidence": ownership,
         "responses": manifest_entries,
     }
     write_once(out_dir / "CAPTURE_MANIFEST.json", json_bytes(manifest))
