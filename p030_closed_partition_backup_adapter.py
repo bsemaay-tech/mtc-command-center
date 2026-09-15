@@ -19,8 +19,10 @@ sys.path.insert(0, str(OPSA_TOOLS))
 import backup  # noqa: E402
 import restore  # noqa: E402
 from opsa_common import (  # noqa: E402
+    COMPLETE_MARKER_NAME,
     RC_OK,
     MANIFEST_SCHEMA,
+    RUN_MANIFEST_NAME,
     atomic_write_bytes,
     atomic_write_json,
     load_backup_config,
@@ -561,9 +563,16 @@ def _verify_manifest_snapshot(
 def _isolated_restore_inputs(
     config: dict, manifest_raw: bytes, *, run_id: str, store_id: str
 ):
-    source_prefix = resolve_confined_path(
-        Path(config["backup_root"]), "runs", run_id, store_id
-    )
+    source_run_dir = resolve_confined_path(Path(config["backup_root"]), "runs", run_id)
+    source_prefix = resolve_confined_path(source_run_dir, store_id)
+    # The P026 explicit-run restore verifies the run's COMPLETE.json + RUN_MANIFEST.jsonl
+    # before it reads anything else, so the isolated root must carry the run's own
+    # completion evidence byte-for-byte; a freshly written pair would defeat the gate.
+    try:
+        complete_raw = (source_run_dir / COMPLETE_MARKER_NAME).read_bytes()
+        run_manifest_raw = (source_run_dir / RUN_MANIFEST_NAME).read_bytes()
+    except OSError as exc:
+        raise ValueError("P026 completion evidence is unavailable") from exc
     try:
         receipt_raw = (source_prefix / STABLE_RECEIPT_NAME).read_bytes()
     except OSError as exc:
@@ -579,10 +588,11 @@ def _isolated_restore_inputs(
 
     with tempfile.TemporaryDirectory(prefix="p030-isolated-restore-") as temporary:
         isolated_root = Path(temporary) / "backup"
-        isolated_prefix = resolve_confined_path(
-            isolated_root, "runs", run_id, store_id
-        )
+        isolated_run_dir = resolve_confined_path(isolated_root, "runs", run_id)
+        isolated_prefix = resolve_confined_path(isolated_run_dir, store_id)
         isolated_prefix.mkdir(parents=True)
+        (isolated_run_dir / COMPLETE_MARKER_NAME).write_bytes(complete_raw)
+        (isolated_run_dir / RUN_MANIFEST_NAME).write_bytes(run_manifest_raw)
         (isolated_prefix / STABLE_RECEIPT_NAME).write_bytes(receipt_raw)
         isolated_snapshot = resolve_confined_path(isolated_prefix, snapshot_rel)
         isolated_snapshot.parent.mkdir(parents=True, exist_ok=True)

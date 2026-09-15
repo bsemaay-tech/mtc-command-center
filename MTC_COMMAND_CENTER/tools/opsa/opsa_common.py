@@ -311,6 +311,9 @@ def load_backup_config(config_path: Path) -> dict:
             require_non_empty_string_field(store, field, f"backup config store[{index}]")
         if store["id"] in seen_ids:
             raise ValueError(f"duplicate store id: {store['id']!r}")
+        if store["id"] in (RUN_MANIFEST_NAME, COMPLETE_MARKER_NAME):
+            raise ValueError(f"store id {store['id']!r} is reserved for the run's completion "
+                             "evidence inside runs/<run_id>/")
         resolve_confined_path(Path(config["backup_root"]), "runs", "_config_check",
                               store["id"])
         seen_ids.add(store["id"])

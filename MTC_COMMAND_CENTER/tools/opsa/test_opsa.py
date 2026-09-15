@@ -25,7 +25,9 @@ from datetime import timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from opsa_common import parse_utc_iso, utc_now, write_once_bytes  # noqa: E402
+from opsa_common import (  # noqa: E402
+    COMPLETE_MARKER_NAME, RUN_MANIFEST_NAME, parse_utc_iso, utc_now, write_once_bytes,
+)
 import backup  # noqa: E402
 import heartbeat  # noqa: E402
 import restore  # noqa: E402
@@ -463,6 +465,22 @@ class BackupRestoreTests(unittest.TestCase):
         self.assertEqual(rc, 3)
         self.assertFalse(self.manifest.exists())
         self.assertFalse((self.backup_root / "runs").exists())
+
+    def test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes(self):
+        """A store named like the per-run completion files would occupy their path inside
+        runs/<run_id>/; the config is refused before any run directory exists."""
+        for reserved in (RUN_MANIFEST_NAME, COMPLETE_MARKER_NAME):
+            with self.subTest(store_id=reserved):
+                config = write_config(
+                    self.root, self.backup_root,
+                    [{"id": reserved, "path": str(self.store), "class": "protected"}],
+                )
+                stdout, stderr = io.StringIO(), io.StringIO()
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    rc = backup.run_backup(config)
+                self.assertEqual(rc, 3)
+                self.assertFalse(self.manifest.exists())
+                self.assertFalse((self.backup_root / "runs").exists())
 
 
 class HeartbeatPathTests(unittest.TestCase):

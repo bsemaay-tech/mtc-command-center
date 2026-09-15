@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import io
 import json
 import shutil
 import subprocess
@@ -1168,11 +1170,95 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
             mutant.__dict__,
         )
 
-        with mock.patch(f"{__name__}.subject", mutant), self.assertRaisesRegex(
+        # Under the P026 explicit-run gate the shared-archive swap is refused inside
+        # restore first (the run's per-run manifest no longer matches the swapped global
+        # manifest), which the adapter surfaces as "P026 restore failed"; the two older
+        # messages remain the accepted outcomes for a mutant that reaches the byte comparison.
+        # A generic restore failure is NOT accepted: the refusal detail must name the
+        # shared-archive disagreement, otherwise a broken restore would pass this mutant.
+        stderr = io.StringIO()
+        with mock.patch(f"{__name__}.subject", mutant), contextlib.redirect_stderr(
+            stderr
+        ), self.assertRaisesRegex(
             (AssertionError, ValueError),
-            "shared archive influenced isolated restore bytes|validated archive bytes",
-        ):
+            "shared archive influenced isolated restore bytes|validated archive bytes"
+            "|P026 restore failed",
+        ) as refused:
             self.test_restore_consumes_isolated_validated_archive_snapshot()
+        if str(refused.exception) == "P026 restore failed":
+            self.assertIn(
+                "per-run manifest file records differ from the global manifest",
+                stderr.getvalue(),
+            )
+
+    def test_isolated_restore_carries_the_runs_own_completion_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, original_prefix = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            run_dir = root / "backups" / "runs" / run_id
+            marker_path = run_dir / subject.COMPLETE_MARKER_NAME
+            manifest_path = run_dir / subject.RUN_MANIFEST_NAME
+            original_marker = marker_path.read_bytes()
+            original_run_manifest = manifest_path.read_bytes()
+            seen: dict[str, bytes] = {}
+            unchanged_restore = subject.restore.run_restore
+
+            def observe_isolated_root(*args, **kwargs):
+                isolated_root = Path(
+                    json.loads(Path(args[0]).read_text(encoding="utf-8"))["backup_root"]
+                )
+                self.assertFalse(isolated_root.samefile(root / "backups"))
+                isolated_run_dir = isolated_root / "runs" / run_id
+                seen["marker"] = (isolated_run_dir / subject.COMPLETE_MARKER_NAME).read_bytes()
+                seen["manifest"] = (isolated_run_dir / subject.RUN_MANIFEST_NAME).read_bytes()
+                return unchanged_restore(*args, **kwargs)
+
+            target = root / "restore-target"
+            target.mkdir()
+            with mock.patch.object(
+                subject.restore, "run_restore", side_effect=observe_isolated_root
+            ):
+                subject.restore_verified_prefix(
+                    config_path, run_id=run_id, store_id=self.STORE_ID, target=target
+                )
+            self.assertEqual(seen["marker"], original_marker)
+            self.assertEqual(seen["manifest"], original_run_manifest)
+            self.assertEqual(
+                (target / self.STORE_ID / "live.jsonl").read_bytes(), original_prefix
+            )
+
+            # The evidence is copied, never fabricated: a marker whose digest no longer
+            # binds the per-run manifest, or one naming another run, refuses the restore
+            # through the adapter path exactly as it refuses the bare P026 restore.
+            marker = json.loads(original_marker)
+            for mutation in (
+                {"run_manifest_sha256": "0" * 64},
+                {"run_id": run_id + "-other"},
+            ):
+                tampered = json.dumps({**marker, **mutation}, sort_keys=True).encode("utf-8")
+                marker_path.write_bytes(tampered)
+                try:
+                    refused_target = root / ("refused-" + next(iter(mutation)))
+                    refused_target.mkdir()
+                    with self.assertRaisesRegex(
+                        ValueError, "P026 check-only failed; restore withheld"
+                    ):
+                        subject.restore_verified_prefix(
+                            config_path,
+                            run_id=run_id,
+                            store_id=self.STORE_ID,
+                            target=refused_target,
+                        )
+                    self.assertEqual(list(refused_target.iterdir()), [])
+                finally:
+                    marker_path.write_bytes(original_marker)
 
     def test_intruder_after_check_only_blocks_actual_restore(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
