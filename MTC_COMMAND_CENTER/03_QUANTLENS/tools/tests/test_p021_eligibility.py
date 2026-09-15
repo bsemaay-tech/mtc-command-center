@@ -31,7 +31,6 @@ from p021_evidence_contracts import (
 
 
 _EXPECTED_OPEN_NUMBERS = {
-    "gap_ratio_max",
     "divergence_tolerance",
     "divergence_window_length",
     "divergence_min_paired_observations",
@@ -88,7 +87,22 @@ class P021ContractTestCase(unittest.TestCase):
         self.assertTrue(
             all(check["status"] == "REFUSED" for check in record["checks"])
         )
-        self.assertEqual(len(record["open_numbers"]), 4)
+        self.assertEqual(len(record["open_numbers"]), 3)
+        # S2 (OD-20260915-P021-S2-RECOMMENDED-1): gap_ratio_max is CLOSED in the catalogue and DATA_QUALITY
+        # carries the value and the two pins, yet every check still refuses readiness.
+        data_quality = next(c for c in record["checks"] if c["check_id"] == "P021.DATA_QUALITY")
+        self.assertEqual(data_quality["limits"]["gap_ratio_max"], 0.0001)
+        self.assertEqual(data_quality["limits"]["gap_ratio_metric"], "m2_missing_bar_ratio")
+        self.assertTrue(data_quality["limits"]["gap_ratio_formula_id"].startswith("m2_missing_bar_ratio@data_gap_ratio.py v1"))
+        self.assertEqual(data_quality["limits"]["dataset_hash_contract"], "ds-v1")
+        self.assertEqual(data_quality["missing_numbers"], [])
+        self.assertEqual(data_quality["missing_rules"], ["accepted_corrected_engine.B01"])
+        divergence = next(c for c in record["checks"] if c["check_id"] == "P021.BACKTEST_FORWARD_DIVERGENCE")
+        self.assertEqual(divergence["limits"]["divergence_metric"], "M-C")
+        self.assertNotIn("divergence_metric.B05", divergence["missing_rules"])
+        self.assertEqual(record["policy_set"]["owner_decisions"]["P021_DECISION_3"], "T")
+        self.assertEqual(record["policy_set"]["owner_decisions"]["P021_DIVERGENCE_METRIC"], "M-C")
+        self.assertEqual({n["name"] for n in record["closed_numbers"] if n["name"] == "gap_ratio_max"}, {"gap_ratio_max"})
         self.assertEqual(
             {item["name"] for item in record["open_numbers"]},
             _EXPECTED_OPEN_NUMBERS,
