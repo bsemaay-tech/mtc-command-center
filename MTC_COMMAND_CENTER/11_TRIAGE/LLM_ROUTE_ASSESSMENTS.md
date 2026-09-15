@@ -274,3 +274,37 @@ byte outputs), and no round-2 launcher script exists on disk because that round 
 - **Owner-in-the-loop step (wallet signature):** the offline sign page cannot see a wallet extension on
   `file://` (browsers do not inject providers there); serving the same bytes on `127.0.0.1` for one
   minute fixed it. The owner's `personal_sign` came back in ~15 min and verified offline.
+
+### Addendum (same Lead, 08:10Z–10:30Z) — afternoon routes
+- **Gemini 3.8 flash-high, third failure shape:** a `503 UNAVAILABLE (No capacity available for model
+  gemini-3.8-flash-high)` arrived MID-RUN after the model had already streamed a complete 33 KB report
+  (JSON verdict + sentinel present in the CLI transcript); the wrapper reports `status: ERROR`, exit 1,
+  chain FAIL. Same recovery as the "cut off" shape: pull the last `result` event from
+  `%TEMP%\gemini_wrapper_failures\<stamp>.stdout.jsonl`, keep it SUPPLEMENTAL, apply what is
+  actionable, count only a clean re-run. Counted re-run of the same 23-file packet: attempt 2 VOIDED by the wrapper's watcher on a single
+  directory-level `Changed` event for the packet directory (no Created/Deleted/Renamed; afterwards no
+  mtime under the packet newer than the staging; the Lead's cwd was outside every worktree) — cause
+  NOT identified, recorded as a fourth failure shape; attempt 3 clean: PASS-WITH-NITS, 758 s wall /
+  744 s model, 25/25 native reads complete, 0 REQUIRED. Three attempts for one counted review = the
+  route's real cost today (~40 min wall, two voids).
+- **`git gc --no-prune` on the shared `.git` (done 09:49Z, no lane running, 75 s):** 32 719 loose
+  objects → 0, 4 packs → 2, nothing pruned, `fsck` clean. Effect on the wrapper's before/after object
+  snapshot: wrapper overhead (wall clock minus the model's `duration_seconds`) fell from ~44 s on
+  attempt 1 (pre-gc) to ~14 s on attempt 3 (post-gc) for the same packet. Lesson: pack the store whenever the loose count passes ~10k and no
+  `agy.exe`/`codex.exe` runs; say so in RUN_STATE first.
+- **GitHub Actions as a one-shot RED/GREEN demonstrator (P0-27):** a draft PR on a throwaway branch with
+  a deliberately failing probe test → the ruleset's required `Bridge suite (Python 3.12)` context went
+  FAILURE and `mergeStateStatus` BLOCKED (run 34946092493); reverting the probe on the same PR → SUCCESS
+  and CLEAN (run 34946405229); PR closed unmerged, branch deleted with `git push origin --delete` (the
+  `gh pr close --delete-branch` remote deletion silently failed while a local worktree still had the
+  branch). Total ~7 min wall clock, zero model tokens; the owner's "Run failed" e-mail arrived as the
+  policy expects. Reusable for any future "prove the gate blocks" acceptance step.
+- **Hyperliquid Info API as a credential-free evidence route (P0-28):** `subAccounts`, `userFees`,
+  `userRole`, `clearinghouseState` by address only; ownership bound by the owner's `personal_sign` over
+  a run-id-bearing message (same primitive as the Path 1 capture). Trap: `userFees.dailyUserVlm[*].exchange`
+  is VENUE-WIDE volume and changes every second, so a byte-level re-query compare refuses
+  (`CAPTURE_REFUSED_REQUERY_MISMATCH`); mask venue-wide fields before comparing (done in the wrapper;
+  both attempts kept as evidence).
+- **ChatGPT Web deep research as an owner-run route (P0-29):** prompt delivered as a file the owner
+  pastes himself; no account data in the prompt; output comes back through the owner and the Lead
+  reconciles it against the DD-01..DD-09 packet. Not yet measured (awaiting the owner's paste).
