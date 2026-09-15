@@ -554,5 +554,10 @@ class TimestampTests(unittest.TestCase):
             parse_utc_iso("2026-08-25T03:00:00")
 
 
+
+class CiRedProbeTests(unittest.TestCase):
+    def test_ci_red_probe(self) -> None:
+        assert False, "deliberate WP-P0-27 D026 red probe for the OPS-A tests workflow (2026-09-15); never merged"
+
 if __name__ == "__main__":
     unittest.main()
