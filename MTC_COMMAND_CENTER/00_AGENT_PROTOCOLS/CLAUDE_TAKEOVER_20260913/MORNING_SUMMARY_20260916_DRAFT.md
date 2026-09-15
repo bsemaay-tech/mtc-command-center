@@ -29,6 +29,13 @@ Plus the relayed "testnet agent-withdraw test: go" → the DD-06 probe is **prep
 | H | P0-21 S1 catalogue slice (puts your S2 values into the rule catalogue): closing `gap_ratio_max` also mints a NEW hashed policy-set version — **"catalogue only"** (recommended: artifact waits for the whole-set ratification B-22) or **"ratify the new policy-set version too"** | catalogue only, built in a daytime slot |
 | F | Optional: forward the 08:18Z "Run failed: CI" demo-run e-mail to the connected mailbox if you want it archived beside the PR #193 one | skip |
 
+## Evening work after your "don't you have work?" (19:30-20:xxZ; all on branches or in records; nothing merged)
+- **P0-26:** measured the two open values myself — your PC has ONE physical drive (C: 930 GB, 55 GB free), so "backup on a second physical drive" needs an external drive or KVM2/cloud; one full backup run = 339 MiB / 11,469 files (write-free dry run). Two pytest scratch folders must be excluded before a real run.
+- **P0-21:** built the S1 catalogue-only slice `701c5ddd` (your four S2 values in the rule catalogue; every check still refuses readiness; policy-set artifact untouched — ask H); 59 tests + RED arms; Gemini detection run queued; unmerged until T1.
+- **P0-12:** the six intake decisions as one-liners for you (`P012_INTAKE_DECISIONS_OWNER_PACKET_20260915.md`) — answer `D-1 R` … `D-6 R` when convenient; nothing admits production.
+- **P0-29:** venue addendum updated on the docs branch (`9e060857`): DD-01 closed; DD-06 r1 outcome recorded honestly (no evidence either way).
+- **P0-22:** N1 reader-path inventory draft (11 paths, mediated/unmediated, proposed fixes) — the design step before any code.
+
 ## Things I did without asking (all reversible, nothing deployed, nothing traded, no host contact)
 - Documents for P0-13/21/22/26/28/29/31 (gap tables, decision packets, fallback spec, docs-branch notes) — listed in `RUN_STATE.md` with paths.
 - P0-26: a **preview** of the drills on the repair candidate (D-4..D-7): the repair behaves as designed (an interrupted backup can no longer be restored; `--latest` is gone). Not an acceptance — the Wednesday Opus lane and Friday Sol are.

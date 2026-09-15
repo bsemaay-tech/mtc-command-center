@@ -66,3 +66,11 @@ No host contact, credentials, deployment, phone send, schedule creation, deletio
 - README residual fixed as **`e114ed31`** on `feature/p026-completion-marker-20260915` (documentation only: usage lines name an explicit `--run <run_id>` and the `COMPLETE.json` + `RUN_MANIFEST.jsonl` pair; +5/−3; no code or test bytes). Candidate for the Wednesday exact-Opus lane 4 is now `e114ed31` (= `d81b07f6` + this docs commit); the brief, launcher and queue file were re-pinned and their prose re-read (four commits, seven files incl. README).
 - The T-A drill PREVIEW of 16:19Z (`P026_REPAIR_20260915/DRILLS_TA_PREVIEW_20260915/`, NONACCEPTING) ran on `d81b07f6`; the code bytes are identical at `e114ed31`, so its observations carry over. Still not a counted T-A execution.
 - Acceptance path unchanged: Wednesday Opus (lane 4) + Friday Sol + Gemini + Lead reproduction, then PR + merge under the standing delegation.
+
+## Addendum 2026-09-15 19:4xZ - the two owner-PC measurements D-A asked for (measured by the Lead, no word needed)
+| Value | Measured | Source |
+|---|---|---|
+| Owner-PC drives | ONE physical NVMe (Crucial P3 Plus 1 TB); C: 930.3 GB with 54.9 GB free (94 % used); no second physical drive | `MEASUREMENTS_20260915/MEASUREMENT_SUMMARY_20260915.md` (Get-PSDrive / Win32_DiskDrive 19:34Z) |
+| Daily all-store size (= the "delta", the tool has no incremental mode) | 11,469 files / 338.9 MiB over the seven section-1 roots; the two owner-PC-only protected roots (`p0_run_root` 49.7 MiB, `gemini_review_roots` 3.7 MiB) = 53.4 MiB; bulk `p020_derived` 247.9 MiB (reproducible) | write-free `backup.py --dry-run` on candidate bytes `e114ed31`, 19:36-19:37Z (exit 0; stderr empty; backup root stayed empty and was removed) |
+| Tool finding | two pytest scratch dirs under the run root are sandbox-locked (`WinError 5`) and would become `skipped` records in a real run - exclude/delete them before the first real run (the adapter's restore gate refuses `skipped`) | dry-run SKIP lines 7181/7202 |
+Consequence for D-A: A1 as written is not available on this PC (no second physical drive); the choices become A1' (external drive as the owner-PC backup root + KVM2 as the cross copy) or A2 (cloud object store) - the owner picks after the candidate is accepted; nothing installed.

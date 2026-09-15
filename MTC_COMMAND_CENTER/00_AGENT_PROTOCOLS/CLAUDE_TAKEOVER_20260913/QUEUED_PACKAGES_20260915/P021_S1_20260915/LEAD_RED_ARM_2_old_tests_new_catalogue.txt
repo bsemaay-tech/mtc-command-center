@@ -1,0 +1,3 @@
+FAILED tests/test_p021_eligibility.py::ClosedBarReceiptTests::test_requires_runtime_source_and_closed_bar_chronology
+FAILED tests/test_strategy_type_policy_set.py::PolicySetTests::test_current_readiness_catalogue_stays_refused
+47 failed, 5 passed, 3 subtests passed in 1.18s

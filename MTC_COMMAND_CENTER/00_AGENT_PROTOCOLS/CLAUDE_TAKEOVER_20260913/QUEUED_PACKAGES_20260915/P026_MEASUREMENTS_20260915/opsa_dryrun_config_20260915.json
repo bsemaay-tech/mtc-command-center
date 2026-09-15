@@ -1,0 +1,13 @@
+{
+  "schema": "mtc.opsa_backup_config/v1",
+  "backup_root": "C:/tmp/P026_DRYRUN_BACKUP_ROOT_NEVER_WRITTEN",
+  "stores": [
+    {"id": "p0_run_root", "path": "C:/tmp/CLAUDE_P0_RUN_20260913", "class": "protected"},
+    {"id": "gemini_review_roots", "path": "C:/tmp/P012_S16_REVIEWS_20260913", "class": "protected"},
+    {"id": "gemini_packets", "path": "C:/LAB/Tradingview_LAB_CLEAN/_gemini_packets_20260913", "class": "reproducible"},
+    {"id": "p020_preselect", "path": "C:/tmp/P020_PRESELECT_20260913", "class": "protected"},
+    {"id": "p020_benchmark", "path": "C:/tmp/P020_LEAD_20260912", "class": "protected"},
+    {"id": "p020_derived", "path": "C:/tmp/P020_DERIVED_20260912", "class": "bulk"},
+    {"id": "opus_queue", "path": "C:/tmp/OPUS_QUEUE_20260916", "class": "process"}
+  ]
+}
