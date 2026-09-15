@@ -1,0 +1,12 @@
+            missing_hash_candidate,
+            "catalog-missing-hash",
+            package_hash="7" * 64,
+        )
+>       with self.assertRaisesRegex(
+            ValueError, "CATALOG_BACKED_WITHOUT_EVALUATION_HASH"
+        ):
+E       AssertionError: "CATALOG_BACKED_WITHOUT_EVALUATION_HASH" does not match "EVALUATION_RUN_HASH_REQUIRED"
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p031_lifecycle_ledger.py:2926: AssertionError
+=========================== short test summary info ===========================
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py::LifecycleLedgerTests::test_configured_catalog_refuses_absent_hash_and_accepts_present_hash
+1 failed, 3 passed, 105 deselected, 10 subtests passed in 0.90s
