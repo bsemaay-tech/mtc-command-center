@@ -12,12 +12,14 @@ What it does, in order, with the agent key found in the process environment (nev
         withdraw3 (``withdraw_from_bridge``), usdSend (``usd_transfer``), spotSend (``spot_transfer``),
         sub-account transfer (only when ``--sub-account`` names a testnet sub-account),
         approveAgent (``approve_agent``; the locally generated candidate key is discarded unseen).
-      Destinations are the account's own master address: usdSend/spotSend would be self-transfers;
-      withdraw3 would be a bridge withdrawal to the SAME address on the bridge chain (owner-controlled,
-      testnet faucet money) with an amount above the documented bridge minimum, so a refusal cannot be
-      an amount refusal. If a fund-moving arm is NOT refused, the probe stops immediately and records
-      a FINDING; DD-06 then stays BLOCK. The venue's refusal text is recorded verbatim (redacted) so
-      the Lead can tell an authorization refusal from a validation refusal at read time.
+      Destinations are the account's own master address. usdSend/spotSend would be self-transfers
+      inside the venue account. withdraw3 is different: if the venue did NOT refuse it, funds WOULD
+      LEAVE the venue account (a bridge withdrawal to the owner's own address on the bridge chain;
+      testnet faucet money); its amount sits above the documented bridge minimum so a refusal cannot
+      be an amount refusal. If a fund-moving arm is NOT refused, the probe stops immediately and
+      records a FINDING; DD-06 then stays BLOCK. Every refusal is classified by its venue text:
+      AUTHORIZATION (agent/permission wording) counts for DD-06; VALIDATION (amount, token, nonce,
+      self-send, sub-account existence) or UNCLASSIFIED does not, and makes the run INCONCLUSIVE.
 Every request and response is recorded with 40- and 64-hex strings redacted; the output directory is
 write-once. ``--dry-run`` prints the plan and touches no network and no credential.
 """
@@ -143,6 +145,50 @@ def classify_exception(exc: BaseException) -> str:
     return "ERROR"
 
 
+AUTHORIZATION_MARKERS = (
+    "must be user",
+    "does not exist",
+    "not authorized",
+    "unauthorized",
+    "not allowed",
+    "not permitted",
+    "permission",
+    "agent",
+    "api wallet",
+    "only the user",
+    "user signature",
+)
+VALIDATION_MARKERS = (
+    "minimum",
+    "min ",
+    "amount",
+    "insufficient",
+    "invalid destination",
+    "same address",
+    "self",
+    "token",
+    "nonce",
+    "sub-account",
+    "subaccount",
+    "does not have a sub",
+    "not found",
+    "invalid",
+)
+
+
+def classify_refusal_text(message: object) -> str:
+    """AUTHORIZATION when the venue's own words say the signer may not act; VALIDATION when they name
+    an amount/token/nonce/destination problem; UNCLASSIFIED otherwise. Only AUTHORIZATION is DD-06
+    evidence; the other two make the arm inconclusive. Authorization markers win over validation
+    markers when both appear ("agent may not send this amount")."""
+    text = str(message or "").lower()
+    if any(marker in text for marker in AUTHORIZATION_MARKERS):
+        return "AUTHORIZATION"
+    if any(marker in text for marker in VALIDATION_MARKERS):
+        return "VALIDATION"
+    return "UNCLASSIFIED"
+
+
 def refuse_unless_testnet(network: str, environ: dict[str, str]) -> None:
     if network != "testnet":
         raise ProbeRefused(
@@ -178,23 +224,26 @@ def _attempt(
         response = call()
     except BaseException as exc:  # noqa: BLE001 - every exception is evidence here
         outcome = classify_exception(exc)
-        record.step(
-            name,
-            outcome,
-            {
-                "request": redact(request),
-                "error_type": type(exc).__name__,
-                "error": redact(str(exc)),
-            },
-        )
+        data = {
+            "request": redact(request),
+            "error_type": type(exc).__name__,
+            "error": redact(str(exc)),
+        }
+        if outcome == "REFUSED":
+            data["refusal_class"] = classify_refusal_text(str(exc))
+        record.step(name, outcome, data)
         return outcome
     if name == "approveAgent" and isinstance(response, tuple):
         # (venue_result, generated_agent_key): the key is discarded before anything is recorded
         response = response[0]
     outcome = classify_response(response)
-    record.step(
-        name, outcome, {"request": redact(request), "response": redact(response)}
-    )
+    data = {"request": redact(request), "response": redact(response)}
+    if outcome == "REFUSED":
+        venue_text = (
+            response.get("response") if isinstance(response, dict) else response
+        )
+        data["refusal_class"] = classify_refusal_text(venue_text)
+    record.step(name, outcome, data)
     return outcome
 
 
@@ -353,10 +402,13 @@ def run_probe(
     )
 
     refused = 0
+    authorization_refusals = 0
     for index, (name, request, call) in enumerate(arms):
         outcome = _attempt(record, name, request, call)
         if outcome == "REFUSED":
             refused += 1
+            if record.steps[-1]["data"].get("refusal_class") == "AUTHORIZATION":
+                authorization_refusals += 1
             continue
         if outcome == "NOT_REFUSED":
             record.finding = f"{name} was NOT refused for an agent wallet"
@@ -366,9 +418,15 @@ def run_probe(
                     record.step(later_name, "SKIPPED_AFTER_FINDING", {})
                 return record
     if record.result == "RUNNING":
-        record.result = (
-            "DD06_REFUSALS_OBSERVED" if refused == len(arms) else "DD06_INCONCLUSIVE"
-        )
+        if refused == len(arms) and authorization_refusals == len(arms):
+            record.result = "DD06_REFUSALS_OBSERVED"
+        else:
+            record.result = "DD06_INCONCLUSIVE"
+            if refused == len(arms):
+                record.finding = (
+                    "every arm was refused, but not every refusal names the signer's "
+                    "authority; read the recorded venue texts before drawing any DD-06 conclusion"
+                )
     return record
 
 
@@ -401,8 +459,13 @@ def write_record(out_dir: Path, record: ProbeRecord) -> Path:
     raw = (
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     ).encode("utf-8")
-    if _HEX64.search(raw.decode("utf-8")):
+    text = raw.decode("utf-8")
+    if _HEX64.search(text):
         raise ProbeRefused("refusing to write: a 64-hex string survived redaction")
+    if _HEX40.search(text):
+        raise ProbeRefused(
+            "refusing to write: a 0x-prefixed address survived redaction"
+        )
     path = out_dir / "DD06_PROBE_RECORD.json"
     with path.open("xb") as handle:
         handle.write(raw)
@@ -420,6 +483,7 @@ def plan_text(sub_account: str | None, include_usd_class_transfer: bool) -> str:
         f"S2 arms (expected REFUSED): withdraw3 {WITHDRAW_AMOUNT_USDC} USDC -> own address on the bridge chain; usdSend {TRANSFER_AMOUNT_USDC} -> own account; spotSend {TRANSFER_AMOUNT_USDC} USDC -> own account;",
         f"    subAccountTransfer: {'1 USDC deposit to ' + redact(sub_account) if sub_account else 'SKIPPED (no --sub-account)'}; usdClassTransfer: {'included' if include_usd_class_transfer else 'not included'}; approveAgent (candidate key discarded unseen)",
         "Stop rule: a NOT_REFUSED fund-moving arm stops the sequence and records a FINDING (DD-06 stays BLOCK).",
+        "Refusal classes: AUTHORIZATION counts for DD-06; VALIDATION / UNCLASSIFIED -> INCONCLUSIVE (read the venue text).",
         "Record: write-once JSON + sha256, 40/64-hex redacted. No key is ever printed.",
     ]
     return "\n".join(lines)

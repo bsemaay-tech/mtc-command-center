@@ -158,8 +158,12 @@ def test_all_arms_refused_gives_refusals_observed_and_redacts_everything(
         outcomes = {step["name"]: step["outcome"] for step in record.steps}
         assert outcomes["S1_control_order"] == "NOT_REFUSED"
         assert outcomes["S1_control_cancel"] == "NOT_REFUSED"
+        classes = {
+            step["name"]: step["data"].get("refusal_class") for step in record.steps
+        }
         for arm in ("withdraw3", "usdSend", "spotSend", "approveAgent"):
             assert outcomes[arm] == "REFUSED", arm
+            assert classes[arm] == "AUTHORIZATION", arm
         assert outcomes["subAccountTransfer"] == "SKIPPED_NO_SUB_ACCOUNT"
         assert exchange.calls == [
             "order",
@@ -220,6 +224,46 @@ def test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence():
         and outcomes["approveAgent"] == "SKIPPED_AFTER_FINDING"
     )
     assert "spotSend" not in exchange.calls and "approveAgent" not in exchange.calls
+
+
+def test_refusal_text_classes():
+    assert probe.classify_refusal_text("Must be user") == "AUTHORIZATION"
+    assert (
+        probe.classify_refusal_text("User or API Wallet 0xabc does not exist.")
+        == "AUTHORIZATION"
+    )
+    assert (
+        probe.classify_refusal_text("Insufficient balance for withdrawal")
+        == "VALIDATION"
+    )
+    assert (
+        probe.classify_refusal_text("Withdrawal amount below minimum") == "VALIDATION"
+    )
+    assert probe.classify_refusal_text("") == "UNCLASSIFIED"
+    assert (
+        probe.classify_refusal_text("agent may not send this amount") == "AUTHORIZATION"
+    )
+
+
+def test_validation_shaped_refusal_makes_the_run_inconclusive():
+    class AmountRefusal(FakeExchange):
+        def withdraw_from_bridge(self, amount, destination):
+            self.calls.append("withdraw3")
+            return {"status": "err", "response": "Withdrawal amount below minimum"}
+
+    record = probe.run_probe(
+        record=_record(),
+        info=FakeInfo(),
+        exchange=AmountRefusal(),
+        account_address=ACCOUNT,
+        sub_account=None,
+    )
+    assert record.result == "DD06_INCONCLUSIVE"
+    steps = {s["name"]: s for s in record.steps}
+    assert steps["withdraw3"]["outcome"] == "REFUSED"
+    assert steps["withdraw3"]["data"]["refusal_class"] == "VALIDATION"
+    assert steps["usdSend"]["data"]["refusal_class"] == "AUTHORIZATION"
+    assert "read the recorded venue texts" in record.finding
 
 
 def test_transport_error_is_inconclusive_not_a_refusal():
