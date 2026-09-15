@@ -47,7 +47,7 @@ Plus the relayed "testnet agent-withdraw test: go" → the DD-06 probe was prepa
 - Notes to fix later under docs authority (P0-13 E-3): `PKT13:30` pins P020 at `556639f5…` (now `b9b72f85`); `PLAN:489` pins `simulate_slice` to line 648 (drifted); `HIST-2026-0045` reference.
 
 ## Route state (so you know why some reviews are "supplemental")
-- Gemini's paid CLI returned a 503 error AFTER finishing every review until 17:25Z (8 of 8); from 19:45Z it ran clean (6 of 6). **Every Lead-built candidate now has a COUNTED Gemini read** (P0-21 S1, DD-06 slice 3, O9FIX, intake, P0-27 PRs) — all PASS-WITH-NITS, nits applied where cheap (test-only slices `7fecf204`, `4c802e9b`).
+- Gemini's paid CLI returned a 503 error AFTER finishing every review until 17:25Z (8 of 8); from 19:45Z it ran clean (6 of 6). **Counted Gemini reads now exist for** P0-21 S1, DD-06 slice 3, O9FIX, the intake adapter and PR #193 + the P0-27 acceptance packet and PR #194's workflow (its own read: PASS, 0 findings) — all PASS-WITH-NITS, nits applied where cheap (test-only slices `7fecf204`, `4c802e9b`).
 - Codex (all homes) capped until Fri Sep 19; Grok until Thu Sep 18; exact Opus resets Wed 20:00Z — queue ready: lanes 1-3 by launcher (P031 → P1CAP → P030), lane 4 P026 and lane 5 (T1 of PRs #193/#194) by hand, optional lanes 6-8 (P0-21 S1, DD-06 probe, intake) if allowance remains. Friday Sol lanes are generated from the same briefs.
 - Your other mailbox address, which a session-4 snapshot had carried once, is masked at the branch tip (`8e4f172c`); git history keeps the old bytes (no force-push).
 
