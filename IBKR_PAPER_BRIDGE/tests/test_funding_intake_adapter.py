@@ -149,6 +149,9 @@ def test_completeness_rule_hour_alignment_and_identical_passes():
     assert complete["complete"] is True and complete["reasons"] == []
     unaligned = adapter.completeness(_manifest(window_start=1789398000000 + 1))
     assert unaligned["complete"] is False and "aligned" in unaligned["reasons"][0]
+    # Gemini NIT-02 (counted detection, 2026-09-15 20:14Z): the END bound is held to the same rule
+    unaligned_end = adapter.completeness(_manifest(window_end=1789412400000 + 41))
+    assert unaligned_end["complete"] is False and "aligned" in unaligned_end["reasons"][0]
     differing = adapter.completeness(_manifest(pass2_sha=SHA_B))
     assert (
         differing["complete"] is False and "byte-identical" in differing["reasons"][0]
