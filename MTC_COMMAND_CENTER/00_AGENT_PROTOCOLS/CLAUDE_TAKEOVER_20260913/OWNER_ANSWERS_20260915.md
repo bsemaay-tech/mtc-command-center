@@ -41,3 +41,25 @@ Lead question (chat): "P0-27 CI additions: go (one PR: contracts tests + 3 P030 
 Owner chat, verbatim: `go`.
 
 Effect: `OD-20260915-P027-CI-ADDITIONS-GO-1` — ONE PR changing only `.github/workflows/research-gates.yml` (informational workflow; required contexts unchanged); opened for review, not merged by this word.
+
+## Night session 5 (03c6c8) — the six one-liners of the overnight handoff §1 (asked 13:57Z; answered ~14:41Z)
+Lead message (chat, verbatim from `HANDOFF_20260915_SESSION5_OVERNIGHT.md` §1): six numbered questions — 1 DD-01 Terms; 2 DD-05 backup venue; 3 P0-27 day-one CI; 4 builder items a/b/c; 5 P0-14; 6 freellmapi keys — each with a stated default.
+
+Owner chat, verbatim (one message, six lines):
+```
+1. I read it: publisher Hyperliquid Corp., English law, London arbitration, $100 liability cap, US/Ontario restricted
+2. OKX
+3. accept day-one scope
+4. all
+5. keep open
+6. not yet
+```
+
+Effects (recorded as rows in `DECISIONS.md`):
+1. `OD-20260915-P029-DD01-READ-1` — the owner read the Terms and restated the five facts the Lead captured (fact half of DD-01 CLOSED on the owner's read + the Lead's hashed capture). He did **not** say "HOLD stands" or "proceed"; the register's decision half stays **HOLD** (the stated default) until he writes the one word. Nothing changes on the venue side.
+2. `OD-20260915-P029-DD05-OKX-1` — OKX is the **named fallback candidate** for the record (DD-05 "named"), not an accepted fallback: acceptance follows the P0-28 fallback specification v1 §B3 (Türkiye-eligibility read of OKX TR / global terms, primary-source re-read of the controls, adapter feasibility on paper, the no-funds rehearsal, then the owner's signature on the row). No account, key or venue action.
+3. `OD-20260915-P027-DAYONE-ACCEPT-1` — WP-P0-27 is **ACCEPTED at day-one scope** (R1-R8, R16-R19 of the reconciliation; the four plan gate clauses evidenced in `P027_ACCEPTANCE_PACKET_20260915.md`); R9-R15 and R20 are the recorded progressive backlog. PR #193 is NOT merged by this word (T1 review of the workflow diff first); `Research gates` is not made required; no document may describe OPS-C as protecting anything beyond the two required checks.
+4. `OD-20260915-BUILD-ABC-1` — the Lead builds tonight, as the disclosed builder (never the acceptor), all three items: (a) the five P0-30 exporter nits (O9FIX brief `laneO9FIX_build/TASK.md`) on `daf6a43b`; (b) the P0-12 funding intake adapter (schema-v10 rows from the Path 1 capture's derived view into `export_mtc_funding.py --mode PRODUCTION`); (c) the OPS-A `test_opsa.py` suite wired into CI as a second small PR. Each: RED/GREEN evidence, Ruff, guard PASS, Gemini detection pass before the flagship slots; commits on feature branches; no merge.
+5. `OD-20260915-P014-KEEP-OPEN-1` — WP-P0-14 stays OPEN; the read-only report of 2026-09-14 stands; nothing built.
+6. `OD-20260915-FREELLMAPI-NOTYET-1` — freellmapi keys not yet added; the route stays unprobed beyond the one `401` call; no spend.
+Not answered (asked after the six, 14:25Z): item 7 (P0-26 README `--latest` lines) → default B (untouched); item 8 (forward the demo-run e-mail) → optional.

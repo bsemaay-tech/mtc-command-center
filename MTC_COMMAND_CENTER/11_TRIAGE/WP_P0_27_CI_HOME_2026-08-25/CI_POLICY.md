@@ -11,6 +11,19 @@ itself reached `master` early, through WAL-branch carry commit `67a53a32` and ma
 venue. **Audit tier:** T1 for the workflow package (unchanged); the 2026-08-25 reconciliation
 edit is documentation-only (T2).
 
+**Acceptance (2026-09-15):** the owner accepted WP-P0-27 **at day-one scope** with the exact words
+"accept day-one scope" (`OD-20260915-P027-DAYONE-ACCEPT-1`, CT13 `DECISIONS.md`), on the evidence of
+`00_AGENT_PROTOCOLS/CLAUDE_TAKEOVER_20260913/QUEUED_PACKAGES_20260915/P027/P027_ACCEPTANCE_PACKET_20260915.md`:
+green root runs (60 of 61 `ci.yml` master runs; the one failure of 2026-08-25 fixed forward before this
+ruleset existed), the deliberate RED/GREEN demonstration (draft PR #192, runs 34946092493 / 34946405229,
+failure e-mail owner-confirmed, channel evidenced), the required-check rule demonstrated (ruleset 21444962:
+`Bridge suite (Python 3.12)` + `pine-alert-guard`, strict, zero bypass), and no continuous-protection claim
+by WP-P0-10 / WP-P0-23 (sweep of CT13 `f1bbac40`: 0 hits). Accepted rows: reconciliation R1-R8, R16-R19.
+**Backlog, not accepted:** R9 golden suite, R10 remainder, R11 parity set, R12 contracts tests (wired in
+PR #193, unmerged, T1 review pending), R13 inert engine workflows, R14 safety-ops checks, R15 delivery-doctrine
+guards, R20 paging channel. This acceptance changes no setting and merges no PR; OPS-C protects exactly the
+two required checks and nothing else.
+
 The GC-referent dependency this page carried is closed: the repair merged to `master` as
 `cef1d070` with the CI check green at 2026-08-25T15:04:24Z, **before** the ruleset was created
 (15:24:47Z), so protection was switched on against an already-green `master` — the ordering this
