@@ -123,3 +123,19 @@ No credential, key, seed or password appears in any session-4 file. The wallet-k
 | Owner one-liners answered 14:41Z | 1 Terms read (HOLD) · 2 OKX · 3 accept day-one · 4 all · 5 keep open · 6 not yet | `OWNER_ANSWERS_20260915.md` night section |
 | Still open for the owner | "probe steps approved" (DD-06); P0-26 README A/B (item 7); DD-01 decision word (HOLD/proceed); PR #193 + #194 T1 reviews (Wed Opus lane / Fri Sol) | `OWNER_DECISIONS_PENDING.md` |
 Route facts: Gemini 3.8 returned `503` after the report on every full call tonight (recover + count only a clean run); pytest basetemp must be ASCII and outside `C:/tmp`; no git while `agy.exe` runs (even `status`). CT13 commits: `401d2e11`, `fc5dfcac`, (session 4's) `7dafb908`, plus the night's second wave after the Gemini chain.
+
+---
+
+## §2-delta-2 — what moved 16:00Z → 17:27Z (same session; read after §2-delta)
+| Item | Δ state | Evidence |
+|---|---|---|
+| P0-30 O9FIX Gemini delta | attempt 1 (16:04-16:15Z) **PASS-WITH-NITS by content** — K-01..K-05 CLOSED, 16/16 refusal codes verified; NITs K-06 (test message regex; ready patch `laneO9FIX_build/K06_PATCH_READY.py`, dry-run OK, NOT applied) and K-07 (lane sums hashed the CRLF checkout; blob LF authoritative) — **VOIDED (503)** → SUPPLEMENTAL; counted run still owed; lane-3 brief updated (stale "NOT run" prose fixed; both refusal-code counts to be reproduced) | `P030_O9FIX_20260915/GEMINI/LEAD_ADJUDICATION.md` |
+| P0-12 intake Gemini detection | attempt 1 on `004a0711` and attempt 2 on `65c4bc40` (test-only slice 2 for NIT-01, RED arm) both PASS-WITH-NITS by content, `fabricated_fields: []`, both VOIDED (503); NIT on the D-6 completeness rule folded into the design note as owner options | `P012_FUNDING_INTAKE_20260915/GEMINI/` |
+| P0-27 Gemini attempt 3 | attempt 3 = third concordant PASS-WITH-NITS ×2 (gate clauses (a)-(d) CORROBORATED, 0 REQUIRED), VOIDED; the owner's acceptance stands on its own | `P027_CI_GEMINI/` |
+| P0-26 | **T-A drill PREVIEW on `d81b07f6`** (NONACCEPTING; Lead = author): D-4/D-5 GREEN with the completion pair, D-6 seven RED-as-expected (marker tamper, per-run-manifest tamper, forged second `run_end`, deleted marker, forged pair re-hashed), D-7 real interrupted run → no pair + restore rc 3 + adapter refusal; hand-made pair refused; CLI `--latest` gone; blob-verified against the commit | `P026_REPAIR_20260915/DRILLS_TA_PREVIEW_20260915/DRILL_RESULTS_PREVIEW.md` |
+| P0-21 | design v1.6 fold note (row-by-row; edits nothing; D-04 = catalogue `missing_rules` vs implemented contracts) | `P021_DESIGN_V16_FOLD_NOTE_20260915.md` |
+| Wednesday queue | worktree HEADs verified 4/4 (P031 `48bd70de`, P1CAP `af921d75`, P030 `153edee9`, P026 `d81b07f6`); `run_queue.ps1` refuses before 2026-09-16 20:00Z | RUN_STATE 16:12Z |
+| PRs | #193 `a3325836` and #194 `63b7bbe0` re-checked 16:28Z: OPEN, all checks SUCCESS, MERGEABLE, unmerged (T1 pending) | `gh pr view` |
+| CT13 | `17cb7606` (fourth wave, 16:24Z); `8e4f172c` (fifth wave, 17:08Z); sixth wave after this delta | git log |
+| Snapshots | the copy script now masks the owner's mailbox addresses on every run (session-4 and session-5 snapshots) | `copy_night_records_to_ct13.py` |
+Route: Gemini 503-after-report 8/8 tonight (P027 ×3, DD06 ×2, O9FIX, intake ×2); probes fail intermittently (15-min chain waits); git only in no-`agy.exe` windows. Morning summary draft: `MORNING_SUMMARY_20260916_DRAFT.md` (asks A-G with defaults).

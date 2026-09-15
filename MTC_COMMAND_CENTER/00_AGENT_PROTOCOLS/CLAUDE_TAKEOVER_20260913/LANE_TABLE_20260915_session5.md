@@ -300,3 +300,13 @@
 | CT13 | `17cb7606` pushed 16:24Z (fourth wave, 32 paths); next commit after the chain |
 
 **Executing provider workers at 16:30Z: 1 (Gemini chain, 2 roots, waiting for a clean probe).**
+
+## 17:10Z (session 5 — after the fifth CT13 wave)
+| Lane | State |
+|---|---|
+| P012INTAKE (b) | `65c4bc40` (slice 2, test-only after Gemini NIT-01); Gemini attempt 1 PASS-WITH-NITS by content (voided); attempt 2 on `65c4bc40` running |
+| P027GEM | attempt 3 = third concordant PASS-WITH-NITS ×2, voided; no further attempts tonight |
+| O9FIX (a) | `153edee9`; Gemini delta voided PASS-WITH-NITS; K-06 ready patch (not applied); counted run owed |
+| CT13 | `8e4f172c` pushed 17:08Z |
+
+**Executing provider workers at 17:10Z: 1 (Gemini chain, 1 root).**
