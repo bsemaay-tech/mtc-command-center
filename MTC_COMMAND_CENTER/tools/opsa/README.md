@@ -57,10 +57,12 @@ cd MTC_COMMAND_CENTER/tools/opsa
 python backup.py --config opsa_config.json --dry-run
 # 3. Backup (append-only manifest + read-back verified copies):
 python backup.py --config opsa_config.json
-# 4. Isolated integrity proof (no writes):
-python restore.py --config opsa_config.json --latest --check-only
+# 4. Isolated integrity proof (no writes). A restore names ONE explicit run id (there is no --latest:
+#    the newest run may be the interrupted one); the run must carry runs/<run_id>/COMPLETE.json +
+#    RUN_MANIFEST.jsonl written by backup.py, or restore.py refuses it (rc 3, run_not_complete):
+python restore.py --config opsa_config.json --run opsa-20260101T000000.000Z --check-only
 # 5. Restore to a target dir (byte-hash verified):
-python restore.py --config opsa_config.json --latest --to D:/recovered
+python restore.py --config opsa_config.json --run opsa-20260101T000000.000Z --to D:/recovered
 
 # Dead-man watchdog (NO schedule is installed by this package):
 python heartbeat.py emit --state-dir D:/hb --id my_process
