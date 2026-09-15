@@ -26,6 +26,15 @@ The merged [WP-P0-28 venue record](../WP_P0_28_VENUE_FACTS_2026-08-25/VENUE_VERI
 
 Therefore this policy treats every agent wallet as capable of moving or economically endangering its accessible funds until a later primary-source record proves a narrower boundary.
 
+**Dated note 2026-09-15 (facts from the 2026-09-15 research reconciliation; labels per source — `[P]` re-read by the Lead on the venue's public page that day, `[R]` reported by the owner-run deep-research pack with a primary URL and NOT yet re-read; none amends the signed record):**
+
+- `[P]` expiry: a named API wallet's custom expiry may be set "at most 180 days in the future" (`hyperliquid-docs/for-developers/api/exchange-endpoint`, re-read 2026-09-15) — row `g` re-verified; the default duration remains undocumented.
+- `[P]` slots: a master account has **1 unnamed approved wallet and up to 3 named ones**, plus **2 additional named agents per sub-account** (same page). Consequence for §8.4 item 4 (preflight available agent slots): on one master account without sub-accounts the overlap capacity for a rotation is bounded by these numbers — a successor must fit into a free named slot or the handover must go through DISARM → revoke → activate.
+- `[R]` nonce window: signed actions are accepted only inside a time window around the current time (reported as roughly `T−2 days … T+1 day`); a clock-skewed signer fails closed — to be re-read from the primary page before it enters a procedure.
+- `[R]` pruning: agents removed by the venue must **not** be reused; re-approval of a pruned agent identity is not a recovery path (feeds §8.3 item 7: recovery = successor generation).
+- `[P]` no explicit "agent cannot withdraw" sentence exists on the exchange-endpoint page (spot-check S2, 2026-09-15); DD-06 stays BLOCK and the least-trust rule above stands.
+- `[P]` account eligibility (row `s`): the owner-authorized read of 2026-09-15 (`p028-eligibility-20260915-r1`) shows 0 sub-accounts and $91.28 windowed volume against the $100,000 sub-account gate — NOT ELIGIBLE (windowed), NONACCEPTING until the roster reviews the capture; the WP-P0-28 virtual-book fallback is therefore the designated binding mode (see the P0-28 fallback specification v1).
+
 ## 2. Roles and records
 
 | Role | Permitted policy role | Forbidden under this package |

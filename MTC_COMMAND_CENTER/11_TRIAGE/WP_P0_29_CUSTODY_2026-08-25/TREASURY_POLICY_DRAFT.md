@@ -70,6 +70,13 @@ This is a named future procedure, not an executed action.
 
 Any mismatch, clipboard substitution, unsupported network, stale address, uncertain destination control or unexpected fee stops the procedure.
 
+### 4.3 Venue deposit and withdrawal path — dated facts (2026-09-15; `[R]` = reported by the owner-run deep-research pack with a primary URL, NOT yet re-read by the Lead; re-read before any deposit decision)
+
+- `[R]` USDC on HyperCore is now **natively minted through Circle's CCTP**; the **legacy Arbitrum bridge is deprecated** (reported at under 10 % of HyperCore USDC supply). The 2026-08-25 record and this policy's deposit assumptions predate this change.
+- `[R]` Legacy bridge facts, for the transition period: contract `0x2df1c51e09aecf9cacb7bc98cb1742757f163df7` (source `Bridge2.sol`); deposit minimum **5 USDC**; a withdrawal requires the **user wallet's signature** (an agent wallet cannot sign it — consistent with §5) and arrives in **3-4 minutes**; signer threshold, guardian set, dispute window and pause authority UNKNOWN.
+- Consequence for §4.1 and §4.2: "network" in the preconditions must name the exact path (CCTP native mint vs legacy bridge) and the exact chain; the address-verification steps apply to the CCTP destination exactly as to the bridge contract; the 24-hour cooling period and the smallest test transfer (item 5) apply to the first use of **either** path. No deposit is authorized by this note.
+- Owner act: DD-02 acceptance on the dated addendum of 2026-09-15 (docs branch) closes the dependency-map half; the primary CCTP page is to be captured with a hash (as the Terms were) before the first deposit decision.
+
 ## 5. Least-trust agent-wallet rule
 
 The merged [WP-P0-28 binding spec](../WP_P0_28_VENUE_FACTS_2026-08-25/ACCOUNT_BINDING_AND_FALLBACK_SPEC.md#3-preferred-subaccount-mode) explicitly does not claim an agent-withdrawal safety boundary. Therefore:

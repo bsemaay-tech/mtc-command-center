@@ -60,6 +60,30 @@
 | Bybit | key creation documented (48-hour post-registration restriction) (VERIFIED) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
 The pack states this is a candidate set, not a volume ranking. The Lead's reading for the owner's choice: OKX is the only candidate whose controls match this record's DD-06/DD-07 wants in documentation.
 
+### D2. Second pass — the owner-run fallback-venue deep research of 2026-09-15 (`[R]`; reconciliation `QUEUED_PACKAGES_20260915/P029/P029_FALLBACK_RESEARCH_RECONCILIATION_20260915.md`; `[!]` = changes an earlier reading)
+| Control the record wants | OKX | Bybit | Binance (Futures) |
+|---|---|---|---|
+| Current Terms + date | VERIFIED 2026-07-24 | UNKNOWN (body not retrievable) | UNKNOWN |
+| Contracting entity | VERIFIED Aux Cayes FinTech Co. Ltd., Seychelles (default for users outside listed local providers) | UNKNOWN | UNKNOWN |
+| Restricted list names Türkiye? | VERIFIED list; not named | VERIFIED list (§11.3); not named | UNKNOWN |
+| **Türkiye eligibility / local entity** | **UNKNOWN** — OKX TR is a separate service; global-vs-TR routing for a Türkiye resident not closed | UNKNOWN (regional redirect) | UNKNOWN (Binance TR separate; TRY pairs moved 2025-10) |
+| KYC before API / withdraw | VERIFIED required | VERIFIED "Standard" mandatory | VERIFIED required |
+| Trade-only key (no withdraw) | VERIFIED — `[!]` `Trade` includes internal funding transfers between the account's wallets/sub-accounts | VERIFIED — finest scoping (`ContractTrade` separate from every `Wallet` permission) | partial — unrestricted keys read-only; withdraw permission needs an IP list |
+| IP allow-list per key | VERIFIED up to 20 IPs (recommended) | field exists; max UNKNOWN | mandatory for withdraw keys; max UNKNOWN |
+| Key expiry hygiene | VERIFIED 14-day inactivity expiry for unbound trade/withdraw keys | VERIFIED unbound keys invalid after 90 days (7 after a password change) | UNKNOWN |
+| Sub-accounts | VERIFIED 5 (Standard); OKX TR 10 | VERIFIED 5 (20 VIP/business); key bound at creation | VERIFIED 5 (regular); 30 keys per sub-account |
+| Withdrawal whitelist / lock | allowlist + 24 h new-address lock VERIFIED | whitelist, daily limit, new-address lock, app-only withdrawals VERIFIED | whitelist + Withdraw Protection (block all 1-7 days) VERIFIED |
+| Demo / testnet keys | VERIFIED demo keys (exempt from expiry) | VERIFIED separate demo account + keys | VERIFIED Futures demo + demo API key |
+| Official Python client | python-okx; release version UNKNOWN | VERIFIED pybit 5.16.0 (2026-04-18), MIT | connector repo; version UNKNOWN |
+| History exports (DD-04 analogue) | VERIFIED API archive endpoints (bills since 2021-02; fills; orders 3 months) | VERIFIED CSV/PDF exports 2-5 years + V5 2-year APIs | UI export; API retention UNKNOWN |
+| Status page / machine feed | VERIFIED page + `GET /api/v5/system/status` + WS `status` | UNKNOWN | UNKNOWN |
+| Incidents (24 months) | UNKNOWN (no archive captured) | `[!]` VERIFIED 2025-02-21 cold-wallet compromise, $1.46 bn (withdrawals continued; users kept whole per the venue) | VERIFIED five order/market-data incidents of 18-66 min; uptime 99.97-99.98 % |
+| Regulator / enforcement (24 months) | `[!]` VERIFIED DOJ/SDNY 2025-02-24 guilty plea (unlicensed money transmitting), >$504 m | VERIFIED Malaysia SC action 2024-12-11 | VERIFIED SEC civil action dismissed 2025-05-29 |
+| Proof of reserves | zk-STARK files, 46th report Aug 2026; auditor/cadence UNKNOWN | PoR + Hacken report after the incident; cadence UNKNOWN | PoR page; cadence/auditor UNKNOWN |
+| Scale (CoinGecko, REPORTED) | $16.9 bn / OI $7.2 bn | ~$10.4 bn / OI ~$10.5 bn | $42.9 bn / OI $32.2 bn |
+
+Lead reading (comparison only; the choice is the owner's DD-05 one-liner): all three fail the same gate — Türkiye eligibility is UNKNOWN for each and must be read from the local entity's terms before any account is opened; **OKX** is strongest on the operational controls this record wants, now with two recorded caveats (`Trade` carries internal transfers — mitigated by sub-account-bound keys + withdrawal allowlist + new-address lock; the 2025 DOJ plea); **Bybit** has the cleanest key scoping and the best-documented exports/SDK, and the one custody incident in the set; **Binance** is the largest and the only one publishing uptime reports, with legal facts UNKNOWN. A reasonable record: OKX primary candidate, Bybit second. The acceptance conditions for a named fallback and the no-funds rehearsal outline are in the P0-28 fallback specification v1 (`QUEUED_PACKAGES_20260915/P028_FALLBACK_SPEC_V1_20260915.md`).
+
 ## E. DD-06 / DD-07 — confirmed undocumented on Hyperliquid (`[R]`, `[P]` for S2)
 - Agent (API) wallets: named-agent expiry ≤ 180 days (default UNKNOWN); 1 unnamed + 3 named per account, +2 named per sub-account; nonce window (T−2 d, T+1 d); pruned agents must not be reused (`[P]` exchange-endpoint page). **No sentence prohibits withdrawals by an agent wallet** (`[P]`); "agent cannot withdraw" is secondary-reported only. Legacy `withdraw3` requires the user wallet signature (`[R]` VERIFIED).
 - Account-level "disable withdrawals" toggle: NOT DOCUMENTED. Customer-configurable IP allow-list: NOT DOCUMENTED (per-IP rate limits only).
