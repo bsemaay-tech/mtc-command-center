@@ -10,7 +10,12 @@
 # carrier for progressive CI activation and the mechanical delivery guards; this is a gap
 # stopped, not that package delivered.
 #
-# Every module here is stdlib-only, so the job installs nothing and stays hermetic.
+# Every research-gate module is stdlib-only, so the `checkers` job installs nothing and stays
+# hermetic. The two jobs added under WP-P0-27 (owner "go", 2026-09-15, OD-20260915-P027-CI-ADDITIONS-GO-1)
+# keep the same rule where they can: the P0-30 checkers are stdlib unittest modules; the shared
+# contracts tests take pytest + pydantic from the hash-locked Bridge lock file, and Ruff is pinned to
+# the version recorded in MTC_COMMAND_CENTER/contracts/constraints.txt. None of them is a required
+# context either.
 name: Research gates
 
 on:
@@ -90,3 +95,76 @@ jobs:
             python check_p020_acceptance.py || true
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # WP-P0-27 addition (2026-09-15): the three repo-root P0-30 checkers merged on 2026-09-13 were
+  # not exercised by any workflow. They are stdlib-only unittest / self-checking modules that work
+  # on fixtures alone (no host, no network, no credentials). The closed-partition backup checker
+  # includes an NTFS junction fence (`mklink /J`), so this job runs on a GitHub-hosted Windows
+  # runner -- also the platform the OPS-A tools are operated on.
+  p030-checkers:
+    name: P0-30 checkers (Python 3.12, Windows)
+    runs-on: windows-2025
+    timeout-minutes: 15
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: P0-30 market-data contracts
+        run: python check_p030_market_data_contracts.py
+
+      - name: P0-30 OPS-A heartbeat adapter
+        run: python check_p030_opsa_heartbeat_adapter.py
+
+      - name: P0-30 closed-partition backup adapter
+        run: python check_p030_closed_partition_backup_adapter.py
+
+  # WP-P0-27 addition (2026-09-15): the shared data contracts (MTC_COMMAND_CENTER/contracts) had no
+  # CI coverage, and the plan's "light lint" half of the day-one job was never wired. Ruff runs with
+  # the same narrow rule set the Lead applies by hand (syntax errors, undefined names, redefinitions,
+  # unused imports and variables) over the surfaces that are clean at fcac0ac6; widen the path list
+  # only after a surface is clean (as of fcac0ac6: 3 findings at the repo root, 21 under
+  # IBKR_PAPER_BRIDGE, 69 under 03_QUANTLENS/tools) so this job never starts red.
+  contracts-and-lint:
+    name: Contracts tests and Ruff (Python 3.12)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install hash-locked Bridge dependencies (provides pytest and pydantic)
+        run: >-
+          python -m pip install --require-hashes
+          -r IBKR_PAPER_BRIDGE/requirements.lock
+
+      - name: Shared contracts tests
+        working-directory: MTC_COMMAND_CENTER/contracts
+        run: python -m pytest tests -q
+
+      - name: Install Ruff (pin from MTC_COMMAND_CENTER/contracts/constraints.txt)
+        run: python -m pip install ruff==0.16.4
+
+      - name: Ruff light lint (E9, F821, F811, F401, F841)
+        run: >-
+          python -m ruff check --select E9,F821,F811,F401,F841
+          MTC_COMMAND_CENTER/tools/opsa MTC_COMMAND_CENTER/contracts
