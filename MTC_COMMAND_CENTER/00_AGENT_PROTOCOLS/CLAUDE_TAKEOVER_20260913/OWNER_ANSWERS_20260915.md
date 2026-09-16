@@ -91,3 +91,7 @@ Owner first asked (Turkish) for times in UTC+3 from now on and for explanations 
 r2 go · H catalogue only · I A A A A A B · D all R
 ```
 Reading: `OD-20260916-P029-DD06-R2-GO-1` (DD-06 re-run authorized), `OD-20260916-P021-S1-CATALOGUE-ONLY-1`, `OD-20260916-P031-M2-Q1-Q6-1` (A,A,A,A,A,B), `OD-20260916-P012-INTAKE-D1-D6-R-1` (all recommended).
+
+## 2026-09-16 11:5x UTC+3 (08:5xZ) — DD-06 r3 (session 6)
+- Owner asked for a guide to fund the `kvm2-bridge` agent wallet; guided in chat (TESTNET app Send to the agent's public address; no faucet needed). Owner sent 14.0 USDC (fee 1.0) at 08:57:33Z; screenshot of the venue's "USD Transfer Fee" modal shared; chat word: `sent`.
+- Owner chat exact words: `r3 go` → row `OD-20260916-P029-DD06-R3-GO-1`; r3 executed 09:00:46-09:00:59Z (`LEAD_READING_r3_20260916.md`): agent-signed spotSend moved the AGENT's own 1 USDC to the master (agent 14.0→13.0, master +1.0); usdSend/withdraw3 refused on the signer's empty perp balance. DD-06 restriction VERIFIED on testnet with direct evidence. Ask: `DD-06 amend` (register row BLOCK → RESTRICTION VERIFIED on testnet).
