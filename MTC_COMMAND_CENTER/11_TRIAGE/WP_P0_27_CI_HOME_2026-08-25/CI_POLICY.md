@@ -104,11 +104,13 @@ never a lane action. Consequence for every lane: work reaches `master` only thro
 
 ## Progressive required-check policy
 
-The first required check is enforced today; the set is what stays progressive. Only
-`Bridge suite (Python 3.12)` is in rule 21444962's required list. The repo-root workflow
-`.github/workflows/pine-defang-guard.yml` (WP-P0-23) runs on every push and pull request,
-including `master`; its `pine-alert-guard` check is green on `59bf7723` but is **not** required —
-that is this policy operating as designed, not an oversight.
+The required set is enforced today; what stays progressive is its growth. Rule 21444962's
+required list holds exactly two contexts: `Bridge suite (Python 3.12)` and `pine-alert-guard`
+(the repo-root `.github/workflows/pine-defang-guard.yml` check, WP-P0-23), both strict on an
+up-to-date head — see "Live `master` protection" above, which is the authority. Every other job
+(`Research gates`, `OPS-A tests`, the Vercel checks) is informational: it runs, it can be red, it
+does not gate a merge. (Corrected 2026-09-16 after the lane-5 T1 review, finding F-09; the
+paragraph had still described the single-context state of 2026-08-25.)
 
 A later guard becomes required only after its owning package delivers the executable check, D026
 RED/GREEN evidence exists, the applicable audit tier accepts it, and the Lead asks the owner to
@@ -118,7 +120,10 @@ requires only the Bridge suite and compile check.
 
 ## Red-master rule
 
-`master` must never stay red. A failed push run is an immediate incident: stop unrelated merges
+`master` must never stay red **on a required check**. A failed push run of a required context
+(`Bridge suite (Python 3.12)`, `pine-alert-guard`) is an immediate incident; a failed push run of
+an informational job (`Research gates`, `OPS-A tests`) is investigated and fixed forward but does
+not stop merges (clarified 2026-09-16, lane-5 T1 review finding F-05). For a required context: stop unrelated merges
 and direct pushes, inspect the first failing check, then either fix forward with the smallest
 accepted repair or revert the offending commit with a new revert commit. Do not rewrite history
 or bypass the workflow. The native GitHub failure notification is the day-one signal; the

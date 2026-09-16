@@ -1,0 +1,3 @@
+2026-09-15T19:56:20.3349756Z refuse: before the weekly reset 2026-09-16T20:00:00.0000000Z
+2026-09-16T10:27:36Z LEAD by hand (owner: use the leftover Pro allowance before the 20:00Z reset): launching lane 5 P027CI early
+2026-09-16T10:51:16Z LEAD: lane 5 finished PASS-WITH-NITS x2 (exit=0); PR #193 merged 879fc2a9, PR #194 merged c19538bc; lane 5 is complete for tonight
