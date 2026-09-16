@@ -2585,6 +2585,85 @@ class LifecycleLedgerTests(unittest.TestCase):
         self.assertEqual(state["package_hash"], PACKAGE_A)
         self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
 
+    def test_post_refresh_admission_cannot_reuse_the_revoked_deployment_identity(
+        self,
+    ) -> None:
+        """OD-7 (6A) revocation fence: after a registrar refresh to FROZEN under a new
+        composite, an admission that carries the OLD deployment identity must be refused
+        by ``DEPLOYMENT_IDENTITY_MISMATCH`` (ledger ``:832-833``) and the candidate must
+        stay FROZEN; the same admission under the NEW identity is accepted and records it.
+
+        Lane-3 exact-Opus review of ``48bd70de`` (2026-09-16, finding F-1): removing that
+        guard left the whole suite green while the ledger re-admitted the revoked
+        identity. This test is RED on that mutant and GREEN with the guard.
+        """
+        candidate_id = "QLC-20260916-revoked-identity"
+        self.build_to_rung(
+            self.ledger, candidate_id, "revoked-identity", "SHADOW_ELIGIBLE"
+        )
+        self.registrar.append(
+            event(
+                event_id="revoked-identity-refresh",
+                event_type="FROZEN",
+                previous_state="SHADOW",
+                next_state="FROZEN",
+                candidate_id=candidate_id,
+                package_hash=PACKAGE_A,
+                deployment_identity_hash=DEPLOYMENT_B,
+                evidence_references=("fixture://revoked-identity/refresh",),
+                timestamp=BASE_TIME + timedelta(seconds=6),
+            )
+        )
+        state = self.ledger.current_state(candidate_id)
+        self.assertEqual(observed_state(state), "FROZEN")
+        self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
+
+        with self.assertRaisesRegex(ValueError, "DEPLOYMENT_IDENTITY_MISMATCH"):
+            self.append_authority_event(
+                self.ledger,
+                candidate_id=candidate_id,
+                event_id="revoked-identity-readmission-old",
+                event_type="SHADOW_ELIGIBLE",
+                previous_state="FROZEN",
+                next_state="SHADOW",
+                writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
+                writer_id="admission-1",
+                check_set_version="shadow-eligibility.v1",
+                package_hash=PACKAGE_A,
+                deployment_identity_hash=DEPLOYMENT_A,
+                offset=7,
+            )
+        state = self.ledger.current_state(candidate_id)
+        self.assertEqual(observed_state(state), "FROZEN")
+        self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
+        self.assertEqual(
+            [
+                record.event.event_id
+                for record in self.ledger.replay()
+                if record.event.candidate_id == candidate_id
+                and record.event.event_type == "SHADOW_ELIGIBLE"
+            ],
+            ["revoked-identity-shadow_eligible"],
+        )
+
+        self.append_authority_event(
+            self.ledger,
+            candidate_id=candidate_id,
+            event_id="revoked-identity-readmission-new",
+            event_type="SHADOW_ELIGIBLE",
+            previous_state="FROZEN",
+            next_state="SHADOW",
+            writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
+            writer_id="admission-1",
+            check_set_version="shadow-eligibility.v1",
+            package_hash=PACKAGE_A,
+            deployment_identity_hash=DEPLOYMENT_B,
+            offset=8,
+        )
+        state = self.ledger.current_state(candidate_id)
+        self.assertEqual(observed_state(state), "SHADOW")
+        self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
+
     def test_status_report_identifies_events_and_all_contract_blockers(self) -> None:
         self.append_capture()
         report = json.loads(self.ledger.render_status_report())
