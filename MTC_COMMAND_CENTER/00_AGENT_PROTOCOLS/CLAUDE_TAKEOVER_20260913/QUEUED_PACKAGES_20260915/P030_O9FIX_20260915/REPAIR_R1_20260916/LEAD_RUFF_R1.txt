@@ -1,0 +1,81 @@
+I001 [*] Import block is un-sorted or un-formatted
+  --> check_p030_archive_exporter.py:3:1
+   |
+ 1 |   """Executable checks for the P030 Shape-B archive exporter."""
+ 2 |
+ 3 | / from __future__ import annotations
+ 4 | |
+ 5 | | import hashlib
+ 6 | | import json
+ 7 | | import subprocess
+ 8 | | import tempfile
+ 9 | | import unittest
+10 | | from pathlib import Path
+11 | | from unittest import mock
+12 | |
+13 | | import check_market_data_collector as collector_fixtures
+14 | | import market_data_collector
+15 | | import p030_archive_exporter as subject
+16 | | from p030_closed_partition_backup_adapter import capture_stable_prefix
+   | |______________________________________________________________________^
+help: Organize imports
+   |
+17 |
+   -
+18 | EXPORTED_AT = "2026-09-14T00:00:00Z"
+   |
+
+SIM117 [*] Use a single `with` statement with multiple contexts instead of nested `with` statements
+   --> check_p030_archive_exporter.py:226:13
+    |
+224 |                   return data
+225 |
+226 | /             with mock.patch.object(
+227 | |                 Path, "read_bytes", autospec=True, side_effect=changed_target_read
+228 | |             ):
+229 | |                 with self.assertRaisesRegex(
+230 | |                     subject.ExportRefused, "re-read differs"
+231 | |                 ) as caught:
+    | |____________________________^
+232 |                       subject.export_partition(
+233 |                           source,
+    |
+help: Combine `with` statements
+    |
+227 |                 Path, "read_bytes", autospec=True, side_effect=changed_target_read
+    -             ):
+    -                 with self.assertRaisesRegex(
+    -                     subject.ExportRefused, "re-read differs"
+    -                 ) as caught:
+    -                     subject.export_partition(
+    -                         source,
+    -                         target,
+    -                         source_root=source_root,
+    -                         exported_at_utc=EXPORTED_AT,
+    -                     )
+228 +             ), self.assertRaisesRegex(
+229 +                 subject.ExportRefused, "re-read differs"
+230 +             ) as caught:
+231 +                 subject.export_partition(
+232 +                     source,
+233 +                     target,
+234 +                     source_root=source_root,
+235 +                     exported_at_utc=EXPORTED_AT,
+236 +                 )
+237 |             self.assertEqual(caught.exception.code, "target_verify_failed")
+    |
+
+RUF059 Unpacked variable `source_root` is never used
+   --> check_p030_archive_exporter.py:364:13
+    |
+362 |         with tempfile.TemporaryDirectory() as temporary:
+363 |             root = Path(temporary)
+364 |             source_root, source = self._partition(root)
+    |             ^^^^^^^^^^^
+365 |             self._refused(
+366 |                 "source_outside_root",
+    |
+help: Prefix it with an underscore or any other dummy variable pattern
+
+Found 3 errors.
+[*] 2 fixable with the `--fix` option (1 hidden fix can be enabled with the `--unsafe-fixes` option).

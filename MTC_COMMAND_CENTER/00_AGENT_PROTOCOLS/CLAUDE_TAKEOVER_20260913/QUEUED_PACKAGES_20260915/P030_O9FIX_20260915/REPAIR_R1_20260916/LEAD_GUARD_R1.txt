@@ -1,0 +1,17 @@
+=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    feature/p030-integrated-20260913
+[freshness] local origin/master tip c19538bc6c6c3e394ce6eb19df9989ac8dec4653 age=0 day(s) (commit timestamp; no fetch attempted)
+[freshness] branch merge-base f42fd5400b2c2ecb805644d406999cb55c8178c8 is 26 commit(s) behind local origin/master (limit 30)
+[dirty]     3 entr(y/ies):
+            M  check_p030_archive_exporter.py
+            M  p030_archive_exporter.py
+            ?? TASK_O9EXP.md
+[staged]    2 file(s):
+            check_p030_archive_exporter.py
+            p030_archive_exporter.py
+[protected] none
+[untracked] no risky files
+[pine-alert] PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
+[unpushed]  1 commit(s) ahead of upstream
+
+RESULT: PASS

@@ -23,7 +23,7 @@
 | K-07 NIT | `sources/SHA256SUMS.txt` and `PACKET_SHA256SUMS.txt` carry different digests for `check_p030_archive_exporter.py` (`8195157c…` vs `b0f0112a…`) | correct observation, **direction reversed**: the packet copy comes from `git show` (blob bytes, LF, 20 608 B → `b0f0112a…`); the lane's `SHA256SUMS.txt` hashed the worktree file (CRLF checkout, 21 074 B → `8195157c…`). The blob is authoritative; `p030_archive_exporter.py` is LF in both | RECORDED here; lane-record lesson: hash blob bytes (`git show HEAD:path`) in lane SHA256SUMS, not the checkout — same lesson as [[recorded-hash-form-ambiguity]] |
 
 ## What the corroboration establishes / does not
-- By content, the delta closes K-01..K-05 and every `ExportRefused` code has a named negative test; scope is exactly two files (+21/−2 exporter, +203 checker); the RED arm is sharp (fails on exactly the three fixed defects, 17 others pass).
+- By content, the delta closes K-01..K-05 and every `ExportRefused` code has a named negative test; scope is exactly two files (+19/−2 (corrected 2026-09-16, lane-3 review finding 6) exporter, +203 checker); the RED arm is sharp (fails on exactly the three fixed defects, 17 others pass).
 - Attempt 1 uncounted (wrapper-voided); attempt 2 COUNTED (28 native reads, 0 outside). The Lead built this change and does not accept it; the Wednesday exact-Opus lane 3 (`C:/tmp/OPUS_QUEUE_20260916/P030/`, pinned `153edee9`) is the first flagship read.
 - Route: five of five full Gemini calls tonight ended in the 503/ERROR envelope after a complete report (P027 ×2, DD06 ×2, O9FIX ×1); the recovery path (`recover_gemini_attempt.py` + `native_read_audit.py`) is now routine — see [[route-lessons-2026-09-15-night]].
 
