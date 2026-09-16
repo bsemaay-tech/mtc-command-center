@@ -84,3 +84,10 @@ E recomended
 G yes
 ```
 Reading: A = execution word for §3 of the DD-06 step packet → `OD-20260915-P029-DD06-PROBE-STEPS-APPROVED-1` (r1 executed 18:33Z, ABORTED at the control arm on a tick-size rejection; re-run needs "r2 go"); B = option A → `OD-20260915-P026-README-A-1` (`e114ed31`, lane 4 re-pinned); C = "proceed" (typo) → `OD-20260915-P029-DD01-PROCEED-1` (DD-01 closed; HOLD disposition unchanged); D = "Wed Opus" → `OD-20260915-P027-T1-WEDOPUS-1` (lane 5); E = "recommended" → `OD-20260915-P021-S2-RECOMMENDED-1` (T / B-17 pin / B-13 pin / M-C); G = yes → `OD-20260915-P013-E4-ASK-1`. F unanswered → default skip.
+
+## 2026-09-16 08:05 UTC+3 batch — morning asks answered after the plain-language explanations (chat, verbatim)
+Owner first asked (Turkish) for times in UTC+3 from now on and for explanations of R2 / H / I / D; the Lead explained each in chat. Then:
+```
+r2 go · H catalogue only · I A A A A A B · D all R
+```
+Reading: `OD-20260916-P029-DD06-R2-GO-1` (DD-06 re-run authorized), `OD-20260916-P021-S1-CATALOGUE-ONLY-1`, `OD-20260916-P031-M2-Q1-Q6-1` (A,A,A,A,A,B), `OD-20260916-P012-INTAKE-D1-D6-R-1` (all recommended).

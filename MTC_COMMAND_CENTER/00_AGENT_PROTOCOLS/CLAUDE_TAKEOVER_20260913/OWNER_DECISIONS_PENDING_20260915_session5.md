@@ -123,3 +123,5 @@ NEW tonight (no rush, one line each):
 
 ## 18:25Z — morning asks A-G ANSWERED early (`A "probe steps approved"` / `B A` / `C procced` / `D we'd opus` / `E recomended` / `G yes`; F silent → skip). Rows `OD-20260915-P029-DD06-PROBE-STEPS-APPROVED-1`, `-P026-README-A-1`, `-P029-DD01-PROCEED-1`, `-P027-T1-WEDOPUS-1`, `-P021-S2-RECOMMENDED-1`, `-P013-E4-ASK-1`. Item 7 (README) CLOSED by B; item 8 (demo mail) stays optional.
 **PENDING now:** "r2 go" for the DD-06 probe re-run on slice 3 `1af85067` (r1 aborted at the control arm on a tick-size rejection; fix shipped and dry-run on KVM2). Nothing else blocks.
+
+## 2026-09-16 08:05 UTC+3 — R2 / H / I / D ANSWERED (`r2 go · H catalogue only · I A A A A A B · D all R`). Rows `OD-20260916-P029-DD06-R2-GO-1`, `-P021-S1-CATALOGUE-ONLY-1`, `-P031-M2-Q1-Q6-1`, `-P012-INTAKE-D1-D6-R-1`. **PENDING now:** F (optional demo mail, default skip). Lead items unlocked: DD-06 r2 execution; P0-31 M2 design half (Q1 A); P0-12 accepting-half slice (D-1..D-6).
