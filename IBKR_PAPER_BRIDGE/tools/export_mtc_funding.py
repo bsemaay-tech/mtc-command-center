@@ -129,9 +129,7 @@ CANDIDATE_INPUT_INVALID = "CANDIDATE_INPUT_INVALID"
 CANDIDATE_INTERVAL_INVALID = "CANDIDATE_INTERVAL_INVALID"
 CANDIDATE_TIMESTAMP_INVALID = "CANDIDATE_TIMESTAMP_INVALID"
 CANDIDATE_COVERAGE_INVALID = "CANDIDATE_COVERAGE_INVALID"
-CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE = (
-    "CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE"
-)
+CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE = "CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE"
 CANDIDATE_BINDING_INVALID = "CANDIDATE_BINDING_INVALID"
 CANDIDATE_BINDING_OUT_OF_INTERVAL = "CANDIDATE_BINDING_OUT_OF_INTERVAL"
 CANDIDATE_BINDING_UNKNOWN_EVENT = "CANDIDATE_BINDING_UNKNOWN_EVENT"
@@ -296,7 +294,9 @@ def _parse_instant(value: Any, field: str) -> _Instant:
             tzinfo=UTC,
         )
     except ValueError as exc:
-        raise _Refusal(CANDIDATE_TIMESTAMP_INVALID, f"{field} is not a real instant: {exc}")
+        raise _Refusal(
+            CANDIDATE_TIMESTAMP_INVALID, f"{field} is not a real instant: {exc}"
+        )
     offset = parts["offset"]
     if offset != "Z":
         sign = -1 if offset[0] == "-" else 1
@@ -308,9 +308,7 @@ def _parse_instant(value: Any, field: str) -> _Instant:
                 f"{field} has an invalid RFC 3339 offset {offset!r}",
             )
         try:
-            stamp -= timedelta(
-                minutes=sign * (offset_hours * 60 + offset_minutes)
-            )
+            stamp -= timedelta(minutes=sign * (offset_hours * 60 + offset_minutes))
         except OverflowError as exc:
             raise _Refusal(
                 CANDIDATE_TIMESTAMP_INVALID,
@@ -322,7 +320,9 @@ def _parse_instant(value: Any, field: str) -> _Instant:
         spelled = f"{spelled}.{fraction_digits}"
     return _Instant(
         seconds=int((stamp - _EPOCH) // timedelta(seconds=1)),
-        fraction=Decimal(0) if fraction_digits is None else Decimal(f"0.{fraction_digits}"),
+        fraction=Decimal(0)
+        if fraction_digits is None
+        else Decimal(f"0.{fraction_digits}"),
         text=f"{spelled}Z",
     )
 
@@ -368,7 +368,9 @@ def _require_digest(value: Any, field: str, code: str) -> str:
     return value
 
 
-def _require_closed_mapping(value: Any, keys: Sequence[str], label: str, code: str) -> dict:
+def _require_closed_mapping(
+    value: Any, keys: Sequence[str], label: str, code: str
+) -> dict:
     if not isinstance(value, Mapping):
         raise _Refusal(code, f"{label} must be an object")
     if tuple(sorted(value)) != tuple(sorted(keys)):
@@ -458,9 +460,7 @@ def _strict_json_loads(raw: bytes) -> Any:
 # ---------------------------------------------------------------------------
 
 
-def _validate_coverage(
-    coverage: Any, start: _Instant, end: _Instant
-) -> dict[str, Any]:
+def _validate_coverage(coverage: Any, start: _Instant, end: _Instant) -> dict[str, Any]:
     witness = _require_closed_mapping(
         coverage, COVERAGE_KEYS, "coverage", CANDIDATE_COVERAGE_INVALID
     )
@@ -490,7 +490,9 @@ def _validate_coverage(
         )
     return {
         "account_scope": _require_text(
-            witness["account_scope"], "coverage.account_scope", CANDIDATE_COVERAGE_INVALID
+            witness["account_scope"],
+            "coverage.account_scope",
+            CANDIDATE_COVERAGE_INVALID,
         ),
         "complete": True,
         "evidence_kind": kind,
@@ -518,8 +520,12 @@ def _validate_retained_row(raw: Any) -> dict[str, Any]:
     row = _require_closed_mapping(
         raw, RETAINED_ROW_KEYS, "retained row", CANDIDATE_INPUT_INVALID
     )
-    event_id = _require_text(row["event_id"], "retained row event_id", CANDIDATE_INPUT_INVALID)
-    symbol = _require_text(row["symbol"], "retained row symbol", CANDIDATE_INPUT_INVALID)
+    event_id = _require_text(
+        row["event_id"], "retained row event_id", CANDIDATE_INPUT_INVALID
+    )
+    symbol = _require_text(
+        row["symbol"], "retained row symbol", CANDIDATE_INPUT_INVALID
+    )
     attribution = _require_text(
         row["attribution"], "retained row attribution", CANDIDATE_INPUT_INVALID
     )
@@ -536,7 +542,9 @@ def _validate_retained_row(raw: Any) -> dict[str, Any]:
     )
     payload = row["payload"]
     if payload is not None and not isinstance(payload, Mapping):
-        raise _Refusal(CANDIDATE_INPUT_INVALID, "retained row payload must be an object or null")
+        raise _Refusal(
+            CANDIDATE_INPUT_INVALID, "retained row payload must be an object or null"
+        )
     if payload is None and reason == PAYLOAD_RETAINED:
         raise _Refusal(
             CANDIDATE_INPUT_INVALID,
@@ -554,7 +562,9 @@ def _validate_retained_row(raw: Any) -> dict[str, Any]:
         "attribution": attribution,
         "event_id": event_id,
         "ledger_effective_ts": ledger,
-        "ledger_instant": _parse_instant(ledger, f"retained row {event_id} ledger_effective_ts"),
+        "ledger_instant": _parse_instant(
+            ledger, f"retained row {event_id} ledger_effective_ts"
+        ),
         "payload": None if payload is None else dict(payload),
         "payload_digest": digest,
         "payload_reason": reason,
@@ -564,7 +574,10 @@ def _validate_retained_row(raw: Any) -> dict[str, Any]:
 
 def _validate_provenance(raw: Any, event_id: str) -> dict[str, str]:
     provenance = _require_closed_mapping(
-        raw, PROVENANCE_KEYS, f"binding {event_id} provenance", CANDIDATE_BINDING_INVALID
+        raw,
+        PROVENANCE_KEYS,
+        f"binding {event_id} provenance",
+        CANDIDATE_BINDING_INVALID,
     )
     kind = provenance["evidence_kind"]
     if kind not in ACCEPTED_EVIDENCE_KINDS:
@@ -603,9 +616,13 @@ def _validate_binding(raw: Any) -> dict[str, Any]:
         raw, BINDING_KEYS, "binding", CANDIDATE_BINDING_INVALID
     )
     event_id = _require_text(
-        fields["funding_event_id"], "binding funding_event_id", CANDIDATE_BINDING_INVALID
+        fields["funding_event_id"],
+        "binding funding_event_id",
+        CANDIDATE_BINDING_INVALID,
     )
-    instant = _parse_instant(fields["event_timestamp"], f"binding {event_id} event_timestamp")
+    instant = _parse_instant(
+        fields["event_timestamp"], f"binding {event_id} event_timestamp"
+    )
     payer = fields["positive_rate_payer"]
     if payer != APPROVED_PAYER:
         raise _Refusal(
@@ -613,13 +630,16 @@ def _validate_binding(raw: Any) -> dict[str, Any]:
             f"binding {event_id} positive_rate_payer must be the approved "
             f"{APPROVED_PAYER} convention, got {payer!r}",
         )
-    raw_rate_text, _ = _parse_decimal(fields["raw_rate"], f"binding {event_id} raw_rate")
+    raw_rate_text, _ = _parse_decimal(
+        fields["raw_rate"], f"binding {event_id} raw_rate"
+    )
     price_text, price = _parse_decimal(
         fields["oracle_price"], f"binding {event_id} oracle_price"
     )
     if price <= 0:
         raise _Refusal(
-            CANDIDATE_BINDING_INVALID, f"binding {event_id} oracle_price must be positive"
+            CANDIDATE_BINDING_INVALID,
+            f"binding {event_id} oracle_price must be positive",
         )
     body = {
         "event_timestamp": instant.text,
@@ -695,7 +715,9 @@ def _verify_source_witness(binding: Mapping[str, Any], source_hex: str) -> None:
         )
 
 
-def _fold_unique(items: list[dict[str, Any]], key: str, label: str) -> dict[str, dict[str, Any]]:
+def _fold_unique(
+    items: list[dict[str, Any]], key: str, label: str
+) -> dict[str, dict[str, Any]]:
     """Duplicate identical entries collapse to one; any conflict refuses."""
     folded: dict[str, dict[str, Any]] = {}
     for item in items:
@@ -834,7 +856,10 @@ def _build(
     facts["account_scope"] = witness["account_scope"]
     facts["witness_identity"] = witness["witness_identity"]
 
-    rows = [_validate_retained_row(raw) for raw in _require_sequence(retained_rows, "retained_rows")]
+    rows = [
+        _validate_retained_row(raw)
+        for raw in _require_sequence(retained_rows, "retained_rows")
+    ]
     bindings = [
         _validate_binding(raw)
         for raw in _require_sequence(approved_event_bindings, "approved_event_bindings")
@@ -915,26 +940,28 @@ def _build(
             )
         _verify_source_witness(binding, witness["source_witnesses"][event_id])
         ledger_instant = row["ledger_instant"]
-        events.append({
-            "sort_key": (binding["instant"].sort_key, event_id.encode("utf-8")),
-            "body": {
-                "binding": binding["body"],
-                "binding_notes": {
-                    "bridge_effective_ts_equals_binding_event_timestamp": (
-                        ledger_instant.sort_key == binding["instant"].sort_key
-                    ),
-                    "settlement_rate_source": SETTLEMENT_SOURCE,
-                    "settlement_time_source": SETTLEMENT_SOURCE,
+        events.append(
+            {
+                "sort_key": (binding["instant"].sort_key, event_id.encode("utf-8")),
+                "body": {
+                    "binding": binding["body"],
+                    "binding_notes": {
+                        "bridge_effective_ts_equals_binding_event_timestamp": (
+                            ledger_instant.sort_key == binding["instant"].sort_key
+                        ),
+                        "settlement_rate_source": SETTLEMENT_SOURCE,
+                        "settlement_time_source": SETTLEMENT_SOURCE,
+                    },
+                    "bridge_evidence": {
+                        "attribution": row["attribution"],
+                        "event_id": event_id,
+                        "ledger_effective_ts": ledger_instant.text,
+                        "payload": payload,
+                        "payload_digest": row["payload_digest"],
+                    },
                 },
-                "bridge_evidence": {
-                    "attribution": row["attribution"],
-                    "event_id": event_id,
-                    "ledger_effective_ts": ledger_instant.text,
-                    "payload": payload,
-                    "payload_digest": row["payload_digest"],
-                },
-            },
-        })
+            }
+        )
 
     facts["out_of_interval_bindings"] = sorted(out_of_interval)
     if out_of_interval:
@@ -1109,7 +1136,9 @@ def _read_snapshot_rows(snapshot: Path, symbol: str) -> list[dict[str, Any]]:
     try:
         uri = f"{snapshot.resolve().as_uri()}?mode=ro&immutable=1"
     except ValueError as exc:  # pragma: no cover - defensive
-        raise _Refusal(CANDIDATE_SNAPSHOT_UNREADABLE, "cannot resolve the snapshot path") from exc
+        raise _Refusal(
+            CANDIDATE_SNAPSHOT_UNREADABLE, "cannot resolve the snapshot path"
+        ) from exc
     try:
         conn = sqlite3.connect(uri, uri=True)
     except sqlite3.Error as exc:
@@ -1135,17 +1164,21 @@ def _read_snapshot_rows(snapshot: Path, symbol: str) -> list[dict[str, Any]]:
                 payload, reason = None, exc.code
             else:
                 reason = (
-                    PAYLOAD_RETAINED if payload is not None else CANDIDATE_PAYLOAD_UNAVAILABLE
+                    PAYLOAD_RETAINED
+                    if payload is not None
+                    else CANDIDATE_PAYLOAD_UNAVAILABLE
                 )
-            rows.append({
-                "attribution": str(ledger["attribution"]),
-                "event_id": event_id,
-                "ledger_effective_ts": str(ledger["effective_ts"]),
-                "payload": payload,
-                "payload_digest": str(ledger["payload_digest"]),
-                "payload_reason": reason,
-                "symbol": str(ledger["symbol"]),
-            })
+            rows.append(
+                {
+                    "attribution": str(ledger["attribution"]),
+                    "event_id": event_id,
+                    "ledger_effective_ts": str(ledger["effective_ts"]),
+                    "payload": payload,
+                    "payload_digest": str(ledger["payload_digest"]),
+                    "payload_reason": reason,
+                    "symbol": str(ledger["symbol"]),
+                }
+            )
         return rows
     except sqlite3.Error as exc:
         raise _Refusal(
@@ -1161,7 +1194,8 @@ def _load_packet(path: Path) -> tuple[list[Any], Any]:
         raw = path.read_bytes()
     except OSError as exc:
         raise _Refusal(
-            CANDIDATE_PACKET_INVALID, f"cannot read the binding packet: {type(exc).__name__}"
+            CANDIDATE_PACKET_INVALID,
+            f"cannot read the binding packet: {type(exc).__name__}",
         ) from exc
     try:
         parsed = _strict_json_loads(raw)
@@ -1317,9 +1351,7 @@ def _cleanup_scratch(scratch: Path) -> list[str]:
 def _stage(staging: Path, result: CandidateResult) -> None:
     report_bytes = canonical_reconcile_json(result.report).encode("utf-8") + b"\n"
     try:
-        scratch = Path(
-            tempfile.mkdtemp(prefix=f".{staging.name}.", dir=staging.parent)
-        )
+        scratch = Path(tempfile.mkdtemp(prefix=f".{staging.name}.", dir=staging.parent))
     except OSError as exc:
         raise _Refusal(
             CANDIDATE_STAGING_FAILED,
