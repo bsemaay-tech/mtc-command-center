@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -131,7 +132,9 @@ class ArchiveExporterTests(unittest.TestCase):
             self.assertEqual(stored["exported_at_utc"], EXPORTED_AT)
             self.assertEqual(
                 stored["exporter_sha256"],
-                hashlib.sha256(Path(subject.__file__).read_bytes()).hexdigest(),
+                hashlib.sha256(
+                    Path(subject.__file__).read_bytes().replace(b"\r\n", b"\n")
+                ).hexdigest(),
             )
 
             raw_rows = [
@@ -212,9 +215,11 @@ class ArchiveExporterTests(unittest.TestCase):
             target = root / "tampered-read.jsonl"
             original_read_bytes = Path.read_bytes
 
+            staging = Path(str(target) + subject.STAGING_SUFFIX)
+
             def changed_target_read(path):
                 data = original_read_bytes(path)
-                if path == target:
+                if path == staging:
                     return data + b"tamper"
                 return data
 
@@ -231,6 +236,10 @@ class ArchiveExporterTests(unittest.TestCase):
                         exported_at_utc=EXPORTED_AT,
                     )
             self.assertEqual(caught.exception.code, "target_verify_failed")
+            # lane-3 T0 review finding 1: a verify refusal publishes nothing under the target name
+            self.assertFalse(target.exists())
+            self.assertFalse(Path(str(target) + ".p030export.json").exists())
+            self.assertTrue(staging.exists())
 
     def test_two_exports_are_byte_identical(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -398,16 +407,16 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
     def test_source_line_invalid_for_overflow_and_nan_literals(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            for name, line in (
-                ("overflow.jsonl", b'{"open":1e999}\n'),
-                ("nan.jsonl", b'{"open":NaN}\n'),
-                ("nested.jsonl", b'{"a":{"b":[1,-1e999]}}\n'),
+            # one exact message per arm (Gemini K-06 / lane-3 finding 3): an overflow literal is
+            # parsed and refused as non-finite; a NaN literal is refused at the parser
+            for name, line, message in (
+                ("overflow.jsonl", b'{"open":1e999}\n', "non-finite"),
+                ("nan.jsonl", b'{"open":NaN}\n', "not parseable"),
+                ("nested.jsonl", b'{"a":{"b":[1,-1e999]}}\n', "non-finite"),
             ):
                 source = root / name
                 source.write_bytes(line)
-                self._refused(
-                    "source_line_invalid", "non-finite|not parseable", source, root
-                )
+                self._refused("source_line_invalid", message, source, root)
 
     def test_source_line_noncanonical_refusal(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -512,8 +521,10 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             target = root / "out.jsonl"
             original_open = Path.open
 
+            staging_target = Path(str(target) + subject.STAGING_SUFFIX)
+
             def denied_target(path, *args, **kwargs):
-                if path == target:
+                if path == staging_target:
                     raise PermissionError("target denied")
                 return original_open(path, *args, **kwargs)
 
@@ -527,11 +538,13 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
                     target=target,
                 )
             self.assertFalse(target.exists())
+            self.assertFalse(staging_target.exists())
 
             receipt = Path(str(target) + ".p030export.json")
+            staging_receipt = Path(str(receipt) + subject.STAGING_SUFFIX)
 
             def denied_receipt(path, *args, **kwargs):
-                if path == receipt:
+                if path == staging_receipt:
                     raise PermissionError("receipt denied")
                 return original_open(path, *args, **kwargs)
 
@@ -544,8 +557,192 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
                     source_root=source_root,
                     target=target,
                 )
-            self.assertTrue(target.exists())
+            # lane-3 T0 review finding 1 / 7: a receipt refusal publishes nothing under the target name
+            self.assertFalse(target.exists())
             self.assertFalse(receipt.exists())
+            self.assertTrue(staging_target.exists())
+
+    def test_mid_write_failure_publishes_nothing_under_the_target_name(self) -> None:
+        """Lane-3 T0 review finding 1: an ENOSPC-shaped failure after the file was created must not
+        leave a truncated partition under the target name (the adapter would accept it)."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            target = root / "out.jsonl"
+            staging_target = Path(str(target) + subject.STAGING_SUFFIX)
+            original_open = Path.open
+
+            def half_then_enospc(path, *args, **kwargs):
+                handle = original_open(path, *args, **kwargs)
+                if path == staging_target and args and "x" in args[0]:
+                    real_write = handle.write
+
+                    def write(data):
+                        real_write(data[: len(data) // 2])
+                        raise OSError(28, "No space left on device")
+
+                    handle.write = write
+                return handle
+
+            with mock.patch.object(Path, "open", half_then_enospc):
+                self._refused(
+                    "target_unwritable",
+                    "nothing was published",
+                    source,
+                    root,
+                    source_root=source_root,
+                    target=target,
+                )
+            self.assertFalse(target.exists())
+            self.assertFalse(Path(str(target) + ".p030export.json").exists())
+            # the half-written bytes exist only under the staging name, which is never a partition name
+            self.assertTrue(staging_target.exists())
+            self.assertTrue(staging_target.name.endswith(subject.STAGING_SUFFIX))
+            self.assertLess(staging_target.stat().st_size, source.stat().st_size)
+            # a second run refuses on the leftover instead of adopting or removing it
+            self._refused(
+                "target_exists",
+                "staging partial",
+                source,
+                root,
+                source_root=source_root,
+                target=target,
+            )
+            self.assertTrue(staging_target.exists())
+
+    def test_publish_failure_of_the_target_leaves_receipt_without_partition(
+        self,
+    ) -> None:
+        """The documented residual window: the receipt is published first (inert alone); if taking the
+        target name then fails, the partition stays under the staging name."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            target = root / "out.jsonl"
+            staging_target = Path(str(target) + subject.STAGING_SUFFIX)
+            receipt = Path(str(target) + ".p030export.json")
+            original_replace = subject.os.replace
+
+            def deny_target_publish(src, dst, *args, **kwargs):
+                if Path(dst) == target:
+                    raise PermissionError("publish denied")
+                return original_replace(src, dst, *args, **kwargs)
+
+            with mock.patch.object(subject.os, "replace", deny_target_publish):
+                self._refused(
+                    "target_unwritable",
+                    "could not be published",
+                    source,
+                    root,
+                    source_root=source_root,
+                    target=target,
+                )
+            self.assertFalse(target.exists())
+            self.assertTrue(receipt.exists())
+            self.assertTrue(staging_target.exists())
+            self.assertEqual(staging_target.read_bytes().count(b"\n"), 2)
+
+    def test_exporter_sha256_is_the_lf_form_on_any_checkout(self) -> None:
+        """Lane-3 T0 review finding 5: the receipt's exporter digest must not depend on CRLF checkout."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            module = Path(subject.__file__)
+            lf_digest = hashlib.sha256(
+                module.read_bytes().replace(b"\r\n", b"\n")
+            ).hexdigest()
+            receipt = subject.export_partition(
+                source,
+                root / "a.jsonl",
+                source_root=source_root,
+                exported_at_utc=EXPORTED_AT,
+            )
+            self.assertEqual(receipt.exporter_sha256, lf_digest)
+            original_read_bytes = Path.read_bytes
+
+            def crlf_checkout(path):
+                data = original_read_bytes(path)
+                if path == module:
+                    return data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+                return data
+
+            with mock.patch.object(
+                Path, "read_bytes", autospec=True, side_effect=crlf_checkout
+            ):
+                receipt_crlf = subject.export_partition(
+                    source,
+                    root / "b.jsonl",
+                    source_root=source_root,
+                    exported_at_utc=EXPORTED_AT,
+                )
+            self.assertEqual(receipt_crlf.exporter_sha256, lf_digest)
+
+    def test_dotdot_traversal_is_refused_even_when_lexically_under_root(self) -> None:
+        """Lane-3 T0 review finding 2: `..` components used to pass the lexical relative_to check
+        and land in the receipt as `../../outside/...`."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            outside = root / "outside"
+            outside.mkdir()
+            (outside / "2026-02.jsonl").write_bytes(source.read_bytes())
+            declared_root = source_root / "bars"
+            traversal = declared_root / ".." / ".." / "outside" / "2026-02.jsonl"
+            self.assertTrue(traversal.exists())
+            self._refused(
+                "source_outside_root",
+                "canonical relative POSIX",
+                traversal,
+                root,
+                source_root=declared_root,
+            )
+            with self.assertRaises(ValueError):
+                capture_stable_prefix(
+                    traversal,
+                    root / "stable",
+                    source_root=declared_root,
+                    high_water_bytes=10,
+                    captured_at_utc=CAPTURED_AT,
+                    dataset_content_hash="p030ds-v1:" + "0" * 64,
+                )
+
+    def test_junction_component_is_refused_like_the_adapter(self) -> None:
+        """Lane-3 T0 review finding 2: a junction inside the root that points outside must be refused
+        by the exporter exactly as the adapter refuses it on the same field."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, source = self._partition(root)
+            jroot = root / "jroot"
+            jroot.mkdir()
+            outside = root / "joutside"
+            outside.mkdir()
+            (outside / "2026-02.jsonl").write_bytes(source.read_bytes())
+            link = jroot / "link"
+            created = subprocess.run(
+                ["cmd", "/c", "mklink", "/J", str(link), str(outside)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if created.returncode != 0 or not link.is_junction():
+                self.skipTest("cannot create an NTFS junction on this host")
+            self._refused(
+                "source_outside_root",
+                "symlink or junction",
+                link / "2026-02.jsonl",
+                root,
+                source_root=jroot,
+            )
+            with self.assertRaises(ValueError):
+                capture_stable_prefix(
+                    link / "2026-02.jsonl",
+                    root / "stable",
+                    source_root=jroot,
+                    high_water_bytes=10,
+                    captured_at_utc=CAPTURED_AT,
+                    dataset_content_hash="p030ds-v1:" + "0" * 64,
+                )
+            self.assertFalse((root / "out.jsonl").exists())
 
 
 class _StatWithSize:

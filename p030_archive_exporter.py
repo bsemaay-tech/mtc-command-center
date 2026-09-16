@@ -5,10 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 from p030_market_data_contracts import (
@@ -64,6 +65,12 @@ class ExportReceipt:
 _BARE_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _PAYLOAD_ID = re.compile(r"^p030payload-v1:[0-9a-f]{64}$")
 _OBSERVATION_ID = re.compile(r"^p030obs-v1:[0-9a-f]{64}$")
+# The target and its receipt are written under this suffix first and published by os.replace only
+# after the byte re-read and the receipt both succeeded (lane-3 T0 review 2026-09-16, finding 1).
+# A refused run therefore never leaves bytes under the target's own name; a leftover staging file
+# is never consumable as a partition (no archive name ends in this suffix) and, under the package
+# invariant of no delete code path, is left in place and named in the refusal.
+STAGING_SUFFIX = ".p030partial"
 
 
 def _refuse(code: str, message: str) -> None:
@@ -120,14 +127,62 @@ def _utc_z(value: str) -> str:
 
 
 def _source_rel(source_jsonl: Path, source_root: Path) -> str:
+    """The receipt's ``source_path``: containment is proven, not inferred from spelling.
+
+    Same rule as the adapter (`p030_closed_partition_backup_adapter.py` `_canonical_relative_posix`
+    + `_refuse_source_links`) and the contracts module's partition-path rule, so the three
+    components refuse the same inputs on the same field (lane-3 T0 review 2026-09-16, finding 2):
+    the literal path must sit under the literal root, spell a canonical relative POSIX path (no
+    ``.``/``..``/empty segment, no backslash, no drive), carry no symlink or junction component
+    anywhere on the way down from the filesystem root, and its resolved form must still sit under
+    the resolved root. Every check is read-only.
+    """
     source_root_abs = Path(source_root).absolute()
     source_abs = Path(source_jsonl).absolute()
     try:
-        return source_abs.relative_to(source_root_abs).as_posix()
+        rel = source_abs.relative_to(source_root_abs).as_posix()
     except ValueError as exc:
         raise ExportRefused(
             "source_outside_root", "source_path must be relative to source_root"
         ) from exc
+    posix = PurePosixPath(rel)
+    windows = PureWindowsPath(rel)
+    if (
+        not rel
+        or rel != rel.strip()
+        or "\\" in rel
+        or "\0" in rel
+        or posix.is_absolute()
+        or windows.drive
+        or windows.root
+        or posix.as_posix() != rel
+        or any(part in {"", ".", ".."} for part in rel.split("/"))
+    ):
+        _refuse(
+            "source_outside_root",
+            "source_path must be a canonical relative POSIX path inside source_root",
+        )
+    current = source_root_abs.joinpath(*posix.parts)
+    while True:
+        if current.is_symlink() or current.is_junction():
+            _refuse(
+                "source_outside_root",
+                "source_path must not contain a symlink or junction component",
+            )
+        parent = current.parent
+        if parent == current:
+            break
+        current = parent
+    try:
+        # non-strict: a missing leaf is reported by the read step as source_unreadable, while
+        # every existing component (links, junctions) is still resolved and re-checked here
+        Path(source_jsonl).resolve().relative_to(Path(source_root).resolve())
+    except (OSError, ValueError) as exc:
+        raise ExportRefused(
+            "source_outside_root",
+            "resolved source_path escapes the resolved source_root",
+        ) from exc
+    return rel
 
 
 def _read_source_once(source_jsonl: Path) -> bytes:
@@ -328,19 +383,33 @@ def export_partition(
         dataset_hash = dataset_content_hash(_descriptor(rows), rows)
     except ContractRefused as exc:
         raise ExportRefused("contract_refused", str(exc)) from exc
+    # Stage, verify, then publish: nothing appears under the target's own name until the bytes
+    # were re-read equal and the receipt was written. A refusal anywhere before the final
+    # os.replace leaves at most a `.p030partial` file, which no archive consumer recognises.
+    staging_target = Path(str(target_jsonl) + STAGING_SUFFIX)
+    staging_receipt = Path(str(receipt_path) + STAGING_SUFFIX)
+    if staging_target.exists() or staging_receipt.exists():
+        _refuse(
+            "target_exists",
+            f"a staging partial ({STAGING_SUFFIX}) from an earlier refused export exists beside "
+            "the target; this tool never overwrites or removes it",
+        )
     try:
         target_jsonl.parent.mkdir(parents=True, exist_ok=True)
-        with target_jsonl.open("xb") as handle:
+        with staging_target.open("xb") as handle:
             handle.write(exported)
             handle.flush()
+            os.fsync(handle.fileno())
     except FileExistsError as exc:
         raise ExportRefused("target_exists", "target partition already exists") from exc
     except OSError as exc:
         raise ExportRefused(
-            "target_unwritable", "target partition is unwritable"
+            "target_unwritable",
+            "target partition is unwritable (a staging partial may remain under "
+            f"{staging_target.name}; nothing was published under the target name)",
         ) from exc
     try:
-        reread = target_jsonl.read_bytes()
+        reread = staging_target.read_bytes()
     except OSError as exc:
         raise ExportRefused(
             "target_verify_failed", "target partition cannot be re-read"
@@ -357,7 +426,11 @@ def export_partition(
         source_path=source_rel,
         source_sha256=hashlib.sha256(source_bytes).hexdigest(),
         source_record_count=len(rows),
-        exporter_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        # LF-normalised so the value equals the sha256 of the git blob's bytes on every checkout
+        # (this repository checks text out as CRLF on Windows; lane-3 review finding 5)
+        exporter_sha256=hashlib.sha256(
+            Path(__file__).read_bytes().replace(b"\r\n", b"\n")
+        ).hexdigest(),
         exported_sha256=hashlib.sha256(exported).hexdigest(),
         exported_record_count=len(rows),
         dataset_content_hash=dataset_hash,
@@ -375,13 +448,34 @@ def export_partition(
         + "\n"
     ).encode("utf-8")
     try:
-        with receipt_path.open("xb") as handle:
+        with staging_receipt.open("xb") as handle:
             handle.write(receipt_raw)
             handle.flush()
+            os.fsync(handle.fileno())
     except FileExistsError as exc:
         raise ExportRefused("receipt_exists", "export receipt already exists") from exc
     except OSError as exc:
         raise ExportRefused(
             "receipt_unwritable", "export receipt is unwritable"
+        ) from exc
+    # Publish the receipt first: a receipt without its partition is inert, a partition without its
+    # receipt is consumable. The target name is re-checked immediately before it is taken.
+    if receipt_path.exists():
+        _refuse("receipt_exists", "export receipt already exists")
+    try:
+        os.replace(staging_receipt, receipt_path)
+    except OSError as exc:
+        raise ExportRefused(
+            "receipt_unwritable", "export receipt could not be published"
+        ) from exc
+    if target_jsonl.exists():
+        _refuse("target_exists", "target partition already exists")
+    try:
+        os.replace(staging_target, target_jsonl)
+    except OSError as exc:
+        raise ExportRefused(
+            "target_unwritable",
+            "target partition could not be published (the receipt was published; the staging "
+            f"partial remains under {staging_target.name})",
         ) from exc
     return receipt
