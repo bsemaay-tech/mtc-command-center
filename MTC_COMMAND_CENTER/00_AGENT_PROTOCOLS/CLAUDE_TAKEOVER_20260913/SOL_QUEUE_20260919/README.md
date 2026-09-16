@@ -2,7 +2,7 @@
 
 Second flagship for every candidate the Wednesday exact-Opus lanes read (owner routing: two flagships of different families + Gemini + Lead reproduction before any merge). Lanes are GENERATED on Friday from the Wednesday briefs by `make_sol_lane.ps1 -Pkg <P031|P1CAP|P030|P026|P027CI>` so that a Wednesday REQUEST_CHANGES (new HEAD, re-pinned brief) is picked up and a stale pin can never run; the generator refuses when the worktree HEAD differs from the Wednesday pin.
 
-Wednesday lanes 6-8 (optional there) exist for the three remaining candidates, so the generator covers them too: `P021S1` (`7fecf204`), `DD06` (`1af85067`), `P012INTAKE` (`4c802e9b`) - each with a counted Gemini PASS-WITH-NITS.
+Wednesday lanes 6-8 (optional there) exist for the three remaining candidates, so the generator covers them too: `P021S1` (`7fecf204`), `DD06` (`1af85067`), `P012INTAKE` (`9ef072a8`, re-pinned 2026-09-16 after the slice-4 accepting half; parent `b667dbcc` format-only) - each with a counted Gemini PASS-WITH-NITS.
 
 Order (serial, one Codex lane at a time on `secondary`): P031 → P1CAP → P030 → P026 → P027CI (T1) → then the three above if budget remains. Each lane: verify HEAD + `git status --porcelain` empty in the worktree before AND after; adjudicate (grep citations; reproduce one RED arm); record under CT13 `<package>_SOL_20260919/`; ledger row.
 

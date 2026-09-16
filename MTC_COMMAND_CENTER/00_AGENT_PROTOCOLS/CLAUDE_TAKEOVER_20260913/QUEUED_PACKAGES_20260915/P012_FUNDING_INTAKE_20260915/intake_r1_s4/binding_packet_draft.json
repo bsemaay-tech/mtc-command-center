@@ -1,0 +1,81 @@
+{
+  "adapter_version": "p012-funding-intake/v1",
+  "bindings": [
+    {
+      "event_timestamp": "2026-09-14T17:00:00.041Z",
+      "funding_event_id": "hl-funding:0x1E26…AC49:BTC:1789405200041",
+      "funding_event_id_rule": "PROPOSED:D-2 hl-funding:<account-short>:<coin>:<time_ms>",
+      "observed": {
+        "szi": "0.00058",
+        "usdc": "-0.000571",
+        "venue_hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "oracle_price": "UNRESOLVED:D-4",
+      "oracle_price_source": "UNRESOLVED:D-4",
+      "positive_rate_payer": "LONG",
+      "positive_rate_payer_basis": "export_mtc_funding.APPROVED_PAYER (tool constant)",
+      "provenance": {
+        "evidence_kind": "REAL_CAPTURE_READ_ONLY",
+        "evidence_kind_status": "UNRESOLVED:D-5",
+        "extraction_method": "capture_own_account_evidence.py tool_sha256=00b3b8f69f0e4870 user_funding_history",
+        "source_locator": "funding_pass1_page001.json#/0",
+        "source_sha256": "6f25ba294ae96dd333f6938bfe103f283559a960463ddfd2ce8757806563578f",
+        "source_title": "Hyperliquid userFunding 0x1E26…AC49 run p012-path1-20260914T1500Z-1900Z-r1"
+      },
+      "raw_rate": "0.0000125",
+      "source_event_digest": "UNRESOLVED:D-1"
+    },
+    {
+      "event_timestamp": "2026-09-14T18:00:00.060Z",
+      "funding_event_id": "hl-funding:0x1E26…AC49:BTC:1789408800060",
+      "funding_event_id_rule": "PROPOSED:D-2 hl-funding:<account-short>:<coin>:<time_ms>",
+      "observed": {
+        "szi": "0.00058",
+        "usdc": "-0.000572",
+        "venue_hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "oracle_price": "UNRESOLVED:D-4",
+      "oracle_price_source": "UNRESOLVED:D-4",
+      "positive_rate_payer": "LONG",
+      "positive_rate_payer_basis": "export_mtc_funding.APPROVED_PAYER (tool constant)",
+      "provenance": {
+        "evidence_kind": "REAL_CAPTURE_READ_ONLY",
+        "evidence_kind_status": "UNRESOLVED:D-5",
+        "extraction_method": "capture_own_account_evidence.py tool_sha256=00b3b8f69f0e4870 user_funding_history",
+        "source_locator": "funding_pass1_page001.json#/1",
+        "source_sha256": "6f25ba294ae96dd333f6938bfe103f283559a960463ddfd2ce8757806563578f",
+        "source_title": "Hyperliquid userFunding 0x1E26…AC49 run p012-path1-20260914T1500Z-1900Z-r1"
+      },
+      "raw_rate": "0.0000125",
+      "source_event_digest": "UNRESOLVED:D-1"
+    }
+  ],
+  "coverage": {
+    "account_scope": "0x1E26…AC49",
+    "complete": true,
+    "evidence_kind": "REAL_CAPTURE_READ_ONLY",
+    "expected_event_ids": [
+      "hl-funding:0x1E26…AC49:BTC:1789405200041",
+      "hl-funding:0x1E26…AC49:BTC:1789408800060"
+    ],
+    "interval_end_exclusive": "2026-09-14T19:00:00Z",
+    "interval_start_inclusive": "2026-09-14T15:00:00Z",
+    "source_witnesses": [
+      {
+        "file": "funding_pass1_page001.json",
+        "sha256": "6f25ba294ae96dd333f6938bfe103f283559a960463ddfd2ce8757806563578f"
+      },
+      {
+        "file": "funding_pass2_page001.json",
+        "sha256": "6f25ba294ae96dd333f6938bfe103f283559a960463ddfd2ce8757806563578f"
+      }
+    ],
+    "symbol": "BTC",
+    "unattributed_event_ids": [],
+    "witness_identity": "capture_own_account_evidence.py tool_sha256=00b3b8f69f0e4870 run p012-path1-20260914T1500Z-1900Z-r1; ownership OWNERSHIP_EVIDENCE: VERIFIED 0x1E26…AC49",
+    "witness_reasons": [],
+    "witness_rule": "hour-aligned window AND two byte-identical funding passes (proposed D-6)"
+  },
+  "label": "NONACCEPTING_INTAKE_DRAFT",
+  "packet_version": "SYNTHETIC_FUNDING_BINDING_PACKET_V1"
+}
