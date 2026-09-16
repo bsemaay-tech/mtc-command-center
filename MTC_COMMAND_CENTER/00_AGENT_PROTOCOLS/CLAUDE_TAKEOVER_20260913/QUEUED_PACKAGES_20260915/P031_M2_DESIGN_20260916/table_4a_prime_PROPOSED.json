@@ -1,0 +1,8 @@
+{
+  "RESEARCH_BATCH": ["CAPTURED", "legacy:research_batch"],
+  "TRIAGED": ["TRIAGED", "legacy:triaged"],
+  "READY_FOR_DETERMINISTIC_REVIEW": ["TRIAGED", "legacy:ready_for_deterministic_review"],
+  "READY_FOR_PYTHON_PROTOTYPE": ["TRIAGED", "legacy:ready_for_python_prototype"],
+  "RESEARCH_GRADE": ["CAPTURED", "legacy:research_grade"],
+  "FORWARD_PAPER_CANDIDATE": ["CAPTURED", "legacy:forward_paper_candidate"]
+}
