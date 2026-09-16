@@ -27,6 +27,23 @@ record: the only accepted completion-evidence kind is
 :data:`PRODUCTION_MODE_UNAVAILABLE` until the real binding-packet schema and the
 ``source_event_digest`` byte domain are approved and implemented elsewhere.
 
+Second evidence profile (2026-09-16, ``OD-20260916-P012-INTAKE-D1-D6-R-1``)
+----------------------------------------------------------------------------
+``--evidence-kind REAL_CAPTURE_READ_ONLY`` reads a packet built from a Path-1
+read-only venue capture under the six ruled intake rules: D-1 the
+``source_event_digest`` hashes the exact captured funding-row bytes
+(``HL_USERFUNDING_ROW_V1:<hex>``); D-2 the event id is re-derived as
+``hl-funding:<account-short>:<coin>:<time_ms>``; D-3 the venue stamp is kept
+verbatim and ``interval_hour_utc`` is its floor; D-4 an oracle capture at the
+funding instant must be named (a payment-derived price is never admitted);
+D-5 the witness identity names the ownership-signature record; D-6 two
+byte-identical funding passes, an hour-aligned window with a 1-second end
+tolerance, and the fills-derived position at every hour witness completeness.
+The profile is named by the caller and must be declared by the packet; it is
+not in :data:`ACCEPTED_EVIDENCE_KINDS`, it is not a mode, and its candidate is
+labelled ``REFUSED_REAL_CAPTURE_READ_ONLY_NOT_A_PRODUCTION_RECORD``:
+production admission is still not granted (``OD-20260914-P012-ADMISSION-Q3``).
+
 It also activates nothing. It never calls ``Store.initialize()``, never
 migrates, checkpoints or backfills, never writes to a database, and never
 copies a live one. ``Store.__init__``/``Store.conn`` are deliberately unused,
@@ -121,10 +138,61 @@ NOT_A_PRODUCTION_RECORD = (
 )
 APPROVED_PAYER = "LONG"
 
+# --- the real read-only capture profile (OD-20260916-P012-INTAKE-D1-D6-R-1) ---
+# A second, explicitly declared evidence profile. It is NOT in
+# ACCEPTED_EVIDENCE_KINDS: the default profile stays synthetic, and a packet is
+# read under this profile only when the caller names it (``--evidence-kind`` /
+# keyword-only ``evidence_kind=``) AND the packet declares the same kind in its
+# coverage witness and in every binding's provenance. There is still no
+# production mode: a real-capture candidate is labelled non-admitted and keeps
+# the same structural non-consumability as the synthetic one.
+REAL_CAPTURE_EVIDENCE_KIND = "REAL_CAPTURE_READ_ONLY"
+REAL_CAPTURE_PACKET_VERSION = "REAL_CAPTURE_FUNDING_BINDING_PACKET_V1"
+REAL_CAPTURE_ARTIFACT_KIND = "REAL_CAPTURE_FUNDING_CANDIDATE_V1"
+REAL_CAPTURE_CANDIDATE_FILENAME = "funding_candidate_real_capture.json"
+REAL_CAPTURE_SIDECAR_FILENAME = "funding_candidate_real_capture.json.sha256"
+REAL_SOURCE_EVENT_DIGEST_DOMAIN = "HL_USERFUNDING_ROW_V1"  # D-1
+REAL_EVENT_ID_PREFIX = "hl-funding"  # D-2
+REAL_END_TOLERANCE_SECONDS = 1  # D-6 (i): the venue stamps the hour's payment late
+REAL_CAPTURE_ADMISSION_STATUS = "REFUSED_REAL_CAPTURE_READ_ONLY_NOT_A_PRODUCTION_RECORD"
+REAL_CAPTURE_CANDIDATE_BUILT = "REAL_CAPTURE_CANDIDATE_BUILT"
+REAL_CAPTURE_NOT_A_PRODUCTION_RECORD = (
+    "Read-only capture evidence bound under the P0-12 intake rules D-1..D-6. "
+    "This is not an accepted economic record and not an admitted production "
+    'input: OD-20260914-P012-ADMISSION-Q3 ("Wait") stands. It must never be '
+    "installed as an MTC funding schedule."
+)
+REAL_CAPTURE_EVIDENCE_LIMITATIONS = (
+    (
+        "REAL_CAPTURE_READ_ONLY: every binding is re-derived from the exact "
+        "captured venue bytes carried in the coverage witness (D-1, D-2, D-3)."
+    ),
+    (
+        "The capture manifest and its ownership-signature record are named by "
+        "digest in the witness identity (D-5); this tool does not re-open them."
+    ),
+    (
+        "The oracle capture behind each oracle_price is named by digest and JSON "
+        "pointer (D-4); this tool does not re-open it and does not re-verify the price."
+    ),
+    (
+        "Whole-interval completeness is witnessed by two byte-identical funding "
+        "passes, an hour-aligned window with a 1-second end tolerance and the "
+        "fills-derived position at every hour (D-6); it is evidence about the "
+        "captured window only."
+    ),
+    (
+        "Production admission is NOT granted (OD-20260914-P012-ADMISSION-Q3 "
+        '"Wait"); this artifact is not admitted by any production selection path.'
+    ),
+)
+
 # --- outcome and refusal codes --------------------------------------------
 SYNTHETIC_CANDIDATE_BUILT = "SYNTHETIC_CANDIDATE_BUILT"
 PAYLOAD_RETAINED = "FUNDING_PAYLOAD_RETAINED"
 
+CANDIDATE_EVIDENCE_KIND_MISMATCH = "CANDIDATE_EVIDENCE_KIND_MISMATCH"
+CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE = "CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE"
 CANDIDATE_INPUT_INVALID = "CANDIDATE_INPUT_INVALID"
 CANDIDATE_INTERVAL_INVALID = "CANDIDATE_INTERVAL_INVALID"
 CANDIDATE_TIMESTAMP_INVALID = "CANDIDATE_TIMESTAMP_INVALID"
@@ -200,6 +268,8 @@ COVERAGE_KEYS = (
     "witness_identity",
 )
 PACKET_KEYS = ("bindings", "coverage", "packet_version")
+REAL_BINDING_KEYS = BINDING_KEYS + ("interval_hour_utc",)  # D-3 schedule key
+REAL_COVERAGE_KEYS = COVERAGE_KEYS + ("fills_witness", "funding_witness_passes")
 
 EVIDENCE_LIMITATIONS = (
     "SYNTHETIC_ONLY: every caller fact in this run is a synthetic fixture.",
@@ -222,6 +292,92 @@ _RFC3339_UTC = re.compile(
     r"(?P<offset>Z|[+-]\d{2}:\d{2})\Z"
 )
 _EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
+_HOUR_SECONDS = 3600
+_REAL_SOURCE_EVENT_DIGEST = re.compile(
+    rf"\A{REAL_SOURCE_EVENT_DIGEST_DOMAIN}:(?P<hex>[0-9a-f]{{64}})\Z"
+)
+_REAL_ORACLE_LOCATOR = re.compile(r"\A[0-9a-f]{64}#/\S+\Z")
+_REAL_SOURCE_LOCATOR = re.compile(r"\A(?P<file>[^#]+)#/(?P<index>0|[1-9][0-9]*)\Z")
+_REAL_WITNESS_MANIFEST = re.compile(
+    r"\bmanifest_sha256=(?P<hex>[0-9a-f]{64})(?![0-9a-f])"
+)
+_REAL_WITNESS_RUN = re.compile(r"\brun (?P<run>[A-Za-z0-9._-]+)")
+_REAL_WITNESS_OWNERSHIP = re.compile(
+    r"\bownership OWNERSHIP_EVIDENCE: VERIFIED (?P<scope>\S+)"
+)
+_LOWER_HEX = re.compile(r"\A(?:[0-9a-f]{2})+\Z")
+
+
+@dataclass(frozen=True)
+class _EvidenceProfile:
+    """Everything that differs between the two explicitly named evidence kinds.
+
+    The synthetic profile is the default and its outputs are byte-for-byte the
+    pre-existing ones. The real profile changes closed key sets, labels, file
+    names and the D-1..D-6 checks — never a flag inside one shared code path.
+    """
+
+    kind: str
+    packet_version: str
+    artifact_kind: str
+    candidate_filename: str
+    sidecar_filename: str
+    admission_status: str
+    built_code: str
+    digest_domain: str
+    not_a_production_record: str
+    evidence_limitations: tuple[str, ...]
+    binding_keys: tuple[str, ...]
+    coverage_keys: tuple[str, ...]
+    candidate_key: str
+    events_key: str
+    schedule_key: str
+    synthetic_only: bool
+    end_tolerance_seconds: int
+
+
+_SYNTHETIC_PROFILE = _EvidenceProfile(
+    kind=SYNTHETIC_EVIDENCE_KIND,
+    packet_version=PACKET_VERSION,
+    artifact_kind=ARTIFACT_KIND,
+    candidate_filename=CANDIDATE_FILENAME,
+    sidecar_filename=SIDECAR_FILENAME,
+    admission_status=ADMISSION_STATUS,
+    built_code=SYNTHETIC_CANDIDATE_BUILT,
+    digest_domain=SOURCE_EVENT_DIGEST_DOMAIN,
+    not_a_production_record=NOT_A_PRODUCTION_RECORD,
+    evidence_limitations=EVIDENCE_LIMITATIONS,
+    binding_keys=BINDING_KEYS,
+    coverage_keys=COVERAGE_KEYS,
+    candidate_key="synthetic_candidate",
+    events_key="synthetic_events",
+    schedule_key="synthetic_schedule_id",
+    synthetic_only=True,
+    end_tolerance_seconds=0,
+)
+_REAL_PROFILE = _EvidenceProfile(
+    kind=REAL_CAPTURE_EVIDENCE_KIND,
+    packet_version=REAL_CAPTURE_PACKET_VERSION,
+    artifact_kind=REAL_CAPTURE_ARTIFACT_KIND,
+    candidate_filename=REAL_CAPTURE_CANDIDATE_FILENAME,
+    sidecar_filename=REAL_CAPTURE_SIDECAR_FILENAME,
+    admission_status=REAL_CAPTURE_ADMISSION_STATUS,
+    built_code=REAL_CAPTURE_CANDIDATE_BUILT,
+    digest_domain=REAL_SOURCE_EVENT_DIGEST_DOMAIN,
+    not_a_production_record=REAL_CAPTURE_NOT_A_PRODUCTION_RECORD,
+    evidence_limitations=REAL_CAPTURE_EVIDENCE_LIMITATIONS,
+    binding_keys=REAL_BINDING_KEYS,
+    coverage_keys=REAL_COVERAGE_KEYS,
+    candidate_key="real_capture_candidate",
+    events_key="bound_events",
+    schedule_key="candidate_schedule_id",
+    synthetic_only=False,
+    end_tolerance_seconds=REAL_END_TOLERANCE_SECONDS,
+)
+_EVIDENCE_PROFILES = {
+    SYNTHETIC_EVIDENCE_KIND: _SYNTHETIC_PROFILE,
+    REAL_CAPTURE_EVIDENCE_KIND: _REAL_PROFILE,
+}
 
 
 class _Refusal(Exception):
@@ -264,6 +420,7 @@ class CandidateResult:
     report: dict[str, Any]
     candidate_bytes: bytes | None = None
     candidate_sha256: str | None = None
+    evidence_kind: str = SYNTHETIC_EVIDENCE_KIND
 
 
 # ---------------------------------------------------------------------------
@@ -460,17 +617,108 @@ def _strict_json_loads(raw: bytes) -> Any:
 # ---------------------------------------------------------------------------
 
 
-def _validate_coverage(coverage: Any, start: _Instant, end: _Instant) -> dict[str, Any]:
-    witness = _require_closed_mapping(
-        coverage, COVERAGE_KEYS, "coverage", CANDIDATE_COVERAGE_INVALID
-    )
-    kind = witness["evidence_kind"]
-    if kind not in ACCEPTED_EVIDENCE_KINDS:
+def _require_evidence_kind(kind: Any, profile: _EvidenceProfile, label: str) -> str:
+    """The packet must say what the caller declared — in the witness and in
+    every binding. A known-but-undeclared kind is a mismatch; an unknown kind
+    stays the unapproved-contract refusal it always was."""
+    if kind == profile.kind:
+        return kind
+    if isinstance(kind, str) and kind in _EVIDENCE_PROFILES:
         raise _Refusal(
-            CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE,
-            "the production completion-evidence contract is not approved or "
-            f"implemented; only {list(ACCEPTED_EVIDENCE_KINDS)} is accepted, got {kind!r}",
+            CANDIDATE_EVIDENCE_KIND_MISMATCH,
+            f"{label} declares evidence_kind {kind!r} but the caller admitted only "
+            f"{profile.kind!r}; the evidence profile is named explicitly, never inferred",
         )
+    raise _Refusal(
+        CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE,
+        "the production completion-evidence contract is not approved or "
+        f"implemented; only {list(ACCEPTED_EVIDENCE_KINDS)} is accepted, got {kind!r}",
+    )
+
+
+def _require_whole_hour(instant: _Instant, field: str) -> None:
+    if instant.fraction != 0 or instant.seconds % _HOUR_SECONDS:
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID,
+            f"D-6: {field} must be aligned to a whole venue funding hour, got {instant.text!r}",
+        )
+
+
+def _require_hex_bytes(value: Any, field: str) -> bytes:
+    if not isinstance(value, str) or _LOWER_HEX.fullmatch(value) is None:
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID,
+            f"D-6: {field} must be the exact captured bytes as lower-case hex",
+        )
+    return bytes.fromhex(value)
+
+
+def _validate_real_witness_identity(identity: str, account_scope: str) -> None:
+    """D-5: the witness names the capture run, the manifest by digest and the
+    ownership-signature record for exactly this account scope."""
+    manifest = _REAL_WITNESS_MANIFEST.search(identity)
+    run = _REAL_WITNESS_RUN.search(identity)
+    ownership = _REAL_WITNESS_OWNERSHIP.search(identity)
+    if manifest is None or run is None or ownership is None:
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID,
+            "D-5: coverage.witness_identity must name the capture run "
+            "(`run <id>`), the capture manifest (`manifest_sha256=<hex>`) and the "
+            "ownership-signature record (`ownership OWNERSHIP_EVIDENCE: VERIFIED <scope>`)",
+        )
+    if ownership.group("scope") != account_scope:
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID,
+            "D-5: the ownership-signature record named by the witness is for "
+            f"{ownership.group('scope')!r}, not the witnessed account scope {account_scope!r}",
+        )
+
+
+def _validate_real_coverage_extras(witness: Mapping[str, Any]) -> dict[str, Any]:
+    """D-6 witness material: two byte-identical funding passes and the fills."""
+    raw_passes = witness["funding_witness_passes"]
+    if isinstance(raw_passes, (str, bytes, Mapping)) or not isinstance(
+        raw_passes, Sequence
+    ):
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID,
+            "D-6: coverage.funding_witness_passes must be a list of captured funding passes",
+        )
+    passes = [
+        _require_hex_bytes(item, f"coverage.funding_witness_passes[{index}]")
+        for index, item in enumerate(raw_passes)
+    ]
+    if len(passes) < 2:
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID,
+            "D-6: at least two captured funding passes are required, got "
+            f"{len(passes)}",
+        )
+    if any(item != passes[0] for item in passes[1:]):
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID,
+            "D-6: the captured funding passes are not byte-identical",
+        )
+    return {
+        "funding_pass_bytes": passes[0],
+        "funding_pass_sha256": hashlib.sha256(passes[0]).hexdigest(),
+        "fills_bytes": _require_hex_bytes(
+            witness["fills_witness"], "coverage.fills_witness"
+        ),
+    }
+
+
+def _validate_coverage(
+    coverage: Any, start: _Instant, end: _Instant, profile: _EvidenceProfile
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    if isinstance(coverage, Mapping) and "evidence_kind" in coverage:
+        # the kind is judged before the shape: a packet of the other profile is
+        # reported as a kind mismatch, not as a malformed witness
+        _require_evidence_kind(coverage["evidence_kind"], profile, "coverage")
+    witness = _require_closed_mapping(
+        coverage, profile.coverage_keys, "coverage", CANDIDATE_COVERAGE_INVALID
+    )
+    kind = _require_evidence_kind(witness["evidence_kind"], profile, "coverage")
     if witness["complete"] is not True:
         raise _Refusal(
             CANDIDATE_COVERAGE_INVALID,
@@ -488,12 +736,16 @@ def _validate_coverage(coverage: Any, start: _Instant, end: _Instant) -> dict[st
             CANDIDATE_COVERAGE_INVALID,
             "the witnessed interval is not the requested interval",
         )
-    return {
-        "account_scope": _require_text(
-            witness["account_scope"],
-            "coverage.account_scope",
-            CANDIDATE_COVERAGE_INVALID,
-        ),
+    account_scope = _require_text(
+        witness["account_scope"], "coverage.account_scope", CANDIDATE_COVERAGE_INVALID
+    )
+    identity = _require_text(
+        witness["witness_identity"],
+        "coverage.witness_identity",
+        CANDIDATE_COVERAGE_INVALID,
+    )
+    validated = {
+        "account_scope": account_scope,
         "complete": True,
         "evidence_kind": kind,
         "expected_event_ids": _require_id_list(
@@ -508,12 +760,17 @@ def _validate_coverage(coverage: Any, start: _Instant, end: _Instant) -> dict[st
         "unattributed_event_ids": _require_id_list(
             witness["unattributed_event_ids"], "coverage.unattributed_event_ids"
         ),
-        "witness_identity": _require_text(
-            witness["witness_identity"],
-            "coverage.witness_identity",
-            CANDIDATE_COVERAGE_INVALID,
-        ),
+        "witness_identity": identity,
     }
+    extras: dict[str, Any] = {}
+    if profile is _REAL_PROFILE:
+        _require_whole_hour(start, "coverage.interval_start_inclusive")
+        _require_whole_hour(end, "coverage.interval_end_exclusive")
+        _validate_real_witness_identity(identity, account_scope)
+        extras = _validate_real_coverage_extras(witness)
+        validated["fills_witness"] = witness["fills_witness"]
+        validated["funding_witness_passes"] = list(witness["funding_witness_passes"])
+    return validated, extras
 
 
 def _validate_retained_row(raw: Any) -> dict[str, Any]:
@@ -572,20 +829,18 @@ def _validate_retained_row(raw: Any) -> dict[str, Any]:
     }
 
 
-def _validate_provenance(raw: Any, event_id: str) -> dict[str, str]:
+def _validate_provenance(
+    raw: Any, event_id: str, profile: _EvidenceProfile
+) -> dict[str, str]:
     provenance = _require_closed_mapping(
         raw,
         PROVENANCE_KEYS,
         f"binding {event_id} provenance",
         CANDIDATE_BINDING_INVALID,
     )
-    kind = provenance["evidence_kind"]
-    if kind not in ACCEPTED_EVIDENCE_KINDS:
-        raise _Refusal(
-            CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE,
-            f"binding {event_id} provenance.evidence_kind {kind!r} is not an "
-            "approved production evidence kind",
-        )
+    kind = _require_evidence_kind(
+        provenance["evidence_kind"], profile, f"binding {event_id} provenance"
+    )
     return {
         "evidence_kind": kind,
         "extraction_method": _require_text(
@@ -611,9 +866,48 @@ def _validate_provenance(raw: Any, event_id: str) -> dict[str, str]:
     }
 
 
-def _validate_binding(raw: Any) -> dict[str, Any]:
+def _hour_text(seconds: int) -> str:
+    return (_EPOCH + timedelta(seconds=seconds)).strftime("%Y-%m-%dT%H:00:00Z")
+
+
+def _millisecond_text(time_ms: int) -> str:
+    stamp = _EPOCH + timedelta(seconds=time_ms // 1000)
+    return f"{stamp.strftime('%Y-%m-%dT%H:%M:%S')}.{time_ms % 1000:03d}Z"
+
+
+def _require_real_oracle_source(value: Any, event_id: str) -> str:
+    """D-4: production needs an oracle capture at the funding instant, named by
+    digest and JSON pointer. A back-derived price, an unresolved marker or a
+    prose label is not that capture."""
+    if (
+        not isinstance(value, str)
+        or value.startswith("UNRESOLVED")
+        or "derived" in value.casefold()
+        or _REAL_ORACLE_LOCATOR.fullmatch(value) is None
+    ):
+        raise _Refusal(
+            CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE,
+            f"D-4: binding {event_id} oracle_price_source must name an oracle capture "
+            f"at the funding instant as <sha256>#<json-pointer>; a price derived from "
+            f"the payment is research evidence only and is never admitted, got {value!r}",
+        )
+    return value
+
+
+def _require_real_source_event_digest(value: Any, event_id: str) -> str:
+    if not isinstance(value, str) or _REAL_SOURCE_EVENT_DIGEST.fullmatch(value) is None:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"D-1: binding {event_id} source_event_digest must be "
+            f"{REAL_SOURCE_EVENT_DIGEST_DOMAIN}:<lower-case sha256 of the exact captured "
+            f"funding row bytes>, got {value!r}",
+        )
+    return value
+
+
+def _validate_binding(raw: Any, profile: _EvidenceProfile) -> dict[str, Any]:
     fields = _require_closed_mapping(
-        raw, BINDING_KEYS, "binding", CANDIDATE_BINDING_INVALID
+        raw, profile.binding_keys, "binding", CANDIDATE_BINDING_INVALID
     )
     event_id = _require_text(
         fields["funding_event_id"],
@@ -633,6 +927,16 @@ def _validate_binding(raw: Any) -> dict[str, Any]:
     raw_rate_text, _ = _parse_decimal(
         fields["raw_rate"], f"binding {event_id} raw_rate"
     )
+    if profile is _REAL_PROFILE:
+        oracle_source = _require_real_oracle_source(
+            fields["oracle_price_source"], event_id
+        )
+    else:
+        oracle_source = _require_text(
+            fields["oracle_price_source"],
+            f"binding {event_id} oracle_price_source",
+            CANDIDATE_BINDING_INVALID,
+        )
     price_text, price = _parse_decimal(
         fields["oracle_price"], f"binding {event_id} oracle_price"
     )
@@ -645,23 +949,40 @@ def _validate_binding(raw: Any) -> dict[str, Any]:
         "event_timestamp": instant.text,
         "funding_event_id": event_id,
         "oracle_price": price_text,
-        "oracle_price_source": _require_text(
-            fields["oracle_price_source"],
-            f"binding {event_id} oracle_price_source",
-            CANDIDATE_BINDING_INVALID,
-        ),
+        "oracle_price_source": oracle_source,
         "positive_rate_payer": payer,
-        "provenance": _validate_provenance(fields["provenance"], event_id),
+        "provenance": _validate_provenance(fields["provenance"], event_id, profile),
         "raw_rate": raw_rate_text,
-        "source_event_digest": _require_digest(
+    }
+    if profile is _REAL_PROFILE:
+        body["source_event_digest"] = _require_real_source_event_digest(
+            fields["source_event_digest"], event_id
+        )
+        digest_hex = _REAL_SOURCE_EVENT_DIGEST.fullmatch(
+            body["source_event_digest"]
+        ).group("hex")
+        hour = _parse_instant(
+            fields["interval_hour_utc"], f"binding {event_id} interval_hour_utc"
+        )
+        expected_hour = _hour_text(instant.seconds - instant.seconds % _HOUR_SECONDS)
+        if fields["interval_hour_utc"] != expected_hour or hour.text != expected_hour:
+            raise _Refusal(
+                CANDIDATE_BINDING_INVALID,
+                f"D-3: binding {event_id} interval_hour_utc must be the venue stamp "
+                f"floored to the hour, {expected_hour!r}, got {fields['interval_hour_utc']!r}",
+            )
+        body["interval_hour_utc"] = expected_hour
+    else:
+        body["source_event_digest"] = _require_digest(
             fields["source_event_digest"],
             f"binding {event_id} source_event_digest",
             CANDIDATE_BINDING_INVALID,
-        ),
-    }
+        )
+        digest_hex = body["source_event_digest"]
     return {
         "event_id": event_id,
         "instant": instant,
+        "digest_hex": digest_hex,
         "source_fields": {key: body[key] for key in SOURCE_BINDING_KEYS},
         "body": body,
     }
@@ -713,6 +1034,300 @@ def _verify_source_witness(binding: Mapping[str, Any], source_hex: str) -> None:
             CANDIDATE_BINDING_INVALID,
             f"binding {event_id} source witness does not describe this binding",
         )
+
+
+# ---------------------------------------------------------------------------
+# Real read-only capture profile — the venue bytes are parsed, never grepped
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class _PassRow:
+    """One funding row exactly as captured: its byte span inside the pass, the
+    venue's fields, and the identity D-2 derives from them."""
+
+    index: int
+    raw: bytes
+    time_ms: int
+    coin: str
+    usdc: Decimal
+    szi: Decimal
+    rate_text: str
+    event_id: str
+
+
+def _json_array_spans(payload: bytes, label: str) -> list[tuple[bytes, Any]]:
+    """Every element of a captured JSON array as (exact bytes, decoded value)."""
+    try:
+        text = payload.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID, f"D-6: {label} is not UTF-8: {exc}"
+        ) from exc
+    decoder = json.JSONDecoder(
+        object_pairs_hook=_reject_duplicate_object, parse_constant=_reject_json_constant
+    )
+    whitespace = " \t\r\n"
+    index = 0
+    try:
+        while text[index] in whitespace:
+            index += 1
+        if text[index] != "[":
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID, f"D-6: {label} is not a JSON array"
+            )
+        index += 1
+        spans: list[tuple[bytes, Any]] = []
+        while True:
+            while text[index] in whitespace:
+                index += 1
+            if text[index] == "]":
+                index += 1
+                break
+            if spans:
+                if text[index] != ",":
+                    raise _Refusal(
+                        CANDIDATE_COVERAGE_INVALID, f"D-6: {label} is not a JSON array"
+                    )
+                index += 1
+                while text[index] in whitespace:
+                    index += 1
+            value, end = decoder.raw_decode(text, index)
+            spans.append((text[index:end].encode("utf-8"), value))
+            index = end
+        if text[index:].strip(whitespace):
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID, f"D-6: {label} carries trailing bytes"
+            )
+    except (IndexError, ValueError) as exc:
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID, f"D-6: {label} is not a JSON array: {exc}"
+        ) from exc
+    return spans
+
+
+def _row_decimal(value: Any, label: str) -> tuple[str, Decimal]:
+    try:
+        return _parse_decimal(value, label)
+    except _Refusal as exc:
+        raise _Refusal(CANDIDATE_COVERAGE_INVALID, f"D-6: {exc.detail}") from exc
+
+
+def _real_pass_rows(pass_bytes: bytes, account_scope: str) -> list[_PassRow]:
+    rows: list[_PassRow] = []
+    for index, (raw, value) in enumerate(_json_array_spans(pass_bytes, "funding pass")):
+        label = f"funding pass row {index}"
+        if not isinstance(value, Mapping) or not isinstance(
+            value.get("delta"), Mapping
+        ):
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID, f"D-6: {label} is not a venue funding row"
+            )
+        time_ms = value.get("time")
+        delta = value["delta"]
+        if isinstance(time_ms, bool) or not isinstance(time_ms, int) or time_ms < 0:
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID,
+                f"D-6: {label} time is not a millisecond stamp",
+            )
+        if delta.get("type") != "funding":
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID, f"D-6: {label} is not a funding delta"
+            )
+        coin = delta.get("coin")
+        if not isinstance(coin, str) or not coin:
+            raise _Refusal(CANDIDATE_COVERAGE_INVALID, f"D-6: {label} carries no coin")
+        _, usdc = _row_decimal(delta.get("usdc"), f"{label} usdc")
+        _, szi = _row_decimal(delta.get("szi"), f"{label} szi")
+        rate_text, _ = _row_decimal(delta.get("fundingRate"), f"{label} fundingRate")
+        rows.append(
+            _PassRow(
+                index=index,
+                raw=raw,
+                time_ms=time_ms,
+                coin=coin,
+                usdc=usdc,
+                szi=szi,
+                rate_text=rate_text,
+                event_id=f"{REAL_EVENT_ID_PREFIX}:{account_scope}:{coin}:{time_ms}",
+            )
+        )
+    return rows
+
+
+def _real_fills(
+    fills_bytes: bytes, symbol: str
+) -> tuple[Decimal | None, list[tuple[int, Decimal]]]:
+    """The coin's fills as (time_ms, signed size), plus the position before the
+    first of them, each fill's ``startPosition`` re-checked against the running
+    position so a gap in the captured history cannot pass as continuity."""
+    fills: list[tuple[int, Decimal, Decimal]] = []
+    for index, (_, value) in enumerate(_json_array_spans(fills_bytes, "fills witness")):
+        label = f"fills witness row {index}"
+        if not isinstance(value, Mapping):
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID, f"D-6: {label} is not a venue fill row"
+            )
+        if value.get("coin") != symbol:
+            if not isinstance(value.get("coin"), str):
+                raise _Refusal(
+                    CANDIDATE_COVERAGE_INVALID, f"D-6: {label} carries no coin"
+                )
+            continue
+        time_ms = value.get("time")
+        side = value.get("side")
+        if (
+            isinstance(time_ms, bool)
+            or not isinstance(time_ms, int)
+            or side not in ("A", "B")
+        ):
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID, f"D-6: {label} is not a venue fill row"
+            )
+        _, size = _row_decimal(value.get("sz"), f"{label} sz")
+        _, start_position = _row_decimal(
+            value.get("startPosition"), f"{label} startPosition"
+        )
+        fills.append((time_ms, size if side == "B" else -size, start_position))
+    fills.sort(key=lambda item: item[0])
+    if not fills:
+        return None, []
+    running = fills[0][2]
+    opening = running
+    for time_ms, signed, start_position in fills:
+        if start_position != running:
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID,
+                f"D-6: the fills witness is not a contiguous {symbol} position history "
+                f"(a fill at {_millisecond_text(time_ms)} starts from {start_position} "
+                f"while the preceding fills leave {running})",
+            )
+        running += signed
+    return opening, [(time_ms, signed) for time_ms, signed, _ in fills]
+
+
+def _real_completion(
+    pass_rows: list[_PassRow],
+    fills_bytes: bytes,
+    symbol: str,
+    start: _Instant,
+    end: _Instant,
+) -> dict[str, Any]:
+    """D-6 (ii): every whole hour of the window at which the fills-derived
+    position is open must carry a payment, and every payment's own ``szi``
+    must be that position. The end hour itself belongs to the grid because the
+    venue stamps its payment inside the 1-second tolerance."""
+    opening, fills = _real_fills(fills_bytes, symbol)
+
+    def position_at(time_ms: int) -> Decimal:
+        if opening is None:
+            constant = {row.szi for row in pass_rows}
+            if len(constant) != 1:
+                raise _Refusal(
+                    CANDIDATE_COVERAGE_INVALID,
+                    "D-6: the fills witness carries no fill for the coin, so the position "
+                    "cannot change inside the window, yet the captured payments show "
+                    f"positions {sorted(str(item) for item in constant)}",
+                )
+            return next(iter(constant))
+        return opening + sum(
+            (signed for fill_ms, signed in fills if fill_ms < time_ms), Decimal(0)
+        )
+
+    grid = list(range(start.seconds, end.seconds + 1, _HOUR_SECONDS))
+    expected = [_hour_text(hour) for hour in grid if position_at(hour * 1000) != 0]
+    observed = sorted(
+        {
+            _hour_text(row.time_ms // 1000 - (row.time_ms // 1000) % _HOUR_SECONDS)
+            for row in pass_rows
+        }
+    )
+    if expected != observed:
+        raise _Refusal(
+            CANDIDATE_COVERAGE_INVALID,
+            "D-6: the fills-derived position expects payments at "
+            f"{expected} but the captured funding passes carry payments at {observed}",
+        )
+    for row in pass_rows:
+        at_stamp = position_at(row.time_ms)
+        if at_stamp != row.szi:
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID,
+                f"D-6: funding row {row.index} reports szi {row.szi} at "
+                f"{_millisecond_text(row.time_ms)} while the fills witness gives {at_stamp}",
+            )
+    return {
+        "expected_funding_hours": expected,
+        "observed_funding_hours": observed,
+        "opening_position": None if opening is None else str(opening),
+        "position_source": "coverage.fills_witness",
+    }
+
+
+def _verify_real_row_witness(
+    binding: Mapping[str, Any],
+    source_hex: str,
+    rows_by_index: Mapping[int, _PassRow],
+    pass_sha256: str,
+) -> None:
+    """D-1, D-2, D-3 and the rate/payer facts, all re-derived from the captured
+    row the binding points at; the binding's own claims are never trusted."""
+    event_id = binding["event_id"]
+    body = binding["body"]
+    locator = _REAL_SOURCE_LOCATOR.fullmatch(body["provenance"]["source_locator"])
+    if locator is None or int(locator.group("index")) not in rows_by_index:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"D-1: binding {event_id} provenance.source_locator must point at a row of the "
+            f"captured funding pass as <file>#/<index>, got {body['provenance']['source_locator']!r}",
+        )
+    row = rows_by_index[int(locator.group("index"))]
+    if bytes.fromhex(source_hex) != row.raw:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"D-1: binding {event_id} source witness bytes are not the located row "
+            f"{row.index} of the captured funding pass",
+        )
+    if hashlib.sha256(row.raw).hexdigest() != binding["digest_hex"]:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"D-1: binding {event_id} source_event_digest does not hash the exact captured "
+            f"bytes of funding row {row.index}",
+        )
+    if body["provenance"]["source_sha256"] != pass_sha256:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"binding {event_id} provenance.source_sha256 is not the digest of the "
+            "captured funding pass it locates into",
+        )
+    if row.event_id != event_id:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"D-2: binding funding_event_id {event_id!r} is not the identity derived from "
+            f"the located row, {row.event_id!r}",
+        )
+    stamp = _millisecond_text(row.time_ms)
+    if body["event_timestamp"] != stamp:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"D-3: binding {event_id} event_timestamp must be the venue stamp verbatim, "
+            f"{stamp!r}, got {body['event_timestamp']!r}",
+        )
+    if body["raw_rate"] != row.rate_text:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"binding {event_id} raw_rate {body['raw_rate']!r} is not the located row's "
+            f"fundingRate {row.rate_text!r}",
+        )
+    rate = Decimal(row.rate_text)
+    if row.usdc != 0 and row.szi != 0 and rate != 0:
+        pays = (row.szi > 0) == (rate > 0)  # a long pays a positive rate
+        if (row.usdc < 0) != pays:
+            raise _Refusal(
+                CANDIDATE_BINDING_INVALID,
+                f"binding {event_id} positive_rate_payer {APPROVED_PAYER} contradicts the "
+                f"located row (szi {row.szi}, fundingRate {row.rate_text}, usdc {row.usdc})",
+            )
 
 
 def _fold_unique(
@@ -788,6 +1403,21 @@ def _verify_retained_payload(row: Mapping[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _resolve_profile(evidence_kind: Any) -> _EvidenceProfile:
+    profile = (
+        _EVIDENCE_PROFILES.get(evidence_kind)
+        if isinstance(evidence_kind, str)
+        else None
+    )
+    if profile is None:
+        raise _Refusal(
+            CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE,
+            f"evidence_kind {evidence_kind!r} names no evidence profile; the profiles are "
+            f"{sorted(_EVIDENCE_PROFILES)} and none of them is a production mode",
+        )
+    return profile
+
+
 def build_funding_candidate(
     retained_rows: Any,
     approved_event_bindings: Any,
@@ -795,15 +1425,21 @@ def build_funding_candidate(
     schedule_id: Any,
     start_inclusive: Any,
     end_exclusive: Any,
+    *,
+    evidence_kind: str = SYNTHETIC_EVIDENCE_KIND,
 ) -> CandidateResult:
-    """Build one synthetic funding candidate for a whole interval, or refuse.
+    """Build one funding candidate for a whole interval, or refuse.
 
     The result is atomic in meaning: either every inventoried event in
     ``[start_inclusive, end_exclusive)`` carries a verified retained payload
     and an explicit approved binding, or no candidate is produced at all.
+    ``evidence_kind`` names the evidence profile the packet must satisfy; it
+    defaults to the synthetic one and the packet must declare the same kind.
     """
     facts: dict[str, Any] = {}
+    profile = _SYNTHETIC_PROFILE
     try:
+        profile = _resolve_profile(evidence_kind)
         return _build(
             retained_rows,
             approved_event_bindings,
@@ -812,6 +1448,7 @@ def build_funding_candidate(
             start_inclusive,
             end_exclusive,
             facts,
+            profile,
         )
     except _Refusal as refusal:
         facts.update(refusal.facts)
@@ -823,7 +1460,9 @@ def build_funding_candidate(
                 reason_code=refusal.code,
                 reason_detail=refusal.detail,
                 facts=facts,
+                profile=profile,
             ),
+            evidence_kind=profile.kind,
         )
 
 
@@ -835,6 +1474,7 @@ def _build(
     start_inclusive: Any,
     end_exclusive: Any,
     facts: dict[str, Any],
+    profile: _EvidenceProfile,
 ) -> CandidateResult:
     schedule = _require_text(schedule_id, "schedule_id", CANDIDATE_INPUT_INVALID)
     if not isinstance(start_inclusive, str) or not isinstance(end_exclusive, str):
@@ -851,7 +1491,7 @@ def _build(
     facts["interval"] = {"start_inclusive": start.text, "end_exclusive": end.text}
     facts["synthetic_schedule_id"] = schedule
 
-    witness = _validate_coverage(coverage, start, end)
+    witness, extras = _validate_coverage(coverage, start, end, profile)
     facts["symbol_scope"] = witness["symbol"]
     facts["account_scope"] = witness["account_scope"]
     facts["witness_identity"] = witness["witness_identity"]
@@ -861,7 +1501,7 @@ def _build(
         for raw in _require_sequence(retained_rows, "retained_rows")
     ]
     bindings = [
-        _validate_binding(raw)
+        _validate_binding(raw, profile)
         for raw in _require_sequence(approved_event_bindings, "approved_event_bindings")
     ]
     facts["retained_row_count"] = len(rows)
@@ -923,22 +1563,72 @@ def _build(
 
     facts["out_of_scope_event_ids"] = []
 
+    completion: dict[str, Any] | None = None
+    rows_by_index: dict[int, _PassRow] = {}
+    if profile is _REAL_PROFILE:
+        pass_rows = _real_pass_rows(
+            extras["funding_pass_bytes"], witness["account_scope"]
+        )
+        rows_by_index = {row.index: row for row in pass_rows}
+        foreign = sorted(
+            {row.coin for row in pass_rows if row.coin != witness["symbol"]}
+        )
+        if foreign:
+            raise _Refusal(
+                CANDIDATE_SYMBOL_MISMATCH,
+                f"the captured funding pass carries rows for {foreign}, outside the "
+                f"witnessed {witness['symbol']} scope",
+            )
+        if not inventory_set:
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID,
+                "D-6: an empty inventory cannot be witnessed as a complete real capture",
+            )
+        pass_ids = [row.event_id for row in pass_rows]
+        if len(set(pass_ids)) != len(pass_ids):
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID,
+                "D-6: two captured funding rows derive the same identity",
+            )
+        uninventoried = sorted(set(pass_ids) - inventory_set)
+        uncaptured = sorted(inventory_set - set(pass_ids))
+        if uninventoried or uncaptured:
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID,
+                "D-6: every row inside the captured funding pass needs a disposition "
+                "under its D-2 identity hl-funding:<account-short>:<coin>:<time_ms>: "
+                f"captured-but-uninventoried {uninventoried}, "
+                f"inventoried-but-not-captured {uncaptured}",
+            )
+        completion = _real_completion(
+            pass_rows, extras["fills_bytes"], witness["symbol"], start, end
+        )
+
+    end_limit = (end.seconds + profile.end_tolerance_seconds, end.fraction)
     events: list[dict[str, Any]] = []
     out_of_interval: list[str] = []
     for event_id in sorted(inventory_set):
         row = folded_rows[event_id]
         binding = folded_bindings[event_id]
         payload = _verify_retained_payload(row)
-        if not (start.sort_key <= binding["instant"].sort_key < end.sort_key):
+        if not (start.sort_key <= binding["instant"].sort_key < end_limit):
             out_of_interval.append(event_id)
             continue
-        if binding["body"]["source_event_digest"] == row["payload_digest"]:
+        if binding["digest_hex"] == row["payload_digest"]:
             raise _Refusal(
                 CANDIDATE_DIGEST_DOMAIN_CONFLATION,
                 f"binding {event_id} reuses the normalized Bridge payload digest "
                 "as a source_event_digest; the two byte domains are distinct",
             )
-        _verify_source_witness(binding, witness["source_witnesses"][event_id])
+        if profile is _REAL_PROFILE:
+            _verify_real_row_witness(
+                binding,
+                witness["source_witnesses"][event_id],
+                rows_by_index,
+                extras["funding_pass_sha256"],
+            )
+        else:
+            _verify_source_witness(binding, witness["source_witnesses"][event_id])
         ledger_instant = row["ledger_instant"]
         events.append(
             {
@@ -985,61 +1675,84 @@ def _build(
         )
 
     events.sort(key=lambda event: event["sort_key"])
-    candidate = {
-        "admission_status": ADMISSION_STATUS,
-        "artifact_kind": ARTIFACT_KIND,
-        "bridge_payload_digest_domain": BRIDGE_PAYLOAD_DIGEST_DOMAIN,
-        "not_a_production_record": NOT_A_PRODUCTION_RECORD,
-        "numeric_representation": NUMERIC_REPRESENTATION,
-        "source_event_digest_domain": SOURCE_EVENT_DIGEST_DOMAIN,
-        "synthetic_candidate": {
-            "account_scope": witness["account_scope"],
-            "coverage_witness": {
-                **witness,
-                "expected_event_ids": sorted(inventory),
-                "unattributed_event_ids": sorted(witness["unattributed_event_ids"]),
-            },
-            "effective_interval": {
-                "end_exclusive": end.text,
-                "start_inclusive": start.text,
-            },
-            "event_count": len(events),
-            "symbol_scope": witness["symbol"],
-            "synthetic_events": [event["body"] for event in events],
-            "synthetic_schedule_id": schedule,
-        },
-        "synthetic_only": True,
+    effective_interval: dict[str, Any] = {
+        "end_exclusive": end.text,
+        "start_inclusive": start.text,
     }
+    if profile is _REAL_PROFILE:
+        effective_interval["end_tolerance_seconds"] = profile.end_tolerance_seconds
+    candidate_body: dict[str, Any] = {
+        "account_scope": witness["account_scope"],
+        "coverage_witness": {
+            **witness,
+            "expected_event_ids": sorted(inventory),
+            "unattributed_event_ids": sorted(witness["unattributed_event_ids"]),
+        },
+        "effective_interval": effective_interval,
+        "event_count": len(events),
+        "symbol_scope": witness["symbol"],
+        profile.events_key: [event["body"] for event in events],
+        profile.schedule_key: schedule,
+    }
+    if completion is not None:
+        candidate_body["completion_check"] = completion
+    candidate = {
+        "admission_status": profile.admission_status,
+        "artifact_kind": profile.artifact_kind,
+        "bridge_payload_digest_domain": BRIDGE_PAYLOAD_DIGEST_DOMAIN,
+        "not_a_production_record": profile.not_a_production_record,
+        "numeric_representation": NUMERIC_REPRESENTATION,
+        "source_event_digest_domain": profile.digest_domain,
+        profile.candidate_key: candidate_body,
+        "synthetic_only": profile.synthetic_only,
+    }
+    if profile is _REAL_PROFILE:
+        candidate["evidence_kind"] = profile.kind
     body = canonical_reconcile_json(candidate).encode("utf-8") + b"\n"
     digest = hashlib.sha256(body).hexdigest()
     facts["event_count"] = len(events)
     facts["candidate_sha256"] = digest
+    if profile is _REAL_PROFILE:
+        detail = (
+            "real-capture candidate bound under D-1..D-6 from the captured venue "
+            'bytes; production admission is not granted (Q3 "Wait")'
+        )
+    else:
+        detail = (
+            "synthetic candidate built from synthetic caller facts; it is "
+            "not evidence of real-world completeness"
+        )
     return CandidateResult(
         accepted=True,
-        reason_code=SYNTHETIC_CANDIDATE_BUILT,
+        reason_code=profile.built_code,
         report=_report(
             accepted=True,
-            reason_code=SYNTHETIC_CANDIDATE_BUILT,
-            reason_detail=(
-                "synthetic candidate built from synthetic caller facts; it is "
-                "not evidence of real-world completeness"
-            ),
+            reason_code=profile.built_code,
+            reason_detail=detail,
             facts=facts,
+            profile=profile,
         ),
         candidate_bytes=body,
         candidate_sha256=digest,
+        evidence_kind=profile.kind,
     )
 
 
 def _report(
-    *, accepted: bool, reason_code: str, reason_detail: str, facts: Mapping[str, Any]
+    *,
+    accepted: bool,
+    reason_code: str,
+    reason_detail: str,
+    facts: Mapping[str, Any],
+    profile: _EvidenceProfile = _SYNTHETIC_PROFILE,
 ) -> dict[str, Any]:
     """One fully labelled, fully deterministic report. No clock is read."""
     return {
         "accepted": accepted,
         "candidate_sha256": facts.get("candidate_sha256"),
         "event_count": facts.get("event_count"),
-        "evidence_limitations": list(EVIDENCE_LIMITATIONS),
+        "evidence_kind": profile.kind,
+        "evidence_limitations": list(profile.evidence_limitations),
         "inputs": {
             "account_scope": facts.get("account_scope"),
             "binding_count": facts.get("binding_count"),
@@ -1052,13 +1765,13 @@ def _report(
         "inventory_missing_event_ids": facts.get("inventory_missing_event_ids", []),
         "inventory_unmatched_event_ids": facts.get("inventory_unmatched_event_ids", []),
         "non_admission": {
-            "admission_status": ADMISSION_STATUS,
+            "admission_status": profile.admission_status,
             "production_selection_keys_absent": [
                 "events",
                 "schedule_id",
                 "settlement_currency",
             ],
-            "statement": NOT_A_PRODUCTION_RECORD,
+            "statement": profile.not_a_production_record,
         },
         "out_of_interval_bindings": facts.get("out_of_interval_bindings", []),
         "out_of_scope_event_ids": facts.get("out_of_scope_event_ids", []),
@@ -1067,7 +1780,7 @@ def _report(
         "reason_detail": reason_detail,
         "report_kind": REPORT_KIND,
         "store_reason_codes": facts.get("store_reason_codes", {}),
-        "synthetic_only": True,
+        "synthetic_only": profile.synthetic_only,
         "unbound_events": facts.get("unbound_events", []),
         "uninventoried_event_ids": facts.get("uninventoried_event_ids", []),
         "unknown_binding_event_ids": facts.get("unknown_binding_event_ids", []),
@@ -1189,7 +1902,7 @@ def _read_snapshot_rows(snapshot: Path, symbol: str) -> list[dict[str, Any]]:
         conn.close()
 
 
-def _load_packet(path: Path) -> tuple[list[Any], Any]:
+def _load_packet(path: Path, profile: _EvidenceProfile) -> tuple[list[Any], Any]:
     try:
         raw = path.read_bytes()
     except OSError as exc:
@@ -1206,11 +1919,11 @@ def _load_packet(path: Path) -> tuple[list[Any], Any]:
     packet = _require_closed_mapping(
         parsed, PACKET_KEYS, "binding packet", CANDIDATE_PACKET_INVALID
     )
-    if packet["packet_version"] != PACKET_VERSION:
+    if packet["packet_version"] != profile.packet_version:
         raise _Refusal(
             CANDIDATE_PACKET_INVALID,
-            f"unsupported packet_version {packet['packet_version']!r}; this tool "
-            f"reads only {PACKET_VERSION}",
+            f"unsupported packet_version {packet['packet_version']!r}; under the "
+            f"{profile.kind} profile this tool reads only {profile.packet_version}",
         )
     if isinstance(packet["bindings"], Mapping) or not isinstance(
         packet["bindings"], list
@@ -1349,6 +2062,7 @@ def _cleanup_scratch(scratch: Path) -> list[str]:
 
 
 def _stage(staging: Path, result: CandidateResult) -> None:
+    profile = _EVIDENCE_PROFILES[result.evidence_kind]
     report_bytes = canonical_reconcile_json(result.report).encode("utf-8") + b"\n"
     try:
         scratch = Path(tempfile.mkdtemp(prefix=f".{staging.name}.", dir=staging.parent))
@@ -1361,9 +2075,9 @@ def _stage(staging: Path, result: CandidateResult) -> None:
         if result.accepted:
             assert result.candidate_bytes is not None
             assert result.candidate_sha256 is not None
-            candidate = scratch / CANDIDATE_FILENAME
+            candidate = scratch / profile.candidate_filename
             _write_new_file(candidate, result.candidate_bytes)
-            sidecar = scratch / SIDECAR_FILENAME
+            sidecar = scratch / profile.sidecar_filename
             _write_new_file(sidecar, result.candidate_sha256.encode("ascii") + b"\n")
         report = scratch / REPORT_FILENAME
         _write_new_file(report, report_bytes)
@@ -1402,11 +2116,22 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--end", required=True)
     parser.add_argument("--schedule-id", required=True, dest="schedule_id")
     parser.add_argument("--staging", required=True)
+    parser.add_argument(
+        "--evidence-kind",
+        dest="evidence_kind",
+        choices=sorted(_EVIDENCE_PROFILES),
+        default=SYNTHETIC_EVIDENCE_KIND,
+        help=(
+            "the evidence profile the packet must satisfy; the packet has to declare "
+            "the same kind. Default: the synthetic profile. Neither is a production mode."
+        ),
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(argv)
+    profile = _EVIDENCE_PROFILES[args.evidence_kind]
     staging = Path(args.staging)
     snapshot = Path(args.snapshot)
     bindings_path = Path(args.bindings)
@@ -1419,7 +2144,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         _assert_quiescent(snapshot)
         before = _sha256_file(snapshot)
-        bindings, coverage = _load_packet(bindings_path)
+        bindings, coverage = _load_packet(bindings_path, profile)
         if not isinstance(coverage, Mapping) or coverage.get("symbol") != args.symbol:
             raise _Refusal(
                 CANDIDATE_SYMBOL_MISMATCH,
@@ -1453,11 +2178,19 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "synthetic_schedule_id": args.schedule_id,
                     **refusal.facts,
                 },
+                profile=profile,
             ),
+            evidence_kind=profile.kind,
         )
     else:
         result = build_funding_candidate(
-            rows, bindings, coverage, args.schedule_id, args.start, args.end
+            rows,
+            bindings,
+            coverage,
+            args.schedule_id,
+            args.start,
+            args.end,
+            evidence_kind=profile.kind,
         )
 
     try:
@@ -1468,8 +2201,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not result.accepted:
         print(f"{TOOL_NAME}: refused ({result.reason_code})", file=sys.stderr)
         return 1
+    label = "SYNTHETIC_ONLY" if profile.synthetic_only else profile.kind
     print(
-        f"{TOOL_NAME}: staged SYNTHETIC_ONLY candidate "
+        f"{TOOL_NAME}: staged {label} candidate "
         f"{result.candidate_sha256} under {staging.name}; it is not an accepted "
         "economic record"
     )

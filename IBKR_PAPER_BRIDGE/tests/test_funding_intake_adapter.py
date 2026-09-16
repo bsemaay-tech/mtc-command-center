@@ -119,7 +119,10 @@ def test_build_fills_only_what_the_bytes_supply_and_labels_the_rest():
     assert first["provenance"]["source_sha256"] == SHA_A
     assert first["provenance"]["evidence_kind_status"] == "UNRESOLVED:D-5"
     assert ADDRESS not in json.dumps(intake)  # only the short form leaves the adapter
-    assert intake["retained_rows"]["rows"][0]["payload_digest"] == "UNRESOLVED:D-1"
+    assert (
+        intake["retained_rows"]["rows"][0]["payload_digest"]
+        == adapter.BRIDGE_DIGEST_UNAVAILABLE
+    )
     assert intake["retained_rows"]["rows"][0]["payload"] == {
         "coin": "BTC",
         "fundingRate": "0.0000125",
@@ -139,7 +142,7 @@ def test_unresolved_fields_are_never_fabricated():
         for field in ("oracle_price", "oracle_price_source", "source_event_digest"):
             assert binding[field].startswith("UNRESOLVED:D-"), field
     for row in intake["retained_rows"]["rows"]:
-        assert row["payload_digest"].startswith("UNRESOLVED:D-")
+        assert row["payload_digest"] == adapter.BRIDGE_DIGEST_UNAVAILABLE
     # the back-derived oracle price (usdc / (szi * rate) ~ 78758.6) must appear nowhere
     assert "78758" not in text and "78759" not in text
 
@@ -151,7 +154,9 @@ def test_completeness_rule_hour_alignment_and_identical_passes():
     assert unaligned["complete"] is False and "aligned" in unaligned["reasons"][0]
     # Gemini NIT-02 (counted detection, 2026-09-15 20:14Z): the END bound is held to the same rule
     unaligned_end = adapter.completeness(_manifest(window_end=1789412400000 + 41))
-    assert unaligned_end["complete"] is False and "aligned" in unaligned_end["reasons"][0]
+    assert (
+        unaligned_end["complete"] is False and "aligned" in unaligned_end["reasons"][0]
+    )
     differing = adapter.completeness(_manifest(pass2_sha=SHA_B))
     assert (
         differing["complete"] is False and "byte-identical" in differing["reasons"][0]
@@ -177,8 +182,9 @@ def test_refuses_foreign_coin_malformed_rows_and_bad_labels():
 
 def test_load_refuses_wrong_kinds_and_duplicate_keys(tmp_path: Path):
     run = _write_run(tmp_path)
-    manifest, derived = adapter.load_capture(run)
+    manifest, derived, raw, manifest_sha = adapter.load_capture(run)
     assert manifest["run_id"] == "p012-path1-test-r1" and len(derived["funding"]) == 2
+    assert raw == {} and len(manifest_sha) == 64
     bad = _write_run(tmp_path / "bad", manifest={**_manifest(), "kind": "OTHER"})
     with pytest.raises(adapter.IntakeRefused, match="manifest kind"):
         adapter.load_capture(bad)
@@ -213,3 +219,241 @@ def test_main_end_to_end(tmp_path: Path, capsys):
     assert "NONACCEPTING_INTAKE_DRAFT events=2 fills=1 complete=True" in out
     assert adapter.main(["--run-dir", str(run), "--out", str(tmp_path / "out")]) == 3
     assert "INTAKE_OUTPUT_EXISTS" in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------------------
+# Slice 4 — the accepting shape, built from the exact captured bytes and read
+# back by export_mtc_funding.py under the REAL_CAPTURE_READ_ONLY profile
+# ---------------------------------------------------------------------------
+
+import hashlib
+from datetime import UTC, datetime
+
+from bridge.engine.types import FundingAttribution, FundingEventRecord
+from tools import export_mtc_funding as exporter
+
+# the exact 433-byte userFunding response of capture r1 (zero hash, no address)
+FUNDING_PASS = (
+    b'[{"time":1789405200041,"hash":"0x'
+    + b"0" * 64
+    + b'","delta":{"type":"funding","coin":"BTC","usdc":"-0.000571","szi":"0.00058",'
+    b'"fundingRate":"0.0000125","nSamples":null}},{"time":1789408800060,"hash":"0x'
+    + b"0"
+    * 64
+    + b'","delta":{"type":"funding","coin":"BTC","usdc":"-0.000572","szi":"0.00058",'
+    b'"fundingRate":"0.0000125","nSamples":null}}]'
+)
+
+
+def _fill(px, sz, side, time_ms, start, direction, seed):
+    tx = "0x" + hashlib.sha256(f"fixture-fill-{seed}".encode()).hexdigest()
+    return (
+        f'{{"coin":"BTC","px":"{px}","sz":"{sz}","side":"{side}","time":{time_ms},'
+        f'"startPosition":"{start}","dir":"{direction}","closedPnl":"0.0","hash":"{tx}",'
+        f'"oid":{544824403105 + seed},"crossed":true,"fee":"0.005423","tid":{261929593852405 + seed},'
+        f'"feeToken":"USDC","twapId":null}}'
+    )
+
+
+FILLS_PASS = (
+    "["
+    + ",".join(
+        [
+            _fill("78462.0", "0.00016", "B", 1789401810942, "0.0", "Open Long", 1),
+            _fill("78451.0", "0.00013", "B", 1789401915271, "0.00016", "Open Long", 2),
+            _fill("78438.0", "0.00013", "B", 1789401971269, "0.00029", "Open Long", 3),
+            _fill("78410.0", "0.00016", "B", 1789402474869, "0.00042", "Open Long", 4),
+            _fill("78993.0", "0.00058", "A", 1789409323372, "0.00058", "Close Long", 5),
+        ]
+    )
+    + "]"
+).encode()
+FUNDING_SHA = hashlib.sha256(FUNDING_PASS).hexdigest()
+FILLS_SHA = hashlib.sha256(FILLS_PASS).hexdigest()
+
+
+def _real_manifest():
+    manifest = _manifest(pass2_sha=FUNDING_SHA)
+    manifest["ownership_evidence"] = {
+        "recovered_address": ADDRESS,
+        "status": "OWNERSHIP_EVIDENCE: VERIFIED",
+    }
+    for response in manifest["responses"]:
+        response["response_sha256"] = (
+            FILLS_SHA if response["file"].startswith("fills") else FUNDING_SHA
+        )
+    return manifest
+
+
+def _real_derived():
+    derived = _derived()
+    for row in derived["funding"]:
+        row["capture_sha256"] = FUNDING_SHA
+    derived["fills"][0]["capture_sha256"] = FILLS_SHA
+    return derived
+
+
+def _write_real_run(root: Path, funding: bytes = FUNDING_PASS) -> Path:
+    run = _write_run(root, manifest=_real_manifest(), derived=_real_derived())
+    (run / "funding_pass1_page001.json").write_bytes(funding)
+    (run / "funding_pass2_page001.json").write_bytes(funding)
+    (run / "fills_pass1_page001.json").write_bytes(FILLS_PASS)
+    return run
+
+
+def _fixture_rows(packet):
+    """FIXTURE retained rows: what a schema-v10 store would carry (none has)."""
+    rows = []
+    for binding, amount in zip(packet["bindings"], (-0.000571, -0.000572)):
+        stamp = datetime.strptime(
+            binding["event_timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ"
+        ).replace(tzinfo=UTC)
+        record = FundingEventRecord(
+            event_id=binding["funding_event_id"],
+            symbol="BTC",
+            amount_usdc=amount,
+            effective_ts=stamp,
+            source="HL_USER_FUNDING",
+            attribution=FundingAttribution.ATTRIBUTED,
+            funding_rate=0.0000125,
+            position_szi=0.00058,
+            n_samples=None,
+        )
+        rows.append(
+            {
+                "attribution": "ATTRIBUTED",
+                "event_id": record.event_id,
+                "ledger_effective_ts": stamp.isoformat(),
+                "payload": record.authoritative(),
+                "payload_digest": record.digest,
+                "payload_reason": exporter.PAYLOAD_RETAINED,
+                "symbol": "BTC",
+            }
+        )
+    return rows
+
+
+def test_real_packet_is_built_from_the_captured_bytes_under_the_ruled_shape(
+    tmp_path: Path,
+):
+    run = _write_real_run(tmp_path)
+    manifest, derived, raw, manifest_sha = adapter.load_capture(run)
+
+    intake = adapter.build_intake(manifest, derived, raw, manifest_sha)
+    packet = intake["real_packet"]
+
+    assert packet is not None
+    assert set(packet) == {"bindings", "coverage", "packet_version"}
+    assert packet["packet_version"] == exporter.REAL_CAPTURE_PACKET_VERSION
+    first = packet["bindings"][0]
+    assert set(first) == set(exporter.REAL_BINDING_KEYS)
+    assert first["funding_event_id"] == "hl-funding:0x1e26…ac49:BTC:1789405200041"
+    assert first["event_timestamp"] == "2026-09-14T17:00:00.041Z"
+    assert first["interval_hour_utc"] == "2026-09-14T17:00:00Z"
+    row0 = FUNDING_PASS[1:216]
+    assert first["source_event_digest"] == (
+        f"HL_USERFUNDING_ROW_V1:{hashlib.sha256(row0).hexdigest()}"
+    )
+    assert first["oracle_price"] == "UNRESOLVED:D-4"
+    assert first["provenance"]["source_sha256"] == FUNDING_SHA
+    cover = packet["coverage"]
+    assert set(cover) == set(exporter.REAL_COVERAGE_KEYS)
+    assert cover["source_witnesses"][first["funding_event_id"]] == row0.hex()
+    assert cover["funding_witness_passes"] == [FUNDING_PASS.hex()] * 2
+    assert cover["fills_witness"] == FILLS_PASS.hex()
+    assert f"manifest_sha256={manifest_sha}" in cover["witness_identity"]
+    assert (
+        "ownership OWNERSHIP_EVIDENCE: VERIFIED 0x1e26…ac49"
+        in cover["witness_identity"]
+    )
+    assert ADDRESS not in json.dumps(intake)
+    assert intake["gap_report"]["real_capture_packet"]["status"] == "BUILT"
+    assert "78758" not in json.dumps(packet)
+
+
+def test_real_packet_refuses_under_d4_then_validates_once_an_oracle_capture_is_named(
+    tmp_path: Path,
+):
+    run = _write_real_run(tmp_path)
+    manifest, derived, raw, manifest_sha = adapter.load_capture(run)
+    packet = adapter.build_intake(manifest, derived, raw, manifest_sha)["real_packet"]
+    rows = _fixture_rows(packet)
+    start, end = "2026-09-14T15:00:00Z", "2026-09-14T19:00:00Z"
+
+    refused = exporter.build_funding_candidate(
+        rows,
+        packet["bindings"],
+        packet["coverage"],
+        "S4-TEST",
+        start,
+        end,
+        evidence_kind=exporter.REAL_CAPTURE_EVIDENCE_KIND,
+    )
+    assert refused.accepted is False
+    assert refused.reason_code == exporter.CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE
+
+    # a FIXTURE oracle capture locator stands in for the capture r1 never made
+    locator = hashlib.sha256(b"fixture-oracle-capture").hexdigest() + "#/1/0/oraclePx"
+    for binding in packet["bindings"]:
+        binding["oracle_price"] = "78758.6"
+        binding["oracle_price_source"] = locator
+    accepted = exporter.build_funding_candidate(
+        rows,
+        packet["bindings"],
+        packet["coverage"],
+        "S4-TEST",
+        start,
+        end,
+        evidence_kind=exporter.REAL_CAPTURE_EVIDENCE_KIND,
+    )
+    assert accepted.accepted is True, accepted.report["reason_detail"]
+    assert accepted.reason_code == exporter.REAL_CAPTURE_CANDIDATE_BUILT
+
+    # and the same packet under the default profile is a kind mismatch, never a pass
+    default = exporter.build_funding_candidate(
+        rows, packet["bindings"], packet["coverage"], "S4-TEST", start, end
+    )
+    assert default.accepted is False
+    assert default.reason_code == exporter.CANDIDATE_EVIDENCE_KIND_MISMATCH
+
+
+def test_real_packet_is_absent_without_raw_bytes_and_refuses_tampered_bytes(
+    tmp_path: Path,
+):
+    intake = adapter.build_intake(_manifest(), _derived())
+    assert intake["real_packet"] is None
+    assert intake["gap_report"]["real_capture_packet"]["status"] == "NOT_BUILT"
+
+    run = _write_run(
+        tmp_path / "plain", manifest=_real_manifest(), derived=_real_derived()
+    )
+    manifest, derived, raw, manifest_sha = adapter.load_capture(run)
+    assert raw == {}
+    assert (
+        adapter.build_intake(manifest, derived, raw, manifest_sha)["real_packet"]
+        is None
+    )
+
+    tampered = _write_real_run(
+        tmp_path / "tampered", funding=FUNDING_PASS.replace(b"0.000571", b"0.000570")
+    )
+    with pytest.raises(adapter.IntakeRefused, match="response_sha256"):
+        adapter.load_capture(tampered)
+
+
+def test_real_packet_outputs_are_written_deterministically(tmp_path: Path, capsys):
+    run = _write_real_run(tmp_path)
+    assert adapter.main(["--run-dir", str(run), "--out", str(tmp_path / "out")]) == 0
+    out = capsys.readouterr().out
+    assert (
+        "real_packet=BUILT real_packet_tool_outcome_expected="
+        "CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE"
+    ) in out
+    written = (tmp_path / "out" / adapter.REAL_PACKET_FILENAME).read_bytes()
+    assert (
+        hashlib.sha256(written).hexdigest()
+        == (tmp_path / "out" / (adapter.REAL_PACKET_FILENAME + ".sha256"))
+        .read_text()
+        .strip()
+    )
+    assert set(re.findall(rb"\d{4}-\d{2}-\d{2}T", written)) <= {b"2026-09-14T"}

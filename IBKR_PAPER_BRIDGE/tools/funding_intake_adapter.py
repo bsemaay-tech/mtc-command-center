@@ -12,9 +12,19 @@ Reads one Path-1 read-only capture run (``CAPTURE_MANIFEST.json`` + ``DERIVED_EX
 * ``intake_gap_report.json`` — the open decisions D-1..D-6, counts, the completeness-rule result and
   the refusal the export tool raises for this packet.
 
-Every artifact carries the label ``NONACCEPTING_INTAKE_DRAFT``. No network, no credential, no write
-into the capture directory (the output directory is write-once). Authority: ``OD-20260915-BUILD-ABC-1``
-item (b); design note ``P012_FUNDING_INTAKE_DESIGN_20260915.md``.
+Every draft artifact carries the label ``NONACCEPTING_INTAKE_DRAFT``. No network, no credential, no
+write into the capture directory (the output directory is write-once). Authority:
+``OD-20260915-BUILD-ABC-1`` item (b); design note ``P012_FUNDING_INTAKE_DESIGN_20260915.md``.
+
+Slice 4 (2026-09-16, ``OD-20260916-P012-INTAKE-D1-D6-R-1``): when the run directory also carries the
+raw response files named by the manifest (bytes re-hashed against ``response_sha256``), a fourth
+output ``binding_packet_real_capture.json`` is written in the shape ``export_mtc_funding.py`` reads
+under ``--evidence-kind REAL_CAPTURE_READ_ONLY``: D-1 digests over the exact captured row bytes,
+D-2 identities, D-3 verbatim stamps plus ``interval_hour_utc``, D-5 witness identity naming the
+manifest and its ownership record, D-6 witness material (both funding passes, the fills pass).
+The oracle fields stay ``UNRESOLVED:D-4`` until an oracle capture at the funding instants exists,
+so the export tool refuses this packet with ``CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE`` — the honest
+outcome for a run that captured no oracle read. Nothing here admits production.
 """
 
 from __future__ import annotations
@@ -37,6 +47,14 @@ APPROVED_PAYER = (
 PAYLOAD_RETAINED = "FUNDING_PAYLOAD_RETAINED"
 EXPECTED_TOOL_REFUSAL = "CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE"
 HOUR_MS = 3_600_000
+# slice 4 — the accepting shape (values ruled by OD-20260916-P012-INTAKE-D1-D6-R-1)
+RULING = "OD-20260916-P012-INTAKE-D1-D6-R-1"
+REAL_PACKET_FILENAME = "binding_packet_real_capture.json"
+REAL_PACKET_VERSION = "REAL_CAPTURE_FUNDING_BINDING_PACKET_V1"
+REAL_DIGEST_DOMAIN = "HL_USERFUNDING_ROW_V1"
+REAL_EVENT_ID_PREFIX = "hl-funding"
+EXPECTED_REAL_TOOL_REFUSAL = "CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE"
+BRIDGE_DIGEST_UNAVAILABLE = "UNAVAILABLE:BRIDGE_OBSERVATION_REQUIRED"
 DECISIONS = {
     "D-1": "production source_event_digest byte domain (also the retained payload_digest domain)",
     "D-2": "funding_event_id rule for venue funding rows (the venue hash is the zero hash)",
@@ -117,7 +135,74 @@ def _int(value: Any, label: str) -> int:
     return value
 
 
-def load_capture(run_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+def hour_z(ms: int) -> str:
+    return datetime.fromtimestamp(ms // HOUR_MS * HOUR_MS / 1000, tz=UTC).strftime(
+        "%Y-%m-%dT%H:00:00Z"
+    )
+
+
+def load_raw_responses(run_dir: Path, manifest: dict[str, Any]) -> dict[str, bytes]:
+    """The raw response files the manifest names, when present in the run directory,
+    each re-hashed against the manifest's ``response_sha256`` (a mismatch refuses).
+    Absent files mean no real-capture packet, never a guessed one."""
+    raw: dict[str, bytes] = {}
+    for response in manifest.get("responses") or []:
+        name = response.get("file")
+        if not isinstance(name, str) or not name or "/" in name or "\\" in name:
+            continue
+        path = run_dir / name
+        if not path.is_file():
+            continue
+        data = path.read_bytes()
+        if hashlib.sha256(data).hexdigest() != response.get("response_sha256"):
+            raise IntakeRefused(
+                "INTAKE_INPUT_INVALID",
+                f"{name}: bytes do not reproduce the manifest response_sha256",
+            )
+        raw[name] = data
+
+    return raw
+
+
+def array_spans(payload: bytes, label: str) -> list[tuple[bytes, Any]]:
+    """Every element of a captured JSON array as (exact bytes, decoded value)."""
+    decoder = json.JSONDecoder(
+        object_pairs_hook=_reject_duplicate, parse_constant=_reject_constant
+    )
+    try:
+        text = payload.decode("utf-8")
+        index = 0
+        while text[index] in " \t\r\n":
+            index += 1
+        if text[index] != "[":
+            raise IntakeRefused("INTAKE_INPUT_INVALID", f"{label} is not a JSON array")
+        index += 1
+        spans: list[tuple[bytes, Any]] = []
+        while True:
+            while text[index] in " \t\r\n":
+                index += 1
+            if text[index] == "]":
+                break
+            if spans:
+                if text[index] != ",":
+                    raise IntakeRefused(
+                        "INTAKE_INPUT_INVALID", f"{label} is not a JSON array"
+                    )
+                index += 1
+                while text[index] in " \t\r\n":
+                    index += 1
+            value, end = decoder.raw_decode(text, index)
+            spans.append((text[index:end].encode("utf-8"), value))
+            index = end
+    except (UnicodeDecodeError, IndexError, ValueError) as exc:
+        raise IntakeRefused("INTAKE_INPUT_INVALID", f"{label}: {exc}") from exc
+    return spans
+
+
+def load_capture(
+    run_dir: Path,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, bytes], str]:
+    manifest_bytes = (run_dir / "CAPTURE_MANIFEST.json").read_bytes()
     manifest = strict_load(run_dir / "CAPTURE_MANIFEST.json")
     derived = strict_load(run_dir / "DERIVED_EXTRACTION.json")
     if (
@@ -139,7 +224,131 @@ def load_capture(run_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             "INTAKE_INPUT_INVALID",
             "derived extraction must carry funding and fills lists",
         )
-    return manifest, derived
+    raw = load_raw_responses(run_dir, manifest)
+    return manifest, derived, raw, hashlib.sha256(manifest_bytes).hexdigest()
+
+
+def build_real_packet(
+    manifest: dict[str, Any],
+    derived: dict[str, Any],
+    raw: dict[str, bytes],
+    manifest_sha256: str,
+) -> tuple[dict[str, Any] | None, str]:
+    """The accepting shape under D-1..D-6, built from the exact captured bytes, or
+    ``(None, reason)`` when the run directory does not carry them."""
+    address = short_address(manifest.get("address"))
+    run_id = _text(manifest.get("run_id"), "manifest.run_id")
+    coin = _text(manifest.get("coin"), "manifest.coin")
+    responses = manifest.get("responses") or []
+    tool_sha = _text(
+        (responses or [{}])[0].get("tool_sha256", ""), "responses[0].tool_sha256"
+    )
+    funding_files = [
+        r.get("file")
+        for r in responses
+        if str(r.get("file", "")).startswith("funding_pass")
+    ]
+    fills_files = [
+        r.get("file")
+        for r in responses
+        if str(r.get("file", "")).startswith("fills_pass")
+    ]
+    if len(funding_files) < 2 or not fills_files:
+        return None, "the manifest names fewer than two funding passes or no fills pass"
+    missing = [name for name in funding_files + fills_files[:1] if name not in raw]
+    if missing:
+        return None, f"raw response bytes absent from the run directory: {missing}"
+    if not isinstance(manifest.get("window"), dict):
+        return None, "the manifest carries no window"
+    window = manifest["window"]
+    pass_bytes = raw[funding_files[0]]
+    spans = array_spans(pass_bytes, funding_files[0])
+    derived_keys = {
+        (row.get("time"), row.get("coin"))
+        for row in derived["funding"]
+        if isinstance(row, dict)
+    }
+    bindings: list[dict[str, Any]] = []
+    witnesses: dict[str, str] = {}
+    for index, (raw_row, value) in enumerate(spans):
+        if not isinstance(value, dict) or not isinstance(value.get("delta"), dict):
+            raise IntakeRefused(
+                "INTAKE_INPUT_INVALID",
+                f"{funding_files[0]}#/{index} is not a funding row",
+            )
+        delta = value["delta"]
+        time_ms = _int(value.get("time"), f"{funding_files[0]}#/{index}.time")
+        row_coin = _text(delta.get("coin"), f"{funding_files[0]}#/{index}.delta.coin")
+        if row_coin != coin:
+            raise IntakeRefused(
+                "INTAKE_INPUT_INVALID",
+                f"{funding_files[0]}#/{index} coin {row_coin!r} is not the run coin {coin!r}",
+            )
+        if (time_ms, row_coin) not in derived_keys:
+            raise IntakeRefused(
+                "INTAKE_INPUT_INVALID",
+                f"{funding_files[0]}#/{index} is not listed by the derived view",
+            )
+        event_id = f"{REAL_EVENT_ID_PREFIX}:{address}:{row_coin}:{time_ms}"
+        witnesses[event_id] = raw_row.hex()
+        bindings.append(
+            {
+                "event_timestamp": utc_z(time_ms),
+                "funding_event_id": event_id,
+                "interval_hour_utc": hour_z(time_ms),
+                "oracle_price": unresolved("D-4"),
+                "oracle_price_source": unresolved("D-4"),
+                "positive_rate_payer": APPROVED_PAYER,
+                "provenance": {
+                    "evidence_kind": PROPOSED_EVIDENCE_KIND,
+                    "extraction_method": (
+                        f"capture_own_account_evidence.py tool_sha256={tool_sha[:16]} "
+                        "user_funding_history"
+                    ),
+                    "source_locator": f"{funding_files[0]}#/{index}",
+                    "source_sha256": hashlib.sha256(pass_bytes).hexdigest(),
+                    "source_title": f"Hyperliquid userFunding {address} run {run_id}",
+                },
+                "raw_rate": _text(
+                    delta.get("fundingRate"),
+                    f"{funding_files[0]}#/{index}.delta.fundingRate",
+                ),
+                "source_event_digest": (
+                    f"{REAL_DIGEST_DOMAIN}:{hashlib.sha256(raw_row).hexdigest()}"
+                ),
+            }
+        )
+    if len(bindings) != len(derived["funding"]):
+        raise IntakeRefused(
+            "INTAKE_INPUT_INVALID",
+            "the derived view and the captured funding pass disagree on the row count",
+        )
+    ownership = manifest.get("ownership_evidence") or {}
+    witness = completeness(manifest)
+    packet = {
+        "packet_version": REAL_PACKET_VERSION,
+        "bindings": bindings,
+        "coverage": {
+            "account_scope": address,
+            "complete": witness["complete"],
+            "evidence_kind": PROPOSED_EVIDENCE_KIND,
+            "expected_event_ids": [b["funding_event_id"] for b in bindings],
+            "fills_witness": raw[fills_files[0]].hex(),
+            "funding_witness_passes": [raw[name].hex() for name in funding_files],
+            "interval_end_exclusive": _text(window.get("end"), "window.end"),
+            "interval_start_inclusive": _text(window.get("start"), "window.start"),
+            "symbol": coin,
+            "source_witnesses": witnesses,
+            "unattributed_event_ids": [],
+            "witness_identity": (
+                f"capture_own_account_evidence.py tool_sha256={tool_sha[:16]} run {run_id}; "
+                f"manifest_sha256={manifest_sha256}; "
+                f"ownership {ownership.get('status')} "
+                f"{short_address(ownership.get('recovered_address', manifest.get('address')))}"
+            ),
+        },
+    }
+    return packet, "built from the captured bytes"
 
 
 def completeness(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -171,7 +380,12 @@ def completeness(manifest: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_intake(manifest: dict[str, Any], derived: dict[str, Any]) -> dict[str, Any]:
+def build_intake(
+    manifest: dict[str, Any],
+    derived: dict[str, Any],
+    raw: dict[str, bytes] | None = None,
+    manifest_sha256: str | None = None,
+) -> dict[str, Any]:
     address = short_address(manifest.get("address"))
     run_id = _text(manifest.get("run_id"), "manifest.run_id")
     coin = _text(manifest.get("coin"), "manifest.coin")
@@ -241,7 +455,9 @@ def build_intake(manifest: dict[str, Any], derived: dict[str, Any]) -> dict[str,
                     "szi": szi,
                     "usdc": usdc,
                 },
-                "payload_digest": unresolved("D-1"),
+                # the Bridge's normalized reconcile digest is a Bridge OBSERVATION of the
+                # event, not the D-1 source domain; no store has observed these events
+                "payload_digest": BRIDGE_DIGEST_UNAVAILABLE,
                 "payload_reason": PAYLOAD_RETAINED,
                 "symbol": row_coin,
             }
@@ -284,7 +500,7 @@ def build_intake(manifest: dict[str, Any], derived: dict[str, Any]) -> dict[str,
         "completeness": witness,
         "unresolved_fields": {
             "bindings[*].source_event_digest": "D-1",
-            "retained_rows[*].payload_digest": "D-1",
+            "retained_rows[*].payload_digest": BRIDGE_DIGEST_UNAVAILABLE,
             "bindings[*].funding_event_id (rule proposed, value derived)": "D-2",
             "bindings[*].event_timestamp (venue stamp kept verbatim)": "D-3",
             "bindings[*].oracle_price / oracle_price_source": "D-4",
@@ -301,10 +517,44 @@ def build_intake(manifest: dict[str, Any], derived: dict[str, Any]) -> dict[str,
             "evidence for C-10, and not an input to any production selection path."
         ),
     }
+    real_packet, real_reason = (
+        build_real_packet(manifest, derived, raw, manifest_sha256)
+        if raw is not None and manifest_sha256 is not None
+        else (None, "raw response bytes were not supplied")
+    )
+    gap_report["real_capture_packet"] = {
+        "ruling": RULING,
+        "file": REAL_PACKET_FILENAME if real_packet is not None else None,
+        "status": "BUILT" if real_packet is not None else "NOT_BUILT",
+        "reason": real_reason,
+        "decisions_applied": {
+            "D-1": f"source_event_digest = {REAL_DIGEST_DOMAIN}:sha256(exact captured row bytes)",
+            "D-2": f"funding_event_id = {REAL_EVENT_ID_PREFIX}:<account-short>:<coin>:<time_ms>",
+            "D-3": "event_timestamp = venue stamp verbatim; interval_hour_utc = its floor",
+            "D-5": "witness_identity names run, manifest_sha256 and the ownership record",
+            "D-6": (
+                "coverage carries both funding passes and the fills pass as exact bytes; the "
+                "export tool re-derives the hour grid, the 1-second end tolerance and the "
+                "fills-based expected count on read"
+            ),
+        },
+        "unresolved": {
+            "bindings[*].oracle_price / oracle_price_source": (
+                "D-4: no oracle capture at the funding instants exists in this run"
+            ),
+        },
+        "export_tool_invocation": "export_mtc_funding.py --evidence-kind REAL_CAPTURE_READ_ONLY",
+        "export_tool_outcome_expected": EXPECTED_REAL_TOOL_REFUSAL,
+        "statement": (
+            "The accepting shape of the intake. It admits NO production evidence: "
+            "OD-20260914-P012-ADMISSION-Q3 (Wait) and the gate order Q6 stand."
+        ),
+    }
     return {
         "packet": packet,
         "retained_rows": {"label": DRAFT_LABEL, "rows": retained},
         "gap_report": gap_report,
+        "real_packet": real_packet,
     }
 
 
@@ -324,11 +574,14 @@ def write_outputs(out_dir: Path, intake: dict[str, Any]) -> dict[str, str]:
         )
     out_dir.mkdir(parents=True)
     digests: dict[str, str] = {}
-    for name, obj in (
+    outputs = [
         ("binding_packet_draft.json", intake["packet"]),
         ("retained_rows_expected.json", intake["retained_rows"]),
         ("intake_gap_report.json", intake["gap_report"]),
-    ):
+    ]
+    if intake.get("real_packet") is not None:
+        outputs.append((REAL_PACKET_FILENAME, intake["real_packet"]))
+    for name, obj in outputs:
         raw = _canonical(obj)
         with (out_dir / name).open("xb") as handle:
             handle.write(raw)
@@ -346,16 +599,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", required=True, help="write-once output directory")
     args = parser.parse_args(argv)
     try:
-        manifest, derived = load_capture(Path(args.run_dir))
-        intake = build_intake(manifest, derived)
+        manifest, derived, raw, manifest_sha256 = load_capture(Path(args.run_dir))
+        intake = build_intake(manifest, derived, raw, manifest_sha256)
         digests = write_outputs(Path(args.out), intake)
     except IntakeRefused as exc:
         print(f"INTAKE_REFUSED {exc.code}: {exc}", file=sys.stderr)
         return 3
     report = intake["gap_report"]
+    real = report["real_capture_packet"]
     print(
         f"{DRAFT_LABEL} events={report['funding_events']} fills={report['fills']} "
-        f"complete={report['completeness']['complete']} export_tool_would_refuse={EXPECTED_TOOL_REFUSAL}"
+        f"complete={report['completeness']['complete']} export_tool_would_refuse={EXPECTED_TOOL_REFUSAL} "
+        f"real_packet={real['status']} real_packet_tool_outcome_expected={real['export_tool_outcome_expected']}"
     )
     for name, digest in digests.items():
         print(f"{digest}  {name}")
