@@ -706,6 +706,33 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
                     dataset_content_hash="p030ds-v1:" + "0" * 64,
                 )
 
+    def test_percent_encoded_segments_are_refused_like_the_adapter(self) -> None:
+        """Gemini delta review of the repair (P030_R1 NIT 2): the adapter refuses percent-escaped
+        spellings such as ``%2e%2e`` as non-canonical; the exporter must refuse the same input."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root)
+            escaped_dir = source_root / "%2e%2e"
+            escaped_dir.mkdir()
+            escaped = escaped_dir / "2026-02.jsonl"
+            escaped.write_bytes(source.read_bytes())
+            self._refused(
+                "source_outside_root",
+                "canonical relative POSIX",
+                escaped,
+                root,
+                source_root=source_root,
+            )
+            with self.assertRaises(ValueError):
+                capture_stable_prefix(
+                    escaped,
+                    root / "stable",
+                    source_root=source_root,
+                    high_water_bytes=10,
+                    captured_at_utc=CAPTURED_AT,
+                    dataset_content_hash="p030ds-v1:" + "0" * 64,
+                )
+
     def test_junction_component_is_refused_like_the_adapter(self) -> None:
         """Lane-3 T0 review finding 2: a junction inside the root that points outside must be refused
         by the exporter exactly as the adapter refuses it on the same field."""

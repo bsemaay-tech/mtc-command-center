@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
+from urllib.parse import unquote
 
 from p030_market_data_contracts import (
     ALGORITHM,
@@ -145,6 +146,18 @@ def _source_rel(source_jsonl: Path, source_root: Path) -> str:
         raise ExportRefused(
             "source_outside_root", "source_path must be relative to source_root"
         ) from exc
+    # percent-escapes are refused as non-canonical spelling, as the adapter refuses them
+    decoded = rel
+    for _ in range(5):
+        next_value = unquote(decoded)
+        if next_value == decoded:
+            break
+        decoded = next_value
+    if decoded != rel:
+        _refuse(
+            "source_outside_root",
+            "source_path must be a canonical relative POSIX path inside source_root",
+        )
     posix = PurePosixPath(rel)
     windows = PureWindowsPath(rel)
     if (
