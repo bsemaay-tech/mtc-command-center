@@ -96,7 +96,10 @@ def _reject_nonfinite_numbers(value: object) -> None:
 
 def _utc_z(value: str) -> str:
     if not isinstance(value, str) or not value.endswith("Z"):
-        _refuse("invalid_timestamp", "exported_at_utc must be a caller-supplied UTC Z timestamp")
+        _refuse(
+            "invalid_timestamp",
+            "exported_at_utc must be a caller-supplied UTC Z timestamp",
+        )
     try:
         parsed = datetime.fromisoformat(value[:-1] + "+00:00")
     except ValueError as exc:
@@ -105,7 +108,10 @@ def _utc_z(value: str) -> str:
             "exported_at_utc must be a caller-supplied UTC Z timestamp",
         ) from exc
     if parsed.utcoffset() is None:
-        _refuse("invalid_timestamp", "exported_at_utc must be a caller-supplied UTC Z timestamp")
+        _refuse(
+            "invalid_timestamp",
+            "exported_at_utc must be a caller-supplied UTC Z timestamp",
+        )
     # The backup adapter's whole-second convention (p030_closed_partition_backup_adapter.py
     # `_utc_z`: "must use whole seconds"); a sub-second receipt timestamp would be refused there.
     if parsed.microsecond:
@@ -132,7 +138,9 @@ def _read_source_once(source_jsonl: Path) -> bytes:
             data = handle.read()
             observed_size = handle.tell()
     except OSError as exc:
-        raise ExportRefused("source_unreadable", "source partition is unreadable") from exc
+        raise ExportRefused(
+            "source_unreadable", "source partition is unreadable"
+        ) from exc
     if observed_size != expected_size or len(data) != expected_size:
         _refuse("short_read", "source partition read was short or partial")
     if not data:
@@ -155,7 +163,9 @@ def _decode_source_line(raw_line: bytes, line_number: int) -> dict[str, Any]:
             "source_line_invalid", f"source line {line_number} is not parseable JSON"
         ) from exc
     if type(record) is not dict:
-        _refuse("source_line_invalid", f"source line {line_number} is not a JSON object")
+        _refuse(
+            "source_line_invalid", f"source line {line_number} is not a JSON object"
+        )
     try:
         # json.loads turns an overflowing token such as 1e999 into inf without consulting
         # parse_constant; the walk below is the only guard, so its ValueError must surface
@@ -163,7 +173,8 @@ def _decode_source_line(raw_line: bytes, line_number: int) -> dict[str, Any]:
         _reject_nonfinite_numbers(record)
     except ValueError as exc:
         raise ExportRefused(
-            "source_line_invalid", f"source line {line_number} carries a non-finite number"
+            "source_line_invalid",
+            f"source line {line_number} carries a non-finite number",
         ) from exc
     try:
         canonical = (
@@ -177,10 +188,14 @@ def _decode_source_line(raw_line: bytes, line_number: int) -> dict[str, Any]:
         )
     except (TypeError, ValueError) as exc:
         raise ExportRefused(
-            "source_line_noncanonical", f"source line {line_number} is not canonical JSONL"
+            "source_line_noncanonical",
+            f"source line {line_number} is not canonical JSONL",
         ) from exc
     if canonical != raw_line:
-        _refuse("source_line_noncanonical", f"source line {line_number} is not canonical JSONL")
+        _refuse(
+            "source_line_noncanonical",
+            f"source line {line_number} is not canonical JSONL",
+        )
     return record
 
 
@@ -200,10 +215,22 @@ def _reidentify(row: dict[str, Any], line_number: int) -> dict[str, Any]:
         raise ExportRefused("contract_refused", str(exc)) from exc
 
     old_payload_hash = row["producer_payload_hash"]
-    if _PAYLOAD_ID.fullmatch(str(old_payload_hash)) and old_payload_hash != payload_hash:
-        _refuse("identity_mismatch", "stored prefixed producer_payload_hash disagrees with payload fields")
-    if not (_BARE_SHA256.fullmatch(str(old_payload_hash)) or old_payload_hash == payload_hash):
-        _refuse("identity_mismatch", "producer_payload_hash is neither collector bare hex nor recomputed P030 identity")
+    if (
+        _PAYLOAD_ID.fullmatch(str(old_payload_hash))
+        and old_payload_hash != payload_hash
+    ):
+        _refuse(
+            "identity_mismatch",
+            "stored prefixed producer_payload_hash disagrees with payload fields",
+        )
+    if not (
+        _BARE_SHA256.fullmatch(str(old_payload_hash))
+        or old_payload_hash == payload_hash
+    ):
+        _refuse(
+            "identity_mismatch",
+            "producer_payload_hash is neither collector bare hex nor recomputed P030 identity",
+        )
 
     candidate = dict(row)
     candidate["producer_payload_hash"] = payload_hash
@@ -215,9 +242,15 @@ def _reidentify(row: dict[str, Any], line_number: int) -> dict[str, Any]:
 
     old_obs_id = row["observation_id"]
     if _OBSERVATION_ID.fullmatch(str(old_obs_id)) and old_obs_id != obs_id:
-        _refuse("identity_mismatch", "stored prefixed observation_id disagrees with row bytes")
+        _refuse(
+            "identity_mismatch",
+            "stored prefixed observation_id disagrees with row bytes",
+        )
     if not (_BARE_SHA256.fullmatch(str(old_obs_id)) or old_obs_id == obs_id):
-        _refuse("identity_mismatch", "observation_id is neither collector bare hex nor recomputed P030 identity")
+        _refuse(
+            "identity_mismatch",
+            "observation_id is neither collector bare hex nor recomputed P030 identity",
+        )
 
     candidate["observation_id"] = obs_id
     return {field: candidate[field] for field in DATASET_ROW_FIELDS}
@@ -237,7 +270,10 @@ def _descriptor(rows: list[dict[str, Any]]) -> dict[str, Any]:
     for row in rows:
         for field in ("venue", "track", "proxy_source"):
             if row[field] != descriptor[field]:
-                _refuse("mixed_dataset_descriptor", f"dataset row {field} does not match descriptor")
+                _refuse(
+                    "mixed_dataset_descriptor",
+                    f"dataset row {field} does not match descriptor",
+                )
     return descriptor
 
 
@@ -266,7 +302,9 @@ def export_partition(
 
     rows = [
         _reidentify(_decode_source_line(raw_line, line_number), line_number)
-        for line_number, raw_line in enumerate(source_bytes.splitlines(keepends=True), start=1)
+        for line_number, raw_line in enumerate(
+            source_bytes.splitlines(keepends=True), start=1
+        )
     ]
     if not rows:
         _refuse("empty_partition", "source partition is empty")
@@ -298,13 +336,20 @@ def export_partition(
     except FileExistsError as exc:
         raise ExportRefused("target_exists", "target partition already exists") from exc
     except OSError as exc:
-        raise ExportRefused("target_unwritable", "target partition is unwritable") from exc
+        raise ExportRefused(
+            "target_unwritable", "target partition is unwritable"
+        ) from exc
     try:
         reread = target_jsonl.read_bytes()
     except OSError as exc:
-        raise ExportRefused("target_verify_failed", "target partition cannot be re-read") from exc
+        raise ExportRefused(
+            "target_verify_failed", "target partition cannot be re-read"
+        ) from exc
     if reread != exported:
-        _refuse("target_verify_failed", "target partition re-read differs from exported bytes")
+        _refuse(
+            "target_verify_failed",
+            "target partition re-read differs from exported bytes",
+        )
 
     receipt = ExportReceipt(
         path=receipt_path,
@@ -336,5 +381,7 @@ def export_partition(
     except FileExistsError as exc:
         raise ExportRefused("receipt_exists", "export receipt already exists") from exc
     except OSError as exc:
-        raise ExportRefused("receipt_unwritable", "export receipt is unwritable") from exc
+        raise ExportRefused(
+            "receipt_unwritable", "export receipt is unwritable"
+        ) from exc
     return receipt

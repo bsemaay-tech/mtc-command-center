@@ -27,9 +27,7 @@ class ArchiveExporterTests(unittest.TestCase):
         base = collector_fixtures.PERSISTED_ORDER_BASE
         for offset in (0, 1):
             bar = market_data_collector.normalize_bar(
-                collector_fixtures.raw_bar(
-                    base + offset * collector_fixtures.STEP
-                ),
+                collector_fixtures.raw_bar(base + offset * collector_fixtures.STEP),
                 source_producer="WS_LIVE",
                 ingest_time=now,
                 env_lineage_id="fixture-lineage",
@@ -37,14 +35,7 @@ class ArchiveExporterTests(unittest.TestCase):
             )
             self.assertIsNotNone(bar)
             self.assertEqual(archive.append_bar(bar), "APPENDED")
-        source = (
-            source_root
-            / "bars"
-            / "HYPERLIQUID"
-            / "BTC"
-            / "15m"
-            / "2026-02.jsonl"
-        )
+        source = source_root / "bars" / "HYPERLIQUID" / "BTC" / "15m" / "2026-02.jsonl"
         self.assertTrue(source.is_file())
         return source_root, source
 
@@ -59,7 +50,9 @@ class ArchiveExporterTests(unittest.TestCase):
         )
         return source_root, source, target, receipt
 
-    def test_exported_collector_fixture_is_accepted_by_stable_prefix_adapter(self) -> None:
+    def test_exported_collector_fixture_is_accepted_by_stable_prefix_adapter(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             source_root, source, target, receipt = self._export(root)
@@ -93,7 +86,9 @@ class ArchiveExporterTests(unittest.TestCase):
             )
             stable = json.loads(stable_receipt.read_text(encoding="utf-8"))
             self.assertEqual(stable["record_count"], 2)
-            self.assertEqual(stable["dataset_content_hash"], receipt.dataset_content_hash)
+            self.assertEqual(
+                stable["dataset_content_hash"], receipt.dataset_content_hash
+            )
             print(f"D-13 RED RAW REFUSAL: {raw_message}")
             print("D-13 GREEN EXPORTED CAPTURE: PASS")
 
@@ -120,9 +115,16 @@ class ArchiveExporterTests(unittest.TestCase):
             )
             self.assertEqual(stored, receipt.as_dict())
             self.assertEqual(stored["schema"], "p030.archive_export/v1")
-            self.assertEqual(stored["source_path"], source.relative_to(source_root).as_posix())
-            self.assertEqual(stored["source_sha256"], hashlib.sha256(source.read_bytes()).hexdigest())
-            self.assertEqual(stored["exported_sha256"], hashlib.sha256(target.read_bytes()).hexdigest())
+            self.assertEqual(
+                stored["source_path"], source.relative_to(source_root).as_posix()
+            )
+            self.assertEqual(
+                stored["source_sha256"], hashlib.sha256(source.read_bytes()).hexdigest()
+            )
+            self.assertEqual(
+                stored["exported_sha256"],
+                hashlib.sha256(target.read_bytes()).hexdigest(),
+            )
             self.assertEqual(stored["source_record_count"], 2)
             self.assertEqual(stored["exported_record_count"], 2)
             self.assertTrue(stored["identity_recomputed"])
@@ -143,7 +145,9 @@ class ArchiveExporterTests(unittest.TestCase):
             for raw, exported in zip(raw_rows, exported_rows, strict=True):
                 self.assertRegex(raw["observation_id"], r"^[0-9a-f]{64}$")
                 self.assertRegex(raw["producer_payload_hash"], r"^[0-9a-f]{64}$")
-                self.assertRegex(exported["observation_id"], r"^p030obs-v1:[0-9a-f]{64}$")
+                self.assertRegex(
+                    exported["observation_id"], r"^p030obs-v1:[0-9a-f]{64}$"
+                )
                 self.assertRegex(
                     exported["producer_payload_hash"],
                     r"^p030payload-v1:[0-9a-f]{64}$",
@@ -158,7 +162,9 @@ class ArchiveExporterTests(unittest.TestCase):
             source_root, source = self._collector_partition(root)
             target = root / "already.jsonl"
             target.write_bytes(b"occupied\n")
-            with self.assertRaisesRegex(subject.ExportRefused, "target partition already exists") as caught:
+            with self.assertRaisesRegex(
+                subject.ExportRefused, "target partition already exists"
+            ) as caught:
                 subject.export_partition(
                     source,
                     target,
@@ -172,7 +178,9 @@ class ArchiveExporterTests(unittest.TestCase):
             root = Path(temporary)
             source = root / "bad.jsonl"
             source.write_bytes(b'{"not":\n')
-            with self.assertRaisesRegex(subject.ExportRefused, "not parseable JSON") as caught:
+            with self.assertRaisesRegex(
+                subject.ExportRefused, "not parseable JSON"
+            ) as caught:
                 subject.export_partition(
                     source,
                     root / "out.jsonl",
@@ -186,7 +194,9 @@ class ArchiveExporterTests(unittest.TestCase):
             root = Path(temporary)
             source = root / "empty.jsonl"
             source.write_bytes(b"")
-            with self.assertRaisesRegex(subject.ExportRefused, "source partition is empty") as caught:
+            with self.assertRaisesRegex(
+                subject.ExportRefused, "source partition is empty"
+            ) as caught:
                 subject.export_partition(
                     source,
                     root / "out.jsonl",
@@ -208,8 +218,12 @@ class ArchiveExporterTests(unittest.TestCase):
                     return data + b"tamper"
                 return data
 
-            with mock.patch.object(Path, "read_bytes", autospec=True, side_effect=changed_target_read):
-                with self.assertRaisesRegex(subject.ExportRefused, "re-read differs") as caught:
+            with mock.patch.object(
+                Path, "read_bytes", autospec=True, side_effect=changed_target_read
+            ):
+                with self.assertRaisesRegex(
+                    subject.ExportRefused, "re-read differs"
+                ) as caught:
                     subject.export_partition(
                         source,
                         target,
@@ -240,7 +254,10 @@ class ArchiveExporterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             source_root, source = self._collector_partition(root)
-            rows = [json.loads(line) for line in source.read_text(encoding="utf-8").splitlines()]
+            rows = [
+                json.loads(line)
+                for line in source.read_text(encoding="utf-8").splitlines()
+            ]
             rows[0]["observation_id"] = "p030obs-v1:" + "0" * 64
             source.write_text(
                 "".join(
@@ -249,7 +266,9 @@ class ArchiveExporterTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            with self.assertRaisesRegex(subject.ExportRefused, "stored prefixed observation_id") as caught:
+            with self.assertRaisesRegex(
+                subject.ExportRefused, "stored prefixed observation_id"
+            ) as caught:
                 subject.export_partition(
                     source,
                     root / "out.jsonl",
@@ -257,7 +276,6 @@ class ArchiveExporterTests(unittest.TestCase):
                     exported_at_utc=EXPORTED_AT,
                 )
             self.assertEqual(caught.exception.code, "identity_mismatch")
-
 
 
 class ArchiveExporterRefusalCodeTests(unittest.TestCase):
@@ -275,7 +293,9 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
 
     @staticmethod
     def _rows(source: Path) -> list[dict]:
-        return [json.loads(line) for line in source.read_text(encoding="utf-8").splitlines()]
+        return [
+            json.loads(line) for line in source.read_text(encoding="utf-8").splitlines()
+        ]
 
     @staticmethod
     def _write_rows(source: Path, rows: list[dict]) -> None:
@@ -287,7 +307,9 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-    def _refused(self, code: str, message_regex: str, source: Path, root: Path, **overrides):
+    def _refused(
+        self, code: str, message_regex: str, source: Path, root: Path, **overrides
+    ):
         kwargs = {
             "source_root": overrides.pop("source_root", root),
             "exported_at_utc": overrides.pop("exported_at_utc", EXPORTED_AT),
@@ -304,13 +326,26 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             source_root, source = self._partition(root)
             for stamp in ("2026-09-14T00:00:00.500Z", "2026-09-14T00:00:00.000001Z"):
                 self._refused(
-                    "invalid_timestamp", "whole seconds", source, root,
-                    source_root=source_root, exported_at_utc=stamp,
+                    "invalid_timestamp",
+                    "whole seconds",
+                    source,
+                    root,
+                    source_root=source_root,
+                    exported_at_utc=stamp,
                 )
-            for stamp in ("2026-09-14T00:00:00+00:00", "2026-09-14T00:00:00", "not-a-time", 20260914):
+            for stamp in (
+                "2026-09-14T00:00:00+00:00",
+                "2026-09-14T00:00:00",
+                "not-a-time",
+                20260914,
+            ):
                 self._refused(
-                    "invalid_timestamp", "UTC Z timestamp", source, root,
-                    source_root=source_root, exported_at_utc=stamp,
+                    "invalid_timestamp",
+                    "UTC Z timestamp",
+                    source,
+                    root,
+                    source_root=source_root,
+                    exported_at_utc=stamp,
                 )
             self.assertFalse((root / "out.jsonl").exists())
 
@@ -319,21 +354,28 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             root = Path(temporary)
             source_root, source = self._partition(root)
             self._refused(
-                "source_outside_root", "relative to source_root", source, root,
+                "source_outside_root",
+                "relative to source_root",
+                source,
+                root,
                 source_root=root / "elsewhere",
             )
 
     def test_source_unreadable_refusal(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            self._refused("source_unreadable", "unreadable", root / "missing.jsonl", root)
+            self._refused(
+                "source_unreadable", "unreadable", root / "missing.jsonl", root
+            )
 
     def test_short_read_refusals(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             source_root, source = self._partition(root)
             source.write_bytes(source.read_bytes().rstrip(b"\n"))
-            self._refused("short_read", "partial line", source, root, source_root=source_root)
+            self._refused(
+                "short_read", "partial line", source, root, source_root=source_root
+            )
 
             source_root, source = self._partition(root / "second")
             original_stat = Path.stat
@@ -346,7 +388,11 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
 
             with mock.patch.object(Path, "stat", inflated_stat):
                 self._refused(
-                    "short_read", "short or partial", source, root / "second", source_root=source_root
+                    "short_read",
+                    "short or partial",
+                    source,
+                    root / "second",
+                    source_root=source_root,
                 )
 
     def test_source_line_invalid_for_overflow_and_nan_literals(self) -> None:
@@ -359,7 +405,9 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             ):
                 source = root / name
                 source.write_bytes(line)
-                self._refused("source_line_invalid", "non-finite|not parseable", source, root)
+                self._refused(
+                    "source_line_invalid", "non-finite|not parseable", source, root
+                )
 
     def test_source_line_noncanonical_refusal(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -375,7 +423,13 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             rows = self._rows(source)
             rows[0]["unexpected"] = 1
             self._write_rows(source, rows)
-            self._refused("source_fields_mismatch", "extra=\\['unexpected'\\]", source, root, source_root=source_root)
+            self._refused(
+                "source_fields_mismatch",
+                "extra=\\['unexpected'\\]",
+                source,
+                root,
+                source_root=source_root,
+            )
 
     def test_contract_refused_from_row_identity(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -384,7 +438,13 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             rows = self._rows(source)
             rows[0]["open"] = "not-a-decimal"
             self._write_rows(source, rows)
-            self._refused("contract_refused", "decimal string", source, root, source_root=source_root)
+            self._refused(
+                "contract_refused",
+                "decimal string",
+                source,
+                root,
+                source_root=source_root,
+            )
 
     def test_contract_refused_from_slice_validation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -393,7 +453,13 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             rows = self._rows(source)
             duplicated = [rows[0], rows[0]]
             self._write_rows(source, duplicated)
-            self._refused("contract_refused", "duplicate observation_id", source, root, source_root=source_root)
+            self._refused(
+                "contract_refused",
+                "duplicate observation_id",
+                source,
+                root,
+                source_root=source_root,
+            )
 
             source_root, source = self._partition(root / "window")
             rows = self._rows(source)
@@ -401,7 +467,11 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
                 row["bar_close_time"] = row["bar_open_time"]
             self._write_rows(source, rows)
             self._refused(
-                "contract_refused", "must be after bar_open_time", source, root / "window", source_root=source_root
+                "contract_refused",
+                "must be after bar_open_time",
+                source,
+                root / "window",
+                source_root=source_root,
             )
 
     def test_mixed_dataset_descriptor_refusal(self) -> None:
@@ -411,7 +481,13 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             rows = self._rows(source)
             rows[1]["venue"] = "OTHERVENUE"
             self._write_rows(source, rows)
-            self._refused("mixed_dataset_descriptor", "does not match descriptor", source, root, source_root=source_root)
+            self._refused(
+                "mixed_dataset_descriptor",
+                "does not match descriptor",
+                source,
+                root,
+                source_root=source_root,
+            )
 
     def test_receipt_exists_refusal(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -419,7 +495,14 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             source_root, source = self._partition(root)
             target = root / "out.jsonl"
             Path(str(target) + ".p030export.json").write_bytes(b"{}\n")
-            self._refused("receipt_exists", "receipt already exists", source, root, source_root=source_root, target=target)
+            self._refused(
+                "receipt_exists",
+                "receipt already exists",
+                source,
+                root,
+                source_root=source_root,
+                target=target,
+            )
             self.assertFalse(target.exists())
 
     def test_target_and_receipt_unwritable_refusals(self) -> None:
@@ -435,7 +518,14 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
                 return original_open(path, *args, **kwargs)
 
             with mock.patch.object(Path, "open", denied_target):
-                self._refused("target_unwritable", "unwritable", source, root, source_root=source_root, target=target)
+                self._refused(
+                    "target_unwritable",
+                    "unwritable",
+                    source,
+                    root,
+                    source_root=source_root,
+                    target=target,
+                )
             self.assertFalse(target.exists())
 
             receipt = Path(str(target) + ".p030export.json")
@@ -446,7 +536,14 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
                 return original_open(path, *args, **kwargs)
 
             with mock.patch.object(Path, "open", denied_receipt):
-                self._refused("receipt_unwritable", "receipt is unwritable", source, root, source_root=source_root, target=target)
+                self._refused(
+                    "receipt_unwritable",
+                    "receipt is unwritable",
+                    source,
+                    root,
+                    source_root=source_root,
+                    target=target,
+                )
             self.assertTrue(target.exists())
             self.assertFalse(receipt.exists())
 
