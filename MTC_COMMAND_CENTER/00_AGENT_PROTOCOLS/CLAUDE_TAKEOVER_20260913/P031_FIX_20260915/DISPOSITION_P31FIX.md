@@ -97,3 +97,5 @@ HEAD:
 ```text
 96af3eb61bfdf23f3315ca1d984f19407c02b9d5
 ```
+
+> **Addendum 2026-09-16 (lane-1 review N-1):** row J-04 names `:832-833` (`DEPLOYMENT_IDENTITY_MISMATCH`) as the guard enforcing an unchanged DEMOTED deployment identity; for `DEMOTED` (previous_state in the deep-rung set) the guard that actually fires is `:675-686` (`DEPLOYMENT_REFRESH_ENVELOPE_UNRESOLVED`), which precedes it. `:832-833` is the FROZEN-path guard (post-refresh re-admission), now fenced by `e9e37aec`. Citation corrected here, not in the row text.

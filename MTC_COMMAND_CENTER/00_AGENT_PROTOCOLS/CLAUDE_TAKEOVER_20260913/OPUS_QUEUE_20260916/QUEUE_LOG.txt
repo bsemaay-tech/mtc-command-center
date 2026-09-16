@@ -7,3 +7,4 @@
 2026-09-16T12:42:09Z LEAD: lane 1 attempt 1 archived (REQUEST_CHANGES on 48bd70de); fence e9e37aec pushed; lane 1 re-pinned; launcher will re-run it
 2026-09-16T12:46:58Z LEAD: lane 3 re-pinned again to 45a7f50e (parity tweak after the Gemini delta review)
 2026-09-16T12:47:05Z LEAD: launching lane 2 P1CAP early (owner: keep using the Pro allowance)
+2026-09-16T13:00:51Z LEAD: lane 2 attempt 1 CAPPED (Pro 5-hour session limit, 429; resets 15:20Z); archived; PowerShell added to allowedTools of the unrun lanes; lane 2 re-run after 15:20Z
