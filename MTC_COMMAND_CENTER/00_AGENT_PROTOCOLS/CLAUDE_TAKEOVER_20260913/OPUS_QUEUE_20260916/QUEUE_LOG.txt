@@ -8,3 +8,8 @@
 2026-09-16T12:46:58Z LEAD: lane 3 re-pinned again to 45a7f50e (parity tweak after the Gemini delta review)
 2026-09-16T12:47:05Z LEAD: launching lane 2 P1CAP early (owner: keep using the Pro allowance)
 2026-09-16T13:00:51Z LEAD: lane 2 attempt 1 CAPPED (Pro 5-hour session limit, 429; resets 15:20Z); archived; PowerShell added to allowedTools of the unrun lanes; lane 2 re-run after 15:20Z
+2026-09-17T05:03:37Z LEAD: host slept from ~14:45Z Sep 16 to ~05:00Z Sep 17 (both alarms delivered late); the 20:00Z queue never started; weekly reset has passed; starting run_queue.ps1 now (lanes 1-3), lane 4 + optional 6-8 by hand afterwards, one Pro lane at a time
+2026-09-17T05:03:42.2877886Z launching P031
+2026-09-17T05:28:55.8389027Z finished P031 : exit=0 start=2026-09-17T05:03:42.6418074Z end=2026-09-17T05:28:55.8160170Z
+2026-09-17T05:28:55.8522189Z launching P1CAP
+2026-09-17T05:39:29Z LEAD: lane 1 attempt 2 archived (REQUEST_CHANGES on e9e37aec, F-2: two unfenced OD-7 refresh-path guards); repair 61c56148 (two fence tests) pushed; lane 1 re-pinned; launch.exit removed so the third read can run by hand after lanes 2-4

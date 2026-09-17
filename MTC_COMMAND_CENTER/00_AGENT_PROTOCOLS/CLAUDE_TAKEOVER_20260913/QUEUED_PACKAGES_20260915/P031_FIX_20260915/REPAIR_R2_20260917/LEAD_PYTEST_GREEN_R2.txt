@@ -1,0 +1,11 @@
+$ /c/tmp/P020_IMPL_20260912/01a0924d-2c4b-7da1-99e1-24e2a7c7685c/.venv/Scripts/python.exe -m pytest MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py -q -p no:cacheprovider  (worktree, candidate bytes + round-2 tests)
+................s.................... [ 32%]
+....................... [ 53%]
+.....................................................         [100%]
+112 passed, 1 skipped, 167 subtests passed in 28.47s
+exit=0
+
+$ (cd MTC_COMMAND_CENTER/contracts && /c/tmp/P020_IMPL_20260912/01a0924d-2c4b-7da1-99e1-24e2a7c7685c/.venv/Scripts/python.exe -m pytest tests -q -p no:cacheprovider)
+..................................................                       [100%]
+50 passed in 0.24s
+exit=0
