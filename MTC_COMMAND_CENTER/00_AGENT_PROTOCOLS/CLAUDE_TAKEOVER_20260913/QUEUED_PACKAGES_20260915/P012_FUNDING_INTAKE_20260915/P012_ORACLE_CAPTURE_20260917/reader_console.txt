@@ -11,3 +11,9 @@ H20260917T100000Z_state clearinghouseState 200 [{'coin': 'BTC', 'szi': '0.0006'}
 H20260917T110000Z_pre metaAndAssetCtxs 200 76402.0
 H20260917T110000Z_post metaAndAssetCtxs 200 76402.0
 H20260917T110000Z_state clearinghouseState 200 []
+H20260917T120000Z_pre metaAndAssetCtxs 200 76476.0
+H20260917T120000Z_post metaAndAssetCtxs 200 76482.0
+H20260917T120000Z_state clearinghouseState 200 []
+H20260917T130000Z_pre metaAndAssetCtxs 200 76734.9
+H20260917T130000Z_post metaAndAssetCtxs 200 76735.0
+H20260917T130000Z_state clearinghouseState 200 []

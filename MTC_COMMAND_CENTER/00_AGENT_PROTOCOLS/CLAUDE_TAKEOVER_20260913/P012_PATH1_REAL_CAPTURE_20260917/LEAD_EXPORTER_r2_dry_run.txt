@@ -1,0 +1,14 @@
+FIXTURE retained rows (Bridge FundingEventRecord, real-shaped digests): 3
+packet sha256 8c88440a58747a1ad66e87a846ba364b8f9bbf189b16069edbd71731874b6323
+retained rows label: NONACCEPTING_INTAKE_DRAFT count 3
+REAL profile on the r2 packet as the adapter emitted it (D-4 unfilled, O-1 wait): accepted=False CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE
+  detail: D-4: binding hl-funding:0x1E26…AC49:BTC:1789632000011 oracle_price_source must name an oracle capture at the funding instant as <sha256>#<json-pointer>; a price derived from the payment is research evidence only and is n
+  D-4 fill 2026-09-17T08:00:00Z: H20260917T080000Z_pre_metaAndAssetCtxs.json @ 2026-09-17T07:59:58.000+00:00 oraclePx 76456.0 (post read 76463.0)
+  D-4 fill 2026-09-17T09:00:00Z: H20260917T090000Z_pre_metaAndAssetCtxs.json @ 2026-09-17T08:59:58.003+00:00 oraclePx 76572.0 (post read 76575.0)
+  D-4 fill 2026-09-17T10:00:00Z: H20260917T100000Z_pre_metaAndAssetCtxs.json @ 2026-09-17T09:59:58.000+00:00 oraclePx 76472.9 (post read 76472.9)
+REAL profile with D-4 filled by hand from the real oracle reads (Lead dry run, NONACCEPTING): accepted=True REAL_CAPTURE_CANDIDATE_BUILT
+  candidate sha256 5da216b773cae4c590297f8fa7da0ba1c44cefa47563b2f312ce55d127daa173
+  artifact_kind REAL_CAPTURE_FUNDING_CANDIDATE_V1 | synthetic_only False | admission REFUSED_REAL_CAPTURE_READ_ONLY_NOT_A_PRODUCTION_RECORD
+  completion_check {'expected_funding_hours': ['2026-09-17T08:00:00Z', '2026-09-17T09:00:00Z', '2026-09-17T10:00:00Z'], 'observed_funding_hours': ['2026-09-17T08:00:00Z', '2026-09-17T09:00:00Z', '2026-09-17T10:00:00Z'], 'opening_position': '0.0', 'position_source': 'coverage.fills_witness'}
+  bound events: [('2026-09-17T08:00:00Z', '76456.0'), ('2026-09-17T09:00:00Z', '76572.0'), ('2026-09-17T10:00:00Z', '76472.9')]
+  wrote LEAD_DRY_RUN_r2_candidate_hand_filled_D4.json / _report_
