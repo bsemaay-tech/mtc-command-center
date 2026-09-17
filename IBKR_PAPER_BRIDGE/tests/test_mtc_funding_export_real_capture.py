@@ -896,6 +896,67 @@ def test_d6_a_foreign_coin_row_inside_the_pass_refuses():
     assert result.reason_code == exporter.CANDIDATE_SYMBOL_MISMATCH
 
 
+def test_d6_the_completion_check_names_the_fills_witness_as_the_position_source():
+    """D-6 (ii) provenance on the normal r1 path: the position that expects the
+    payments comes from the fills witness, and the completion check says so
+    (lane-8 exact-Opus review of ``9ef072a8``, REQUIRED-1: the two provenance
+    fields were emitted but never asserted)."""
+    result = build(evidence_kind=REAL)
+
+    assert result.accepted is True, result.report["reason_detail"]
+    check = json.loads(result.candidate_bytes)["real_capture_candidate"][
+        "completion_check"
+    ]
+    assert check["position_source"] == exporter.REAL_POSITION_SOURCE_FILLS
+    assert check["position_source"] == "coverage.fills_witness"
+    assert check["opening_position"] == "0.0"
+    assert check["expected_funding_hours"] == [HOUR1, HOUR2]
+
+
+@pytest.mark.parametrize(
+    "fills",
+    [
+        b"[]",
+        (
+            "["
+            + _fill("1.0", "1", "B", 1789405000000, "0.0", "Open Long", 9).replace(
+                '"coin":"BTC"', '"coin":"ETH"'
+            )
+            + "]"
+        ).encode("utf-8"),
+    ],
+    ids=["empty-fills-witness", "another-coin-only"],
+)
+def test_d6_without_a_fill_for_the_symbol_the_position_source_is_the_payments(fills):
+    """D-6 (ii) accepting branch with no fill for the symbol: the position is the
+    constant szi the payments report, every grid hour of a [17:00, 18:00) window
+    carries a payment, and the completion check names the payments - not the fills
+    witness - as the producer of that position (lane-8 REQUIRED-1: this branch was
+    reachable, accepting and unlabelled; three mutants of it survived the suite)."""
+    start, end = "2026-09-14T17:00:00Z", "2026-09-14T18:00:00Z"
+    bindings = r1_bindings()
+    cover = real_coverage(bindings=bindings, fills=fills, start=start, end=end)
+
+    result = build(
+        bindings=bindings, cover=cover, start=start, end=end, evidence_kind=REAL
+    )
+
+    assert result.accepted is True, result.report["reason_detail"]
+    body = json.loads(result.candidate_bytes)["real_capture_candidate"]
+    check = body["completion_check"]
+    assert check["position_source"] == exporter.REAL_POSITION_SOURCE_PAYMENTS
+    assert check["position_source"] != exporter.REAL_POSITION_SOURCE_FILLS
+    assert "fills witness carries no fill" in check["position_source"]
+    assert check["opening_position"] is None
+    assert check["expected_funding_hours"] == [HOUR1, HOUR2]
+    assert check["observed_funding_hours"] == [HOUR1, HOUR2]
+    assert body["coverage_witness"]["fills_witness"] == fills.hex()
+    assert any(
+        "position the payments" in item
+        for item in result.report["evidence_limitations"]
+    )
+
+
 def test_d6_an_empty_inventory_cannot_be_witnessed():
     cover = real_coverage(bindings=[], rows=[], passes=[b"[]", b"[]"], fills=b"[]")
 

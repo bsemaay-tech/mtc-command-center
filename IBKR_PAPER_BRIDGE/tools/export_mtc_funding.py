@@ -154,6 +154,12 @@ REAL_CAPTURE_SIDECAR_FILENAME = "funding_candidate_real_capture.json.sha256"
 REAL_SOURCE_EVENT_DIGEST_DOMAIN = "HL_USERFUNDING_ROW_V1"  # D-1
 REAL_EVENT_ID_PREFIX = "hl-funding"  # D-2
 REAL_END_TOLERANCE_SECONDS = 1  # D-6 (i): the venue stamps the hour's payment late
+REAL_POSITION_SOURCE_FILLS = "coverage.fills_witness"  # D-6 (ii)
+REAL_POSITION_SOURCE_PAYMENTS = (  # D-6 (ii) when the fills witness has no fill
+    "captured funding rows: the fills witness carries no fill for the symbol, so "
+    "the position is the constant szi the payments themselves report and the "
+    "per-row szi cross-check is vacuous"
+)
 REAL_CAPTURE_ADMISSION_STATUS = "REFUSED_REAL_CAPTURE_READ_ONLY_NOT_A_PRODUCTION_RECORD"
 REAL_CAPTURE_CANDIDATE_BUILT = "REAL_CAPTURE_CANDIDATE_BUILT"
 REAL_CAPTURE_NOT_A_PRODUCTION_RECORD = (
@@ -178,8 +184,10 @@ REAL_CAPTURE_EVIDENCE_LIMITATIONS = (
     (
         "Whole-interval completeness is witnessed by two byte-identical funding "
         "passes, an hour-aligned window with a 1-second end tolerance and the "
-        "fills-derived position at every hour (D-6); it is evidence about the "
-        "captured window only."
+        "fills-derived position at every hour (D-6) - or, when the fills witness "
+        "carries no fill for the symbol, the constant position the payments "
+        "themselves report (completion_check.position_source names which); it is "
+        "evidence about the captured window only."
     ),
     (
         "Production admission is NOT granted (OD-20260914-P012-ADMISSION-Q3 "
@@ -1218,19 +1226,26 @@ def _real_completion(
     must be that position. The end hour itself belongs to the grid because the
     venue stamps its payment inside the 1-second tolerance."""
     opening, fills = _real_fills(fills_bytes, symbol)
+    # No fill for the symbol inside the fills witness: the position cannot change
+    # inside the window, so the payments' own szi is the only position on record;
+    # the completion check then names that producer, never the fills witness
+    # (lane-8 exact-Opus review of 9ef072a8, REQUIRED-1).
+    payments_position: Decimal | None = None
+    if opening is None:
+        constant = {row.szi for row in pass_rows}
+        if len(constant) != 1:
+            raise _Refusal(
+                CANDIDATE_COVERAGE_INVALID,
+                "D-6: the fills witness carries no fill for the coin, so the position "
+                "cannot change inside the window, yet the captured payments show "
+                f"positions {sorted(str(item) for item in constant)}",
+            )
+        payments_position = next(iter(constant))
 
     def position_at(time_ms: int) -> Decimal:
-        if opening is None:
-            constant = {row.szi for row in pass_rows}
-            if len(constant) != 1:
-                raise _Refusal(
-                    CANDIDATE_COVERAGE_INVALID,
-                    "D-6: the fills witness carries no fill for the coin, so the position "
-                    "cannot change inside the window, yet the captured payments show "
-                    f"positions {sorted(str(item) for item in constant)}",
-                )
-            return next(iter(constant))
-        return opening + sum(
+        if payments_position is not None:
+            return payments_position
+        return (Decimal(0) if opening is None else opening) + sum(
             (signed for fill_ms, signed in fills if fill_ms < time_ms), Decimal(0)
         )
 
@@ -1260,7 +1275,11 @@ def _real_completion(
         "expected_funding_hours": expected,
         "observed_funding_hours": observed,
         "opening_position": None if opening is None else str(opening),
-        "position_source": "coverage.fills_witness",
+        "position_source": (
+            REAL_POSITION_SOURCE_PAYMENTS
+            if payments_position is not None
+            else REAL_POSITION_SOURCE_FILLS
+        ),
     }
 
 
