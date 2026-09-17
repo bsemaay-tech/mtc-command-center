@@ -1,0 +1,33 @@
+# LEAD_ADJUDICATION — lane 2: exact `claude-opus-5` xhigh T0 review of the P0-12 Path 1 capture tool `af921d75` — 2026-09-17 08:5x-09:1x UTC+3
+
+**Lane:** `OPUS_QUEUE_20260916/P1CAP/opus/run.ps1`, Claude PRO profile, run by the Thursday queue (the Wednesday 23:00 slot was lost to the host sleeping; attempt 1 of 2026-09-16 was CAPPED at the Pro 5-hour limit and is archived as `ATTEMPT1_CAPPED_1247Z/`). This attempt: 08:29-08:50 UTC+3 (05:28:56-05:50:17Z), launcher exit 0, 139 turns, no 429; report `opus/OPUS_T0_REPORT.md`, 583 lines; 43 own arms (`C:/tmp/OPUS_P1CAP_SCRATCH/opus_arms/`), 13 of them RED on the pre-fix tree `e77af1c8`; real-capture record r1 re-verified file by file (sidecars, manifest digests, original-bytes evidence, ownership recovery).
+**Verdict as returned:** `VERDICT: PASS-WITH-NITS` — **0 REQUIRED**, 7 NITs, 2 observations, 8 NOT VERIFIED items. Lead authorship of `af921d75` (owner "A") is disclosed and the reviewer weighed it (§11). The reviewer accepts nothing; the Lead never accepts its own code.
+
+## Lead reproduction
+| Check | Result |
+|---|---|
+| Citations `capture_own_account_evidence.py` `:107-112`, `:229-240`, `:343/:352`, `:368-390`, `:448-450`, `:513`, `:527`, `:533`, `:536-547`, `:708` | **EXACT** at the committed blob `af921d75` (sha256 `00b3b8f6…`, = the worktree bytes, = every manifest `tool_sha256` in r1) |
+| NIT-1 reproduced (`verify_sidecars` covers only `manifest["responses"]`) | a copy of r1 with one fee digit changed in `DERIVED_EXTRACTION.json` (sha `ba052f24…` vs sidecar `feb43cd2…`): `--verify-existing` prints `CAPTURE_VERIFY_OK`, exit 0 — **CONFIRMED** (untampered copy also OK, exit 0) |
+| Observation 1 (the r1 `OWNERSHIP_MESSAGE_r1.txt` is not the signed bytes) | **CONFIRMED and repaired as a record**: the run-root/CT13 checkout file is CRLF + trailing newline (139 B), the CT13 blob LF + trailing newline (136 B); recovery over either gives `0x1e10…0324`; the exact 135-byte string (`ownership_message`, LF, no trailing newline) recovers the owner `0x1E26…AC49` = manifest `address` = `recovered_address`. New record file `P012_PATH1_REAL_CAPTURE_20260915/OWNERSHIP_MESSAGE_r1_EXACT_BYTES.md` (sha256 `736dadd8…`, base64 of the exact bytes, recovery recipe) |
+| The reviewer's one full-suite failure (`test_linux_deployment.py::test_canonical_ledger_artifact_fresh_autocrlf_checkout_matches_recorded_identity`, `git add` exit 128 in a fresh tmp repo) | **environmental**: the reviewer's `--basetemp` sat under the user profile path (non-ASCII); the Lead's rerun of that test in the P1CAP worktree with an ASCII basetemp (`C:/bt_s4/p1cap_lead`) → `1 passed`; the full suite with an ASCII basetemp → see `LEAD_FULL_BRIDGE_SUITE_af921d75.txt` (result line below). Same rule as the standing Bridge pytest note (ASCII basetemp outside `C:/tmp`) |
+| NOT VERIFIED item: `sources/REAL_OBSERVATION_INTAKE.md` of the Gemini packet no longer on disk | true — the packet's `sources/` staging dir was cleaned after the counted Gemini read; the file's sha256 stays pinned in `PACKET_SHA256SUMS.txt` (CT13 copy) and the half-open rule the reviewer needed is cited twice in `P012_ACCEPTANCE_AMENDMENT_20260913.md`; no action |
+| Scope | three files, +/− as the reviewer's `git show af921d75 --stat`; `path1_sign_ownership.html` byte-identical at `e77af1c8`/`af921d75` (`b43dbe39…`) — consistent with `DISPOSITION_P1FIX.md` |
+
+Full Bridge suite at `af921d75`, Lead run, ASCII basetemp (`tests` from `IBKR_PAPER_BRIDGE`, Bridge interpreter, `--basetemp C:/bt_s4/p1cap_lead_full`): **1619 passed, 1 skipped, 0 failed** (175 s; `LEAD_FULL_BRIDGE_SUITE_af921d75.txt`). The reviewer collected 1650 (whole package, no path argument — `tools/tests` included) against the Lead's 1620 (`tests` only); its single failure does not reproduce with an ASCII basetemp, so it is charged to the temp path, not to the candidate.
+
+## NITs — disposition (all carried; none blocks the roster; the candidate pin `af921d75` is NOT moved before the Sol read)
+| # | Finding | Lead reading | Disposition |
+|---|---|---|---|
+| NIT-1 | `verify_sidecars` never checks `DERIVED_EXTRACTION.json` / `CAPTURE_MANIFEST.json` sidecars → `CAPTURE_VERIFY_OK` over-promises | reproduced; bounded (originals fully covered; derived view reproducible from them) | **carried, engineering follow-up slice** (walk every `*.sha256`, or record the derived digest in the manifest + test) |
+| NIT-2 | a descending-time page would be silently truncated (`paged_query`) | same design as the accepted broker; SDK pages ascending; r1 never paginated | **carried** (one-line refusal when page times are not non-decreasing + test); NOT VERIFIED region |
+| NIT-3 | malformed `account_state` refuses before `record_response` (bytes discarded), unlike `paged_query` | true; contradicts "a failed query is never evidence-free" | **carried** (move `record_response` above the shape check + test) |
+| NIT-4 | no test replays the recorded r1 bytes | true; the reviewer's arm `test_OK_real_capture_manifest_is_reproducible_from_the_stored_bytes` passes today | **carried** (check a copy of the r1 page bytes in as a fixture and keep that arm) |
+| NIT-5 | no-`tid` identity `hash+oid+time` can merge two identical partial fills (undercount, never fabrication) | true; not reached in r1 (all fills carry `tid`) | **carried** (include page position in the no-`tid` identity, or refuse the shape) |
+| NIT-6 | malformed signature / bad `--verify-existing` dir escape as raw exceptions (exit 1) instead of named refusals (exit 2) | true; fails closed | **carried** (wrap in `CaptureRefused`) |
+| NIT-7 | the attestation binds address + run id only; the signature is not stored in the manifest | true; r1 complete because the Lead recorded `sig_r1.txt` outside the tool | **carried, design** (sign `start`/`end`/`network` too; copy the exact signed text + signature into the manifest) — pairs with the record fix above |
+| Obs. 2 | `--coin` is a declaration, not a filter | true; every derived row carries its own `coin`; r1 is BTC only | **note for the intake document** (the intake adapter `9ef072a8` refuses a foreign coin as `CANDIDATE_SYMBOL_MISMATCH` — already covered there) |
+
+## Standing
+Lane 2 read COUNTED: exact-Opus PASS-WITH-NITS on `af921d75`, 0 REQUIRED; Gemini delta on `af921d75` was COUNTED PASS on 2026-09-15 (`P1CAP` Gemini root). Roster still needs the second flagship (exact Sol, Sep 19) before any merge; the Lead built the candidate and cannot accept it. NITs 1-7 go into one follow-up slice after the Sol read (so both flagships judge the same bytes).
+
+Recorded by Claude Opus 5 Lead (session 6, `4a8233`).

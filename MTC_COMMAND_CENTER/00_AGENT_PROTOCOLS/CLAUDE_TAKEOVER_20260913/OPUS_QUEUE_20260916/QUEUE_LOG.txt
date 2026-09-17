@@ -13,3 +13,9 @@
 2026-09-17T05:28:55.8389027Z finished P031 : exit=0 start=2026-09-17T05:03:42.6418074Z end=2026-09-17T05:28:55.8160170Z
 2026-09-17T05:28:55.8522189Z launching P1CAP
 2026-09-17T05:39:29Z LEAD: lane 1 attempt 2 archived (REQUEST_CHANGES on e9e37aec, F-2: two unfenced OD-7 refresh-path guards); repair 61c56148 (two fence tests) pushed; lane 1 re-pinned; launch.exit removed so the third read can run by hand after lanes 2-4
+2026-09-17T05:50:17.9521340Z finished P1CAP : exit=0 start=2026-09-17T05:28:56.1796518Z end=2026-09-17T05:50:17.9300325Z
+2026-09-17T05:50:17.9642024Z launching P030
+2026-09-17T06:06:31.0650026Z finished P030 : exit=1 start=2026-09-17T05:50:18.3190787Z end=2026-09-17T06:06:30.8538304Z
+2026-09-17T06:06:31.0650026Z stopping the queue after P030 (non-zero or missing exit)
+2026-09-17T06:06:31.0650026Z queue complete
+2026-09-17T06:06:53Z LEAD: lane 3 attempt 2 died at 06:06Z on an API server_error ("Connection lost mid-response"; not a 429) after 126 turns with only a skeleton report (placeholder VERDICT: BLOCK = void); archived ATTEMPT2_API_ERROR_0606Z; relaunching lane 3 by hand now
