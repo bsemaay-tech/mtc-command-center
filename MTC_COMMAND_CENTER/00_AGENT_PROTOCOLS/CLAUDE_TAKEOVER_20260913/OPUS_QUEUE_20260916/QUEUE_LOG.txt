@@ -36,3 +36,9 @@
 2026-09-17T18:48:41Z LEAD: launching lane 7 attempt 3 (DD06 2128352b, third read = round 2 of the T0 cap 3) on the remaining Pro window; a 429 archives it for tomorrow
 2026-09-17T18:54:34Z LANE7 attempt 3 (2128352b) CAPPED 18:53:21Z after 30 turns (Pro 5h window; resets 20:00Z = 23:00 UTC+3); archived DD06/ATTEMPT3_CAPPED_1853Z/; NOT counted; relaunch after reset
 2026-09-17T18:55:14Z LEAD: chain armed in session 6 (background task) — at 20:00:30Z launch lane 7 attempt 4 (DD06 2128352b), then lane 6 second read (P021S1 eada65ed); a sleeping host kills it -> start by hand (handoff)
+2026-09-17T20:00:37Z CHAIN: 23:00 UTC+3 window opened; launching lane 7 attempt 4 (DD06 2128352b)
+2026-09-17T20:16:50Z CHAIN: lane 7 attempt 4 ended: exit=0 start=2026-09-17T20:00:37.7666438Z end=2026-09-17T20:16:49.9584198Z
+2026-09-17T20:17:10Z CHAIN: launching lane 6 second read (P021S1 eada65ed)
+2026-09-17T20:31:56Z CHAIN: lane 6 second read ended: exit=0 start=2026-09-17T20:17:10.4573079Z end=2026-09-17T20:31:56.8046979Z
+2026-09-17T20:37:13Z LANE7 attempt 4 (2128352b) REQUEST_CHANGES 20:16:49Z (R-1: a partially unreadable master - spot None, perp 0.0 - printed as 'did not pay' + 'not the DD-06 breach'; Lead reproduced offline, 3 passed) = round 3 of the T0 cap 3 -> Lead repair authority ENDS; owner DD06-CAP A|B|C; archived DD06/ATTEMPT4_REQUEST_CHANGES_2128352b/; LEAD_ADJUDICATION_DD06_R2_T0.md
+2026-09-17T20:37:13Z LANE6 second read (eada65ed) PASS-WITH-NITS 20:31:56Z (0 REQUIRED; NIT-3/4/5/6); archived P021S1/ATTEMPT2_PASS_WITH_NITS_eada65ed/; LEAD_ADJUDICATION_P021S1_R1_T0.md; next Sol Sat
