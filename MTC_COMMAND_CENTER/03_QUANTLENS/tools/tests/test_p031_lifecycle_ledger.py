@@ -2590,10 +2590,10 @@ class LifecycleLedgerTests(unittest.TestCase):
     ) -> None:
         """OD-7 (6A) revocation fence: after a registrar refresh to FROZEN under a new
         composite, an admission that carries the OLD deployment identity must be refused
-        by ``DEPLOYMENT_IDENTITY_MISMATCH`` (ledger ``:832-833``) and the candidate must
+        by ``DEPLOYMENT_IDENTITY_MISMATCH`` (the ladder-path guard) and the candidate must
         stay FROZEN; the same admission under the NEW identity is accepted and records it.
 
-        Lane-3 exact-Opus review of ``48bd70de`` (2026-09-16, finding F-1): removing that
+        Lane-1 exact-Opus review of ``48bd70de`` (2026-09-16, finding F-1): removing that
         guard left the whole suite green while the ledger re-admitted the revoked
         identity. This test is RED on that mutant and GREEN with the guard.
         """
@@ -2663,6 +2663,162 @@ class LifecycleLedgerTests(unittest.TestCase):
         state = self.ledger.current_state(candidate_id)
         self.assertEqual(observed_state(state), "SHADOW")
         self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
+
+    def test_registrar_refresh_cannot_adopt_the_candidates_own_retired_identity(
+        self,
+    ) -> None:
+        """OD-7 refresh-path fence for ``DEPLOYMENT_IDENTITY_RETIRED``: a registrar refresh
+        (SHADOW -> FROZEN under a new composite) that names a deployment identity this
+        candidate already retired must be refused, and the candidate must stay where it
+        was under the identity it currently holds.
+
+        Second exact-Opus T0 read of ``e9e37aec`` (2026-09-17, finding F-2): removing the
+        refresh-path retired-identity guard left the whole suite green while the ledger
+        accepted the refresh and re-installed the retired identity as current. This test
+        is RED on that mutant and GREEN with the guard.
+        """
+        candidate_id = "QLC-20260917-refresh-retired-identity"
+        self.build_to_rung(
+            self.ledger, candidate_id, "refresh-retired", "SHADOW_ELIGIBLE"
+        )
+        self.append_authority_event(
+            self.ledger,
+            candidate_id=candidate_id,
+            event_id="refresh-retired-retirement",
+            event_type="RETIRED",
+            previous_state="SHADOW",
+            next_state="RETIRED",
+            writer_class="MULTI_WORKER_SUPERVISOR",
+            writer_id="supervisor-1",
+            check_set_version="supervisor.v1",
+            offset=5,
+        )
+        self.registrar.append(
+            event(
+                event_id="refresh-retired-reentry",
+                event_type="RE_ENTRY",
+                previous_state="RETIRED",
+                next_state="CANDIDATE",
+                candidate_id=candidate_id,
+                reason="The venue replaced its matching engine.",
+                trigger="OWNER_EXTERNAL_CHANGE",
+                evidence_references=("fixture://refresh-retired/reentry",),
+                timestamp=BASE_TIME + timedelta(seconds=6),
+            ),
+            evaluation_run_hash=hashlib.sha256(b"refresh-retired-reentry").hexdigest(),
+        )
+        self.registrar.append(
+            event(
+                event_id="refresh-retired-refreeze",
+                event_type="FROZEN",
+                previous_state="CANDIDATE",
+                next_state="FROZEN",
+                candidate_id=candidate_id,
+                package_hash=PACKAGE_B,
+                evidence_references=("fixture://refresh-retired/refreeze",),
+                timestamp=BASE_TIME + timedelta(seconds=7),
+            )
+        )
+        self.append_authority_event(
+            self.ledger,
+            candidate_id=candidate_id,
+            event_id="refresh-retired-readmission",
+            event_type="SHADOW_ELIGIBLE",
+            previous_state="FROZEN",
+            next_state="SHADOW",
+            writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
+            writer_id="admission-1",
+            check_set_version="shadow-eligibility.v1",
+            package_hash=PACKAGE_B,
+            deployment_identity_hash=DEPLOYMENT_B,
+            offset=8,
+        )
+        state = self.ledger.current_state(candidate_id)
+        self.assertEqual(observed_state(state), "SHADOW")
+        self.assertEqual(state["package_hash"], PACKAGE_B)
+        self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
+
+        with self.assertRaisesRegex(ValueError, "DEPLOYMENT_IDENTITY_RETIRED"):
+            self.registrar.append(
+                event(
+                    event_id="refresh-retired-refresh-onto-retired",
+                    event_type="FROZEN",
+                    previous_state="SHADOW",
+                    next_state="FROZEN",
+                    candidate_id=candidate_id,
+                    package_hash=PACKAGE_B,
+                    deployment_identity_hash=DEPLOYMENT_A,
+                    evidence_references=("fixture://refresh-retired/refresh",),
+                    timestamp=BASE_TIME + timedelta(seconds=9),
+                )
+            )
+        state = self.ledger.current_state(candidate_id)
+        self.assertEqual(observed_state(state), "SHADOW")
+        self.assertEqual(state["package_hash"], PACKAGE_B)
+        self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
+        self.assertEqual(
+            [
+                record.event.event_id
+                for record in self.ledger.replay()
+                if record.event.candidate_id == candidate_id
+                and record.event.event_type == "FROZEN"
+            ],
+            ["refresh-retired-frozen", "refresh-retired-refreeze"],
+        )
+
+    def test_registrar_refresh_cannot_adopt_another_candidates_identity(self) -> None:
+        """OD-7 refresh-path fence for ``DEPLOYMENT_IDENTITY_BOUND_TO_ANOTHER_CANDIDATE``:
+        a registrar refresh that names a deployment identity another candidate already
+        holds must be refused, and both candidates must keep their recorded identities.
+
+        Second exact-Opus T0 read of ``e9e37aec`` (2026-09-17, finding F-2): removing the
+        refresh-path ownership guard left the whole suite green while two candidates ended
+        up sharing one deployment identity. This test is RED on that mutant and GREEN
+        with the guard.
+        """
+        self.build_to_rung(
+            self.ledger,
+            CANDIDATE_B,
+            "refresh-foreign-holder",
+            "SHADOW_ELIGIBLE",
+            package_hash=PACKAGE_B,
+            deployment_identity_hash=DEPLOYMENT_B,
+        )
+        self.build_to_rung(
+            self.ledger, CANDIDATE_A, "refresh-foreign-claimant", "SHADOW_ELIGIBLE"
+        )
+        with self.assertRaisesRegex(
+            ValueError, "DEPLOYMENT_IDENTITY_BOUND_TO_ANOTHER_CANDIDATE"
+        ):
+            self.registrar.append(
+                event(
+                    event_id="refresh-foreign-claimant-refresh",
+                    event_type="FROZEN",
+                    previous_state="SHADOW",
+                    next_state="FROZEN",
+                    candidate_id=CANDIDATE_A,
+                    package_hash=PACKAGE_A,
+                    deployment_identity_hash=DEPLOYMENT_B,
+                    evidence_references=("fixture://refresh-foreign/refresh",),
+                    timestamp=BASE_TIME + timedelta(seconds=6),
+                )
+            )
+        claimant = self.ledger.current_state(CANDIDATE_A)
+        self.assertEqual(observed_state(claimant), "SHADOW")
+        self.assertEqual(claimant["package_hash"], PACKAGE_A)
+        self.assertEqual(claimant["deployment_identity_hash"], DEPLOYMENT_A)
+        holder = self.ledger.current_state(CANDIDATE_B)
+        self.assertEqual(observed_state(holder), "SHADOW")
+        self.assertEqual(holder["package_hash"], PACKAGE_B)
+        self.assertEqual(holder["deployment_identity_hash"], DEPLOYMENT_B)
+        self.assertEqual(
+            [
+                record.event.event_id
+                for record in self.ledger.replay()
+                if record.event.event_type == "FROZEN"
+            ],
+            ["refresh-foreign-holder-frozen", "refresh-foreign-claimant-frozen"],
+        )
 
     def test_status_report_identifies_events_and_all_contract_blockers(self) -> None:
         self.append_capture()
