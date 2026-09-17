@@ -34,3 +34,5 @@
 2026-09-17T18:15:39Z LEAD: launching lane 7 attempt 2 (DD06 a46b2a9d, second read under the binding safety rule)
 2026-09-17T18:42:29Z LEAD: lane 7 attempt 2 archived (REQUEST_CHANGES on a46b2a9d: R-1 attribution inverted r3, R-2 errored fund arm unmeasured); repair 2128352b pushed; lane 7 re-pinned (round 2 of cap 3); Gemini delta next; third read on the next Pro window
 2026-09-17T18:48:41Z LEAD: launching lane 7 attempt 3 (DD06 2128352b, third read = round 2 of the T0 cap 3) on the remaining Pro window; a 429 archives it for tomorrow
+2026-09-17T18:54:34Z LANE7 attempt 3 (2128352b) CAPPED 18:53:21Z after 30 turns (Pro 5h window; resets 20:00Z = 23:00 UTC+3); archived DD06/ATTEMPT3_CAPPED_1853Z/; NOT counted; relaunch after reset
+2026-09-17T18:55:14Z LEAD: chain armed in session 6 (background task) — at 20:00:30Z launch lane 7 attempt 4 (DD06 2128352b), then lane 6 second read (P021S1 eada65ed); a sleeping host kills it -> start by hand (handoff)
