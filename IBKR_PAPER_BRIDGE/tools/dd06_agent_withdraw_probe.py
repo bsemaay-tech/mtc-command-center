@@ -16,10 +16,19 @@ What it does, in order, with the agent key found in the process environment (nev
       inside the venue account. withdraw3 is different: if the venue did NOT refuse it, funds WOULD
       LEAVE the venue account (a bridge withdrawal to the owner's own address on the bridge chain;
       testnet faucet money); its amount sits above the documented bridge minimum so a refusal cannot
-      be an amount refusal. If a fund-moving arm is NOT refused, the probe stops immediately and
-      records a FINDING; DD-06 then stays BLOCK. Every refusal is classified by its venue text:
-      AUTHORIZATION (agent/permission wording) counts for DD-06; VALIDATION (amount, token, nonce,
-      self-send, sub-account existence) or UNCLASSIFIED does not, and makes the run INCONCLUSIVE.
+      be an amount refusal. If ANY arm is NOT refused, the probe stops immediately and records a
+      FINDING; for a fund-moving arm it re-reads BOTH wallets (the account and the agent) and names
+      whose funds moved (``DD06_FINDING_MASTER_FUNDS_MOVED`` / ``DD06_FINDING_OWN_FUNDS_MOVED``;
+      the r3 lesson: an agent moving its own money is not the DD-06 breach); DD-06 stays BLOCK.
+      Every refusal is classified by its venue text: AUTHORIZATION (agent/permission wording,
+      "User or API Wallet ... does not exist") counts for DD-06; VALIDATION (amount, token, nonce,
+      self-send, sub-account or destination existence) or UNCLASSIFIED does not, and makes the run
+      INCONCLUSIVE.
+Two independent gates keep the tool offline: ``--network testnet`` with no ``HL_LIVE_ACK``, AND the
+execution token ``DD06_PROBE_RUN_TOKEN=<run-id>`` in the environment (owner-worded runs only); both
+are checked before any credential is read or any SDK object is built, so no single-line change can
+arm the tool from a test suite (lane-7 exact-Opus review of 1af85067, 2026-09-17: one removed refusal
+turned the fixture suite into a live testnet run).
 Every request and response is recorded with 40- and 64-hex strings redacted; the output directory is
 write-once. ``--dry-run`` prints the plan and touches no network and no credential.
 """
@@ -52,7 +61,14 @@ CONTROL_MIN_NOTIONAL_USD = 10.5  # venue minimum is $10; keep a margin for round
 TRANSFER_AMOUNT_USDC = 1.0
 WITHDRAW_AMOUNT_USDC = 6.0  # above the documented 5 USDC bridge minimum + 1 USDC fee: a refusal cannot be an amount refusal
 SUB_ACCOUNT_TRANSFER_USD_MICRO = 1_000_000  # 1 USDC in the SDK's integer unit
-FUND_MOVING_ARMS = ("withdraw3", "usdSend", "spotSend", "subAccountTransfer")
+FUND_MOVING_ARMS = (
+    "withdraw3",
+    "usdSend",
+    "spotSend",
+    "subAccountTransfer",
+    "usdClassTransfer",
+)
+RUN_TOKEN_ENV = "DD06_PROBE_RUN_TOKEN"  # second execution gate: must equal --run-id
 STOP_ON_NOT_REFUSED = True
 
 _HEX64 = re.compile(r"(?i)(?:0x)?[0-9a-f]{64,}")
@@ -123,6 +139,13 @@ class ProbeRecord:
         )
 
 
+def redact_map(values: dict[str, str | None] | None) -> dict[str, str | None]:
+    return {
+        key: (None if value is None else redact(value))
+        for key, value in (values or {}).items()
+    }
+
+
 def _now() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
@@ -164,7 +187,7 @@ def classify_exception(exc: BaseException) -> str:
 
 AUTHORIZATION_MARKERS = (
     "must be user",
-    "does not exist",
+    "user or api wallet",  # the venue's "User or API Wallet <addr> does not exist." (unknown signer)
     "not authorized",
     "unauthorized",
     "not allowed",
@@ -188,6 +211,7 @@ VALIDATION_MARKERS = (
     "sub-account",
     "subaccount",
     "does not have a sub",
+    "does not exist",  # sub-account / destination existence (packet: VALIDATION)
     "not found",
     "invalid",
 )
@@ -197,7 +221,9 @@ def classify_refusal_text(message: object) -> str:
     """AUTHORIZATION when the venue's own words say the signer may not act; VALIDATION when they name
     an amount/token/nonce/destination problem; UNCLASSIFIED otherwise. Only AUTHORIZATION is DD-06
     evidence; the other two make the arm inconclusive. Authorization markers win over validation
-    markers when both appear ("agent may not send this amount")."""
+    markers when both appear ("agent may not send this amount"). A bare "does not exist" is
+    VALIDATION (a sub-account or destination that is not there); only the venue's "User or API
+    Wallet ... does not exist" names the signer and is AUTHORIZATION (lane-7 review, R-3)."""
     text = str(message or "").lower()
     if any(marker in text for marker in AUTHORIZATION_MARKERS):
         return "AUTHORIZATION"
@@ -214,6 +240,18 @@ def refuse_unless_testnet(network: str, environ: dict[str, str]) -> None:
     if environ.get("HL_LIVE_ACK", "").strip():
         raise ProbeRefused(
             "HL_LIVE_ACK is present in the environment; the probe refuses to run beside a live acknowledgement"
+        )
+
+
+def refuse_without_run_token(run_id: str, environ: dict[str, str]) -> None:
+    """Second, independent gate (lane-7 review, R-2): the environment must carry
+    ``DD06_PROBE_RUN_TOKEN`` equal to this run id. Checked before any credential is read, so a
+    test suite that reaches ``main`` can never dial the venue by losing one refusal."""
+    token = environ.get(RUN_TOKEN_ENV, "").strip()
+    if not token or token != run_id:
+        raise ProbeRefused(
+            f"{RUN_TOKEN_ENV} must equal the run id ({run_id!r}); the probe runs only under an "
+            "owner-worded execution token"
         )
 
 
@@ -242,7 +280,9 @@ def _attempt(
     """Run one arm, record the redacted request/response, return the outcome."""
     try:
         response = call()
-    except BaseException as exc:  # noqa: BLE001 - every exception is evidence here
+    except (KeyboardInterrupt, SystemExit):
+        raise  # the operator's abort gesture stops the sequence (lane-7 review, N-2)
+    except BaseException as exc:  # noqa: BLE001 - every other exception is evidence here
         outcome = classify_exception(exc)
         data = {
             "request": redact(request),
@@ -270,6 +310,47 @@ def _attempt(
     return outcome
 
 
+def _balances(info: InfoLike, address: str) -> dict[str, str | None]:
+    """Perp accountValue + spot USDC total of one wallet, as the venue reports them (strings), or
+    ``None`` where a read failed; used to say WHOSE funds moved after a NOT_REFUSED fund arm."""
+    out: dict[str, str | None] = {"accountValue": None, "usdc_total": None}
+    try:
+        state = info.user_state(address)
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except BaseException:  # noqa: BLE001 - an unreadable balance is recorded as None
+        state = None
+    summary = state.get("marginSummary", {}) if isinstance(state, dict) else {}
+    value = summary.get("accountValue")
+    out["accountValue"] = None if value is None else str(value)
+    try:
+        spot = info.spot_user_state(address)
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except BaseException:  # noqa: BLE001 - as above
+        spot = None
+    balances = spot.get("balances", []) if isinstance(spot, dict) else []
+    usdc = next(
+        (b for b in balances if isinstance(b, dict) and b.get("coin") == "USDC"), {}
+    )
+    total = usdc.get("total")
+    out["usdc_total"] = None if total is None else str(total)
+    return out
+
+
+def _moved(before: dict[str, str | None], after: dict[str, str | None]) -> bool | None:
+    """True when a readable balance changed, False when all readable balances are equal, None when
+    nothing was readable on either side."""
+    readable = [
+        key
+        for key in before
+        if before.get(key) is not None and after.get(key) is not None
+    ]
+    if not readable:
+        return None
+    return any(before[key] != after[key] for key in readable)
+
+
 def run_probe(
     *,
     record: ProbeRecord,
@@ -278,6 +359,7 @@ def run_probe(
     account_address: str,
     sub_account: str | None,
     include_usd_class_transfer: bool = False,
+    agent_address: str | None = None,
 ) -> ProbeRecord:
     # S0 identity
     try:
@@ -330,6 +412,17 @@ def run_probe(
             "S0_spot_user_state",
             "ERROR",
             {"error_type": type(exc).__name__, "error": redact(str(exc))},
+        )
+
+    # S0 (lane-7 review, R-4): the agent wallet's OWN balances, so a later NOT_REFUSED fund arm can
+    # say whose funds moved
+    account_before = _balances(info, account_address)
+    agent_before = _balances(info, agent_address) if agent_address else None
+    if agent_address:
+        record.step("S0_agent_balances", "RECORDED", dict(redact_map(agent_before)))
+    else:
+        record.step(
+            "S0_agent_balances", "SKIPPED", {"reason": "no agent address supplied"}
         )
 
     # S1 control arm
@@ -457,8 +550,50 @@ def run_probe(
                 authorization_refusals += 1
             continue
         if outcome == "NOT_REFUSED":
-            record.finding = f"{name} was NOT refused for an agent wallet"
             record.result = "DD06_FINDING_NOT_REFUSED"
+            record.finding = f"{name} was NOT refused for the agent key"
+            if name in FUND_MOVING_ARMS:
+                account_after = _balances(info, account_address)
+                record.step(
+                    f"post_{name}_account_balances",
+                    "RECORDED",
+                    {
+                        "before": redact_map(account_before),
+                        "after": redact_map(account_after),
+                    },
+                )
+                master_moved = _moved(account_before, account_after)
+                own_moved: bool | None = None
+                if agent_address and agent_before is not None:
+                    agent_after = _balances(info, agent_address)
+                    record.step(
+                        f"post_{name}_agent_balances",
+                        "RECORDED",
+                        {
+                            "before": redact_map(agent_before),
+                            "after": redact_map(agent_after),
+                        },
+                    )
+                    own_moved = _moved(agent_before, agent_after)
+                if master_moved:
+                    record.result = "DD06_FINDING_MASTER_FUNDS_MOVED"
+                    record.finding = (
+                        f"{name} was NOT refused and the ACCOUNT's balance changed: the agent key "
+                        "moved the master's funds (DD-06 falsified on testnet)"
+                    )
+                elif own_moved:
+                    record.result = "DD06_FINDING_OWN_FUNDS_MOVED"
+                    record.finding = (
+                        f"{name} was NOT refused and only the AGENT wallet's own balance changed: "
+                        "the agent moved its own funds, the master's are unchanged (r3 shape; not "
+                        "the DD-06 breach)"
+                    )
+                else:
+                    record.finding = (
+                        f"{name} was NOT refused; balances unchanged or unreadable on both wallets "
+                        f"(master_moved={master_moved}, own_moved={own_moved}) - read the venue "
+                        "response before drawing any DD-06 conclusion"
+                    )
             if STOP_ON_NOT_REFUSED:
                 for later_name, _, _ in arms[index + 1 :]:
                     record.step(later_name, "SKIPPED_AFTER_FINDING", {})
@@ -531,6 +666,10 @@ def plan_text(sub_account: str | None, include_usd_class_transfer: bool) -> str:
         "Stop rule: a NOT_REFUSED fund-moving arm stops the sequence and records a FINDING (DD-06 stays BLOCK).",
         "Refusal classes: AUTHORIZATION counts for DD-06; VALIDATION / UNCLASSIFIED -> INCONCLUSIVE (read the venue text).",
         "Record: write-once JSON + sha256, 40/64-hex redacted. No key is ever printed.",
+        (
+            f"Execution gates: --network testnet, no HL_LIVE_ACK, and {RUN_TOKEN_ENV}=<run-id> in the "
+            "environment; all checked before any credential is read or SDK object built."
+        ),
     ]
     return "\n".join(lines)
 
@@ -560,6 +699,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     try:
         refuse_unless_testnet(args.network, dict(os.environ))
+        refuse_without_run_token(args.run_id, dict(os.environ))
         from eth_account import Account  # noqa: PLC0415 - imported only for a real run
         from hyperliquid.exchange import Exchange  # noqa: PLC0415
         from hyperliquid.info import Info  # noqa: PLC0415
@@ -594,6 +734,7 @@ def main(argv: list[str] | None = None) -> int:
         account_address=account_address,
         sub_account=args.sub_account,
         include_usd_class_transfer=args.include_usd_class_transfer,
+        agent_address=wallet.address,
     )
     path = write_record(Path(args.out), record)
     print(f"{record.result} record={path}")

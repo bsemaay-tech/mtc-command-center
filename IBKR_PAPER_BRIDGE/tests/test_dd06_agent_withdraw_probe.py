@@ -260,7 +260,13 @@ def test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence():
         sub_account=None,
     )
     assert record.result == "DD06_FINDING_NOT_REFUSED"
-    assert record.finding == "usdSend was NOT refused for an agent wallet"
+    assert record.finding.startswith(
+        "usdSend was NOT refused; balances unchanged or unreadable"
+    )
+    # lane-7 review R-4: the record now carries both wallets' balances around the arm
+    names = [s["name"] for s in record.steps]
+    assert "post_usdSend_account_balances" in names
+    assert "S0_agent_balances" in names
     outcomes = {s["name"]: s["outcome"] for s in record.steps}
     assert outcomes["withdraw3"] == "REFUSED" and outcomes["usdSend"] == "NOT_REFUSED"
     assert (
@@ -284,6 +290,16 @@ def test_refusal_text_classes():
         probe.classify_refusal_text("Withdrawal amount below minimum") == "VALIDATION"
     )
     assert probe.classify_refusal_text("") == "UNCLASSIFIED"
+    # lane-7 review R-3: a sub-account or destination that "does not exist" is a VALIDATION refusal,
+    # never AUTHORIZATION-class DD-06 evidence; the venue's signer sentence still is
+    assert (
+        probe.classify_refusal_text("Sub-account 0xabc does not exist") == "VALIDATION"
+    )
+    assert probe.classify_refusal_text("destination does not exist") == "VALIDATION"
+    assert (
+        probe.classify_refusal_text("User or API Wallet 0xabc does not exist.")
+        == "AUTHORIZATION"
+    )
     assert (
         probe.classify_refusal_text("agent may not send this amount") == "AUTHORIZATION"
     )
@@ -404,9 +420,188 @@ def test_dry_run_needs_no_credentials_and_no_network(capsys, monkeypatch):
     assert "TESTNET ONLY" in out and "approveAgent" in out and "Stop rule" in out
 
 
-def test_main_refuses_mainnet_before_reading_any_credential(monkeypatch, capsys):
-    monkeypatch.setenv("HL_LIVE_ACK", "I_UNDERSTAND_THIS_IS_REAL_MONEY")
+class _NeverDial:
+    """Installed in place of the SDK constructors and the credential resolver for every main() test:
+    reaching any of them means the suite would have dialled the venue (lane-7 incident, 2026-09-17)."""
+
+    def __init__(self, what: str) -> None:
+        self.what = what
+
+    def __call__(self, *args, **kwargs):
+        raise AssertionError(
+            f"{self.what} must never be reached from the fixture suite"
+        )
+
+
+@pytest.fixture
+def offline(monkeypatch):
+    """Every main() test runs under this fixture: the resolver and both SDK constructors are replaced by
+    tripwires, the live acknowledgement and the execution token are absent, and no credential is present."""
+    import hyperliquid.exchange as hl_exchange
+    import hyperliquid.info as hl_info
+
+    from bridge import settings
+
+    tripwire = _NeverDial("resolve_hyperliquid_credentials")
+    monkeypatch.setattr(settings, "resolve_hyperliquid_credentials", tripwire)
+    monkeypatch.setattr(hl_exchange, "Exchange", _NeverDial("Exchange"))
+    monkeypatch.setattr(hl_info, "Info", _NeverDial("Info"))
+    for name in (
+        "HL_LIVE_ACK",
+        probe.RUN_TOKEN_ENV,
+        "HL_API_WALLET_KEY",
+        "HL_ACCOUNT_ADDRESS",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    return monkeypatch
+
+
+def test_main_refuses_mainnet_before_reading_any_credential(offline, capsys):
+    offline.setenv("HL_LIVE_ACK", "I_UNDERSTAND_THIS_IS_REAL_MONEY")
     assert probe.main(["--run-id", "x", "--out", "unused", "--network", "testnet"]) == 3
     assert "PROBE_REFUSED" in capsys.readouterr().err
-    monkeypatch.delenv("HL_LIVE_ACK")
+    offline.delenv("HL_LIVE_ACK")
     assert probe.main(["--run-id", "x", "--out", "unused", "--network", "mainnet"]) == 3
+
+
+def test_main_refuses_without_the_execution_token_before_reading_any_credential(
+    offline, capsys
+):
+    # lane-7 review R-2: testnet, no HL_LIVE_ACK - the shape that dialled the venue when one refusal was
+    # removed. The second gate refuses before the resolver (a tripwire here) is ever called.
+    assert probe.main(["--run-id", "x", "--out", "unused", "--network", "testnet"]) == 3
+    err = capsys.readouterr().err
+    assert "PROBE_REFUSED" in err and probe.RUN_TOKEN_ENV in err
+    offline.setenv(probe.RUN_TOKEN_ENV, "another-run")
+    assert probe.main(["--run-id", "x", "--out", "unused", "--network", "testnet"]) == 3
+    assert probe.RUN_TOKEN_ENV in capsys.readouterr().err
+
+
+def test_run_token_gate_is_a_unit_of_its_own():
+    probe.refuse_without_run_token("run-7", {probe.RUN_TOKEN_ENV: "run-7"})
+    for environ in (
+        {},
+        {probe.RUN_TOKEN_ENV: ""},
+        {probe.RUN_TOKEN_ENV: "run-8"},
+        {probe.RUN_TOKEN_ENV: "run-77"},
+    ):
+        with pytest.raises(probe.ProbeRefused):
+            probe.refuse_without_run_token("run-7", environ)
+
+
+def test_main_refuses_a_master_key_after_the_gates_and_before_any_sdk_object(
+    offline, capsys
+):
+    # lane-7 review R-1 (M3): the refuse_master_key call in main is fenced - a key that derives to the
+    # account address exits 3 with the SDK constructors (tripwires) never reached.
+    from eth_account import Account
+
+    from bridge import settings
+
+    key = "0x" + "11" * 32
+    address = Account.from_key(key).address
+    offline.setenv(probe.RUN_TOKEN_ENV, "x")
+    offline.setattr(
+        settings, "resolve_hyperliquid_credentials", lambda: (address, key, "test")
+    )
+    assert probe.main(["--run-id", "x", "--out", "unused", "--network", "testnet"]) == 3
+    assert "master key" in capsys.readouterr().err
+
+
+def test_plan_names_the_testnet_host_and_the_gates(capsys):
+    # lane-7 review R-1 (M2): the only host the tool can dial is pinned in the plan the owner reads
+    text = probe.plan_text(None, False)
+    assert "https://api.hyperliquid-testnet.xyz" in text
+    assert probe.TESTNET_URL == "https://api.hyperliquid-testnet.xyz"
+    assert probe.RUN_TOKEN_ENV in text and "HL_LIVE_ACK" in text
+
+
+def test_write_record_refuses_surviving_hex(tmp_path: Path):
+    # lane-7 review R-1 (M4): the last-resort guard in write_record is fenced
+    for poison in ("c3" * 32, "0x" + "d4" * 20):
+        record = _record()
+        record.steps.append(
+            {"name": "poison", "outcome": "RECORDED", "data": {"leak": poison}}
+        )
+        record.result = "DD06_INCONCLUSIVE"
+        out = tmp_path / poison[:6]
+        with pytest.raises(probe.ProbeRefused):
+            probe.write_record(out, record)
+        assert not (out / "DD06_PROBE_RECORD.json").exists()
+
+
+class _BalancesInfo(FakeInfo):
+    """Balances per address that the test can change between the S0 read and the post-arm re-read."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.usdc = {ACCOUNT: "984.987457", AGENT: "13.0"}
+
+    def spot_user_state(self, address: str):
+        return {
+            "balances": [{"coin": "USDC", "total": self.usdc[address], "hold": "0.0"}]
+        }
+
+
+def _leaky_exchange(info: _BalancesInfo, move: str):
+    class Leaky(FakeExchange):
+        def spot_transfer(self, amount, destination, token):
+            self.calls.append("spotSend")
+            if move == "agent":
+                info.usdc[AGENT] = "12.0"
+            elif move == "master":
+                info.usdc[ACCOUNT] = "983.987457"
+            return {"status": "ok", "response": {"type": "default"}}
+
+    return Leaky()
+
+
+@pytest.mark.parametrize(
+    ("move", "result", "phrase"),
+    [
+        ("agent", "DD06_FINDING_OWN_FUNDS_MOVED", "AGENT wallet's own balance changed"),
+        ("master", "DD06_FINDING_MASTER_FUNDS_MOVED", "ACCOUNT's balance changed"),
+        ("none", "DD06_FINDING_NOT_REFUSED", "balances unchanged or unreadable"),
+    ],
+)
+def test_not_refused_fund_arm_names_whose_funds_moved(move, result, phrase):
+    # lane-7 review R-4 (the r3 lesson): the record re-reads BOTH wallets after a NOT_REFUSED fund arm
+    # and names whose balance changed instead of asserting a breach it never measured
+    info = _BalancesInfo()
+    exchange = _leaky_exchange(info, move)
+    record = probe.run_probe(
+        record=_record(),
+        info=info,
+        exchange=exchange,
+        account_address=ACCOUNT,
+        sub_account=None,
+        agent_address=AGENT,
+    )
+    assert record.result == result
+    assert phrase in record.finding
+    steps = {s["name"]: s for s in record.steps}
+    assert steps["S0_agent_balances"]["data"]["usdc_total"] == "13.0"
+    assert (
+        steps["post_spotSend_account_balances"]["data"]["before"]["usdc_total"]
+        == "984.987457"
+    )
+    assert steps["post_spotSend_agent_balances"]["data"]["after"]["usdc_total"] == (
+        "12.0" if move == "agent" else "13.0"
+    )
+    assert steps["approveAgent"]["outcome"] == "SKIPPED_AFTER_FINDING"
+
+
+def test_operator_abort_stops_the_sequence():
+    # lane-7 review N-2: KeyboardInterrupt inside an arm must not be swallowed as ERROR evidence
+    class Aborting(FakeExchange):
+        def withdraw_from_bridge(self, amount, destination):
+            raise KeyboardInterrupt
+
+    with pytest.raises(KeyboardInterrupt):
+        probe.run_probe(
+            record=_record(),
+            info=FakeInfo(),
+            exchange=Aborting(),
+            account_address=ACCOUNT,
+            sub_account=None,
+        )
