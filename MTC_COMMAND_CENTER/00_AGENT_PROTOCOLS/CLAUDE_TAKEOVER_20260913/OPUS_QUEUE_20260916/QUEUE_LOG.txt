@@ -28,3 +28,5 @@
 2026-09-17T11:34:20Z LEAD: lane 8 attempt 2 CAPPED at once (Pro 5-hour 429, resets 18:00 UTC+3 = 15:00Z; 9 turns, void); archived ATTEMPT2_CAPPED_1133Z; relaunch after 18:01 (alarm)
 2026-09-17T15:01:50Z LEAD: Pro window reopened (18:00 UTC+3); launching lane 8 attempt 3 (P012INTAKE a871e429)
 2026-09-17T15:21:43Z LEAD: lane 8 attempt 3 DONE (PASS-WITH-NITS, 0 REQUIRED, 19 min); launching lane 6 P021S1 7fecf204
+2026-09-17T15:47:09Z LEAD: lane 6 DONE (REQUEST_CHANGES, 2 REQUIRED on B-05/B-06 fidelity; repair in progress); launching lane 7 DD06 1af85067
+2026-09-17T15:48:48Z LEAD: lane 6 attempt 1 archived (REQUEST_CHANGES on 7fecf204, REQUIRED-1/2 B-05 fidelity + B-06 count); repair eada65ed pushed; lane 6 re-pinned; Gemini delta next; second read after lane 7 if the window allows

@@ -1,4 +1,4 @@
-# Exact claude-opus-5 xhigh T0 review of WP-P0-21 S1 catalogue-only slice (owner S2 values in the readiness rule catalogue) candidate 7fecf204 on the Claude PRO profile (~/.claude), NOT the Max desktop session.
+# Exact claude-opus-5 xhigh T0 review of WP-P0-21 S1 catalogue-only slice (owner S2 values in the readiness rule catalogue) candidate 7fecf204 on the Claude PRO profile (~/.claude), NOT the Max desktop session. — RE-PINNED 2026-09-17 19:0x to eada65ed (T0 repair round 1: verbatim M-C + two B-06 tolerances, after the first exact-Opus read returned REQUEST_CHANGES on REQUIRED-1/2)
 # PREPARED 2026-09-15 20:2xZ. OPTIONAL lane (6-8): only if allowance remains after lanes 1-5; started BY HAND; never while agy.exe runs; never two Pro lanes at once; refuses on HEAD drift.
 $ErrorActionPreference = 'Continue'
 Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
@@ -14,7 +14,7 @@ $env:CLAUDE_CONFIG_DIR = (Join-Path $env:USERPROFILE '.claude')
 if (Get-Process agy -ErrorAction SilentlyContinue) { 'agy.exe running: refuse' | Out-File "$lane\launch.exit" -Encoding ascii; exit 4 }
 Set-Location 'C:\tmp\P021_S1_20260915'
 $head = (git -c safe.directory=* rev-parse HEAD).Trim()
-if ($head -ne '7fecf204c5d457ff19872c97e5d27e2d5a712508') { "HEAD $head != 7fecf204: refuse" | Out-File "$lane\launch.exit" -Encoding ascii; exit 3 }
+if ($head -ne 'eada65edfeacef9ebbe5b237d8e111caf36052e4') { "HEAD $head != eada65ed: refuse" | Out-File "$lane\launch.exit" -Encoding ascii; exit 3 }
 $start = Get-Date
 & claude --print "Read and execute exactly $lane\BRIEF.md. Start by reading that file." --model claude-opus-5 --effort xhigh --permission-mode dontAsk --allowedTools 'Bash' 'PowerShell' 'Edit' 'Read' 'Write' 'Glob' 'Grep' --disallowedTools 'Agent' 'WebFetch' 'WebSearch' 'NotebookEdit' --add-dir 'C:\tmp\OPUS_QUEUE_20260916\P021S1' 'C:\tmp\OPUS_P021S1_SCRATCH' 'C:\tmp\P021_S1_20260915' 'C:\CT13' --strict-mcp-config --max-turns 100 --output-format stream-json --verbose 2>&1 | Out-File -FilePath "$lane\stream.jsonl" -Encoding utf8
 "exit=$LASTEXITCODE start=$($start.ToUniversalTime().ToString('o')) end=$((Get-Date).ToUniversalTime().ToString('o'))" | Out-File "$lane\launch.exit" -Encoding ascii
