@@ -19,3 +19,4 @@
 2026-09-17T06:06:31.0650026Z stopping the queue after P030 (non-zero or missing exit)
 2026-09-17T06:06:31.0650026Z queue complete
 2026-09-17T06:06:53Z LEAD: lane 3 attempt 2 died at 06:06Z on an API server_error ("Connection lost mid-response"; not a 429) after 126 turns with only a skeleton report (placeholder VERDICT: BLOCK = void); archived ATTEMPT2_API_ERROR_0606Z; relaunching lane 3 by hand now
+2026-09-17T06:26:24Z LEAD: lane 3 attempt 3 COUNTED: PASS-WITH-NITS on 45a7f50e, 0 REQUIRED (report complete before the 429 on the sign-off turn; Pro window resets 13:00 UTC+3 = 10:00Z); lanes 4, 1c (61c56148), 8, 6, 7 wait for the reset

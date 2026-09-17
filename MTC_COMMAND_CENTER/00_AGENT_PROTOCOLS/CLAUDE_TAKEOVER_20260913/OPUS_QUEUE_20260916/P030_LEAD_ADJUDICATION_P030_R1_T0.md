@@ -1,0 +1,26 @@
+# LEAD_ADJUDICATION — lane 3, attempt 3: second exact `claude-opus-5` xhigh T0 read of WP-P0-30 at `45a7f50e` (T0 repair round 1) — 2026-09-17 09:2x-09:3x UTC+3
+
+**Lane history:** attempt 1 (2026-09-16, `153edee9`) REQUEST_CHANGES, 2 REQUIRED → Lead repair `0be0a8aa` + `45a7f50e` (`ATTEMPT1_REQUEST_CHANGES_153edee9/`); attempt 2 (Thu 08:50-09:06) died on an API `server_error` with a skeleton report (void, `ATTEMPT2_API_ERROR_0606Z/`); **attempt 3** relaunched by hand 09:07 on the same pin: 09:07-09:22 UTC+3 (06:06:59-06:22:47Z), 84 turns. The reviewer wrote "Evidence complete. Writing the report." and wrote the whole 339-line report in one `Write`; the NEXT turn hit the Pro 5-hour limit (`api_error_status 429`, "session limit · resets 1pm Europe/Chisinau" = 13:00 UTC+3), so the launcher exit is 1. The report is complete (§1-§9, findings, NOT VERIFIED, verdict) and is COUNTED; the cap cost nothing but the reviewer's sign-off turn.
+**Verdict as returned:** `VERDICT: PASS-WITH-NITS` — **0 REQUIRED**; attempt-1 findings 1 and 2 **CONFIRMED CLOSED** (nine probes on finding 1: ENOSPC, receipt/verify/publish refusals, publication order receipt→target, `os.replace` the only publication path, no delete path, exactly two files on success; finding 2: `..`, junction, `%2e%2e`, junction root — exporter and adapter refuse alike; POSIX symlink NOT VERIFIED on this host, same expression as the junction arm). Mandated RED arm reproduced **test-for-test** (7 of 25 with the `0be0a8aa` checker; 8 of 26 with `45a7f50e`). Attempt-1 NITs 3/5/7 APPLIED; Gemini K-01..K-06 and `P030_R1_NIT_1/2/3` re-derived (NIT_1 refuted from `LEAD_RUFF_R1.txt`; NIT_3 extended by execution → N1). Five NITs N1-N5.
+
+## Lead reproduction
+| Check | Result |
+|---|---|
+| Citations — exporter `:71-73`, `:180`, `:189-190`, `:229`, `:242`, `:407-408`, `:442-446`, `:474-479`, `:484-487`; checker `:239-242`, `:407-419`, `:540-541`, `:561-563`; adapter `:109-118`, `:181-217`, `:220-290`, `:245-249`, `:594-603`; sibling checker `:835-840` | **EXACT** at the `45a7f50e` blobs (root-level files of the integration branch) |
+| N5 reproduced (sibling `check_p030_closed_partition_backup_adapter.py` depends on `TEMP`) | ASCII `TEMP` (`C:/bt_s4/p030_tmp`) → `Ran 44 tests … OK`, exit 0; the owner's long-form `TEMP` (`C:\Users\Barış…`) → `FAIL: test_isolated_config_redirect_after_check_never_reaches_restore … AssertionError: 0 != 1`, `FAILED (failures=1)`, exit 1 — **CONFIRMED**; the Lead's R1 "sibling checkers OK" row ran under the 8.3 short `TEMP` → **record corrected** (`LEAD_VERIFICATION_P030_R1.md`, correction section) |
+| N2 (a staging remnant is adapter-consumable when named explicitly) | consistent with the Lead's own attempt-1 reproduction (616-byte leftover ACCEPTED by the adapter); the repair moved the remnant off the target's name, it did not change its bytes — the comment at `:71-73` over-claims as the reviewer says |
+| RED arm | the reviewer's 7/25 list equals `LEAD_RED_ARM_new_checker_vs_153edee9.txt` test-for-test |
+
+## NITs — disposition (carried; pin `45a7f50e` NOT moved before the Sol read)
+| # | Finding | Lead reading | Disposition |
+|---|---|---|---|
+| N1 | `os.replace` publication can overwrite a target created inside the exists-check → replace window (`:484-487`, `:476-479`); `open("xb")` at `153edee9` could not; the comment at `:407-408` is stronger than the bytes | true; microsecond window, needs a foreign writer; = Gemini `P030_R1_NIT_3` confirmed by execution | **carried** (Windows: `os.rename` raises `FileExistsError` — restores no-clobber at publication with no delete path; POSIX semantics differ, so the fix must be guarded or documented) |
+| N2 | "a leftover staging partial is never consumable" over-claims; only the name protects it (the ENOSPC cut can land on a row boundary → canonical one-row prefix; the adapter accepts it when named explicitly) | true | **carried** (weaken the comment to what the bytes support, or stage in a sibling directory / leading marker line) |
+| N3 | the D-13 GREEN arm never binds the adapter's capture to the export receipt (`prefix_sha256` == `exported_sha256` would; a price mutant passes today) | true; one assertion | **carried** (test-only, with N1/N2 slice) |
+| N4 | `RecursionError` on ~3000-deep nested JSON escapes as a raw exception (`:229`, `:242` catch `ValueError` family only); filesystem untouched; adapter shares the shape | true; parity-preserving | **carried** (catch `RecursionError` → `source_line_invalid` in both, or document) |
+| N5 | sibling adapter checker fails under a non-ASCII `TEMP` (attempt-1 NIT 8 / F8), unchanged file outside the candidate; the R1 record said "OK" without the precondition | true; reproduced | **record corrected today**; F8 engineering fix carried (test anchor `ensure_ascii` parity) |
+
+## Standing
+Lane 3 COUNTED: exact-Opus PASS-WITH-NITS on `45a7f50e`, 0 REQUIRED, both attempt-1 REQUIRED findings closed by the reviewer's own probes; Gemini delta on the repair COUNTED PASS-WITH-NITS (2026-09-16). Roster still needs the second flagship (exact Sol, Sep 19) before any merge; the Lead built the repair and cannot accept it. N1-N5 (+ F8) go into one follow-up slice after the Sol read so both flagships judge the same bytes.
+
+Recorded by Claude Opus 5 Lead (session 6, `4a8233`).
