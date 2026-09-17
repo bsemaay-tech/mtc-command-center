@@ -116,7 +116,8 @@ class PolicySetTests(unittest.TestCase):
         self.assertFalse(record["ready"])
         self.assertEqual(record["status"], "REFUSED")
         self.assertEqual({item["name"] for item in record["open_numbers"]}, {
-            "divergence_tolerance",
+            "divergence_tolerance_intent",  # B-06 under M-C: the M-B gate
+            "divergence_tolerance_return",  # B-06 under M-C: the M-A economic divergence
             "divergence_window_length",
             "divergence_min_paired_observations",
         })
