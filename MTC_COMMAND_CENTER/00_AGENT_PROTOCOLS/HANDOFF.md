@@ -10,6 +10,6 @@ Current P0 takeover (2026-09-13): read MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/CLA
 - **Rotation (G7):** the 2026-09-13 WP-P0-21 / WP-P0-30 closeout section moved verbatim to
   `_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md`; its facts stand (`ca2f8a68` integrated offline baseline; no package acceptance).
 
-NEXT ACTION: T1 review of PR #193's workflow diff (exact Opus Wed 2026-09-16 20:00Z or exact Sol Fri 2026-09-19), then merge on a separate word.
+NEXT ACTION (2026-09-17 13:5x UTC+3, session 6 → 7): read `CLAUDE_TAKEOVER_20260913/HANDOFF_20260917_SESSION7.md`. PRs #193/#194 MERGED 2026-09-16 (master `c19538bc`) on the exact-Opus T1 PASS-WITH-NITS ×2 + Gemini + Lead; exact-Opus T0 reads of 2026-09-17: P1CAP `af921d75`, P030 `45a7f50e`, P026 `e114ed31` PASS-WITH-NITS, P031 `61c56148` third read in flight; P0-12 r2 real window captured (signature pending); Sol second-flagship reads Sat 2026-09-19 via the generator; Grok pre-screen of the P0-20 derived plan Fri 2026-09-18.
 
-WAITING FOR OWNER: DD-01 decision half (HOLD stands / proceed); P0-26 README `--latest` two-line follow-behind (A/B).
+WAITING FOR OWNER: `P26-N2 doc|change` (torn completion marker); `O-1 build` (oracle-capture slice, evidence now on disk); F (demo mail, optional). DD-01 CLOSED 2026-09-15; the P0-26 `--latest` follow-behind was answered "A" 2026-09-15 and shipped as `e114ed31`.

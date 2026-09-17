@@ -1,0 +1,10 @@
+start 2026-09-17T07:00:33+00:00 first hour 2026-09-17T08:00:00+00:00 hours 14 coin BTC
+H20260917T080000Z_pre metaAndAssetCtxs 200 76456.0
+H20260917T080000Z_post metaAndAssetCtxs 200 76463.0
+H20260917T080000Z_state clearinghouseState 200 [{'coin': 'BTC', 'szi': '0.0006'}]
+H20260917T090000Z_pre metaAndAssetCtxs 200 76572.0
+H20260917T090000Z_post metaAndAssetCtxs 200 76575.0
+H20260917T090000Z_state clearinghouseState 200 [{'coin': 'BTC', 'szi': '0.0006'}]
+H20260917T100000Z_pre metaAndAssetCtxs 200 76472.9
+H20260917T100000Z_post metaAndAssetCtxs 200 76472.9
+H20260917T100000Z_state clearinghouseState 200 [{'coin': 'BTC', 'szi': '0.0006'}]

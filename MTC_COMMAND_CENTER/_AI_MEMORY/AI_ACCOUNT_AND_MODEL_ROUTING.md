@@ -29,6 +29,17 @@ routing. It is not part of normal onboarding.
 | API fallback harness | repository-relative `_deepseek_driver/ds_agent.py`; read its `README.md` first |
 | freellmapi free-tier router (TRIAL, 2026-09-14) | local `http://127.0.0.1:3001/v1` (source at `C:\LAB\TOOLS\freellmapi`); documentary/mechanical lanes only — no exact T0 slots, no protected code or secrets; owner adds provider keys in its dashboard; wrapper and first assessment pending |
 
+Dated route note (2026-09-17, owner instruction): the two Gemini entry points
+authenticate through the Antigravity CLI's OS keyring, not through a file in the
+repository. On 2026-09-17 the owner ended the Google AI subscription on his
+`bsemaay3` Gmail mailbox and moved it to his `bsemaay` Gmail mailbox; the CLI
+credential was re-issued for the new mailbox the same morning (owner-completed
+browser OAuth, 60-second window; agent-headless attempts time out) and a probe
+passed. Claude Pro/Max routes are unaffected (still the `bsemaay3` mailbox).
+Re-login recipe and the dated probe live in `C:\LAB\PROJECT_STARTER_KIT\TOOLBOX.md`
+(Antigravity row). Mailboxes are named by their local part only; no address,
+token or credential value is recorded here.
+
 The Codex launcher currently allowlists route names `secondary`, `third`,
 `fourth`, and `free`. Select identity only through the launcher's
 process-scoped `CODEX_HOME`; never repoint a running job, change the global
