@@ -18,8 +18,12 @@ What it does, in order, with the agent key found in the process environment (nev
       testnet faucet money); its amount sits above the documented bridge minimum so a refusal cannot
       be an amount refusal. If ANY arm is NOT refused, the probe stops immediately and records a
       FINDING; for a fund-moving arm it re-reads BOTH wallets (the account and the agent) and names
-      whose funds moved (``DD06_FINDING_MASTER_FUNDS_MOVED`` / ``DD06_FINDING_OWN_FUNDS_MOVED``;
-      the r3 lesson: an agent moving its own money is not the DD-06 breach); DD-06 stays BLOCK.
+      whose funds LEFT: ``DD06_FINDING_MASTER_FUNDS_MOVED`` needs a measured DECREASE of the account's
+      balance by at least half the arm amount (the breach), ``DD06_FINDING_OWN_FUNDS_MOVED`` the
+      agent's own decrease (r3 shape: the agent paid, the master received - not the breach); an
+      unreadable side is named unreadable, never unchanged. A fund-moving arm that ends in ERROR
+      (timeout, 5xx - the signed request may have executed) is measured the same way and stops the
+      sequence (``DD06_INCONCLUSIVE_FUND_ARM_ERROR``). DD-06 stays BLOCK on any finding.
       Every refusal is classified by its venue text: AUTHORIZATION (agent/permission wording,
       "User or API Wallet ... does not exist") counts for DD-06; VALIDATION (amount, token, nonce,
       self-send, sub-account or destination existence) or UNCLASSIFIED does not, and makes the run
@@ -44,6 +48,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Callable, Protocol
 
@@ -51,7 +56,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from bridge.broker.hyperliquid import round_hl_price  # noqa: E402 - the Bridge's own wire rounding
+from bridge.broker.hyperliquid import (
+    round_hl_price,  # noqa: E402 - the Bridge's own wire rounding
+)
 
 TESTNET_URL = "https://api.hyperliquid-testnet.xyz"
 PROBE_VERSION = "dd06-probe/v1"
@@ -69,6 +76,13 @@ FUND_MOVING_ARMS = (
     "usdClassTransfer",
 )
 RUN_TOKEN_ENV = "DD06_PROBE_RUN_TOKEN"  # second execution gate: must equal --run-id
+ARM_AMOUNT_USDC = {  # what each fund-moving arm asks the venue to move (attribution threshold = half)
+    "withdraw3": WITHDRAW_AMOUNT_USDC,
+    "usdSend": TRANSFER_AMOUNT_USDC,
+    "spotSend": TRANSFER_AMOUNT_USDC,
+    "subAccountTransfer": SUB_ACCOUNT_TRANSFER_USD_MICRO / 1_000_000,
+    "usdClassTransfer": TRANSFER_AMOUNT_USDC,
+}
 STOP_ON_NOT_REFUSED = True
 
 _HEX64 = re.compile(r"(?i)(?:0x)?[0-9a-f]{64,}")
@@ -338,17 +352,96 @@ def _balances(info: InfoLike, address: str) -> dict[str, str | None]:
     return out
 
 
-def _moved(before: dict[str, str | None], after: dict[str, str | None]) -> bool | None:
-    """True when a readable balance changed, False when all readable balances are equal, None when
-    nothing was readable on either side."""
-    readable = [
-        key
-        for key in before
-        if before.get(key) is not None and after.get(key) is not None
-    ]
-    if not readable:
-        return None
-    return any(before[key] != after[key] for key in readable)
+def _paid(
+    before: dict[str, str | None], after: dict[str, str | None], amount: float
+) -> bool | None:
+    """Did funds LEAVE this wallet in a way consistent with the arm's amount? True when a readable
+    balance (spot USDC total or perp accountValue) DECREASED by at least half the amount; False when
+    every readable balance stayed within that band (an increase, or a mark-to-market tick, is not a
+    payment); None when no balance was readable on both sides. Second exact-Opus read of a46b2a9d,
+    R-1: "changed" is not "paid" - r3's spotSend RAISED the master's balance and must not read as
+    the master paying."""
+    threshold = Decimal(str(amount)) / 2
+    readable = 0
+    for key in before:
+        first, second = before.get(key), after.get(key)
+        if first is None or second is None:
+            continue
+        try:
+            delta = Decimal(str(second)) - Decimal(str(first))
+        except (InvalidOperation, ValueError):
+            continue
+        readable += 1
+        if delta <= -threshold:
+            return True
+    return False if readable else None
+
+
+def _attribute(
+    name: str,
+    master_paid: bool | None,
+    own_paid: bool | None,
+    agent_read: bool,
+) -> tuple[str, str]:
+    """Result label + finding text for a NOT_REFUSED fund-moving arm. The breach label needs a measured
+    master DECREASE; an unreadable side is always named as unreadable, never as unchanged."""
+    master_text = {True: "paid", False: "did not pay", None: "UNREADABLE"}[master_paid]
+    if not agent_read:
+        own_text = "NOT READ (no agent address supplied)"
+    else:
+        own_text = {True: "paid", False: "did not pay", None: "UNREADABLE"}[own_paid]
+    readings = f"account {master_text}, agent wallet {own_text}"
+    if master_paid:
+        text = (
+            f"{name} was NOT refused and the ACCOUNT's balance DECREASED by at least half the arm "
+            f"amount: the agent key moved the master's funds (DD-06 falsified on testnet) [{readings}]"
+        )
+        return "DD06_FINDING_MASTER_FUNDS_MOVED", text
+    if own_paid:
+        text = (
+            f"{name} was NOT refused and the AGENT wallet's own balance DECREASED while the account's "
+            f"readable balances did not: the agent moved its own funds (r3 shape; not the DD-06 breach) "
+            f"[{readings}]"
+        )
+        return "DD06_FINDING_OWN_FUNDS_MOVED", text
+    text = (
+        f"{name} was NOT refused; no readable balance decreased by half the arm amount on either "
+        f"wallet [{readings}] - read the venue response and the ledger before drawing any DD-06 "
+        "conclusion"
+    )
+    return "DD06_FINDING_NOT_REFUSED", text
+
+
+def _reread_both_wallets(
+    record: ProbeRecord,
+    info: InfoLike,
+    name: str,
+    account_address: str,
+    account_before: dict[str, str | None],
+    agent_address: str | None,
+    agent_before: dict[str, str | None] | None,
+) -> tuple[bool | None, bool | None, bool]:
+    """Re-read the account and (when known) the agent wallet after a fund-moving arm that was not
+    refused or that errored; record before/after; return (master_paid, own_paid, agent_read)."""
+    amount = ARM_AMOUNT_USDC.get(name, TRANSFER_AMOUNT_USDC)
+    account_after = _balances(info, account_address)
+    record.step(
+        f"post_{name}_account_balances",
+        "RECORDED",
+        {"before": redact_map(account_before), "after": redact_map(account_after)},
+    )
+    master_paid = _paid(account_before, account_after, amount)
+    own_paid: bool | None = None
+    agent_read = bool(agent_address) and agent_before is not None
+    if agent_read:
+        agent_after = _balances(info, agent_address)  # type: ignore[arg-type]
+        record.step(
+            f"post_{name}_agent_balances",
+            "RECORDED",
+            {"before": redact_map(agent_before), "after": redact_map(agent_after)},
+        )
+        own_paid = _paid(agent_before, agent_after, amount)  # type: ignore[arg-type]
+    return master_paid, own_paid, agent_read
 
 
 def run_probe(
@@ -553,51 +646,45 @@ def run_probe(
             record.result = "DD06_FINDING_NOT_REFUSED"
             record.finding = f"{name} was NOT refused for the agent key"
             if name in FUND_MOVING_ARMS:
-                account_after = _balances(info, account_address)
-                record.step(
-                    f"post_{name}_account_balances",
-                    "RECORDED",
-                    {
-                        "before": redact_map(account_before),
-                        "after": redact_map(account_after),
-                    },
+                master_paid, own_paid, agent_read = _reread_both_wallets(
+                    record,
+                    info,
+                    name,
+                    account_address,
+                    account_before,
+                    agent_address,
+                    agent_before,
                 )
-                master_moved = _moved(account_before, account_after)
-                own_moved: bool | None = None
-                if agent_address and agent_before is not None:
-                    agent_after = _balances(info, agent_address)
-                    record.step(
-                        f"post_{name}_agent_balances",
-                        "RECORDED",
-                        {
-                            "before": redact_map(agent_before),
-                            "after": redact_map(agent_after),
-                        },
-                    )
-                    own_moved = _moved(agent_before, agent_after)
-                if master_moved:
-                    record.result = "DD06_FINDING_MASTER_FUNDS_MOVED"
-                    record.finding = (
-                        f"{name} was NOT refused and the ACCOUNT's balance changed: the agent key "
-                        "moved the master's funds (DD-06 falsified on testnet)"
-                    )
-                elif own_moved:
-                    record.result = "DD06_FINDING_OWN_FUNDS_MOVED"
-                    record.finding = (
-                        f"{name} was NOT refused and only the AGENT wallet's own balance changed: "
-                        "the agent moved its own funds, the master's are unchanged (r3 shape; not "
-                        "the DD-06 breach)"
-                    )
-                else:
-                    record.finding = (
-                        f"{name} was NOT refused; balances unchanged or unreadable on both wallets "
-                        f"(master_moved={master_moved}, own_moved={own_moved}) - read the venue "
-                        "response before drawing any DD-06 conclusion"
-                    )
+                record.result, record.finding = _attribute(
+                    name, master_paid, own_paid, agent_read
+                )
             if STOP_ON_NOT_REFUSED:
                 for later_name, _, _ in arms[index + 1 :]:
                     record.step(later_name, "SKIPPED_AFTER_FINDING", {})
                 return record
+        if outcome == "ERROR" and name in FUND_MOVING_ARMS:
+            # second exact-Opus read of a46b2a9d, R-2: a timeout or 5xx on a fund-moving arm may have
+            # executed at the venue; measure both wallets and STOP instead of trying the next arm
+            master_paid, own_paid, agent_read = _reread_both_wallets(
+                record,
+                info,
+                name,
+                account_address,
+                account_before,
+                agent_address,
+                agent_before,
+            )
+            record.result = "DD06_INCONCLUSIVE_FUND_ARM_ERROR"
+            label, text = _attribute(name, master_paid, own_paid, agent_read)
+            if label != "DD06_FINDING_NOT_REFUSED":
+                record.result = label
+            record.finding = (
+                f"{name} ended in ERROR (transport or server) - the signed request may have executed; "
+                f"balances re-read and the sequence stopped: {text}"
+            )
+            for later_name, _, _ in arms[index + 1 :]:
+                record.step(later_name, "SKIPPED_AFTER_ERROR", {})
+            return record
     if record.result == "RUNNING":
         if refused == len(arms) and authorization_refusals == len(arms):
             record.result = "DD06_REFUSALS_OBSERVED"

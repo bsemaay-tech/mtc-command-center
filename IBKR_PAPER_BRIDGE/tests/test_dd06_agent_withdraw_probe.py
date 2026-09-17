@@ -261,10 +261,11 @@ def test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence():
     )
     assert record.result == "DD06_FINDING_NOT_REFUSED"
     assert record.finding.startswith(
-        "usdSend was NOT refused; balances unchanged or unreadable"
+        "usdSend was NOT refused; no readable balance decreased"
     )
     # lane-7 review R-4: the record now carries both wallets' balances around the arm
     names = [s["name"] for s in record.steps]
+    assert "agent wallet NOT READ (no agent address supplied)" in record.finding
     assert "post_usdSend_account_balances" in names
     assert "S0_agent_balances" in names
     outcomes = {s["name"]: s["outcome"] for s in record.steps}
@@ -339,8 +340,16 @@ def test_transport_error_is_inconclusive_not_a_refusal():
         account_address=ACCOUNT,
         sub_account=None,
     )
-    assert record.result == "DD06_INCONCLUSIVE"
-    assert {s["name"]: s["outcome"] for s in record.steps}["withdraw3"] == "ERROR"
+    # second exact-Opus read of a46b2a9d, R-2: a fund-moving arm that ends in ERROR may have executed;
+    # both wallets are re-read and the sequence STOPS instead of trying the next arm
+    assert record.result == "DD06_INCONCLUSIVE_FUND_ARM_ERROR"
+    outcomes = {s["name"]: s["outcome"] for s in record.steps}
+    assert outcomes["withdraw3"] == "ERROR"
+    assert "post_withdraw3_account_balances" in outcomes
+    assert outcomes["usdSend"] == "SKIPPED_AFTER_ERROR"
+    assert outcomes["spotSend"] == "SKIPPED_AFTER_ERROR"
+    assert "may have executed" in record.finding
+    assert "sequence stopped" in record.finding
 
 
 def test_control_arm_rejection_aborts_before_any_transfer_arm():
@@ -412,9 +421,8 @@ def test_output_directory_is_write_once(tmp_path: Path):
         probe.write_record(tmp_path / "once", record)
 
 
-def test_dry_run_needs_no_credentials_and_no_network(capsys, monkeypatch):
-    monkeypatch.delenv("HL_API_WALLET_KEY", raising=False)
-    monkeypatch.delenv("HL_ACCOUNT_ADDRESS", raising=False)
+def test_dry_run_needs_no_credentials_and_no_network(offline, capsys):
+    # N-11 of the second read: every main() test runs under the offline fixture
     assert probe.main(["--run-id", "x", "--out", "unused", "--dry-run"]) == 0
     out = capsys.readouterr().out
     assert "TESTNET ONLY" in out and "approveAgent" in out and "Stop rule" in out
@@ -531,44 +539,113 @@ def test_write_record_refuses_surviving_hex(tmp_path: Path):
 
 
 class _BalancesInfo(FakeInfo):
-    """Balances per address that the test can change between the S0 read and the post-arm re-read."""
+    """Balances per address that the test can change between the S0 read and the post-arm re-read;
+    a None entry makes that wallet's reads fail (unreadable)."""
 
     def __init__(self) -> None:
         super().__init__()
-        self.usdc = {ACCOUNT: "984.987457", AGENT: "13.0"}
+        self.usdc = {ACCOUNT: "983.987457", AGENT: "14.0"}
+        self.account_value = {ACCOUNT: "0.0", AGENT: "0.0"}
+
+    def user_state(self, address: str):
+        if self.account_value.get(address) is None:
+            raise _ServerError(503, "unreadable")
+        return {
+            "marginSummary": {"accountValue": self.account_value[address]},
+            "withdrawable": "0.0",
+        }
 
     def spot_user_state(self, address: str):
+        if self.usdc.get(address) is None:
+            raise _ServerError(503, "unreadable")
         return {
             "balances": [{"coin": "USDC", "total": self.usdc[address], "hold": "0.0"}]
         }
 
 
-def _leaky_exchange(info: _BalancesInfo, move: str):
+def _leaky_exchange(info: _BalancesInfo, effect):
     class Leaky(FakeExchange):
         def spot_transfer(self, amount, destination, token):
             self.calls.append("spotSend")
-            if move == "agent":
-                info.usdc[AGENT] = "12.0"
-            elif move == "master":
-                info.usdc[ACCOUNT] = "983.987457"
+            effect(info)
             return {"status": "ok", "response": {"type": "default"}}
 
     return Leaky()
 
 
+def _r3_replay(info: _BalancesInfo) -> None:
+    # the venue's own r3 readings (2026-09-16): the agent paid 1 USDC, the master RECEIVED it
+    info.usdc[AGENT] = "13.0"
+    info.usdc[ACCOUNT] = "984.987457"
+
+
+def _master_pays(info: _BalancesInfo) -> None:
+    info.usdc[ACCOUNT] = "982.987457"
+
+
+def _tick_only(info: _BalancesInfo) -> None:
+    # a mark-to-market drift on the account's perp value with USDC untouched is not a payment
+    info.account_value[ACCOUNT] = "0.01"
+
+
+def _nothing(info: _BalancesInfo) -> None:
+    return None
+
+
+def _agent_pays_master_unreadable(info: _BalancesInfo) -> None:
+    info.usdc[AGENT] = "13.0"
+    info.usdc[ACCOUNT] = None
+    info.account_value[ACCOUNT] = None
+
+
 @pytest.mark.parametrize(
-    ("move", "result", "phrase"),
+    ("effect", "result", "phrase", "absent"),
     [
-        ("agent", "DD06_FINDING_OWN_FUNDS_MOVED", "AGENT wallet's own balance changed"),
-        ("master", "DD06_FINDING_MASTER_FUNDS_MOVED", "ACCOUNT's balance changed"),
-        ("none", "DD06_FINDING_NOT_REFUSED", "balances unchanged or unreadable"),
+        (
+            _r3_replay,
+            "DD06_FINDING_OWN_FUNDS_MOVED",
+            "the agent moved its own funds",
+            "falsified",
+        ),
+        (
+            _master_pays,
+            "DD06_FINDING_MASTER_FUNDS_MOVED",
+            "DD-06 falsified on testnet",
+            "own funds",
+        ),
+        (
+            _tick_only,
+            "DD06_FINDING_NOT_REFUSED",
+            "no readable balance decreased",
+            "falsified",
+        ),
+        (
+            _nothing,
+            "DD06_FINDING_NOT_REFUSED",
+            "account did not pay, agent wallet did not pay",
+            "falsified",
+        ),
+        (
+            _agent_pays_master_unreadable,
+            "DD06_FINDING_OWN_FUNDS_MOVED",
+            "account UNREADABLE",
+            "unchanged",
+        ),
+    ],
+    ids=[
+        "r3-replay",
+        "master-pays",
+        "mark-to-market-tick",
+        "nothing-moves",
+        "agent-pays-master-unreadable",
     ],
 )
-def test_not_refused_fund_arm_names_whose_funds_moved(move, result, phrase):
-    # lane-7 review R-4 (the r3 lesson): the record re-reads BOTH wallets after a NOT_REFUSED fund arm
-    # and names whose balance changed instead of asserting a breach it never measured
+def test_not_refused_fund_arm_names_whose_funds_left(effect, result, phrase, absent):
+    # second exact-Opus read of a46b2a9d, R-1: attribution is directional (a DECREASE) and amount-aware;
+    # replaying r3's real readings must NOT print the breach sentence, and an unreadable side is named as
+    # unreadable, never as unchanged
     info = _BalancesInfo()
-    exchange = _leaky_exchange(info, move)
+    exchange = _leaky_exchange(info, effect)
     record = probe.run_probe(
         record=_record(),
         info=info,
@@ -579,16 +656,32 @@ def test_not_refused_fund_arm_names_whose_funds_moved(move, result, phrase):
     )
     assert record.result == result
     assert phrase in record.finding
+    assert absent not in record.finding
     steps = {s["name"]: s for s in record.steps}
-    assert steps["S0_agent_balances"]["data"]["usdc_total"] == "13.0"
-    assert (
-        steps["post_spotSend_account_balances"]["data"]["before"]["usdc_total"]
-        == "984.987457"
-    )
-    assert steps["post_spotSend_agent_balances"]["data"]["after"]["usdc_total"] == (
-        "12.0" if move == "agent" else "13.0"
-    )
+    assert steps["S0_agent_balances"]["data"]["usdc_total"] == "14.0"
+    assert "post_spotSend_account_balances" in steps
+    assert "post_spotSend_agent_balances" in steps
     assert steps["approveAgent"]["outcome"] == "SKIPPED_AFTER_FINDING"
+
+
+def test_paid_is_directional_amount_aware_and_unreadable_honest():
+    paid = probe._paid
+    both = {"accountValue": "0.0", "usdc_total": "14.0"}
+    assert paid(both, {"accountValue": "0.0", "usdc_total": "13.0"}, 1.0) is True
+    assert paid(both, {"accountValue": "0.0", "usdc_total": "15.0"}, 1.0) is False
+    assert paid(both, {"accountValue": "0.01", "usdc_total": "14.0"}, 1.0) is False
+    assert paid(both, {"accountValue": "0.0", "usdc_total": "13.6"}, 1.0) is False
+    assert paid(both, {"accountValue": "0.0", "usdc_total": "13.4"}, 1.0) is True
+    unreadable = {"accountValue": None, "usdc_total": None}
+    assert paid(unreadable, unreadable, 1.0) is None
+    assert (
+        paid(
+            {"accountValue": None, "usdc_total": "10.0"},
+            {"accountValue": "5.0", "usdc_total": "10.0"},
+            1.0,
+        )
+        is False
+    )
 
 
 def test_operator_abort_stops_the_sequence():
