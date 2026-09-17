@@ -1,0 +1,31 @@
+# mutant M3_opening_position_always_none applied to the patched exporter (mutant sha256 42a3c793739844eb76b93fd11d06dbc028f97514d064f14884ba43c245152220); focused three modules; restored to b179e306d7729704724e776ac4b78905f401e3297e78c26f11265664e3900698
+.....................................................F.................. [ 30%]
+........................................................................ [ 61%]
+........................................................................ [ 92%]
+..s..............                                                        [100%]
+================================== FAILURES ===================================
+_ test_d6_the_completion_check_names_the_fills_witness_as_the_position_source _
+
+    def test_d6_the_completion_check_names_the_fills_witness_as_the_position_source():
+        """D-6 (ii) provenance on the normal r1 path: the position that expects the
+        payments comes from the fills witness, and the completion check says so
+        (lane-8 exact-Opus review of ``9ef072a8``, REQUIRED-1: the two provenance
+        fields were emitted but never asserted)."""
+        result = build(evidence_kind=REAL)
+    
+        assert result.accepted is True, result.report["reason_detail"]
+        check = json.loads(result.candidate_bytes)["real_capture_candidate"][
+            "completion_check"
+        ]
+        assert check["position_source"] == exporter.REAL_POSITION_SOURCE_FILLS
+        assert check["position_source"] == "coverage.fills_witness"
+>       assert check["opening_position"] == "0.0"
+E       AssertionError: assert None == '0.0'
+
+tests\test_mtc_funding_export_real_capture.py:912: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_mtc_funding_export_real_capture.py::test_d6_the_completion_check_names_the_fills_witness_as_the_position_source
+1 failed, 231 passed, 1 skipped in 6.87s
+
+
+exit=1
