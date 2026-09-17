@@ -1,0 +1,21 @@
+# mutant M2_testnet_url_to_mainnet (sha256 12f19dd9b1fbe3cbb91cdef6b3e51b395642ae1403b0444f0a043659c4ff928b) on the patched tool; HL_* removed from the env; restored to 47c70e6882e674e2d22d2b2fc8337731402c691387c5651432d827db6a6df84b
+...................F.....                                                [100%]
+================================== FAILURES ===================================
+_______________ test_plan_names_the_testnet_host_and_the_gates ________________
+
+capsys = <_pytest.capture.CaptureFixture object at 0x0000000004D839B0>
+
+    def test_plan_names_the_testnet_host_and_the_gates(capsys):
+        # lane-7 review R-1 (M2): the only host the tool can dial is pinned in the plan the owner reads
+        text = probe.plan_text(None, False)
+>       assert "https://api.hyperliquid-testnet.xyz" in text
+E       AssertionError: assert 'https://api.hyperliquid-testnet.xyz' in 'dd06-probe/v1 ? TESTNET ONLY (https://api.hyperliquid.xyz)\nS0 identity: agent address != account address (else refus..., and DD06_PROBE_RUN_TOKEN=<run-id> in the environment; all checked before any credential is read or SDK object built.'
+
+tests\test_dd06_agent_withdraw_probe.py:514: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_plan_names_the_testnet_host_and_the_gates
+1 failed, 24 passed in 0.77s
+
+
+exit=1
+tripwire_hit=False

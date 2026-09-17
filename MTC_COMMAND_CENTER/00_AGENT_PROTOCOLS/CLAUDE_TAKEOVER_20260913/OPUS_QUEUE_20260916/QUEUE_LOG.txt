@@ -30,3 +30,4 @@
 2026-09-17T15:21:43Z LEAD: lane 8 attempt 3 DONE (PASS-WITH-NITS, 0 REQUIRED, 19 min); launching lane 6 P021S1 7fecf204
 2026-09-17T15:47:09Z LEAD: lane 6 DONE (REQUEST_CHANGES, 2 REQUIRED on B-05/B-06 fidelity; repair in progress); launching lane 7 DD06 1af85067
 2026-09-17T15:48:48Z LEAD: lane 6 attempt 1 archived (REQUEST_CHANGES on 7fecf204, REQUIRED-1/2 B-05 fidelity + B-06 count); repair eada65ed pushed; lane 6 re-pinned; Gemini delta next; second read after lane 7 if the window allows
+2026-09-17T18:02:39Z LEAD: lane 7 attempt 1 archived (REQUEST_CHANGES on 1af85067, R-1..R-4 + the disclosed unintended testnet run); repair a46b2a9d pushed; lane 7 re-pinned with a binding safety rule in the addendum; Gemini delta next
