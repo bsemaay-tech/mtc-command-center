@@ -157,3 +157,4 @@ NEW tonight (no rush, one line each):
 - **B**: park it as it is; Sol reads the same bytes on Saturday; decide after both.
 - **C**: accept as it is and carry the defect as a known limitation with a hand rule (never trust an attribution whose balance step shows a null).
 - Default: nothing moves; the candidate stays parked at `2128352b`; nothing runs on the venue.
+- **ANSWERED 2026-09-18 08:1x UTC+3: `DD06-CAP A`** -> `OD-20260918-DD06-CAP-A-1`. One extra round: Lead repair -> Gemini -> fourth exact-Opus read -> Sol Sat. Still open: `N-16 A|B`, `D6-START A|B`, `DD06-ORDER A|B`, `P26-N2 doc|change`, `O-1 build`, the registry key (yours).

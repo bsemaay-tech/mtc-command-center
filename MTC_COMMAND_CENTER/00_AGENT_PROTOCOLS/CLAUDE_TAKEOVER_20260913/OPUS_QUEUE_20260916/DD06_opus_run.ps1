@@ -14,7 +14,7 @@ $env:CLAUDE_CONFIG_DIR = (Join-Path $env:USERPROFILE '.claude')
 if (Get-Process agy -ErrorAction SilentlyContinue) { 'agy.exe running: refuse' | Out-File "$lane\launch.exit" -Encoding ascii; exit 4 }
 Set-Location 'C:\tmp\P029_DD06_20260915'
 $head = (git -c safe.directory=* rev-parse HEAD).Trim()
-if ($head -ne '2128352b348902a8b4755d2566e133c55094af8b') { "HEAD $head != 2128352b: refuse" | Out-File "$lane\launch.exit" -Encoding ascii; exit 3 }
+if ($head -ne 'acd79b52efbbf8847621cabe1797cc6fc0567f17') { "HEAD $head != acd79b52: refuse" | Out-File "$lane\launch.exit" -Encoding ascii; exit 3 }
 $start = Get-Date
 & claude --print "Read and execute exactly $lane\BRIEF.md. Start by reading that file." --model claude-opus-5 --effort xhigh --permission-mode dontAsk --allowedTools 'Bash' 'PowerShell' 'Edit' 'Read' 'Write' 'Glob' 'Grep' --disallowedTools 'Agent' 'WebFetch' 'WebSearch' 'NotebookEdit' --add-dir 'C:\tmp\OPUS_QUEUE_20260916\DD06' 'C:\tmp\OPUS_DD06_SCRATCH' 'C:\tmp\P029_DD06_20260915' 'C:\CT13' --strict-mcp-config --max-turns 100 --output-format stream-json --verbose 2>&1 | Out-File -FilePath "$lane\stream.jsonl" -Encoding utf8
 "exit=$LASTEXITCODE start=$($start.ToUniversalTime().ToString('o')) end=$((Get-Date).ToUniversalTime().ToString('o'))" | Out-File "$lane\launch.exit" -Encoding ascii

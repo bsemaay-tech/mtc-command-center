@@ -38,3 +38,8 @@ H20260917T190000Z_state clearinghouseState 200 []
 H20260917T200000Z_pre metaAndAssetCtxs 200 76601.4
 H20260917T200000Z_post metaAndAssetCtxs 200 76591.0
 H20260917T200000Z_state clearinghouseState 200 []
+H20260917T210000Z_pre metaAndAssetCtxs 200 76551.3
+H20260917T210000Z_post metaAndAssetCtxs 200 76556.8
+H20260917T210000Z_state clearinghouseState 200 []
+window complete
+READER_EXIT=0

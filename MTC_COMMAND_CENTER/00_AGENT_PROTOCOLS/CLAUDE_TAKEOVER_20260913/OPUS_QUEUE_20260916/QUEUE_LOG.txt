@@ -42,3 +42,10 @@
 2026-09-17T20:31:56Z CHAIN: lane 6 second read ended: exit=0 start=2026-09-17T20:17:10.4573079Z end=2026-09-17T20:31:56.8046979Z
 2026-09-17T20:37:13Z LANE7 attempt 4 (2128352b) REQUEST_CHANGES 20:16:49Z (R-1: a partially unreadable master - spot None, perp 0.0 - printed as 'did not pay' + 'not the DD-06 breach'; Lead reproduced offline, 3 passed) = round 3 of the T0 cap 3 -> Lead repair authority ENDS; owner DD06-CAP A|B|C; archived DD06/ATTEMPT4_REQUEST_CHANGES_2128352b/; LEAD_ADJUDICATION_DD06_R2_T0.md
 2026-09-17T20:37:13Z LANE6 second read (eada65ed) PASS-WITH-NITS 20:31:56Z (0 REQUIRED; NIT-3/4/5/6); archived P021S1/ATTEMPT2_PASS_WITH_NITS_eada65ed/; LEAD_ADJUDICATION_P021S1_R1_T0.md; next Sol Sat
+2026-09-18T05:03:13Z LEAD: Grok probe OK (25 s, weekly reset landed); launching laneGKDERIV_grok (P0-20 derived-plan pre-screen; digests re-verified)
+2026-09-18T05:05:07Z OWNER: DD06-CAP A -> one extra T0 round authorized (OD-20260918-DD06-CAP-A-1); Lead repair round 3 starts; fourth exact-Opus read to follow the Gemini delta
+2026-09-18T05:16:53Z LEAD: Grok pre-screen NITS/0 REQUIRED adjudicated SATISFIED (LEAD_ADJUDICATION_GROK.md); launching p020_measurement_run.ps1 (once; OD-20260914-P020-MEASURE-1 + OD-20260915-P020-MEASURE-GROK-1)
+2026-09-18T05:17:47Z LEAD: p020_measurement_run.ps1 threw at the roster-gate Log line (PowerShell case-insensitive variables: $sol shadowed $SOL) BEFORE any swap or run - shot NOT spent; launcher fixed (content vars renamed), relaunching
+2026-09-18T05:20:02Z LEAD: DD06_R3_GEMINI launched (packet DD06_R3_20260918, 18 files, HEAD acd79b52); no git / no worktree cwd until it ends
+2026-09-18T05:21:23Z LEAD: DD06_R3_GEMINI attempt 0 died in 6 s - the reused r2 runner hard-codes the R2 packet boundary (prompt check), no Gemini call was made; runner cloned as run_dd06_r3_g38.ps1 (boundary = DD06_R3_20260918), relaunching
+2026-09-18T05:25:33Z GEMINI DD06_R3_GEMINI PASS (R-1 CLOSED; 28 native reads / 18 files / 0 mismatches; 122 s; cid a747d248) COUNTED; launching lane 7 attempt 5 = fourth exact-Opus read of acd79b52 (the owner-authorized extra round)

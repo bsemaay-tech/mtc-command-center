@@ -1,0 +1,300 @@
+$ (scratch C:\tmp\LEAD_DD06_SCRATCH_R3_RED) -m pytest tests/test_dd06_agent_withdraw_probe.py -q -p no:cacheprovider --basetemp=C:/bt_s4/dd06r3a -rf
+.........................FF.FF.                                          [100%]
+================================== FAILURES ===================================
+_ test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-unreadable] _
+
+effect = <function _agent_pays_master_unreadable at 0x0000000006363110>
+result = 'DD06_FINDING_OWN_FUNDS_MOVED_MASTER_UNREADABLE'
+phrase = 'account UNREADABLE', absent = 'not the DD-06 breach'
+
+    @pytest.mark.parametrize(
+        ("effect", "result", "phrase", "absent"),
+        [
+            (
+                _r3_replay,
+                "DD06_FINDING_OWN_FUNDS_MOVED",
+                "the agent moved its own funds",
+                "falsified",
+            ),
+            (
+                _master_pays,
+                "DD06_FINDING_MASTER_FUNDS_MOVED",
+                "DD-06 falsified on testnet",
+                "own funds",
+            ),
+            (
+                _tick_only,
+                "DD06_FINDING_NOT_REFUSED",
+                "no readable balance decreased",
+                "falsified",
+            ),
+            (
+                _nothing,
+                "DD06_FINDING_NOT_REFUSED",
+                "account did not pay, agent wallet did not pay",
+                "falsified",
+            ),
+            (
+                _agent_pays_master_unreadable,
+                "DD06_FINDING_OWN_FUNDS_MOVED_MASTER_UNREADABLE",
+                "account UNREADABLE",
+                "not the DD-06 breach",
+            ),
+            (
+                _agent_pays_master_spot_unreadable,
+                "DD06_FINDING_OWN_FUNDS_MOVED_MASTER_UNREADABLE",
+                "account UNREADABLE",
+                "did not pay",
+            ),
+            (
+                _master_pays_perp_unreadable,
+                "DD06_FINDING_MASTER_FUNDS_MOVED",
+                "DD-06 falsified on testnet",
+                "own funds",
+            ),
+            (
+                _nothing_master_spot_unreadable,
+                "DD06_FINDING_NOT_REFUSED",
+                "NOT measured (UNREADABLE): re-read it by hand",
+                "account did not pay",
+            ),
+        ],
+        ids=[
+            "r3-replay",
+            "master-pays",
+            "mark-to-market-tick",
+            "nothing-moves",
+            "agent-pays-master-unreadable",
+            "agent-pays-master-spot-unreadable",
+            "master-pays-perp-unreadable",
+            "nothing-moves-master-spot-unreadable",
+        ],
+    )
+    def test_not_refused_fund_arm_names_whose_funds_left(effect, result, phrase, absent):
+        # second exact-Opus read of a46b2a9d, R-1: attribution is directional (a DECREASE) and amount-aware;
+        # replaying r3's real readings must NOT print the breach sentence, and an unreadable side is named as
+        # unreadable, never as unchanged. Third read of 2128352b, R-1: a PARTIALLY unreadable account (the
+        # decoy perp 0.0 parses, the spot read fails) is not a measurement - no exclusion, no "did not pay"
+        info = _BalancesInfo()
+        exchange = _leaky_exchange(info, effect)
+        record = probe.run_probe(
+            record=_record(),
+            info=info,
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+            agent_address=AGENT,
+        )
+>       assert record.result == result
+E       AssertionError: assert 'DD06_FINDING_OWN_FUNDS_MOVED' == 'DD06_FINDING...ER_UNREADABLE'
+E         
+E         - DD06_FINDING_OWN_FUNDS_MOVED_MASTER_UNREADABLE
+E         ?                             ------------------
+E         + DD06_FINDING_OWN_FUNDS_MOVED
+
+tests\test_dd06_agent_withdraw_probe.py:697: AssertionError
+_ test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-spot-unreadable] _
+
+effect = <function _agent_pays_master_spot_unreadable at 0x0000000006363270>
+result = 'DD06_FINDING_OWN_FUNDS_MOVED_MASTER_UNREADABLE'
+phrase = 'account UNREADABLE', absent = 'did not pay'
+
+    @pytest.mark.parametrize(
+        ("effect", "result", "phrase", "absent"),
+        [
+            (
+                _r3_replay,
+                "DD06_FINDING_OWN_FUNDS_MOVED",
+                "the agent moved its own funds",
+                "falsified",
+            ),
+            (
+                _master_pays,
+                "DD06_FINDING_MASTER_FUNDS_MOVED",
+                "DD-06 falsified on testnet",
+                "own funds",
+            ),
+            (
+                _tick_only,
+                "DD06_FINDING_NOT_REFUSED",
+                "no readable balance decreased",
+                "falsified",
+            ),
+            (
+                _nothing,
+                "DD06_FINDING_NOT_REFUSED",
+                "account did not pay, agent wallet did not pay",
+                "falsified",
+            ),
+            (
+                _agent_pays_master_unreadable,
+                "DD06_FINDING_OWN_FUNDS_MOVED_MASTER_UNREADABLE",
+                "account UNREADABLE",
+                "not the DD-06 breach",
+            ),
+            (
+                _agent_pays_master_spot_unreadable,
+                "DD06_FINDING_OWN_FUNDS_MOVED_MASTER_UNREADABLE",
+                "account UNREADABLE",
+                "did not pay",
+            ),
+            (
+                _master_pays_perp_unreadable,
+                "DD06_FINDING_MASTER_FUNDS_MOVED",
+                "DD-06 falsified on testnet",
+                "own funds",
+            ),
+            (
+                _nothing_master_spot_unreadable,
+                "DD06_FINDING_NOT_REFUSED",
+                "NOT measured (UNREADABLE): re-read it by hand",
+                "account did not pay",
+            ),
+        ],
+        ids=[
+            "r3-replay",
+            "master-pays",
+            "mark-to-market-tick",
+            "nothing-moves",
+            "agent-pays-master-unreadable",
+            "agent-pays-master-spot-unreadable",
+            "master-pays-perp-unreadable",
+            "nothing-moves-master-spot-unreadable",
+        ],
+    )
+    def test_not_refused_fund_arm_names_whose_funds_left(effect, result, phrase, absent):
+        # second exact-Opus read of a46b2a9d, R-1: attribution is directional (a DECREASE) and amount-aware;
+        # replaying r3's real readings must NOT print the breach sentence, and an unreadable side is named as
+        # unreadable, never as unchanged. Third read of 2128352b, R-1: a PARTIALLY unreadable account (the
+        # decoy perp 0.0 parses, the spot read fails) is not a measurement - no exclusion, no "did not pay"
+        info = _BalancesInfo()
+        exchange = _leaky_exchange(info, effect)
+        record = probe.run_probe(
+            record=_record(),
+            info=info,
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+            agent_address=AGENT,
+        )
+>       assert record.result == result
+E       AssertionError: assert 'DD06_FINDING_OWN_FUNDS_MOVED' == 'DD06_FINDING...ER_UNREADABLE'
+E         
+E         - DD06_FINDING_OWN_FUNDS_MOVED_MASTER_UNREADABLE
+E         ?                             ------------------
+E         + DD06_FINDING_OWN_FUNDS_MOVED
+
+tests\test_dd06_agent_withdraw_probe.py:697: AssertionError
+_ test_not_refused_fund_arm_names_whose_funds_left[nothing-moves-master-spot-unreadable] _
+
+effect = <function _nothing_master_spot_unreadable at 0x0000000006363530>
+result = 'DD06_FINDING_NOT_REFUSED'
+phrase = 'NOT measured (UNREADABLE): re-read it by hand'
+absent = 'account did not pay'
+
+    @pytest.mark.parametrize(
+        ("effect", "result", "phrase", "absent"),
+        [
+            (
+                _r3_replay,
+                "DD06_FINDING_OWN_FUNDS_MOVED",
+                "the agent moved its own funds",
+                "falsified",
+            ),
+            (
+                _master_pays,
+                "DD06_FINDING_MASTER_FUNDS_MOVED",
+                "DD-06 falsified on testnet",
+                "own funds",
+            ),
+            (
+                _tick_only,
+                "DD06_FINDING_NOT_REFUSED",
+                "no readable balance decreased",
+                "falsified",
+            ),
+            (
+                _nothing,
+                "DD06_FINDING_NOT_REFUSED",
+                "account did not pay, agent wallet did not pay",
+                "falsified",
+            ),
+            (
+                _agent_pays_master_unreadable,
+                "DD06_FINDING_OWN_FUNDS_MOVED_MASTER_UNREADABLE",
+                "account UNREADABLE",
+                "not the DD-06 breach",
+            ),
+            (
+                _agent_pays_master_spot_unreadable,
+                "DD06_FINDING_OWN_FUNDS_MOVED_MASTER_UNREADABLE",
+                "account UNREADABLE",
+                "did not pay",
+            ),
+            (
+                _master_pays_perp_unreadable,
+                "DD06_FINDING_MASTER_FUNDS_MOVED",
+                "DD-06 falsified on testnet",
+                "own funds",
+            ),
+            (
+                _nothing_master_spot_unreadable,
+                "DD06_FINDING_NOT_REFUSED",
+                "NOT measured (UNREADABLE): re-read it by hand",
+                "account did not pay",
+            ),
+        ],
+        ids=[
+            "r3-replay",
+            "master-pays",
+            "mark-to-market-tick",
+            "nothing-moves",
+            "agent-pays-master-unreadable",
+            "agent-pays-master-spot-unreadable",
+            "master-pays-perp-unreadable",
+            "nothing-moves-master-spot-unreadable",
+        ],
+    )
+    def test_not_refused_fund_arm_names_whose_funds_left(effect, result, phrase, absent):
+        # second exact-Opus read of a46b2a9d, R-1: attribution is directional (a DECREASE) and amount-aware;
+        # replaying r3's real readings must NOT print the breach sentence, and an unreadable side is named as
+        # unreadable, never as unchanged. Third read of 2128352b, R-1: a PARTIALLY unreadable account (the
+        # decoy perp 0.0 parses, the spot read fails) is not a measurement - no exclusion, no "did not pay"
+        info = _BalancesInfo()
+        exchange = _leaky_exchange(info, effect)
+        record = probe.run_probe(
+            record=_record(),
+            info=info,
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+            agent_address=AGENT,
+        )
+        assert record.result == result
+>       assert phrase in record.finding
+E       AssertionError: assert 'NOT measured (UNREADABLE): re-read it by hand' in 'spotSend was NOT refused; no readable balance decreased by half the arm amount on either wallet [account did not pay, agent wallet did not pay] - read the venue response and the ledger before drawing any DD-06 conclusion'
+E        +  where 'spotSend was NOT refused; no readable balance decreased by half the arm amount on either wallet [account did not pay, agent wallet did not pay] - read the venue response and the ledger before drawing any DD-06 conclusion' = ProbeRecord(run_id='dd06-test', network='testnet', account_address_redacted='[redacted-address]', agent_address_redact...t did not pay, agent wallet did not pay] - read the venue response and the ledger before drawing any DD-06 conclusion').finding
+
+tests\test_dd06_agent_withdraw_probe.py:698: AssertionError
+_________ test_paid_is_directional_amount_aware_and_unreadable_honest _________
+
+    def test_paid_is_directional_amount_aware_and_unreadable_honest():
+        paid = probe._paid
+        both = {"accountValue": "0.0", "usdc_total": "14.0"}
+        assert paid(both, {"accountValue": "0.0", "usdc_total": "13.0"}, 1.0) is True
+        assert paid(both, {"accountValue": "0.0", "usdc_total": "15.0"}, 1.0) is False
+        assert paid(both, {"accountValue": "0.01", "usdc_total": "14.0"}, 1.0) is False
+        assert paid(both, {"accountValue": "0.0", "usdc_total": "13.6"}, 1.0) is False
+        assert paid(both, {"accountValue": "0.0", "usdc_total": "13.4"}, 1.0) is True
+        unreadable = {"accountValue": None, "usdc_total": None}
+>       assert paid(unreadable, unreadable, 1.0) is None
+E       AssertionError: assert False is None
+E        +  where False = <function _paid at 0x000000000635F8A0>({'accountValue': None, 'usdc_total': None}, {'accountValue': None, 'usdc_total': None}, 1.0)
+
+tests\test_dd06_agent_withdraw_probe.py:716: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-unreadable]
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-spot-unreadable]
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[nothing-moves-master-spot-unreadable]
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_paid_is_directional_amount_aware_and_unreadable_honest
+4 failed, 27 passed in 1.04s

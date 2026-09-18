@@ -1,0 +1,38 @@
+$ (scratch C:\tmp\LEAD_DD06_SCRATCH_R3_RED) -m pytest tests/test_dd06_agent_withdraw_probe.py -q -p no:cacheprovider --basetemp=C:/bt_s4/dd06r3d -rf
+.............................F.                                          [100%]
+================================== FAILURES ===================================
+_________ test_paid_is_directional_amount_aware_and_unreadable_honest _________
+
+    def test_paid_is_directional_amount_aware_and_unreadable_honest():
+        paid = probe._paid
+        both = {"accountValue": "0.0", "usdc_total": "14.0"}
+        assert paid(both, {"accountValue": "0.0", "usdc_total": "13.0"}, 1.0) is True
+        assert paid(both, {"accountValue": "0.0", "usdc_total": "15.0"}, 1.0) is False
+        assert paid(both, {"accountValue": "0.01", "usdc_total": "14.0"}, 1.0) is False
+        assert paid(both, {"accountValue": "0.0", "usdc_total": "13.6"}, 1.0) is False
+        assert paid(both, {"accountValue": "0.0", "usdc_total": "13.4"}, 1.0) is True
+        unreadable = {"accountValue": None, "usdc_total": None}
+        assert paid(unreadable, unreadable, 1.0) is None
+        # third exact-Opus read of 2128352b, R-1: a wallet is measured only when EVERY read succeeded
+        assert (
+            paid(
+                {"accountValue": None, "usdc_total": "10.0"},
+                {"accountValue": "5.0", "usdc_total": "10.0"},
+                1.0,
+            )
+            is None
+        )
+        decoy = {"accountValue": "0.0", "usdc_total": "983.987457"}
+        assert paid(decoy, {"accountValue": "0.0", "usdc_total": None}, 6.0) is None
+        assert paid(decoy, {"accountValue": "0.0", "usdc_total": None}, 1.0) is None
+        # a measured decrease is a fact even when the other balance is unreadable
+        assert paid(decoy, {"accountValue": None, "usdc_total": "977.987457"}, 6.0) is True
+        # unparsable strings are unreadable, not zero; an empty reading is no measurement
+>       assert paid(decoy, {"accountValue": "0.0", "usdc_total": "n/a"}, 6.0) is None
+E       AssertionError: assert False is None
+E        +  where False = <function _paid at 0x00000000063738A0>({'accountValue': '0.0', 'usdc_total': '983.987457'}, {'accountValue': '0.0', 'usdc_total': 'n/a'}, 6.0)
+
+tests\test_dd06_agent_withdraw_probe.py:732: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_paid_is_directional_amount_aware_and_unreadable_honest
+1 failed, 30 passed in 1.01s
