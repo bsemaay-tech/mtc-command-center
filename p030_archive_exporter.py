@@ -68,10 +68,29 @@ _PAYLOAD_ID = re.compile(r"^p030payload-v1:[0-9a-f]{64}$")
 _OBSERVATION_ID = re.compile(r"^p030obs-v1:[0-9a-f]{64}$")
 # The target and its receipt are written under this suffix first and published by os.replace only
 # after the byte re-read and the receipt both succeeded (lane-3 T0 review 2026-09-16, finding 1).
-# A refused run therefore never leaves bytes under the target's own name; a leftover staging file
-# is never consumable as a partition (no archive name ends in this suffix) and, under the package
-# invariant of no delete code path, is left in place and named in the refusal.
+# A refused run therefore never leaves bytes under the target's own name. A leftover staging file
+# is not addressed by any archive name (no consumer resolves a name ending in this suffix), but
+# its BYTES may be a canonical prefix of a partition - a reader handed the staging path explicitly
+# can consume it (third T0 read, N2): the name is the only protection. Under the package
+# invariant of no delete code path it is left in place and named in the refusal.
 STAGING_SUFFIX = ".p030partial"
+
+
+def _publish(staging: Path, final: Path) -> None:
+    """Move ``staging`` to ``final`` without replacing a ``final`` that already exists.
+
+    ``os.replace`` overwrites; a file created between the caller's exists-check and the move would
+    be replaced silently (third T0 read, N1). On Windows ``os.rename`` refuses an existing
+    destination with ``FileExistsError`` and keeps the no-delete invariant (nothing is unlinked).
+    On POSIX ``os.rename`` overwrites as well and the no-clobber forms (link + unlink, renameat2)
+    either add a delete path or are not portable, so the exists-check immediately before the move
+    is the guard there and the remaining window is documented, not closed."""
+    if os.name == "nt":
+        os.rename(staging, final)
+    else:
+        if final.exists():
+            raise FileExistsError(str(final))
+        os.replace(staging, final)
 
 
 def _refuse(code: str, message: str) -> None:
@@ -226,7 +245,14 @@ def _decode_source_line(raw_line: bytes, line_number: int) -> dict[str, Any]:
             parse_constant=_reject_nonfinite_json,
             object_pairs_hook=_reject_duplicate_json_keys,
         )
-    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+    except (
+        UnicodeDecodeError,
+        json.JSONDecodeError,
+        ValueError,
+        RecursionError,
+    ) as exc:
+        # RecursionError: a line nested deeper than the interpreter's limit is not a valid source
+        # line either (third T0 read, N4); the adapter refuses it the same way
         raise ExportRefused(
             "source_line_invalid", f"source line {line_number} is not parseable JSON"
         ) from exc
@@ -243,6 +269,10 @@ def _decode_source_line(raw_line: bytes, line_number: int) -> dict[str, Any]:
         raise ExportRefused(
             "source_line_invalid",
             f"source line {line_number} carries a non-finite number",
+        ) from exc
+    except RecursionError as exc:
+        raise ExportRefused(
+            "source_line_invalid", f"source line {line_number} is nested too deeply"
         ) from exc
     try:
         canonical = (
@@ -398,7 +428,7 @@ def export_partition(
         raise ExportRefused("contract_refused", str(exc)) from exc
     # Stage, verify, then publish: nothing appears under the target's own name until the bytes
     # were re-read equal and the receipt was written. A refusal anywhere before the final
-    # os.replace leaves at most a `.p030partial` file, which no archive consumer recognises.
+    # publication leaves at most a `.p030partial` file, which no archive name resolves.
     staging_target = Path(str(target_jsonl) + STAGING_SUFFIX)
     staging_receipt = Path(str(receipt_path) + STAGING_SUFFIX)
     if staging_target.exists() or staging_receipt.exists():
@@ -476,7 +506,13 @@ def export_partition(
     if receipt_path.exists():
         _refuse("receipt_exists", "export receipt already exists")
     try:
-        os.replace(staging_receipt, receipt_path)
+        _publish(staging_receipt, receipt_path)
+    except FileExistsError as exc:
+        raise ExportRefused(
+            "receipt_exists",
+            "export receipt appeared before publication; nothing was replaced (the staging "
+            f"receipt remains under {staging_receipt.name})",
+        ) from exc
     except OSError as exc:
         raise ExportRefused(
             "receipt_unwritable", "export receipt could not be published"
@@ -484,7 +520,13 @@ def export_partition(
     if target_jsonl.exists():
         _refuse("target_exists", "target partition already exists")
     try:
-        os.replace(staging_target, target_jsonl)
+        _publish(staging_target, target_jsonl)
+    except FileExistsError as exc:
+        raise ExportRefused(
+            "target_exists",
+            "target partition appeared before publication; nothing was replaced (the receipt was "
+            f"published; the staging partial remains under {staging_target.name})",
+        ) from exc
     except OSError as exc:
         raise ExportRefused(
             "target_unwritable",

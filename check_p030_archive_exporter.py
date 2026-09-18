@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -89,6 +90,12 @@ class ArchiveExporterTests(unittest.TestCase):
             self.assertEqual(stable["record_count"], 2)
             self.assertEqual(
                 stable["dataset_content_hash"], receipt.dataset_content_hash
+            )
+            # third T0 read, N3: the capture is bound to the export receipt's bytes, not only to
+            # its identity - a mutated exported row would change exported_sha256 and fail here
+            self.assertEqual(stable["prefix_sha256"], receipt.exported_sha256)
+            self.assertEqual(
+                stable["prefix_sha256"], hashlib.sha256(target.read_bytes()).hexdigest()
             )
             print(f"D-13 RED RAW REFUSAL: {raw_message}")
             print("D-13 GREEN EXPORTED CAPTURE: PASS")
@@ -328,6 +335,65 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             subject.export_partition(source, target, **kwargs)
         self.assertEqual(caught.exception.code, code)
         return caught.exception
+
+    def test_publication_never_replaces_a_target_that_appeared_after_the_check(
+        self,
+    ) -> None:
+        # third T0 read, N1: a file created between the exists-check and the move must not be
+        # replaced. The race is simulated by making the target's exists-check answer False while
+        # the target really exists; on Windows os.rename refuses (no-clobber, nothing unlinked).
+        if os.name != "nt":
+            self.skipTest("documented residual window on POSIX (see _publish)")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root / "window")
+            target = root / "out" / "partition.jsonl"
+            target.parent.mkdir(parents=True)
+            foreign = b'{"foreign": true}\n'
+            target.write_bytes(foreign)
+            unchanged_exists = Path.exists
+
+            def target_looks_absent(path):
+                if path == target:
+                    return False
+                return unchanged_exists(path)
+
+            with (
+                mock.patch.object(
+                    Path, "exists", autospec=True, side_effect=target_looks_absent
+                ),
+                self.assertRaisesRegex(
+                    subject.ExportRefused, "appeared before publication"
+                ) as caught,
+            ):
+                subject.export_partition(
+                    source,
+                    target,
+                    source_root=source_root,
+                    exported_at_utc=EXPORTED_AT,
+                )
+            self.assertEqual(caught.exception.code, "target_exists")
+            self.assertEqual(target.read_bytes(), foreign)
+            self.assertTrue(Path(str(target) + subject.STAGING_SUFFIX).exists())
+            self.assertTrue(Path(str(target) + ".p030export.json").exists())
+
+    def test_pathologically_nested_line_is_a_refusal_not_a_crash(self) -> None:
+        # third T0 read, N4: a line nested deeper than the interpreter's recursion limit is refused
+        # as source_line_invalid (the adapter refuses it the same way); RecursionError never escapes
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root, source = self._partition(root / "window")
+            depth = 3000
+            nested = "[" * depth + "]" * depth
+            raw = source.read_bytes()
+            source.write_bytes(raw + f'{{"deep": {nested}}}\n'.encode())
+            self._refused(
+                "source_line_invalid",
+                "source line 3",
+                source,
+                root / "out",
+                source_root=source_root,
+            )
 
     def test_invalid_timestamp_refusals_including_sub_second(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -621,14 +687,15 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
             target = root / "out.jsonl"
             staging_target = Path(str(target) + subject.STAGING_SUFFIX)
             receipt = Path(str(target) + ".p030export.json")
-            original_replace = subject.os.replace
+            primitive = "rename" if os.name == "nt" else "replace"
+            original_publish = getattr(subject.os, primitive)
 
             def deny_target_publish(src, dst, *args, **kwargs):
                 if Path(dst) == target:
                     raise PermissionError("publish denied")
-                return original_replace(src, dst, *args, **kwargs)
+                return original_publish(src, dst, *args, **kwargs)
 
-            with mock.patch.object(subject.os, "replace", deny_target_publish):
+            with mock.patch.object(subject.os, primitive, deny_target_publish):
                 self._refused(
                     "target_unwritable",
                     "could not be published",

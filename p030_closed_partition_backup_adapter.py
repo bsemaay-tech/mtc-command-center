@@ -111,11 +111,16 @@ def _decode_strict_jsonl(raw: bytes, description: str) -> list[dict]:
                 parse_constant=_reject_nonfinite_json,
                 object_pairs_hook=_reject_duplicate_json_keys,
             )
-        except json.JSONDecodeError as exc:
+        except (json.JSONDecodeError, RecursionError) as exc:
+            # RecursionError: nested deeper than the interpreter limit is invalid too (P0-30 N4)
             raise ValueError(f"invalid {description} line {line_number}") from exc
         if not isinstance(record, dict):
             raise ValueError(f"invalid {description} line {line_number}")
-        _reject_nonfinite_numbers(record)
+        try:
+            _reject_nonfinite_numbers(record)
+        except RecursionError as exc:
+            # the parser may accept a nesting the (recursive) walk cannot; same refusal (P0-30 N4)
+            raise ValueError(f"invalid {description} line {line_number}") from exc
         records.append(record)
     return records
 
@@ -189,11 +194,15 @@ def _prefix_facts(data: bytes) -> tuple[int, str]:
                 parse_constant=_reject_nonfinite_json,
                 object_pairs_hook=_reject_duplicate_json_keys,
             )
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
             raise ValueError("prefix record is not canonical JSONL") from exc
         if not isinstance(record, dict):
             raise ValueError("prefix record is not a JSON object")
-        _reject_nonfinite_numbers(record)
+        try:
+            _reject_nonfinite_numbers(record)
+        except RecursionError as exc:
+            # the parser may accept a nesting the (recursive) walk cannot; same refusal (P0-30 N4)
+            raise ValueError("prefix record is not canonical JSONL") from exc
         canonical = (
             json.dumps(
                 record,

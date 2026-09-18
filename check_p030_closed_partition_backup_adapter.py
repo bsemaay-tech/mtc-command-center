@@ -170,6 +170,21 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                     captured_at_utc=self.CAPTURED_AT,
                     dataset_content_hash=self.DATASET_CONTENT_HASH,
                 )
+            # P0-30 N4 (parity with the exporter): a line nested deeper than the interpreter's
+            # recursion limit is refused as non-canonical JSONL, never surfaced as RecursionError
+            depth = 3000
+            source.write_bytes(
+                ('{"observation_id": "' + self.OBS_1 + '", "deep": ' + "[" * depth + "]" * depth + "}\n").encode()
+            )
+            with self.assertRaisesRegex(ValueError, "prefix record is not canonical JSONL"):
+                subject.capture_stable_prefix(
+                    source,
+                    root / "nested",
+                    source_root=root,
+                    high_water_bytes=source.stat().st_size,
+                    captured_at_utc=self.CAPTURED_AT,
+                    dataset_content_hash=self.DATASET_CONTENT_HASH,
+                )
 
     def test_capture_refuses_noncontract_dataset_and_observation_identities(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -832,10 +847,16 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                         raw = Path(bound_config_path).read_text(encoding="utf-8")
                         if defect == "duplicate_backup_root":
                             configured_root = json.loads(raw)["backup_root"]
-                            anchor = f'  "backup_root": {json.dumps(configured_root)},'
-                            replacement = (
-                                anchor
-                                + f'\n  "backup_root": {json.dumps(str(alternate_root))},'
+                            # F8 (lane-3 attempt-1 NIT 8): the config is written with
+                            # ensure_ascii=False, so the anchor must be built the same way or a
+                            # non-ASCII TEMP path (a user name with a non-ASCII letter) never matches
+                            anchor = (
+                                '  "backup_root": '
+                                f'{json.dumps(configured_root, ensure_ascii=False)},'
+                            )
+                            replacement = anchor + (
+                                '\n  "backup_root": '
+                                f'{json.dumps(str(alternate_root), ensure_ascii=False)},'
                             )
                             self.assertEqual(raw.count(anchor), 1)
                             raw = raw.replace(anchor, replacement)
