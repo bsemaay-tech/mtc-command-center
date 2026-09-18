@@ -59,7 +59,11 @@ python backup.py --config opsa_config.json --dry-run
 python backup.py --config opsa_config.json
 # 4. Isolated integrity proof (no writes). A restore names ONE explicit run id (there is no --latest:
 #    the newest run may be the interrupted one); the run must carry runs/<run_id>/COMPLETE.json +
-#    RUN_MANIFEST.jsonl written by backup.py, or restore.py refuses it (rc 3, run_not_complete):
+#    RUN_MANIFEST.jsonl written by backup.py, or restore.py refuses it (rc 3, run_not_complete).
+#    The marker is written once (O_EXCL), not atomically: a run whose COMPLETE.json is torn or
+#    unreadable is treated as NOT complete and is re-backed-up under a NEW run id; its data
+#    stays in place (this package has no delete primitive) and is never restored from.
+#    (owner ruling OD-20260918-P026-N2-DOC-1: documented, not changed)
 python restore.py --config opsa_config.json --run opsa-20260101T000000.000Z --check-only
 # 5. Restore to a target dir (byte-hash verified):
 python restore.py --config opsa_config.json --run opsa-20260101T000000.000Z --to D:/recovered

@@ -38,9 +38,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from opsa_common import (  # noqa: E402
-    RC_CHECK_FAILED, RC_OK, RequiredFieldError, RunNotComplete, load_complete_marker,
-    read_jsonl, require_non_empty_string, require_non_empty_string_field,
-    resolve_confined_path, run_manifest_path, sha256_file, utc_now_iso,
+    RC_CHECK_FAILED, RC_OK, RUN_MANIFEST_NAME, RequiredFieldError, RunNotComplete,
+    load_complete_marker, read_jsonl, require_non_empty_string,
+    require_non_empty_string_field, resolve_confined_path, run_manifest_path, sha256_file,
+    utc_now_iso,
 )
 
 RC_ERROR = 1
@@ -109,6 +110,17 @@ def verify_completion_evidence(run_dir: Path, run_id: str, global_records: list[
                              f"{end.get('files')!r}, completion marker declares {declared}")
     if any(r.get("readback") != "match" for r in run_records if r.get("record") == "file"):
         raise RunNotComplete(f"run {run_id}: per-run manifest carries a non-matching readback record")
+    # NIT-1 (exact-Opus read of e114ed31): every claim the marker makes about itself is checked last -
+    # after the pair, the global manifest and the per-run records - so the existing refusal reasons keep
+    # their precedence; before restore prints "completion_marker": "verified" - the tool writes readback ==
+    # "all_match" and run_manifest == RUN_MANIFEST_NAME, so any other value is a hand-made or
+    # damaged marker, not a partially-checked one
+    if marker.get("readback") != "all_match":
+        raise RunNotComplete(f"run {run_id}: completion marker declares readback="
+                             f"{marker.get('readback')!r}; the backup tool writes 'all_match'")
+    if marker.get("run_manifest") != RUN_MANIFEST_NAME:
+        raise RunNotComplete(f"run {run_id}: completion marker names run_manifest="
+                             f"{marker.get('run_manifest')!r}; expected {RUN_MANIFEST_NAME!r}")
     return marker
 
 

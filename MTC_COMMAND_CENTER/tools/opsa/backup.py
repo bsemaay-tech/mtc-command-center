@@ -234,7 +234,7 @@ def run_backup(config_path: Path, dry_run: bool = False, store_filter: set[str] 
                       "bytes": bytes_copied, "errors": len(errors),
                       "completion_marker": completion,
                       "finished_at": finished_at}, ensure_ascii=False))
-    return RC_OK if not errors and status == "ok" else RC_ERROR
+    return RC_OK if not errors else RC_ERROR  # status is derived from errors alone (NIT-5)
 
 
 def write_completion_evidence(run_dir: Path, *, run_id: str, started_at, finished_at: str,

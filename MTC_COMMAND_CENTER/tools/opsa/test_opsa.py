@@ -381,6 +381,18 @@ class BackupRestoreTests(unittest.TestCase):
         refused("differ from the global manifest")
         manifest_path.write_bytes(good_manifest)
         marker_path.write_bytes(good_marker)
+        # (d2) NIT-1 (exact-Opus read of e114ed31): the marker's own claims are validated, not only
+        # the four pair-integrity fields - a falsified readback or run_manifest name is refused
+        # before restore could print "completion_marker": "verified"
+        payload = json.loads(good_marker)
+        payload["readback"] = "partial"
+        marker_path.write_bytes(json.dumps(payload, sort_keys=True).encode("utf-8"))
+        refused("declares readback='partial'")
+        payload = json.loads(good_marker)
+        payload["run_manifest"] = "OTHER.jsonl"
+        marker_path.write_bytes(json.dumps(payload, sort_keys=True).encode("utf-8"))
+        refused("names run_manifest='OTHER.jsonl'")
+        marker_path.write_bytes(good_marker)
         # (e) intact evidence, but a backed-up file bit-rots -> hash mismatch still refuses (rc 1)
         victim = run_dir / "ledger_store" / "ledger.jsonl"
         data = bytearray(victim.read_bytes())
@@ -445,7 +457,10 @@ class BackupRestoreTests(unittest.TestCase):
             (run_dir / "RUN_MANIFEST.jsonl").write_bytes(forged)
             (run_dir / "COMPLETE.json").write_text(json.dumps({
                 "schema": "mtc.opsa_run_complete/v1", "run_id": run, "files": 0,
-                "run_manifest_sha256": hashlib.sha256(forged).hexdigest()}), encoding="utf-8")
+                "run_manifest_sha256": hashlib.sha256(forged).hexdigest(),
+                # NIT-1: the gate now also checks the marker's own claims, so a forgery meant to
+                # reach the fences BEHIND the gate must carry the tool's values for them
+                "readback": "all_match", "run_manifest": "RUN_MANIFEST.jsonl"}), encoding="utf-8")
 
         forge(self.backup_root / "runs" / run_id, lines[1], run_id)
         stderr = io.StringIO()
