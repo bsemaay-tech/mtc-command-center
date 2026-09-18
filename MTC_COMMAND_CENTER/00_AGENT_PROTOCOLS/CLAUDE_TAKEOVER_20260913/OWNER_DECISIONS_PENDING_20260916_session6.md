@@ -165,3 +165,5 @@ NEW tonight (no rush, one line each):
 - **B**: accept as-is; carry the hole as a known limitation with a hand rule (any `DD06_INCONCLUSIVE` on a fund arm = stop and re-read by hand).
 - **C**: park; Sol reads Saturday; decide after.
 - Default: nothing moves; nothing runs on the venue.
+
+- **ANSWERED 2026-09-18 10:4x UTC+3 (one line): `N-16 B  D6-START B  DD06-ORDER B  P26-N2 doc  O-1 wait  DD06-R4 A`** -> rows OD-20260918-P031-N16-B-1, -P012-D6START-B-1, -DD06-ORDER-B-1, -P026-N2-DOC-1, -P012-O1-WAIT-1, -DD06-R4-A-1. **No owner one-liner is open now**; the registry-key hygiene note stays his environment (no decision needed).

@@ -12,7 +12,7 @@ New-Item -ItemType Directory -Force $tmp, "$lane\logs", 'C:\tmp\OPUS_P026_SCRATC
 $env:CLAUDE_CONFIG_DIR = (Join-Path $env:USERPROFILE '.claude')
 Set-Location 'C:\tmp\P026_REPAIR_20260915'
 $head = (git -c safe.directory=* rev-parse HEAD).Trim()
-if ($head -ne 'e114ed314fa2545b5c64399ddb024e4d75289c14') { "HEAD $head != e114ed31: refuse" | Out-File "$lane\launch.exit" -Encoding ascii; exit 3 }
+if ($head -ne '505af399db1152910661b40e7e20fa517852e05d') { "HEAD $head != 505af399: refuse" | Out-File "$lane\launch.exit" -Encoding ascii; exit 3 }
 $start = Get-Date
 & claude --print "Read and execute exactly $lane\BRIEF.md. Start by reading that file." --model claude-opus-5 --effort xhigh --permission-mode dontAsk --allowedTools 'Bash' 'PowerShell' 'Edit' 'Read' 'Write' 'Glob' 'Grep' --disallowedTools 'Agent' 'WebFetch' 'WebSearch' 'NotebookEdit' --add-dir 'C:\tmp\OPUS_QUEUE_20260916\P026' 'C:\tmp\OPUS_P026_SCRATCH' 'C:\tmp\P026_REPAIR_20260915' 'C:\CT13' --strict-mcp-config --max-turns 100 --output-format stream-json --verbose 2>&1 | Out-File -FilePath "$lane\stream.jsonl" -Encoding utf8
 "exit=$LASTEXITCODE start=$($start.ToUniversalTime().ToString('o')) end=$((Get-Date).ToUniversalTime().ToString('o'))" | Out-File "$lane\launch.exit" -Encoding ascii

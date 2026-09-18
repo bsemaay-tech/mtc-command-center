@@ -1,0 +1,156 @@
+$ (scratch C:\tmp\LEAD_DD06_SCRATCH_R4_RED) -m pytest tests/test_dd06_agent_withdraw_probe.py -q -p no:cacheprovider --basetemp=C:/bt_s4/dd06r4e -rf
+.....F.F..FF....................                                         [100%]
+================================== FAILURES ===================================
+____ test_all_arms_refused_gives_refusals_observed_and_redacts_everything _____
+
+tmp_path = WindowsPath('C:/bt_s4/dd06r4e/test_all_arms_refused_gives_re0')
+
+    def test_all_arms_refused_gives_refusals_observed_and_redacts_everything(
+        tmp_path: Path,
+    ):
+        for mode in ("err", "raise"):
+            exchange = FakeExchange()
+            exchange.refusal = mode
+            record = probe.run_probe(
+                record=_record(),
+                info=FakeInfo(),
+                exchange=exchange,
+                account_address=ACCOUNT,
+                sub_account=None,
+            )
+            assert record.result == "DD06_REFUSALS_OBSERVED", record.steps
+            outcomes = {step["name"]: step["outcome"] for step in record.steps}
+            assert outcomes["S1_control_order"] == "NOT_REFUSED"
+            assert outcomes["S1_control_cancel"] == "NOT_REFUSED"
+            classes = {
+                step["name"]: step["data"].get("refusal_class") for step in record.steps
+            }
+            for arm in ("withdraw3", "usdSend", "spotSend", "approveAgent"):
+                assert outcomes[arm] == "REFUSED", arm
+                assert classes[arm] == "AUTHORIZATION", arm
+            assert outcomes["subAccountTransfer"] == "SKIPPED_NO_SUB_ACCOUNT"
+            # owner OD-20260918-DD06-ORDER-B-1: self-transfers first, withdraw3 last, then approveAgent
+>           assert exchange.calls == [
+                "order",
+                "cancel:60109082440",
+                "usdSend",
+                "spotSend",
+                "withdraw3",
+                "approveAgent",
+            ]
+E           AssertionError: assert ['order', 'ca...approveAgent'] == ['order', 'ca...approveAgent']
+E             
+E             At index 2 diff: 'withdraw3' != 'usdSend'
+E             Use -v to get more diff
+
+tests\test_dd06_agent_withdraw_probe.py:213: AssertionError
+____ test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence _____
+
+    def test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence():
+        class Leaky(FakeExchange):
+            def usd_transfer(self, amount, destination):
+                self.calls.append("usdSend")
+                return {"status": "ok", "response": {"type": "default"}}
+    
+        exchange = Leaky()
+        record = probe.run_probe(
+            record=_record(),
+            info=FakeInfo(),
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+        )
+        assert record.result == "DD06_FINDING_NOT_REFUSED"
+        assert record.finding.startswith(
+            "usdSend was NOT refused; no readable balance decreased"
+        )
+        # lane-7 review R-4: the record now carries both wallets' balances around the arm
+        names = [s["name"] for s in record.steps]
+        assert "agent wallet NOT READ (no agent address supplied)" in record.finding
+        assert "post_usdSend_account_balances" in names
+        assert "S0_agent_balances" in names
+        outcomes = {s["name"]: s["outcome"] for s in record.steps}
+        assert outcomes["usdSend"] == "NOT_REFUSED"
+>       assert (
+            outcomes["spotSend"] == "SKIPPED_AFTER_FINDING"
+            and outcomes["withdraw3"] == "SKIPPED_AFTER_FINDING"
+            and outcomes["approveAgent"] == "SKIPPED_AFTER_FINDING"
+        )
+E       AssertionError: assert ('SKIPPED_AFTER_FINDING' == 'SKIPPED_AFTER_FINDING'
+E         
+E           SKIPPED_AFTER_FINDING and 'REFUSED' == 'SKIPPED_AFTER_FINDING'
+E         
+E         - SKIPPED_AFTER_FINDING
+E         + REFUSED)
+
+tests\test_dd06_agent_withdraw_probe.py:274: AssertionError
+_____________ test_transport_error_is_inconclusive_not_a_refusal ______________
+
+    def test_transport_error_is_inconclusive_not_a_refusal():
+        class Flaky(FakeExchange):
+            def usd_transfer(self, amount, destination):
+                self.calls.append("usdSend")
+                raise _ServerError(503, "no capacity")
+    
+        exchange = Flaky()
+        record = probe.run_probe(
+            record=_record(),
+            info=FakeInfo(),
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+        )
+        # second exact-Opus read of a46b2a9d, R-2: a fund-moving arm that ends in ERROR may have executed;
+        # both wallets are re-read and the sequence STOPS instead of trying the next arm
+        assert record.result == "DD06_INCONCLUSIVE_FUND_ARM_ERROR"
+        outcomes = {s["name"]: s["outcome"] for s in record.steps}
+        assert outcomes["usdSend"] == "ERROR"
+        assert "post_usdSend_account_balances" in outcomes
+        assert outcomes["spotSend"] == "SKIPPED_AFTER_ERROR"
+>       assert outcomes["withdraw3"] == "SKIPPED_AFTER_ERROR"
+E       AssertionError: assert 'REFUSED' == 'SKIPPED_AFTER_ERROR'
+E         
+E         - SKIPPED_AFTER_ERROR
+E         + REFUSED
+
+tests\test_dd06_agent_withdraw_probe.py:354: AssertionError
+_______ test_unclassifiable_response_on_fund_arm_is_measured_and_stops ________
+
+    def test_unclassifiable_response_on_fund_arm_is_measured_and_stops():
+        # fourth exact-Opus read of acd79b52, R-1: the installed SDK turns a 2xx with a non-JSON body into
+        # {"error": "Could not parse JSON: ..."} without raising; classify_response grades it INCONCLUSIVE and
+        # the loop used to fall through - no re-read, no stop, two more signed fund-moving requests sent
+        class Opaque(FakeExchange):
+            def spot_transfer(self, amount, destination, token):
+                self.calls.append("spotSend")
+                return {"error": "Could not parse JSON: <html>502 Bad Gateway</html>"}
+    
+        exchange = Opaque()
+        record = probe.run_probe(
+            record=_record(),
+            info=FakeInfo(),
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+        )
+        assert (
+            probe.classify_response({"error": "Could not parse JSON: x"}) == "INCONCLUSIVE"
+        )
+        assert record.result == "DD06_INCONCLUSIVE_FUND_ARM_UNCLASSIFIED"
+        outcomes = {s["name"]: s["outcome"] for s in record.steps}
+        assert outcomes["usdSend"] == "REFUSED"
+        assert outcomes["spotSend"] == "INCONCLUSIVE"
+        assert "post_spotSend_account_balances" in outcomes
+>       assert outcomes["withdraw3"] == "SKIPPED_AFTER_UNCLASSIFIED"
+E       AssertionError: assert 'REFUSED' == 'SKIPPED_AFTER_UNCLASSIFIED'
+E         
+E         - SKIPPED_AFTER_UNCLASSIFIED
+E         + REFUSED
+
+tests\test_dd06_agent_withdraw_probe.py:386: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_all_arms_refused_gives_refusals_observed_and_redacts_everything
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_transport_error_is_inconclusive_not_a_refusal
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_unclassifiable_response_on_fund_arm_is_measured_and_stops
+4 failed, 28 passed in 1.00s
