@@ -19,4 +19,4 @@
 ## NOT VERIFIED (Lead)
 The Lead did not re-run Grok's driver mutations or the re-derivation (the trial-by-trial equality was the Lead's own earlier check `LEAD_TRIAL_CHECK_S4.txt`, ALL EQUAL, on the same bytes); the CSV prefix bytes were not re-hashed in this lane (Grok says the same).
 
-Recorded by Claude Opus 5 Lead (session 6, `4a8233`), 08:5x UTC+3.
+Recorded by Claude Opus 5 Lead (session 6, `4a8233`), 08:1x UTC+3.

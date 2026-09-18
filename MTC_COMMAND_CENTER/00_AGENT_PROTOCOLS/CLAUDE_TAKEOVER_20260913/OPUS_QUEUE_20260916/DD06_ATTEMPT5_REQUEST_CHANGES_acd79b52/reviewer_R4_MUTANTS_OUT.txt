@@ -1,0 +1,85 @@
+﻿BASELINE (pristine scratch copy)
+   31 passed in 0.57s   rc=0
+
+M-1  _paid back to readable-per-key (round-3 (a))
+   KILLED  3 failed, 28 passed in 0.70s
+   tripwire hit: False   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-spot-unreadable]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[nothing-moves-master-spot-unreadable]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_paid_is_directional_amount_aware_and_unreadable_honest
+
+M-2  MASTER_UNREADABLE branch removed (round-3 (b))
+   KILLED  2 failed, 29 passed in 0.70s
+   tripwire hit: False   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-unreadable]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-spot-unreadable]
+
+M-3  TESTNET_URL -> mainnet
+   KILLED  1 failed, 30 passed in 0.69s
+   tripwire hit: False   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_plan_names_the_testnet_host_and_the_gates
+
+M-4  refuse_master_key call removed from main
+   KILLED  1 failed, 30 passed in 0.67s
+   tripwire hit: True   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_main_refuses_a_master_key_after_the_gates_and_before_any_sdk_object
+
+M-5  HL_LIVE_ACK refusal removed
+   KILLED  1 failed, 30 passed in 0.69s
+   tripwire hit: False   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_refuses_mainnet_and_live_ack
+
+M-6  run-token gate removed from main
+   KILLED  1 failed, 30 passed in 0.69s
+   tripwire hit: True   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_main_refuses_without_the_execution_token_before_reading_any_credential
+
+M-7  write_record hex guards removed
+   KILLED  1 failed, 30 passed in 0.72s
+   tripwire hit: False   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_write_record_refuses_surviving_hex
+
+M-8  `del api_key` removed
+   *** SURVIVED ***  31 passed in 0.55s
+   tripwire hit: False   network-shaped error: False
+
+M-9  per-arm amount lookup -> flat 1 USDC (N-16)
+   *** SURVIVED ***  31 passed in 0.54s
+   tripwire hit: False   network-shaped error: False
+
+M-10 STOP_ON_NOT_REFUSED = False
+   KILLED  9 failed, 22 passed in 0.71s
+   tripwire hit: False   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[r3-replay]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[master-pays]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[mark-to-market-tick]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[nothing-moves]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-unreadable]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-spot-unreadable]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[master-pays-perp-unreadable]
+
+M-11 withdraw3 amount 6.0 -> 1.0
+   KILLED  11 failed, 20 passed in 0.71s
+   tripwire hit: False   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_all_arms_refused_gives_refusals_observed_and_redacts_everything
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_sub_account_arm_runs_only_when_named
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[r3-replay]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[master-pays]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[mark-to-market-tick]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[nothing-moves]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-unreadable]
+
+M-12 'does not exist' back in AUTHORIZATION
+   KILLED  1 failed, 30 passed in 0.65s
+   tripwire hit: False   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_refusal_text_classes - A...
+
+M-13 _attribute: OWN branch drawn without a complete master reading
+   KILLED  2 failed, 29 passed in 0.69s
+   tripwire hit: False   network-shaped error: False
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-unreadable]
+   FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-spot-unreadable]
+
+pristine restored OK

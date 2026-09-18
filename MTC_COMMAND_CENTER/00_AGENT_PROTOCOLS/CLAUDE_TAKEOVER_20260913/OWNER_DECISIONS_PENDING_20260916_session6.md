@@ -158,3 +158,10 @@ NEW tonight (no rush, one line each):
 - **C**: accept as it is and carry the defect as a known limitation with a hand rule (never trust an attribution whose balance step shows a null).
 - Default: nothing moves; the candidate stays parked at `2128352b`; nothing runs on the venue.
 - **ANSWERED 2026-09-18 08:1x UTC+3: `DD06-CAP A`** -> `OD-20260918-DD06-CAP-A-1`. One extra round: Lead repair -> Gemini -> fourth exact-Opus read -> Sol Sat. Still open: `N-16 A|B`, `D6-START A|B`, `DD06-ORDER A|B`, `P26-N2 doc|change`, `O-1 build`, the registry key (yours).
+
+## DD06-R4 (added 2026-09-18 08:5x UTC+3) - the extra round you authorized is spent
+- The fourth exact-Opus read CONFIRMED the round-3 repair (all four checks pass) but found a DIFFERENT, older hole (present since the first slice, missed by three reads): if the venue answers a fund-moving request with a page instead of JSON, the tool cannot classify it, does NOT re-read the wallets, does NOT stop, and sends two more signed fund-moving requests. One-line fix + one test.
+- **A** (recommended): one more named round - I make the one-line fix, Gemini, a fifth exact-Opus read, Sol Saturday on the final bytes.
+- **B**: accept as-is; carry the hole as a known limitation with a hand rule (any `DD06_INCONCLUSIVE` on a fund arm = stop and re-read by hand).
+- **C**: park; Sol reads Saturday; decide after.
+- Default: nothing moves; nothing runs on the venue.

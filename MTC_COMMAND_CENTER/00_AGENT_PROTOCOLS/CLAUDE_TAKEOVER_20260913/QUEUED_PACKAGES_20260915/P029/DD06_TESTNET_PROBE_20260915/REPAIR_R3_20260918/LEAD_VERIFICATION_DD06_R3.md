@@ -30,4 +30,4 @@ N-3 `_resting_oid`, N-4 `_HEX40`, N-5 min-notional, N-6 host binding, N-7 `usd_c
 ## Roster
 Lane 7 re-pinned to `acd79b52` (launcher HEAD pin, agent brief, REVIEW_BRIEF HEAD + addendum 4, queue row); attempt 4 archived. Fourth exact-Opus read on the fresh Pro window right after the Gemini delta; Sol (Sat) under the safety rule. A REQUEST_CHANGES on this round goes back to the owner, not to a Lead repair. The Lead never accepts its own code.
 
-Recorded by Claude Opus 5 Lead (session 6, `4a8233`), 09:1x UTC+3.
+Recorded by Claude Opus 5 Lead (session 6, `4a8233`), 08:2x UTC+3 (time labels in this file are UTC+3; the machine-stamped QUEUE_LOG is authoritative).
