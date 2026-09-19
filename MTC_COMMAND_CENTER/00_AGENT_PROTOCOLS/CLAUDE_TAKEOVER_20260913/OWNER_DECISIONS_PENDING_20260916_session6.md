@@ -167,3 +167,6 @@ NEW tonight (no rush, one line each):
 - Default: nothing moves; nothing runs on the venue.
 
 - **ANSWERED 2026-09-18 10:4x UTC+3 (one line): `N-16 B  D6-START B  DD06-ORDER B  P26-N2 doc  O-1 wait  DD06-R4 A`** -> rows OD-20260918-P031-N16-B-1, -P012-D6START-B-1, -DD06-ORDER-B-1, -P026-N2-DOC-1, -P012-O1-WAIT-1, -DD06-R4-A-1. **No owner one-liner is open now**; the registry-key hygiene note stays his environment (no decision needed).
+
+## P26-EVID (added Sat 2026-09-19 09:2x UTC+3, from the P0-26 slice read NIT-4)
+- The slice's dated note in `11_TRIAGE/WP_P0_26_OPSA_2026-08-25/RESTORE_DRILL_EVIDENCE.md` is outside the packet's five-file ceiling and no decision row names that file. **A** = keep it in the merge PR (I record a row); **B** = drop that one hunk to the follow-up slice. Default if silent: B before the merge PR. Not urgent; no venue, no code behaviour.
