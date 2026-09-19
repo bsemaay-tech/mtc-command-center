@@ -91,6 +91,8 @@ class PolicySetTests(unittest.TestCase):
         policy["version"] = compute_policy_version(policy)
         self.assertEqual(validate_policy_set(policy), policy["version"])
         self.assertIsNone(policy["shared"]["gap_ratio_max"])
+        # Catalogue-only S2 closure: the accepted artifact still carries None here until B-22
+        # ratifies the whole set (the catalogue value is 0.0001 - see test_current_readiness_catalogue_stays_refused).
 
     def test_nonfinite_bool_and_unsupported_json_values_refuse(self) -> None:
         for label, path, value in (
@@ -114,8 +116,8 @@ class PolicySetTests(unittest.TestCase):
         self.assertFalse(record["ready"])
         self.assertEqual(record["status"], "REFUSED")
         self.assertEqual({item["name"] for item in record["open_numbers"]}, {
-            "gap_ratio_max",
-            "divergence_tolerance",
+            "divergence_tolerance_intent",  # B-06 under M-C: the M-B gate
+            "divergence_tolerance_return",  # B-06 under M-C: the M-A economic divergence
             "divergence_window_length",
             "divergence_min_paired_observations",
         })

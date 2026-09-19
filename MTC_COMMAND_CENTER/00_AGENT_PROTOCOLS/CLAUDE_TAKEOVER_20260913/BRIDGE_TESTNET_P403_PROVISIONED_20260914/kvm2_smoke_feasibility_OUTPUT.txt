@@ -1,0 +1,21 @@
+﻿UTC=2026-09-14T13:51:26Z
+ssh.exe : bash: line 1: ﻿set: command not found
+At line:1 char:790
++ ... = $script | & $ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o " ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (bash: line 1: ﻿set: command not found:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+release_tree=present perms=555 root:root
+smoke_sha256=52d03a8181111c6956c23422d8ba7abe64e4b36d4c1a90735735a4253d3ae39c
+smoke_fill_sha256=6a12c02fabbf82e00422f2ad0c95c5e53b5b272b7936b231ad4d06efe2e6591b
+docs_dir_perms=555 root:root
+venv_python=Python 3.12.3
+bash: line 23: $'\r': command not found
+import_ok hyperliquid.exchange 
+import_ok eth_account 0.13.7
+import_ok bridge.settings 
+import_ok bridge.broker.hyperliquid 
+import_ok bridge.engine.types 
+outbound_dns_testnet=13.226.244.83
+tmp_free=93G

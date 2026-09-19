@@ -1,0 +1,4 @@
+$ python -m pytest tests/test_mtc_funding_export_real_capture.py tests/test_mtc_funding_export.py tests/test_funding_intake_adapter.py -q -p no:cacheprovider --basetemp=C:/bt_s4/p012r1c  (patched bytes)
+..s..............                                                        [100%]
+232 passed, 1 skipped in 5.07s
+exit=0

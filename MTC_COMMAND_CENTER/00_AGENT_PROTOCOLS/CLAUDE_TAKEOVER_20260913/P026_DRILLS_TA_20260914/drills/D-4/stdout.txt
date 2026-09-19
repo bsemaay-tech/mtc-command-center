@@ -1,0 +1,15 @@
+byte_compare_before receipt_sha256=b34427fa5b68c05bb9b253ec00cb3babce25c1cd95716dee894b0184930628a6 snapshot_sha256=371f9ffc2db7f32bfda73b5e84d19679c667fe02c061d1c6c3c6e8dd9aa1121f
+{"mode": "backup", "run_id": "opsa-20260914T061919.156Z", "backup_root": "C:\\tmp\\P026_DRILLS_TA_20260914\\fixtures\\backup_root", "stores": ["p030_closed_partition"], "started_at": "2026-09-14T06:19:19Z"}
+OK    p030_closed_partition/_P030_STABLE_PREFIX.json size=524 sha256=b34427fa5b68c05b… readback=match
+OK    p030_closed_partition/source.jsonl size=1860 sha256=371f9ffc2db7f32b… readback=match
+{"run_id": "opsa-20260914T061919.156Z", "status": "ok", "files": 2, "bytes": 2384, "errors": 0, "finished_at": "2026-09-14T06:19:19Z"}
+run_id=opsa-20260914T061919.156Z
+byte_compare_after receipt_equal=True snapshot_equal=True
+byte_compare_archived receipt_equal=True snapshot_equal=True
+manifest=C:\tmp\P026_DRILLS_TA_20260914\fixtures\backup_root\manifest.jsonl
+manifest_exists=True
+manifest_record_types=['run_start', 'file', 'file', 'run_end']
+manifest_file rel=_P030_STABLE_PREFIX.json readback=match size=524 sha256=b34427fa5b68c05bb9b253ec00cb3babce25c1cd95716dee894b0184930628a6
+manifest_file rel=source.jsonl readback=match size=1860 sha256=371f9ffc2db7f32bfda73b5e84d19679c667fe02c061d1c6c3c6e8dd9aa1121f
+manifest_run_end status=ok errors=[] files=2 bytes=2384
+member_set=['_P030_STABLE_PREFIX.json', 'source.jsonl']

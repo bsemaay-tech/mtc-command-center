@@ -1,0 +1,76 @@
+# WP-P0-26 (OPS-A) — deployment-and-drill decision packet, draft 2 (2026-09-15 night)
+
+Prepared by the Claude Opus 5 Lead (session 5, `03c6c8`) as the successor of draft 1 (08:50Z, Gemini NITs applied 10:25Z). Draft 1 was a pre-build snapshot; this draft records the repair as a **reviewed candidate** and re-scopes the drills accordingly. Facts refreshed 14:00-14:30Z from the run root, CT13 `f1bbac40` and the repair records; host-side facts stay UNKNOWN (no G9 contact is authorized by this packet). Nothing here installs, schedules, sends, deletes, merges or accepts. The owner is asked nothing in this draft; the questions in §2 become live only after the candidate is accepted.
+
+## 0. State at draft 2
+| Item | Draft 1 (08:50Z) | Now (night) |
+|---|---|---|
+| `master` | `fcac0ac6`: OPS-A local half (`tools/opsa/`), watchdog repair `53d33dbc` in; **completion-marker repair ABSENT** | unchanged — `fcac0ac6`; the repair is still not on `master` |
+| Repair | unbuilt; owner "A" just given | **candidate `d81b07f6`** on `feature/p026-completion-marker-20260915` (`C:/tmp/P026_REPAIR_20260915`, pushed): slice 1 `6ac9cfb7` (marker + explicit-run restore; `OD-20260915-P026-REPAIR-LEAD-1`), slice 2 `8d4056c5` (P0-30 adapter carries the run's completion evidence into its isolated root + checker fence + reserved store ids; `OD-20260915-P026-ADAPTER-LEAD-1`), slice 3 `d81b07f6` (Gemini detection findings F-01 REQUIRED / F-02 / F-03 fixed: restore requires exactly one successful `run_end` for the run; evidence written before `run_end`) |
+| Review state | none | **Gemini 3.8 detection of `8d4056c5` → REQUEST_CHANGES (F-01 REQUIRED, confirmed in the bytes) → slice 3 → Gemini DELTA of `8d4056c5..d81b07f6` counted PASS** (F-01/F-02/F-03 CLOSED; all attack-shape (e) variants REFUSED; 25/25 native reads). Lead ✔ as author (never acceptor). **Exact Opus: Wednesday queue lane 4 (`C:/tmp/OPUS_QUEUE_20260916/P026/`, pinned `d81b07f6`, started by hand after lanes 1-3). Exact Sol: Fri 2026-09-19 (Codex weekly cap).** Acceptance = both flagships + Gemini + Lead reproduction, then PR + merge under the standing delegation. |
+| Evidence at the candidate | — | 39 unit tests OK on the pinned 3.12.12; `check_p030_closed_partition_backup_adapter.py` 45 OK (exit 0); heartbeat adapter check exit 0; Ruff clean; guard PASS; RED arms recorded per slice (5F+4E on the pre-fix backup/restore; 6F+3E new checker vs old adapter; 2 reserved-id failures vs old loader; 3F+1E slice-3 fence vs slice-2 restore) — `P026_REPAIR_20260915/LEAD_VERIFICATION_P026_REPAIR.md` |
+| Interfaces | "must stay unchanged" | global `manifest.jsonl` record shapes unchanged; `backup.py` CLI unchanged; `restore.py` CLI **stricter by design**: `--run` required, `--latest` removed, completion gate (rc 3 `run_not_complete`) before any hash check or write. Consumers (grep of CT13 `f1bbac40`, tonight): the P0-30 closed-partition adapter (adapted in slice 2), its checker, and `test_opsa.py` — no other code caller. **Lead-found residual (night, not in any Gemini packet): `tools/opsa/README.md` lines 61 and 63 still document `restore.py … --latest …`, a flag the candidate removes; the README also does not yet name `RUN_MANIFEST.jsonl` / `COMPLETE.json`.** The README is outside the scope packet's five-file ceiling, so the Lead did not touch it; it is a two-line docs (T2) follow-behind to be fixed in the merge PR on an owner word, or by the roster's repair round — recorded for the Opus lane 4 brief as a known residual. The historical 2026-08-25 records (`11_TRIAGE/WP_P0_26_OPSA_2026-08-25/`) mention `--latest` as dated evidence and stay as written |
+| T-A drills | "after the repair" | **already executed once, 2026-09-14, on the PRE-repair bytes** (`P026_DRILLS_TA_20260914/`: D-1..D-14, Codex Spark + Grok audits 1-2 + corrections; `backup.py c2aecdac…`, `restore.py 4c415719…` = `fcac0ac6` bytes). D-4 (backup manifests), D-5 (isolated restore), D-6 (tamper), D-7 (interrupted-run manifests) exercise behaviour the repair changes → **re-run on the accepted bytes** before they count for P0-26 (see §3) |
+| CI | `test_opsa.py` not in any workflow (P0-27 R14 dependent) | unchanged on `master`; PR #193 (P0-27 additions, open) covers the three P0-30 checkers + contracts tests + Ruff, **not** `test_opsa.py` — a second small PR is the owner's §1 Q4(c) item tonight ("build c"); default: not built |
+
+## 1. Evidence-store inventory (unchanged from draft 1 except the rows marked ▲; host side UNKNOWN)
+| Store | Location | Class (plan §12.6.2(b)) | Size | Second copy today |
+|---|---|---|---|---|
+| Governance records (CT13 takeover records, DECISIONS, handoffs) | `C:/CT13/…/CLAUDE_TAKEOVER_20260913/` (git) | text / protected | ~4.9 MB ▲ | GitHub (branch pushed; `f1bbac40`) ✔ |
+| P0 run root (lane briefs, launcher logs, adjudications, Path 1 capture r1, P028 eligibility read, derived plan) | `C:/tmp/CLAUDE_P0_RUN_20260913/` | protected | >61 MB ▲ | none (accepted parts copied to CT13; the rest only here) ✖ |
+| Gemini review roots | `C:/tmp/P012_S16_REVIEWS_20260913/` | protected (audit logs) | >4.2 MB ▲ | none ✖ |
+| Gemini packets | `C:/LAB/Tradingview_LAB_CLEAN/_gemini_packets_20260913/` (untracked) | reproducible | ~26 MB | none (reproducible from git + records) |
+| P020 frozen preselection + one-shot outputs | `C:/tmp/P020_PRESELECT_20260913/` | protected | 1.8 MB | digests in CT13; bytes only here ✖ |
+| P020 benchmark dir | `C:/tmp/P020_LEAD_20260912/` | protected | 18 MB | branch state on GitHub; lane files untracked — still to verify (draft 1 open item) |
+| P020 derived datasets (93 CSVs + manifest) | `C:/tmp/P020_DERIVED_20260912/` | bulk, reproducible | 249 MB | none |
+| Package worktrees (P012/P020/P031/P030/P1CAP/P026/P027 CI…) | `C:/tmp/*`, `C:/P020_IMPL_20260912` | git | — | GitHub for committed state ✔; lane files untracked ✖ |
+| Wednesday Opus queue (briefs + launchers) ▲ | `C:/tmp/OPUS_QUEUE_20260916/` | process | small | none (regenerable from CT13 briefs) |
+| Bridge runtime stores on KVM2 | KVM2-P4-03 (`be007fd8` DISARMED; TESTNET provisioned 2026-09-14) | protected | UNKNOWN (G9) | UNKNOWN ✖ |
+| Owner wallet / venue evidence | venue + owner's browser; captured bytes in CT13 | protected | — | CT13/GitHub ✔ |
+**Consistent-snapshot method (unchanged):** git-tracked stores → the pushed commit is the snapshot; `C:/tmp` run/review roots → `backup.py` over the listed paths into the backup root, each run closed by the repair's `RUN_MANIFEST.jsonl` + `COMPLETE.json`; KVM2 stores → the P0-30 closed-partition backup adapter + `backup.py` from the host (G9 step). **New since draft 1:** with the candidate, a run that did not finish leaves no completion pair and `restore.py` refuses it (rc 3) — the "restore something half-written" failure mode of the day-one tools is closed on the candidate's fixtures; it is proven on real stores only by the drills in §3.
+
+## 2. Decisions the owner will be asked to make — after the candidate is accepted (options unchanged; facts updated)
+| # | Decision | Options prepared | Measured value still missing |
+|---|---|---|---|
+| D-A | Backup locations: owner PC ↔ VPS cross-copy | (A1) owner-PC backup root on a second physical drive + KVM2 as the cross copy; (A2) owner PC + a second cloud object store (outside the plan; needs a decision) | free space on the owner-PC drives (measurable by the Lead without a word — `Get-PSDrive`; not yet measured) and on KVM2 (UNKNOWN, G9); daily delta size = one dry run of `backup.py` over the §1 roots (write-free; T-A drill D-2 proved the dry-run path) |
+| D-B | External dead-man checker location (must be OUTSIDE the watched host) | (B1) owner PC checks KVM2 heartbeats; (B2) **GitHub Actions `schedule:` NOT available** (P0-27 non-goal; listed so the exclusion is explicit); (B3) the phone provider's own uptime monitor | detect-to-delivery elapsed time on the real channel — the `[OPEN]` bound the owner ratifies from a measurement (drill D-16, T-C) |
+| D-C | Phone channel | (C1) Telegram bot via the Bridge's existing `bridge.engine.notify` credential resolution (reuse; no key in repo); (C2) e-mail-to-SMS; (C3) a push app | one measured end-to-end push from a killed heartbeat (T-C) |
+| D-D | Schedules | daily all-store + hourly critical-ledger sync during active windows (ratified cadence) — the owner confirms the clock hours of "active windows" only | none |
+| D-E | Restore / reconciliation procedure | explicit-run restore into a scratch dir → byte-hash verify → reconciliation read against the live store; never in place. **The candidate makes "explicit run" mandatory (`--latest` gone) — D-E's first bullet is now enforced by the tool** | the RED/GREEN drill on a copy of a real store (T-B) |
+| D-F | Deletions | none by tooling; owner-approved exact list only | — |
+
+## 3. Drill plan — three tiers, in order (each on its own owner word; nothing runs from this packet)
+| Tier | Drills | Precondition | What it proves / does not prove |
+|---|---|---|---|
+| **T-A (fixtures, scratch, offline)** — DONE once on pre-repair bytes | D-1..D-14 (`P026_DRILLS_TA_20260914/DRILL_RESULTS.md`: per-case GREEN / RED-as-expected; 8 disclosed deviations; D-13 RED half only) | — | tool behaviour on synthetic stores; nothing about real roots, real hosts, real channels |
+| **T-A re-run on the accepted bytes** (new) | D-4, D-5, D-6, D-7 (+ D-13 GREEN half if O-9 is given) against the accepted `tools/opsa` + adapter; the run scripts exist and are regenerable; update expectations: D-7 "interrupted run" must now also show **no `COMPLETE.json` and restore rc 3**; D-5 isolated restore must show the carried completion pair; D-6 tamper must add the marker-tamper and forged-`run_end` arms of the candidate's tests | candidate accepted (Opus + Sol + Gemini) and merged, or at least pinned; ~1 h of Lead time; Grok delta audit when Grok is back (Sep 18) | the repair's behaviour under the drill harness, not on real stores |
+| **T-B (real roots on the owner PC, read-only sources, scratch destination)** | D-15 (real-root backup of the §1 `C:/tmp` stores into a scratch backup root; restore into a second scratch dir; byte-hash verify; then the RED arm: damage one file in the *copy* → refusal) | O-1/O-2 concrete roots + the owner's word for the real-root read (sources are read-only by construction; destination is scratch); free-space measurement first | that the day-one procedure works on the real evidence volume and timing; **not** cross-device placement, not KVM2 |
+| **T-C (host + channel; G9)** | D-16 (dead-man: kill the heartbeat on the watched process → external `watchdog.py` → notifier → measure detect-to-delivery), D-17 (KVM2 store backup via the adapter) | G9 host contact word; D-C channel chosen; D-B location chosen | the numbers the owner must ratify (silence bound; delivery time) — the plan's acceptance test for the watchdog half |
+Recording rule for every tier: commands, cwd, outputs, hashes; T-A/T-B reviewed T1 (Gemini corroboration + one flagship); T-C is T0/G9 per session.
+
+## 4. What this packet does NOT do
+No host contact, credentials, deployment, phone send, schedule creation, deletion, merge or acceptance. The forward clocks (paper/TESTNET timing) stay gated on P0-26 acceptance. The candidate's author is the Lead; the Lead does not accept it.
+
+## 5. Next actions (in order)
+1. Wednesday 2026-09-16 20:00Z: exact Opus lane 4 on `d81b07f6` (by hand after lanes 1-3); adjudicate (grep citations; reproduce one RED arm).
+2. Friday 2026-09-19: exact Sol on the same pin. Both accepting → PR from `feature/p026-completion-marker-20260915` → merge (standing delegation; Bridge suite green on an up-to-date head).
+3. Then: T-A re-run on the accepted bytes (§3 row 2) → Grok delta audit (Sep 18+) → this packet's draft 3 with the §2 questions put to the owner, plus the two owner-PC measurements (free space; dry-run delta size) done beforehand so each question carries its number.
+4. Separately, on the owner's word only: `test_opsa.py` into CI (§1 Q4(c)); the README `--latest` follow-behind (§0, two lines, docs) in the merge PR; the P0-27 R14 safety-ops checks become buildable once T-B has produced a real restore proof.
+
+## 6. Files
+- Draft 1: `P026_DEPLOYMENT_AND_DRILL_DECISION_PACKET_20260915.md` (kept as written). Draft 2: this file (run root `P026_DECISION_PACKET_20260915/`; copied to CT13 `QUEUED_PACKAGES_20260915/`).
+- Candidate records: `P026_REPAIR_20260915/` (run root + CT13); Gemini roots `P012_S16_REVIEWS_20260913/P026_CAND_GEMINI/` (detection) and `P026_DELTA_GEMINI/` (delta PASS); Opus lane 4 `C:/tmp/OPUS_QUEUE_20260916/P026/`.
+- Drills: CT13 `P026_DRILLS_TA_20260914/` (65 files; fixtures in the scratch lane `C:/tmp/P026_DRILLS_TA_20260914/`).
+
+## Addendum 2026-09-15 18:4xZ — owner item 7 answered "A" (`OD-20260915-P026-README-A-1`)
+- README residual fixed as **`e114ed31`** on `feature/p026-completion-marker-20260915` (documentation only: usage lines name an explicit `--run <run_id>` and the `COMPLETE.json` + `RUN_MANIFEST.jsonl` pair; +5/−3; no code or test bytes). Candidate for the Wednesday exact-Opus lane 4 is now `e114ed31` (= `d81b07f6` + this docs commit); the brief, launcher and queue file were re-pinned and their prose re-read (four commits, seven files incl. README).
+- The T-A drill PREVIEW of 16:19Z (`P026_REPAIR_20260915/DRILLS_TA_PREVIEW_20260915/`, NONACCEPTING) ran on `d81b07f6`; the code bytes are identical at `e114ed31`, so its observations carry over. Still not a counted T-A execution.
+- Acceptance path unchanged: Wednesday Opus (lane 4) + Friday Sol + Gemini + Lead reproduction, then PR + merge under the standing delegation.
+
+## Addendum 2026-09-15 19:4xZ - the two owner-PC measurements D-A asked for (measured by the Lead, no word needed)
+| Value | Measured | Source |
+|---|---|---|
+| Owner-PC drives | ONE physical NVMe (Crucial P3 Plus 1 TB); C: 930.3 GB with 54.9 GB free (94 % used); no second physical drive | `MEASUREMENTS_20260915/MEASUREMENT_SUMMARY_20260915.md` (Get-PSDrive / Win32_DiskDrive 19:34Z) |
+| Daily all-store size (= the "delta", the tool has no incremental mode) | 11,469 files / 338.9 MiB over the seven section-1 roots; the two owner-PC-only protected roots (`p0_run_root` 49.7 MiB, `gemini_review_roots` 3.7 MiB) = 53.4 MiB; bulk `p020_derived` 247.9 MiB (reproducible) | write-free `backup.py --dry-run` on candidate bytes `e114ed31`, 19:36-19:37Z (exit 0; stderr empty; backup root stayed empty and was removed) |
+| Tool finding | two pytest scratch dirs under the run root are sandbox-locked (`WinError 5`) and would become `skipped` records in a real run - exclude/delete them before the first real run (the adapter's restore gate refuses `skipped`) | dry-run SKIP lines 7181/7202 |
+Consequence for D-A: A1 as written is not available on this PC (no second physical drive); the choices become A1' (external drive as the owner-PC backup root + KVM2 as the cross copy) or A2 (cloud object store) - the owner picks after the candidate is accepted; nothing installed.

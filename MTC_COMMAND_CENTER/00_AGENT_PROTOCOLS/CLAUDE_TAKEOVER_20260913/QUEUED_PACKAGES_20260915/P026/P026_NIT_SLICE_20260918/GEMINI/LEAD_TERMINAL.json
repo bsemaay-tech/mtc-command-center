@@ -1,0 +1,13 @@
+{
+  "window": "P012-S16-G5-C:/tmp/P012_S16_REVIEWS_20260913/P026_NIT_GEMINI",
+  "verified_at": "2026-09-18T09:02:44.412187+00:00",
+  "runner_exit": 0,
+  "elapsed_seconds": 532.0,
+  "launch_exit": "exit=0 actual_exit=0 start=2026-09-18T08:53:52.7025051Z end=2026-09-18T09:02:39.3882145Z",
+  "review_log_bytes": 12050,
+  "review_log_sha256": "b9abd66d3a22e1603ee5264f0259dbc4f64498e702cf8aea17208e5e1930501f",
+  "agy_helpers_after": 0,
+  "manifest_sha256_after": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+  "candidate_head_after": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_after": 0
+}

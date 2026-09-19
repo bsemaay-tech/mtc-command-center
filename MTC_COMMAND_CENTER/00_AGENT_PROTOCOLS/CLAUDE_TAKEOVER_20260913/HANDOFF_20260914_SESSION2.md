@@ -1,0 +1,63 @@
+# Handoff — Claude Lead session 2 (2026-09-14, desktop session `tradingview-lab-clean-10`, id 2c48d1, Opus 5 on Claude MAX)
+
+Written 2026-09-14 ~11:35Z. Read this first, then `C:/tmp/CLAUDE_P0_RUN_20260913/RUN_STATE.md` (session-2 sections start at "2026-09-14 — session 2"), `LANE_TABLE.md`, `OWNER_DECISIONS_PENDING.md` (D9 is the newest open question). Copies of this handoff: `C:/tmp/CLAUDE_P0_RUN_20260913/HANDOFF_20260914_SESSION2.md` and CT13 `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/CLAUDE_TAKEOVER_20260913/HANDOFF_20260914_SESSION2.md`. Owner is Barış (non-technical; answers in one-line chat; plain language; English).
+
+## 0. First five minutes
+1. `ListAgents` + process list: no other Lead session may hold the lane (owner confirmed this session held it; a new session takes over by writing to `OWNERSHIP_CLAIM.md`). Check no `agy.exe` (Gemini) or Codex lanes are alive before any git command in any worktree.
+2. Read the three state files above. Then check the three remaining background artefacts of this session: `C:/tmp/P012_RISK_20260914/` (corrected packet, NOT yet re-audited), `C:/tmp/P031_M1_20260913` (UNCOMMITTED partial P031 batch edits), `C:/tmp/CLAUDE_P0_RUN_20260913/laneO9EXP_build/` (never started).
+3. Skills to invoke before acting: `mtc-repo-guard` (any repo/git/worktree action), `superpowers:verification-before-completion` (before claiming any gate/test result), `wizard` (if the owner needs another owner-hands procedure), `anthropic-skills:consolidate-memory` (memory index grew again).
+
+## 1. Subscription quotas RIGHT NOW (verified today; times local = UTC+3)
+| Route | State | Use |
+|---|---|---|
+| Claude MAX | this Lead session only | orchestration ONLY (owner rule) |
+| Claude Pro (exact `claude-opus-5` reviewer) | **0.81 of the weekly limit used**; resets **2026-09-16 20:00Z** (Sep 16 23:00 local) | at most ONE more xhigh review before the reset, and only with the owner's word (each slot ~76 turns / 17 min); the P031 batch roster and the P020 V1.6 roster both want one |
+| Codex Plus pool (`secondary` = `fourth`, one account) | **capped 10:55Z**; "try again at 6:07 PM" local = **15:07Z** | exact `gpt-5.6-sol` reviews and gpt-5.5 builders; today it capped three times (07:12Z, 10:55Z) — plan ONE heavy lane per window; the pool's weekly cap is unknown |
+| Codex Pro Spark (`free`, `gpt-5.3-codex-spark`) | **WEEKLY cap**; resets Sep 19 16:04 local | none until then |
+| Codex Pro main (`free`) | 1% weekly (owner map) | none |
+| SuperGrok (grok-4.6) | **WEEKLY 100%**; resets Sep 18 00:12 local | none until then (budget ≤ ~6 lanes/day afterwards) |
+| OpenCode Go | **MONTHLY limit reached** (`~/.local/share/opencode/log/opencode.log`: "Resets in 15 days"); the CLI hides it | none until ~Sep 29 unless the owner enables balance usage on his workspace page |
+| Gemini paid CLI (3.8 read-only / 3.7 corroboration) | fine (probe-first chain `gemini_retry_chain_v2.py`; no git in any worktree while `agy.exe` runs; stage packets ONCE — idempotent PRE_STAGE — or the FS watcher aborts) | document audits/delta audits/corroboration; cannot run probes or write files |
+So until 15:07Z the ONLY working routes are Gemini (read-only) and the Lead. After 15:07Z: Codex Plus (serially).
+
+## 2. Where things stand (verified)
+### P020 preselection — BLOCKED by a sizing artefact; owner decision D9 open
+- V1.5 frozen `b75489841a096f6f7271b12880c10cc318cfc25c8f19f7dedc8711baaefdc17b`; round-5 roster complete and accepting (Lead REPRODUCED + end-to-end synthetic smoke; Grok NITS; Gemini 3.7 PASS; Opus R5 PASS-WITH-NITS; Sol R5 PASS-WITH-NITS). Evidence set recorded in CT13 `P020_ROUNDS_4_5_EVIDENCE_20260914/` (commit 6821f338) — the round-5 Sol adjudication and the ELIG15 records below are NOT yet in CT13.
+- One-shot ELIG15 ran 10:34Z with the token: **`BENCHMARK_PROFILE_BLOCKED: no complete matching of 5 distinct families to 5 timeframes`**; both outputs ABORTED records in `C:/tmp/P020_PRESELECT_20260913/` (shot spent; never delete). Record: `C:/tmp/CLAUDE_P0_RUN_20260913/P020_ELIGIBILITY_RUN_V15/LEAD_TERMINAL_ELIG15.md` (with the owner-authorized D7-A and D8-A diagnostics).
+- Root cause (D8-A, owner-authorized, identities withheld): 8 of 9 families SIGNAL on 1h/2h/4h but get NO FILLS because the frozen profile sizes by RISK_AT_STOP with `requested_risk_fraction = 0.0001` (owner policy `OD-20260912-P020-VALUES-1`) and floors quantity to the synthetic instrument's `quantity_step = 1` (one whole BTC contract at $50k-$126k) → 0. 15m: 4 fills; 1D: mostly no signals (361-row window). The same artefact would block the 15 measurement trials.
+- **D9 (open):** A = synthetic instrument record V3 with `quantity_step = 0.00001` (venue-realistic; same "owner word" path as V2) → V1.6 re-freeze (builder brief pattern: `laneP20R6_repair/TASK.md`) → roster → new shot; B = change the risk fraction (not recommended); C = stop. If A: the roster needs Sol (Plus after 15:07Z), Gemini, Lead, Grok (out) and ONE Opus Pro slot (see quota) — ask the owner whether to wait for the Pro reset.
+- Prior owner rulings that still bind: D1 Option A; D5 A (driver family-set generalized acyclically in V1.5); D6 A (record V2 end 2026-05-01; reset of the V1.4 shot); B YES (bounded measurement may run once after eligibility + derived-plan review; `OD-20260914-P020-MEASURE-1`). Derivation tool repaired in V1.5 (`C:/tmp/P020_PLAN_DERIVE_20260913`, EXPECTED digest = V1.5 — re-pin again for V1.6).
+- Launcher for the next shot: copy `p020_eligibility_run_v15.ps1` → v16 and re-pin TOKEN/PROC_SHA/TEST_SHA + round-6 gate paths; run through a file wrapper (`p020_eligibility_run_v15_wrapper.ps1` pattern); reviewer briefs: `C:/tmp/P020_PRESELECT_T0_R5_20260913/REVIEW_BRIEF.md` (item 7 real-stack precondition arm is mandatory; add a sizing/fill smoke: one real cell per timeframe must be trade-bearing before the shot).
+
+### P012 — research/engineering complete; production-admission packet corrected, awaiting delta audit; TESTNET provisioning waits on the owner's hands
+- Packet: `C:/tmp/P012_RISK_20260914/P012_PRODUCTION_ADMISSION_PACKET.md` (290 lines after the gpt-5.5 correction lane P12FIX, `DISPOSITION_FIX1.md`, `SHA256SUMS.txt`). First Gemini audit was REQUEST_CHANGES (3 BLOCKING: B3/F-13 conflation, invented citation, "owner confirmed as qualified reviewer" hedge upgrade — `C:/tmp/P012_S16_REVIEWS_20260913/P012_RISK_PACKET_GEMINI/`). **Next:** Gemini 3.8 DELTA audit of the corrected packet (new root, e.g. `P012_RISK_PACKET_GEMINI_B`, PRE_STAGE idempotent, prompt = the previous PROMPT.md + "first: each finding F-01..F-09 RESOLVED/NOT/REGRESSED using DISPOSITION_FIX1.md"), then the Lead reads it (owner-facing: the decision list section 6 is what the owner answers), records it in CT13 and presents. Do not present before CLEAN.
+- TESTNET GO recorded (`OD-20260914-BRIDGE-TESTNET-GO-1`): the owner must run `C:/LAB/BRIDGE_TOOLKIT/5 - TESTNET Secret Provisioning (KVM2).cmd` himself (audited PASS-WITH-NITS by Gemini; wizard writes only `/etc/mtc-bridge/mtc-bridge.env` on KVM2 152.239.123.231 user `baris`, key `~/.ssh/hostinger_kvm2`, strict known_hosts). When he says "provisioned": read-only post-conditions (`sudo -n stat -c '%a %U:%G' /etc/mtc-bridge/mtc-bridge.env` = 600 root:root; `grep -c '^HL_LIVE_ACK='` = 0; counts of the two HL_ lines = 1 each — values never printed), `deploy/linux/verify.sh` with the release sha, then ASK the owner for the DISARMED credential-mode restart + `tools/smoke_p0.py` sentence; ARM (KVM2-P5-05/P5-05A) needs its own owner sentence. KVM2 at 08:40Z: `mtc-bridge-first-start.service` active, `/api/status` DISARMED `credential_free_disarmed`, release be007fd8.
+- Production admission itself: weeks — real venue captures (testnet first, real later), N=3 fills, funding intervals, 27 signed risks, 10 Section-19 rows, experienced-human money gate.
+
+### P031 — batch build INTERRUPTED (uncommitted)
+- Owner GO recorded (`OD-20260914-P031-BATCH-GO-1`). Lane P31B (Codex Plus gpt-5.5, `laneP31B_batch/TASK.md`) ran 96 commands then hit the pool cap at 10:55Z. **Worktree `C:/tmp/P031_M1_20260913` now has UNCOMMITTED edits**: `MTC_COMMAND_CENTER/03_QUANTLENS/tools/p031_lifecycle_ledger.py` (+247/−23) and `.../tests/test_p031_lifecycle_ledger.py` (+185/−25), plus untracked `TASK_P31B.md`. Its last messages: OD-10 same-epoch reuse assertions done; earlier items (OD-2/5/6/7/9/11, OD-1 doc, OD-4/8 recording) partially done — UNKNOWN which. **Resume after 15:07Z** with a continuation brief ("read TASK_P31B.md; the worktree already contains partial edits — inventory them with `git -c safe.directory=* diff`, finish every item, run the package's check commands, ONE commit, REPORT"); do not discard the diff. Then the full T0 roster (one Opus Pro slot — quota!).
+
+### P030/P026 — drills recorded; exporter build NOT started
+- O-8 drills D-1..D-14 T-A recorded (CT13 da275356). O-9 Shape B chosen + implement GO (`OD-20260914-P030-EXPORTER-GO-1`); lane `laneO9EXP_build/TASK.md` + `run_codex.ps1` prepared, never launched (queue stopped at the cap). Run after P31B on the Plus pool, then Gemini review (Grok out) + exact Sol.
+- O-1 `C:\LAB\MTC_DATA\ARCHIVE` / O-2 = OneDrive-synced folder (`OD-20260914-P030-P026-ROOTS-1`, residuals recorded: same physical disk; cloud copy via sync; non-ASCII path must be drilled); O-4 Android. T-B (real-root) drills would need an explicit execution scope — not requested yet.
+
+### P014 — done (report recorded CT13 260960e3). P013 — blocked on P020 acceptance (unchanged).
+
+## 3. Owner decisions recorded today (CT13 DECISIONS.md rows `OD-20260914-*`, all pushed through 32de5bc7 except the items in §5)
+D3 P0-14 scope; D4 one Opus review of V1.4; Q4 backup pushes; P031 OD-1..OD-12 and P030/P026 O-1..O-10 = packet recommendations; D5 A; O-4 Android; D6 A (record V2 end 2026-05-01, V1.5, shot reset); O-9 B; B YES (bounded measurement); P031 batch GO; O-9 implement GO; O-1/O-2 roots; TESTNET GO; risk packet order. Verbatim words in `OWNER_ANSWERS_20260914.md`. **Open:** D9 (sizing artefact), "provisioned" from the owner, P012 packet answers (after audit).
+
+## 4. Route/lane craft learned today (also in memory `route-lessons-2026-09-14.md`, `five-reviewers-passed-a-procedure-that-could-not-run.md`)
+- A roster whose members all list the same NOT VERIFIED line has zero coverage of it: run a zero-cost real-stack smoke (pure precondition calls AND one real cell through the gate per timeframe) before spending any token. Today the second shot blocked on an artefact the smoke would have caught (sizing floor) — add a per-timeframe trade-bearing smoke to the V1.6 brief.
+- Codex Plus `--add-dir <lane>` lets reviewers/builders write their report outside cwd (Sol R4 could not). Codex `apply_patch` can throw transient "helper cancellation" on long writes.
+- Native-call launchers: `$ErrorActionPreference='Stop'` + `*>` LOSES the traceback and skips the exit file; use EAP=Continue + `2>&1 | Out-File`, and run launchers through a small file wrapper (a `-Command` string with nested quotes silently did nothing).
+- Gemini FS watcher aborts if the packet directory is (re)written just before the call — PRE_STAGE must be idempotent (skip when `PACKET_SHA256SUMS.txt` exists).
+- Bash heredocs mangle Windows backslashes (`\t`, `\r`) — write `.ps1`/paths with the Write tool; Python written through a heredoc also mangles `\\`.
+- Spark-written markdown was ANSI (cp1254) — transcode to UTF-8 before audits. Grok writes markdown fine but its weekly budget is ~20 lanes.
+- The one-shot's BLOCKED path discards the matrix by design; owner-authorized bounded diagnostics (counts only, identities withheld, scratch copy, no matching) are the honest way to learn why.
+
+## 5. Not yet recorded in CT13 (do first when git is safe)
+- `P020_ELIGIBILITY_RUN_V15/LEAD_TERMINAL_ELIG15.md` (+ D7/D8 diagnostics), `P020_PRESELECT_T0_R5_20260913/LEAD_ADJUDICATION_R5_SOL.md`, Sol R5 report, D7 A / D8 A owner words → new rows (`OD-20260914-P020-DIAG-1`) and the D9 packet; `laneP12FIX_build` outputs after the delta audit; the wizard audit adjudication (`P012_S16_REVIEWS_20260913/BRIDGE_WIZARD_GEMINI/LEAD_ADJUDICATION.md`) + button files (toolkit lives outside the repo: `C:/LAB/BRIDGE_TOOLKIT`). Kit repo (`C:/LAB/PROJECT_STARTER_KIT`, no remote) has TOOLBOX commits through e2eb81f (route facts).
+- Mentor inbox (`C:/tmp/CLAUDE_P0_MONITOR_20260913/MENTOR_INBOX.md`): no note after M004; session-2 note appended to ACK.md.
+
+## 6. Redactions
+No credential appears in this run's files. The KVM2 host address/user and the owner's OneDrive path appear in governance rows by the owner's own words; no key, wallet or env value was ever read or written by the Lead. Grok/Codex/Claude auth lives in their own homes.

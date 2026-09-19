@@ -55,8 +55,19 @@ POLICY_SET = {
     "owner_decisions": {
         "P021_DECISION_1": "A",
         "P021_DECISION_2": "balanced",
+        "P021_DECISION_3": "T",
+        "P021_DIVERGENCE_METRIC": "M-C",
     },
     "decided_at": "2026-09-07",
+    "s2_decided_at": "2026-09-15",
+    "s2_source_document": (
+        "CT13 DECISIONS.md OD-20260915-P021-S2-RECOMMENDED-1 "
+        "(P021_OPTIONS_PACKET_S2_20260915.md; owner word \"recommended\")"
+    ),
+    "s2_scope": (
+        "catalogue only: gap_ratio_max closed here; the hashed strategy_type_policy_set "
+        "artifact still carries gap_ratio_max = None until the whole set is ratified (B-22)"
+    ),
     "source_document": "C:/tmp/OWNER_P021_DECISIONS_20260906_1600.md",
     "derivation_document": (
         "C:/tmp/P021_DESIGN_V21_AUDIT_20260906_1545/EVIDENCE_POLICY_PROFILES.md"
@@ -158,18 +169,58 @@ CLOSED_NUMBERS = (
     ),
 )
 
+CLOSED_NUMBERS = CLOSED_NUMBERS + (
+    ClosedNumber(
+        "gap_ratio_max",
+        0.0001,
+        "ratio: missing bars inside counted gaps / expected bars over the observed span "
+        "(m2_missing_bar_ratio)",
+        "P021_DECISION_3 = T (one-bar tolerance: about 24 missing bars in a 245,873-bar 5m "
+        "series). Both measured scans (17 x 5m series, 4,105,966 bars; 93 derived files, "
+        "4,477,626 rows) read exactly 0.0, so the value is an appetite for unseen gapping, "
+        "not data-calibrated (P021_OPTIONS_PACKET_S2_20260915.md section 1; "
+        "OD-20260915-P021-S2-RECOMMENDED-1). Coverage is a separate rule, never this one",
+    ),
+)
+
 CLOSED_NUMBER_VALUES = {number.name: number.value for number in CLOSED_NUMBERS}
 
 EXPECTED_CLOSED_NUMBER_NAMES = frozenset(number.name for number in CLOSED_NUMBERS)
 
 OPEN_NUMBERS = (
-    MissingNumber("gap_ratio_max", "What is the maximum permitted gap ratio for one series?", "B-02"),
-    MissingNumber("divergence_tolerance", "How much backtest-to-forward difference is permitted?", "B-06"),
+    MissingNumber("divergence_tolerance_intent", "M-B gate: how much intent-level disagreement (backtest intents the forward path did not produce at the same bar) is permitted?", "B-06"),
+    MissingNumber("divergence_tolerance_return", "M-A economic divergence: how much signed mean difference of realized trade return (forward - backtest) is permitted?", "B-06"),
     MissingNumber("divergence_window_length", "How long is the aligned backtest-to-forward comparison window?", "B-07"),
     MissingNumber("divergence_min_paired_observations", "How many paired observations are required for the difference check?", "B-07"),
 )
 
 EXPECTED_OPEN_NUMBER_NAMES = frozenset(number.name for number in OPEN_NUMBERS)
+
+# B-17 pin (OD-20260915-P021-S2-RECOMMENDED-1): the formula the merged helper already computes.
+GAP_RATIO_FORMULA_ID = (
+    "m2_missing_bar_ratio@data_gap_ratio.py v1 (fixed-step 24/7, half-open "
+    "span, leading/trailing absence excluded)"
+)
+
+# B-05 definition: the owner ratified option M-C of P021_OPTIONS_PACKET_S2_20260915.md section 4
+# (OD-20260915-P021-S2-RECOMMENDED-1). M-C is defined by reference to rows M-A and M-B of that table;
+# both are restated here VERBATIM (lane-6 exact-Opus review of 7fecf204, REQUIRED-1: the first
+# spelling substituted a Lead-authored statistic). Tolerances (B-06, two numbers under M-C), window
+# length and minimum pairs (B-07) stay open.
+DIVERGENCE_METRIC_M_A = (
+    "M-A: per-pair signed difference of realized trade return (forward - backtest), aggregated as "
+    "the mean over the aligned window, reported with the count and the standard deviation; unit: "
+    "return fraction per trade"
+)
+DIVERGENCE_METRIC_M_B = (
+    "M-B: intent-level agreement rate: share of backtest intents that the forward path produced at "
+    "the same bar (entry/exit decisions match), independent of P&L; unit: fraction"
+)
+DIVERGENCE_METRIC_DEFINITION = (
+    "M-C: both - M-B as the gate on signal fidelity, M-A as the economic divergence, each with its "
+    "own tolerance (B-06 becomes two numbers: divergence_tolerance_intent for M-B, "
+    "divergence_tolerance_return for M-A; both open). " + DIVERGENCE_METRIC_M_B + ". " + DIVERGENCE_METRIC_M_A
+)
 
 RULES = (
     Rule(
@@ -198,9 +249,12 @@ RULES = (
             ("out_of_order_timestamp_count_max", 0),
             ("invalid_ohlcv_count_max", 0),
             ("dataset_hash_required", True),
+            ("gap_ratio_max", CLOSED_NUMBER_VALUES["gap_ratio_max"]),
+            ("gap_ratio_metric", "m2_missing_bar_ratio"),
+            ("gap_ratio_formula_id", GAP_RATIO_FORMULA_ID),
+            ("dataset_hash_contract", "ds-v1"),
         ),
-        missing_numbers=("gap_ratio_max",),
-        missing_rules=("accepted_corrected_engine.B01", "gap_ratio_formula.B17", "dataset_hash_contract.B13"),
+        missing_rules=("accepted_corrected_engine.B01",),
     ),
     Rule(
         "P021.BASIC_FAILURE_FLOOR",
@@ -228,9 +282,14 @@ RULES = (
     Rule(
         "P021.BACKTEST_FORWARD_DIVERGENCE",
         "Is the measured difference between backtest expectation and forward evidence within a stated limit?",
-        (),
-        missing_numbers=("divergence_tolerance", "divergence_window_length", "divergence_min_paired_observations"),
-        missing_rules=("accepted_corrected_engine.B01", "divergence_metric.B05", "divergence_alignment.B07", "divergence_provenance.B20"),
+        (("divergence_metric", "M-C"), ("divergence_metric_definition", DIVERGENCE_METRIC_DEFINITION)),
+        missing_numbers=(
+            "divergence_tolerance_intent",
+            "divergence_tolerance_return",
+            "divergence_window_length",
+            "divergence_min_paired_observations",
+        ),
+        missing_rules=("accepted_corrected_engine.B01", "divergence_alignment.B07", "divergence_provenance.B20"),
     ),
 )
 
@@ -349,12 +408,12 @@ def self_check() -> None:
     assert {item["name"] for item in record["closed_numbers"]} == EXPECTED_CLOSED_NUMBER_NAMES
     assert record["policy_set"]["status"] == "PROVISIONAL"
 
-    changed_rule = replace(RULES[3], missing_numbers=())
-    modified_rules = RULES[:3] + (changed_rule,) + RULES[4:]
+    changed_rule = replace(RULES[6], missing_numbers=())
+    modified_rules = RULES[:6] + (changed_rule,)
     try:
         validate_catalog(modified_rules, OPEN_NUMBERS, CLOSED_NUMBERS)
     except ValueError as error:
-        assert "gap_ratio_max" in str(error)
+        assert "divergence_tolerance_intent" in str(error)
     else:
         raise AssertionError("modified copy was not detected")
 
@@ -371,7 +430,15 @@ def self_check() -> None:
     print(f"SELF-CHECK PASS: {len(RULES)} checks all refuse readiness")
     print(f"CLOSED NUMBERS: {len(CLOSED_NUMBERS)} (profile {POLICY_SET['profile']}, {POLICY_SET['status'].lower()})")
     print(f"OPEN NUMBERS: {len(OPEN_NUMBERS)}")
-    print("MODIFIED COPY DETECTED: gap_ratio_max refusal wiring removed")
+    print("MODIFIED COPY DETECTED: divergence tolerance refusal wiring removed")
+    print(
+        "S2 CLOSED (catalogue only): "
+        f"gap_ratio_max={CLOSED_NUMBER_VALUES['gap_ratio_max']} on "
+        f"{dict(RULES[3].limits)['gap_ratio_metric']}; B-17 formula pin "
+        f"{dict(RULES[3].limits)['gap_ratio_formula_id']!r}; B-13 "
+        f"{dict(RULES[3].limits)['dataset_hash_contract']} pin; B-05 metric "
+        f"{dict(RULES[6].limits)['divergence_metric']}"
+    )
     print("MODIFIED COPY DETECTED: swing_forward_period closure removed")
     print("READY=False")
 

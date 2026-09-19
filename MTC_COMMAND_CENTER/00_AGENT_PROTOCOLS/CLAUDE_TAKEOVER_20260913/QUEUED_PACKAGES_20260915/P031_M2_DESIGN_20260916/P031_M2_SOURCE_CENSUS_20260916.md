@@ -1,0 +1,51 @@
+# WP-P0-31 Milestone 2 — SOURCE-ROW CENSUS of the five legacy stores (design half, Q1 A) — 2026-09-16 11:4x UTC+3
+
+Prepared by the Claude Opus 5 Lead (session 6, `4a8233`) under `OD-20260916-P031-M2-Q1-Q6-1` (Q1 = A: documentary + scratch only; no ledger write; no code on the P031 branch). Everything below is MEASURED on scratch copies (`C:/tmp/P031_M2_DESIGN_20260916/scratch_stores/`, copied from the canonical checkout `root/current-20260829` @ `108ea066`; sha256 and blob OIDs in `census.json`, sha256 `19561336…`). The plan demands a FRESH re-measure at import time; these numbers are the design baseline, not the import's.
+
+## 1. Rows (measured) vs the fold's counts
+| Store | Field(s) | Rows measured | Fold said | Scratch copy sha256 / blob OID at `108ea066` |
+|---|---|---|---|---|
+| `05_REGISTRY/STRATEGY_RESEARCH_REGISTRY.json` | `current_status` (+ `maturity_level`) | **63** strategies | "all strategies" | `0024cd4f…` / `e01ce84d…` (generated 2026-06-06 by `build_strategy_research_registry.py`) |
+| `03_QUANTLENS/strategies/*/producer_spec.json` | `promotion_status` | **63** files, **44 filled / 19 null** | 44/63 | 63 file digests folded: `be069995…` |
+| `05_REGISTRY/VARIANT_LOG_REGISTRY.json` | `promotable` | **20** variants, **all `False`** | — | `b85307c9…` / `49eacba0…` (2026-07-13) |
+| `05_REGISTRY/TRIAGE_CANDIDATE_REGISTRY.json` | (extract-or-decline decision), `eligible_for_retriage` | **172** candidates; `eligible_for_retriage` True 90 / False 82 | 172 | `f9fe8aab…` / `bd2571de…` (2026-06-04 from `11_TRIAGE/2026-05-30_rejected_worklist.xlsx`) |
+| `05_REGISTRY/AI_QUANTLENS_VERDICT_REGISTRY.json` | `decision` | **212** entries: `NEEDS_CLARIFICATION` 141, `RESEARCH_ONLY` 46, `SALVAGE` 25 | — | `ca6bea7e…` / `88c2aa37…` (2026-06-08, model "Codex GPT-5") |
+| `scorecard_v2` files | — | not migrated (plan) | — | — |
+| (sixth, outside the five) the nine 4b labels | `label:<lowercased>` tags | **251** JSON files under `MTC_COMMAND_CENTER/` (outside `05_REGISTRY`) carry one: `INSUFFICIENT_TRADES` 245, `NO_DATA` 218, `REJECTED` 6; the other six labels appear in **no** data file | — | evaluation artifacts (scorecards / classifications) — the fold maps the labels but names no store; a host-identity join is undefined |
+
+## 2. THE finding: the live vocabulary is not table 4a's vocabulary
+`STRATEGY_RESEARCH_REGISTRY.current_status`, measured: `RESEARCH_BATCH` 32 · `READY_FOR_DETERMINISTIC_REVIEW` 14 · `READY_FOR_PYTHON_PROTOTYPE` 7 · `TRIAGED` 7 · `PROMOTE_TO_FORWARD_PAPER_TRADE|PROMOTE_TO_PARITY_CANDIDATE` 2 · `PROMOTE_TO_FORWARD_PAPER_TRADE` 1. **Only 3 of 63 values are in table 4a** (the old 7-stage ladder the fold mapped). Under Q5 A (out-of-table → `UNKNOWN` + listed) the ruled tables alone leave **60 registry rows `UNKNOWN`**, each blocking Milestone 3 for that target.
+`producer_spec.promotion_status`, measured: `RESEARCH_GRADE` 24 · `FORWARD_PAPER_CANDIDATE` 17 · null 19 · `[PROMOTE_TO_FORWARD_PAPER_TRADE, PROMOTE_TO_PARITY_CANDIDATE]` 2 · `[PROMOTE_TO_FORWARD_PAPER_TRADE]` 1 — a JSON **list** (the registry spells composites `A|B`); `RESEARCH_GRADE` and `FORWARD_PAPER_CANDIDATE` are not in table 4a either (`FORWARD_PAPER_CANDIDATE` is the label the 2026-08-28 audit found "minted from classification alone"; it never passed the forward-paper queue).
+Consequence for Q4 A (two-writer disagreement → `migrated-conflict`, lower state): with the tables as ruled there are **0 conflicts**, because every disagreeing pair has at least one unmappable side and Q5 A makes the row `UNKNOWN` first. The 11 measured registry↔producer_spec pairs are in `census.json` (`two_writer_pairs_registry_vs_producer_spec`); the three in-table pairs agree exactly.
+
+## 3. Identity vocabularies (the ledger needs ONE `candidate_id` rule per store)
+| Store | Identity field | Form | Joins |
+|---|---|---|---|
+| registry | `strategy_id` | `STG###` (63 unique) | = the strategy folder code |
+| producer_spec | `candidate_id` | `QL_…` free text (63 unique; **0** equal to a registry id) | joins the registry only through its FOLDER `STG###_…` (63/63) |
+| triage | `candidate_id` | `QLR_<youtube id>` (172 unique) | `stg_code` `Stg###` is the triage worklist NUMBER: **0 exact matches** to registry ids, **62 case-folded collisions** that are DIFFERENT items (e.g. triage `Stg001` = a CANSLIM intake transcript; registry `STG001` = `ql_alpha_ada_two_candle_sr_1h`) |
+| verdicts | `strategy_id` | `CAND_…` / `GEN_…` / `QLR_…` / `QL_…` (212 unique) | 169 join a triage `candidate_id`; **43 orphans** (8 `GEN_*`, 5 `QLR_*`, 29 `QL_*`, 1 literal `UNKNOWN`) join nothing |
+| variants | `variant_id` | `NEW_…` archetype names (20) | no strategy / family identity field at all |
+Design rule that follows (Pattern 8, "the name is not the identity"): the importer joins by exact, case-sensitive identity only; `stg_code` is never an identity; a registry seed is `STG###`, a triage seed is its `QLR_…` id; an advisory tag attaches only to an existing host seed.
+
+## 4. Decision-field census for table 4c (triage)
+The fold seeds a triage candidate to `TRIAGED` "with a recorded extract-or-decline decision", else `CAPTURED`. The store carries **no decision field**. Nearest proxies (measured): `recommended_next_step` (`Review` 96, `Source audit / park` 61, `Build promotion packet` 9, `Resolve source/formula audit` 2, `Run PineTS parity` 2, `Split into indicator cases` 1, `Start forward paper-trade` 1) and `blocked_reason` (null 108, `wiki-only source` 41, `rejected source classification` 20, `salvage only` 2, `needs indicator split` 1), `source_quality` (`HIGH` 89, `REJECTED` 70, `MEDIUM` 9, `LOW` 4). Applying the fold literally (no decision recorded) seeds **all 172 → `CAPTURED`** (90 with `legacy:retriage_eligible`). Whether a proxy should count as a decision is an owner question (Q9 below), not the Lead's inference.
+
+## 5. What the ruled tables produce today (dry run, `run_as_ruled/reconciliation_report.json` sha256 `0fc6a0a6…`)
+175 seeds (3 `CANDIDATE` from the three promote rows; 172 `CAPTURED` triage seeds carrying 169 advisory tags), **0 `migrated-conflict`**, **60 `UNKNOWN`** (all registry rows with out-of-table values), 63 not seeded (20 variants `promotable=False`; 43 advisory orphans). Every source row has exactly one disposition; the balance against this census holds; a planted registry row is detected (`run_planted/`: registry measured 64 vs censused 63 → `balanced=false`).
+
+## 6. What-if (NOT RULED) — a proposed extension 4a′ so the import says something
+`table_4a_prime_PROPOSED.json`: `RESEARCH_BATCH`→`CAPTURED`+`legacy:research_batch`; `TRIAGED`→`TRIAGED`+`legacy:triaged`; `READY_FOR_DETERMINISTIC_REVIEW`→`TRIAGED`+`legacy:ready_for_deterministic_review`; `READY_FOR_PYTHON_PROTOTYPE`→`TRIAGED`+`legacy:ready_for_python_prototype`; `RESEARCH_GRADE`→`CAPTURED`+`legacy:research_grade`; `FORWARD_PAPER_CANDIDATE`→`CAPTURED`+`legacy:forward_paper_candidate` (deliberately NOT `CANDIDATE`: the label was minted from classification). Result (`run_whatif_4a_prime/`, sha256 `9fbd9b7f…`, every artifact labelled `WHAT_IF_NOT_RULED`): 235 seeds (3 `CANDIDATE`, 232 `CAPTURED`), **28 `migrated-conflict`** — every one a registry `TRIAGED`/`READY_FOR_*` (→`TRIAGED`) against a producer_spec `FORWARD_PAPER_CANDIDATE`/`RESEARCH_GRADE` (→`CAPTURED`), resolved to the LOWER state `CAPTURED` with both values retained (Q4 A working as ruled) — 0 `UNKNOWN`. Note what the choice does: mapping `FORWARD_PAPER_CANDIDATE` conservatively pulls 17 registry-`TRIAGED` rows down to `CAPTURED`; mapping it to `UNKNOWN` instead would leave 17 targets blocked for M3. The owner picks; the Lead does not.
+
+## 7. Questions this census puts to the owner (packet style; nothing runs on a default)
+| # | Question | Options | Lead note |
+|---|---|---|---|
+| Q7 | Extend table 4a to the live vocabulary (`RESEARCH_BATCH`, `READY_FOR_DETERMINISTIC_REVIEW`, `READY_FOR_PYTHON_PROTOTYPE`, `TRIAGED`; producer_spec `RESEARCH_GRADE`, `FORWARD_PAPER_CANDIDATE`)? | A: adopt 4a′ as proposed (§6); B: adopt 4a′ but `FORWARD_PAPER_CANDIDATE` → `UNKNOWN` (17 targets blocked); C: no extension — 60 rows stay `UNKNOWN` | the fold was written against the rules doc's ladder, not against the stores; without an extension the import is 3 seeds and 60 blockers |
+| Q8 | The ledger `candidate_id` per store | A: registry `STG###`; triage `QLR_…`; producer_spec joined by folder (its `candidate_id` kept as an alias in provenance); advisory tags only on a host seed; variants unseeded until a family identity exists | B: one global re-keying (out of scope for M2) | A is the only rule that never merges different items (§3) |
+| Q9 | Triage "recorded decision" | A: none is recorded → all 172 `CAPTURED` (fold letter); B: treat `recommended_next_step ∈ {Build promotion packet, Run PineTS parity, Start forward paper-trade}` (12) as a recorded extract decision → `TRIAGED`; C: `UNKNOWN` for those 12 | B is an inference from a recommendation field |
+| Q10 | The 43 advisory-verdict orphans | A: listed as "tag without host", no record (fold: never a state); B: seed a `CAPTURED` host for each `QL_*`/`GEN_*` id | B invents 43 candidates from an advisory file |
+| Q11 | The 4b labels' source | A: out of M2 scope (labels live in scorecards, which the plan does not migrate; only 3 of 9 labels occur in data); B: in scope with a scorecard→strategy join to be designed | A keeps M2 to the five stores |
+| Q12 | "Lower state" order for Q4 A | A: `REJECTED < PARKED < CAPTURED < TRIAGED < CANDIDATE` (used in the dry run) | any other order changes which side wins a conflict |
+| Q13 | `SEED_IMPORT` as an initial registrar event | A: allow `(None, SEED_IMPORT, <state>)` for `CAPTURED`/`TRIAGED`/`CANDIDATE`/`PARKED`/`REJECTED` with `source_kind = MIGRATED_2026`, `authoritative = 0` (the M1 schema `CHECK` widened to the two values) | today the registrar admits a candidate only through `(None, CAPTURED)` — a seed at `CANDIDATE` needs its own initial transition |
+
+Files: `census.json` (+`.sha256`), `m2_census.py`, `m2_dry_run.py`, `run_as_ruled/`, `run_planted/`, `run_whatif_4a_prime/`, `table_4a_prime_PROPOSED.json`, and the companion documents `P031_M2_MAPPING_DRY_RUN_20260916.md` and `P031_M2_FIXTURE_DESIGN_20260916.md`. Nothing here is a ledger write, a repository change, an authorization or an acceptance.

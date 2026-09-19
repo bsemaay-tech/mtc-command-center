@@ -1,0 +1,9 @@
+﻿2026-09-14T03:08:15.2033126Z preflight OK: HEAD=6d6a450232c81c4c13d63c9a4e06ce3b1bf4f889 clean
+2026-09-14T03:08:15.4034239Z A-12 before: 10 HYPERLIQUID record files hashed
+2026-09-14T03:08:15.5744472Z patches applied: .../contracts/semantic_coverage_review.schema.json             | 10 +++++++---
+ .../contracts/semantic_coverage_review.schema.md               |  7 ++++---
+ 2 files changed, 11 insertions(+), 6 deletions(-)
+2026-09-14T03:08:15.7233540Z receipt written sha256=7d7d598b99ffa6bc46e6d94faf0931e5ef8d50c84de763b26adabb92a51351bd signed_at=2026-09-14T03:07:20Z
+2026-09-14T03:09:07.8395860Z gate exit=0 elapsed=52s
+2026-09-14T03:09:36.3599735Z selftests exit=0 elapsed=29s 706 passed, 1 skipped in 27.84s
+2026-09-14T03:09:36.3678553Z A-12 after: changed=0 

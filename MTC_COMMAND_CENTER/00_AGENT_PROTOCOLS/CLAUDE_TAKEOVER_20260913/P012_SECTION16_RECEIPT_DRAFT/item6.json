@@ -1,0 +1,23 @@
+{
+ "review_disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
+ "disposition": "UNCHANGED",
+ "evidence_paths": [
+  "REVIEWER_PARTS/C56_CORE.md",
+  "REVIEWER_PARTS/C5_BRIDGE.md",
+  "REVIEWER_PARTS/C5_MTCTESTS.md",
+  "REVIEWER_PARTS/C5_MCC_A.md",
+  "REVIEWER_PARTS/C5_MCC_B_R2.md",
+  "REVIEWER_PARTS/ITEM56_COVERAGE_LEDGER.json",
+  "REVIEWER_PARTS/PARTS_ADDENDUM.json",
+  "AUTHORITY/SECTION16_PACKET_STANDARD.md",
+  "AUTHORITY/P012_PRICE_DESIGN_V1_27.md",
+  "LEAD_REVIEW_CONTRACT.md",
+  "CAND/mtc_v2/core/types.py",
+  "CAND/mtc_v2/core/results.py",
+  "CAND/IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_fees.py",
+  "CAND/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/stage1_freeze.py",
+  "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/semantic_coverage_review.json"
+ ],
+ "notes": "[6 ACCEPTED_WITH_RESIDUAL_RISK] Reconciled terminal disposition across all five slice envelopes and Lead coverage ledger. Emitted event and result surfaces (decision_events, fill_events, cash_events, fee_events, funding_events, exit_events, RESULT_SURFACE) strictly adhere to closed schemas. Duplicate identities and sequence breaks are rejected deterministically across cash, funding, and fill events. Residual risks are retained for (1) OPEN-07 upstream bridge schema gap where 16 of 18 FundingEvent fields lack direct source in bridge schema with source_event_digest blocked in RULE2-08-RED, and (2) unrounded_fill_price on FillDecision dataclass being intentionally suppressed from wire serialization per Design section 23.3 explicit prohibition."
+}

@@ -1,0 +1,1 @@
+﻿PLAN_VALID: frozen manifest, selections, hashes, and 15-trial shape verified

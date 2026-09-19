@@ -1,0 +1,261 @@
+"""Derive the bounded benchmark plan from a frozen preselection result."""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import hashlib
+import json
+from pathlib import Path
+
+
+EXPECTED_FROZEN_SHA256 = "cb75602080850873e28dc3aa268ad1072a0f1d50148d91ad75c9896cf37fb126"
+FROZEN_PATH = Path(r"C:/tmp/P020_PRESELECT_20260913/PRESELECTION_FROZEN.json")
+MEASUREMENT_SIZES = [512, 1024, 2048]
+TIMEFRAMES = ("15m", "1h", "2h", "4h", "1D")
+ELIGIBLE_STATUS = "PROFILE_ELIGIBLE_NOT_ACCEPTED"
+RULE_TEXT = (
+    "Replace only the base plan trial list with 15 trials derived from the "
+    "eligible frozen selection: selected family/timeframe pairs in frozen "
+    "family order, sizes 512/1024/2048 per pair, using each frozen family's "
+    "single fixed parameter record and each frozen timeframe's dataset and "
+    "measurement prefix hash. Preserve all other base plan fields value-for-value, "
+    "not byte-for-byte, and add this derivation block."
+)
+
+
+class DerivationRefused(ValueError):
+    """Raised when a requested derivation is not mechanically bound."""
+
+
+def load_json_once(path: Path) -> tuple[dict, str]:
+    try:
+        raw = path.read_bytes()
+        digest = hashlib.sha256(raw).hexdigest()
+        value = json.loads(raw)
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise DerivationRefused(f"REFUSED: cannot read JSON {path}: {exc}") from exc
+    if not isinstance(value, dict):
+        raise DerivationRefused(f"REFUSED: JSON object required: {path}")
+    return value, digest
+
+
+def sha256_path(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def dump_bytes(value: dict) -> bytes:
+    return (json.dumps(value, indent=2, ensure_ascii=True) + "\n").encode("ascii")
+
+
+def symbol_from_dataset(dataset: dict) -> str:
+    symbol = dataset.get("symbol")
+    if isinstance(symbol, str) and symbol:
+        return symbol
+    parts = str(dataset.get("normalized_path", "")).replace("\\", "/").split("/")
+    timeframe = dataset.get("timeframe")
+    if timeframe in parts:
+        index = parts.index(timeframe)
+        if index > 0 and parts[index - 1]:
+            return parts[index - 1]
+    dataset_id = str(dataset.get("dataset_id", ""))
+    bits = dataset_id.split("_")
+    if len(bits) >= 3 and bits[0] == "BINANCE" and bits[1] == "FUTURES":
+        return bits[2]
+    raise DerivationRefused("REFUSED: cannot derive symbol for dataset")
+
+
+def frozen_family_order(frozen: dict) -> list[str]:
+    families = frozen.get("family_order")
+    if not isinstance(families, list):
+        raise DerivationRefused("REFUSED: frozen family_order missing")
+    order = []
+    for entry in families:
+        if not isinstance(entry, dict) or not isinstance(entry.get("strategy_id"), str):
+            raise DerivationRefused("REFUSED: invalid frozen family_order entry")
+        order.append(entry["strategy_id"])
+    return order
+
+
+def lexicographic_first_matching(family_order: list, timeframes: tuple, eligible: set) -> dict:
+    """Transcribed from preselect_profile.py:412-443."""
+    assignment = [None] * len(timeframes)
+    used = set()
+
+    def search(index: int) -> bool:
+        if index == len(timeframes):
+            return True
+        for family in family_order:
+            if family in used or (family, timeframes[index]) not in eligible:
+                continue
+            used.add(family)
+            assignment[index] = family
+            if search(index + 1):
+                return True
+            used.discard(family)
+            assignment[index] = None
+        return False
+
+    if not search(0):
+        raise DerivationRefused(
+            "DERIVE_REFUSED_SELECTION_MISMATCH: no complete matching of %d distinct families to %d timeframes"
+            % (len(timeframes), len(timeframes))
+        )
+    return dict(zip(timeframes, assignment))
+
+
+def verified_selection(calibration: dict, order: list) -> dict:
+    """Re-derive the selection from the recorded binary matrix."""
+    matrix = calibration.get("eligibility_matrix_binary_only")
+    if not isinstance(matrix, dict):
+        raise DerivationRefused("DERIVE_REFUSED_SELECTION_MISMATCH: calibration has no binary eligibility matrix")
+    recorded = calibration.get("selection")
+    if not isinstance(recorded, dict) or set(recorded) != set(TIMEFRAMES):
+        raise DerivationRefused(
+            "DERIVE_REFUSED_SELECTION_MISMATCH: selection does not cover exactly the five frozen timeframes"
+        )
+    families = [recorded[timeframe] for timeframe in TIMEFRAMES]
+    if len(set(families)) != len(TIMEFRAMES):
+        raise DerivationRefused("DERIVE_REFUSED_SELECTION_MISMATCH: selection does not name five distinct families")
+    for timeframe, strategy_id in zip(TIMEFRAMES, families):
+        if strategy_id not in order:
+            raise DerivationRefused("DERIVE_REFUSED_SELECTION_MISMATCH: %s is not a frozen family" % strategy_id)
+        if matrix.get(strategy_id, {}).get(timeframe) is not True:
+            raise DerivationRefused(
+                "DERIVE_REFUSED_SELECTION_MISMATCH: %s is not marked eligible on %s" % (strategy_id, timeframe)
+            )
+    eligible = {
+        (strategy_id, timeframe)
+        for strategy_id in order
+        for timeframe in TIMEFRAMES
+        if matrix.get(strategy_id, {}).get(timeframe) is True
+    }
+    derived = lexicographic_first_matching(order, TIMEFRAMES, eligible)
+    if recorded != derived:
+        raise DerivationRefused(
+            "DERIVE_REFUSED_SELECTION_MISMATCH: recorded selection is not the lexicographically first matching of the recorded matrix"
+        )
+    return dict(recorded)
+
+
+def verify_inputs(eligibility: dict, calibration: dict, calibration_sha256: str, frozen_sha256: str, family_order: list[str]) -> dict:
+    if eligibility.get("frozen_sha256") != EXPECTED_FROZEN_SHA256:
+        raise DerivationRefused("REFUSED: eligibility frozen_sha256 mismatch")
+    if frozen_sha256 != EXPECTED_FROZEN_SHA256:
+        raise DerivationRefused("REFUSED: frozen artifact SHA-256 mismatch")
+    if eligibility.get("calibration_sha256") != calibration_sha256:
+        raise DerivationRefused("REFUSED: eligibility calibration_sha256 mismatch")
+    if calibration.get("frozen_sha256") != eligibility.get("frozen_sha256"):
+        raise DerivationRefused("REFUSED: calibration frozen_sha256 mismatch")
+    if eligibility.get("status") != ELIGIBLE_STATUS:
+        raise DerivationRefused("REFUSED: status is not PROFILE_ELIGIBLE_NOT_ACCEPTED")
+    selection = eligibility.get("selection")
+    if not isinstance(selection, dict):
+        raise DerivationRefused("REFUSED: eligibility selection missing")
+    if calibration.get("selection") != selection:
+        raise DerivationRefused("REFUSED: calibration selection mismatch")
+    selected_families = set(selection.values())
+    if len(selection) != 5 or len(selected_families) != 5:
+        raise DerivationRefused("REFUSED_SELECTION_NOT_FIVE_DISTINCT: selection must name five distinct families")
+    if not selected_families.issubset(set(family_order)):
+        raise DerivationRefused("REFUSED_SELECTION_FAMILY_NOT_FROZEN: selection family is outside frozen family_order")
+    return verified_selection(calibration, family_order)
+
+
+def derive_trials(frozen: dict, selection: dict) -> list[dict]:
+    order = frozen_family_order(frozen)
+    selected = [(family, timeframe) for family in order for timeframe, chosen in selection.items() if chosen == family]
+    if len(selected) != 5:
+        raise DerivationRefused("REFUSED: selection is not five frozen families")
+
+    family_records = {
+        entry["strategy_id"]: entry["fixed_parameter_record"]
+        for entry in frozen["family_order"]
+        if isinstance(entry, dict) and "fixed_parameter_record" in entry
+    }
+    trials = []
+    for family, timeframe in selected:
+        if family not in family_records:
+            raise DerivationRefused(f"REFUSED: no fixed parameter record for {family}")
+        datasets = frozen.get("datasets", {})
+        measurement = frozen.get("measurement_inputs", {})
+        dataset = datasets.get(timeframe)
+        prefixes = measurement.get(timeframe, {}).get("prefixes")
+        if not isinstance(dataset, dict) or not isinstance(prefixes, list):
+            raise DerivationRefused(f"REFUSED: missing frozen dataset or prefixes for {timeframe}")
+        prefix_by_size = {entry.get("input_rows"): entry.get("sha256") for entry in prefixes if isinstance(entry, dict)}
+        for size in MEASUREMENT_SIZES:
+            prefix_sha256 = prefix_by_size.get(size)
+            if not isinstance(prefix_sha256, str):
+                raise DerivationRefused(f"REFUSED: missing prefix hash for {timeframe} n{size}")
+            trial_no = len(trials) + 1
+            trials.append(
+                {
+                    "trial_id": f"p020-{trial_no:02d}-{family}-{symbol_from_dataset(dataset)}-{timeframe}-n{size}",
+                    "strategy_id": family,
+                    "strategy_family": family,
+                    "symbol": symbol_from_dataset(dataset),
+                    "timeframe": timeframe,
+                    "bar_interval_seconds": dataset["bar_interval_seconds"],
+                    "dataset_id": dataset["dataset_id"],
+                    "dataset_selection_order": dataset["selection_order"],
+                    "normalized_path": dataset["normalized_path"],
+                    "dataset_sha256": dataset["dataset_sha256"],
+                    "parameter_record": copy.deepcopy(family_records[family]),
+                    "input_rows": size,
+                    "input_prefix_sha256": prefix_sha256,
+                }
+            )
+    return trials
+
+
+def derive_plan(eligibility_path: Path, calibration_path: Path, base_plan_path: Path) -> dict:
+    eligibility, eligibility_sha256 = load_json_once(eligibility_path)
+    calibration, calibration_sha256 = load_json_once(calibration_path)
+    base_plan, base_plan_sha256 = load_json_once(base_plan_path)
+    frozen, frozen_sha256 = load_json_once(FROZEN_PATH)
+
+    family_order = frozen_family_order(frozen)
+    selection = verify_inputs(eligibility, calibration, calibration_sha256, frozen_sha256, family_order)
+
+    output = copy.deepcopy(base_plan)
+    output["trials"] = derive_trials(frozen, selection)
+    output["derivation"] = {
+        "eligibility_sha256": eligibility_sha256,
+        "source_eligibility_sha256": eligibility_sha256,
+        "calibration_sha256": calibration_sha256,
+        "frozen_sha256": eligibility["frozen_sha256"],
+        "base_plan_sha256": base_plan_sha256,
+        "family_order": family_order,
+        "selection_rederived": True,
+        "tool_sha256": sha256_path(Path(__file__)),
+        "rule_text": RULE_TEXT,
+    }
+    return output
+
+
+def write_once(path: Path, payload: bytes) -> None:
+    try:
+        with path.open("xb") as handle:
+            handle.write(payload)
+    except FileExistsError as exc:
+        raise DerivationRefused(f"REFUSED: output already exists: {path}") from exc
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--eligibility", required=True, type=Path)
+    parser.add_argument("--calibration", required=True, type=Path)
+    parser.add_argument("--base-plan", required=True, type=Path)
+    parser.add_argument("--out", required=True, type=Path)
+    args = parser.parse_args(argv)
+    try:
+        plan = derive_plan(args.eligibility, args.calibration, args.base_plan)
+        write_once(args.out, dump_bytes(plan))
+    except DerivationRefused as exc:
+        parser.exit(2, f"{exc}\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,13 @@
+{
+  "window": "P012-S16-G5-P1CAP_GEMINI",
+  "verified_at": "2026-09-15T06:02:16.450539+00:00",
+  "runner_exit": 0,
+  "elapsed_seconds": 244.9,
+  "launch_exit": "exit=0 actual_exit=0 start=2026-09-15T05:58:11.8488918Z end=2026-09-15T06:02:11.4234393Z",
+  "review_log_bytes": 38884,
+  "review_log_sha256": "0953f25bc5adaf5a14fe4e51a9588140236a70d58fb41855a7d673b2975d9bfa",
+  "agy_helpers_after": 0,
+  "manifest_sha256_after": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+  "candidate_head_after": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_after": 0
+}

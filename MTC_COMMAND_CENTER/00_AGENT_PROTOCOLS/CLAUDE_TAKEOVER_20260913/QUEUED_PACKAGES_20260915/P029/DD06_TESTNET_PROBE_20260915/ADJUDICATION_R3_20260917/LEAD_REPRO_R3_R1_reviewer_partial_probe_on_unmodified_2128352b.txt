@@ -1,0 +1,7 @@
+RESULT : DD06_FINDING_OWN_FUNDS_MOVED
+FINDING: spotSend was NOT refused and the AGENT wallet's own balance DECREASED while the account's readable balances did not: the agent moved its own funds (r3 shape; not the DD-06 breach) [account did not pay, agent wallet paid]
+MASTER READINGS: {'before': {'accountValue': '0.0', 'usdc_total': '983.987457'}, 'after': {'accountValue': '0.0', 'usdc_total': None}}
+..RESULT : DD06_FINDING_OWN_FUNDS_MOVED
+FINDING: spotSend was NOT refused and the AGENT wallet's own balance DECREASED while the account's readable balances did not: the agent moved its own funds (r3 shape; not the DD-06 breach) [account did not pay, agent wallet paid]
+.
+3 passed in 0.59s

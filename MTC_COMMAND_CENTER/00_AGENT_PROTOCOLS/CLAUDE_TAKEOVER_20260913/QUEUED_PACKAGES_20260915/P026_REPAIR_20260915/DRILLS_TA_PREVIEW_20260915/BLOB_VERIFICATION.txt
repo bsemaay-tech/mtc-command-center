@@ -1,0 +1,25 @@
+# Blob verification of wt/ copies against commit d81b07f6 (git show <sha>:<path> | sha256), 2026-09-15 16:2xZ, run while no agy.exe was alive
+OK   p030_closed_partition_backup_adapter.py copied=60a0e7af31d884eb blob=60a0e7af31d884eb crlf_in_blob=False
+DIFF p030_opsa_heartbeat_adapter.py copied=bf3c5032cf2d5a1e blob=551b338969aade29 crlf_in_blob=False
+DIFF p030_market_data_contracts.py copied=1c2c23933b665039 blob=433db0e6b2f86f8c crlf_in_blob=False
+DIFF market_data_collector.py copied=377c0eb6de7bc8b6 blob=2819b248be23ce3c crlf_in_blob=False
+DIFF p030_opsa_backup_config.json copied=52d36c953026da67 blob=12af91c56bda7595 crlf_in_blob=False
+OK   MTC_COMMAND_CENTER/tools/opsa/backup.py copied=e7f74464ac7a197c blob=e7f74464ac7a197c crlf_in_blob=False
+OK   MTC_COMMAND_CENTER/tools/opsa/restore.py copied=9836bfe59f6268ed blob=9836bfe59f6268ed crlf_in_blob=False
+OK   MTC_COMMAND_CENTER/tools/opsa/opsa_common.py copied=e2b3d386abdb4285 blob=e2b3d386abdb4285 crlf_in_blob=False
+DIFF MTC_COMMAND_CENTER/tools/opsa/heartbeat.py copied=38b43d72548de049 blob=3970bde53eed012f crlf_in_blob=False
+DIFF MTC_COMMAND_CENTER/tools/opsa/watchdog.py copied=0d4ba79dc4cedc32 blob=0b5130c967a6ad9a crlf_in_blob=False
+DIFF MTC_COMMAND_CENTER/tools/opsa/config.example.json copied=1e38309c05318754 blob=91761ae6d96fa73e crlf_in_blob=False
+DIFF MTC_COMMAND_CENTER/tools/opsa/README.md copied=03ddff57810ccd73 blob=6aade409cc063b0f crlf_in_blob=False
+HEAD=d81b07f62569996edb20dc96f83e7d7029406cdd
+MISMATCH PRESENT
+
+# Second pass: the 8 DIFF files are the files the repair does not touch; the worktree checkout is CRLF (autocrlf) while the blobs are LF.
+EQUAL_AFTER_CRLF_TO_LF p030_opsa_heartbeat_adapter.py copied_has_crlf=True
+EQUAL_AFTER_CRLF_TO_LF p030_market_data_contracts.py copied_has_crlf=True
+EQUAL_AFTER_CRLF_TO_LF market_data_collector.py copied_has_crlf=True
+EQUAL_AFTER_CRLF_TO_LF p030_opsa_backup_config.json copied_has_crlf=True
+EQUAL_AFTER_CRLF_TO_LF MTC_COMMAND_CENTER/tools/opsa/heartbeat.py copied_has_crlf=True
+EQUAL_AFTER_CRLF_TO_LF MTC_COMMAND_CENTER/tools/opsa/watchdog.py copied_has_crlf=True
+EQUAL_AFTER_CRLF_TO_LF MTC_COMMAND_CENTER/tools/opsa/config.example.json copied_has_crlf=True
+EQUAL_AFTER_CRLF_TO_LF MTC_COMMAND_CENTER/tools/opsa/README.md copied_has_crlf=True

@@ -1,0 +1,21 @@
+# LEAD_ADJUDICATION — P012_RISK_PACKET_GEMINI_B2 (gemini-3.8-flash-high DELTA audit of the P12FIX-corrected P012 production-admission packet) — 2026-09-14 12:58Z
+
+Conversation `6a32ef5f-7219-40b7-8c8d-3e67090a7f4b`, 220 s, 1 turn, usage 284,771 in / 47,641 out / 29,078 thinking (2,048,962 cache-read). `launch.exit` = `exit=0 actual_exit=0 start=2026-09-14T12:49:03Z end=12:53:21Z`; wrapper `66c749a0…` accepted the envelope (status SUCCESS, sentinel present). REVIEW.log sha256 `3ac5756a6f953c35…`; response sha256 `bda36d4bc351054e…` (38,347 chars, `REPORT_RESPONSE_UTF8.md`).
+
+Subject bytes: `subject/P012_PRODUCTION_ADMISSION_PACKET.md` sha256 `50a6cbbc939016eba54f559da51c63e6940c2c5b858306862ac4bb27c178f4c4` (290 lines; the auditor counts 291 because the file ends with a newline), = `C:/tmp/P012_RISK_20260914/P012_PRODUCTION_ADMISSION_PACKET.md` byte-identical (PACKET_SHA256SUMS.txt; 18 staged files).
+
+## Native-read verification (Lead, from the CLI conversation store, read-only)
+30 `view_file` reads inside the packet, **30/30 displayed content == staged bytes**, 0 failures (`NATIVE_READ_VERIFICATION.json`). One read outside the packet: `C:/LAB/Tradingview_LAB_CLEAN/AGENTS.md` lines 1-64 — instructed by the wrapper's own preamble ("Read and obey AGENTS.md"), present in every run, not a boundary violation. Every REQUIRED range in PROMPT.md was read: packet 1-291 (two views), matrix 1-66, SIGNED 1-20, REVIEW_POLICY 1-77, HL setup 1-113, README 130-148, COMMANDS 96-105 + 258-266, master-plan excerpt 1-38, LEAD_NOTE 1-11, amendment 1-50 / 140-220 / 335-410 (all 19 cited lines inside), PATH_D packet 20-110 / 160-255 (all 18 cited lines inside), DISPOSITION_FIX1, TASK, TASK_FIX1, prior report 309-389 + 424-446, FILE_MAP, both SHA256SUMS. `required_scope_unread: []` is therefore TRUE, not asserted.
+
+## Verdict as returned
+**PASS** (`evidence_class: SUPPLEMENTAL_UNEXECUTED`). Delta F-01..F-09: **all RESOLVED** with packet proof lines (F-01 lines 49-55/126/176-178/227-241; F-02 108-110/137/163/274-278, every matrix citation inside lines 7-62 of a 66-line file; F-03 lines 4/117/125/136/179/204-206 — reviewer identity framed only as an open WHO question; F-04 README + master-plan copies verified line by line; F-05 typo absent in 14 citations; F-06 all citations exact; F-07 Tables A/B verbatim; F-08 `>= 1` clean; F-09 who-shaped answer). Table A 10/10, Table B 27/27 (I-1..I-5, C-6..C-12, F-13..F-23, 24-27 grouped). Citation table: **115/115 EQUAL, 0 WRONG LINE, 0 NOT FOUND** (38+19+18+10+8+6+5+4+3+3+1 rows — Lead counted the rows). New findings: **none**. NOT VERIFIED (nonempty): funding cadence not established in the sources; five residual obligations counted, not enumerated; 24-27 grouped; 27-count quoted not recomputed; no credential read.
+
+## Lead cross-check (independent, before reading the verdict)
+`../P012_RISK_PACKET_GEMINI_B/lead_citation_check.py` opened all 235 citations in the REAL source files: 177 quote-EQUAL, 57 table-cell citations exist but carry no quote to compare (Gemini's verbatim-cell check covers them), 1 parser miss on a nested-quote citation (`TASK.md:11`, EQUAL by eye), 0 wrong lines. Reviewer-identity grep: only the WHO question (lines 117, 204-206) and "venue+Bridge capture + Baris" actor cells quoted from the amendment. The two checks agree by construction on different evidence (bytes vs the auditor's reads), not by reading each other.
+
+## Disposition
+- Audit slot for the P012 production-admission packet: **SATISFIED (PASS)** on bytes `50a6cbbc…`. The packet is presentable to the owner (owner-facing summary: `C:/tmp/CLAUDE_P0_RUN_20260913/P012_RISK_PACKET_OWNER_PRESENTATION_DRAFT.md`, to be recorded with this adjudication).
+- Attempt 1 (`../P012_RISK_PACKET_GEMINI_B/`, conversation 259ba939…) is recorded as a wrapper envelope failure after a completed model run (`LEAD_TERMINAL_ATTEMPT1.md`); its recovered report (also PASS, 115/115) is SUPPLEMENTAL only and was not needed for this slot.
+- Nothing in this adjudication accepts WP-P0-12, admits venue facts, or authorizes any host/venue/ARM action. The owner's answers to the packet's seven questions are the next act; each is recorded verbatim in CT13 DECISIONS.md when given.
+
+Adjudicated by Claude Opus 5 Lead (desktop session tradingview-lab-clean-ca / b9df29).

@@ -1,0 +1,20 @@
+=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    feature/p012-funding-intake-adapter-20260915
+[freshness] local origin/master tip fcac0ac67cf2682693ad28138b1a56e15a0846f2 age=2 day(s) (commit timestamp; no fetch attempted)
+[freshness] branch merge-base fcac0ac67cf2682693ad28138b1a56e15a0846f2 is 0 commit(s) behind local origin/master (limit 30)
+[dirty]     4 entr(y/ies):
+            M  IBKR_PAPER_BRIDGE/tests/test_funding_intake_adapter.py
+            A  IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export_real_capture.py
+            M  IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py
+            M  IBKR_PAPER_BRIDGE/tools/funding_intake_adapter.py
+[staged]    4 file(s):
+            IBKR_PAPER_BRIDGE/tests/test_funding_intake_adapter.py
+            IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export_real_capture.py
+            IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py
+            IBKR_PAPER_BRIDGE/tools/funding_intake_adapter.py
+[protected] none
+[untracked] no risky files
+[pine-alert] PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
+[unpushed]  1 commit(s) ahead of upstream
+
+RESULT: PASS

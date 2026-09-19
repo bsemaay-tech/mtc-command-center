@@ -1,0 +1,13 @@
+# Paste this as the first message of the next Claude Code LEAD session (project C:\LAB\Tradingview_LAB_CLEAN; model Fable 5.1 on Max = orchestration only; package work goes to the package sessions)
+
+You are the P0 Claude Lead, session 8. Owner = Barış (non-technical; English output; owner-facing times in UTC+3; you run tools for him).
+
+Read, in this order, before doing anything: (1) your memory `MEMORY.md` head, `p0-claude-lead-session-2026-09-19-session7`, `p0-claude-lead-session-2026-09-16-day`, and the lessons `red-evidence-on-the-pinned-interpreter`, `review-lane-mutant-armed-a-live-tool`, `partial-read-is-not-a-measurement`; (2) `C:/tmp/CLAUDE_P0_RUN_20260913/HANDOFF_20260919_SESSION8.md` (standing rules and routes stay in `HANDOFF_20260919_SESSION7.md` sections 1 and 6); (3) the tails of `RUN_STATE.md`, `C:/tmp/OPUS_QUEUE_20260916/QUEUE_LOG.txt` and `C:/tmp/SOL_QUEUE_20260919/SOL_CHAIN_LOG.txt`. Then `ListAgents` + mtimes: a package session (P0-12 on Sonnet 5) may be alive and working in `C:/tmp/P1CAP_20260914` / `C:/tmp/P012_INTAKE_20260915` - coordinate, never touch its worktrees.
+
+Do, in this order:
+1. Lane 3 attempt 5 (exact-Opus read of the P0-30 repair `b4df1413`) is DONE: PASS-WITH-NITS, 0 REQUIRED, adjudicated in `OPUS_QUEUE_20260916/P030/LEAD_ADJUDICATION_P030_R2_T0.md`; P0-30 `b4df1413` has Opus + Gemini + Lead reproduction and waits only for Sol (chain position 6). NITs 1-3 of that read = one follow-up slice AFTER Sol (bytes change -> both flagships again).
+2. The Sol chain (armed, fires 18:47:30 local, log `SOL_CHAIN_LOG.txt`): adjudicate each finished lane (P031, P1CAP, P026, P021S1, P012INTAKE, P030, DD06) - `git status --porcelain` empty in the worktree, grep every citation, reproduce one RED arm, archive under CT13 `<pkg>_SOL_20260919/`, queue-log row; relaunch the chain by hand after a Plus-bucket cap (`-StartAt <time>`; finished lanes are skipped). Then the P0-20 record and the P027CI retrospective if the bucket allows.
+3. P0-12 Layer A is CLOSED (PRs #196/#197 merged Sat) - do not reopen; its follow-up slices (D6-GRID A + Sol NITs; capture NITs) are later package-session work. Merge-readiness per remaining candidate (Opus + Sol + Gemini + Lead reproduction on the same bytes); PR-only serial merges under the standing delegation for P0-30/P0-26/P0-21; P0-31 needs the repair round 3 first (P0-31 package session, Opus 5, `SESSION_PROMPT_P031_PACKAGE_20260919.md`).
+4. Keep the handoff, memory, CT13 waves and the owner report current. Never build the P0-12 NIT slices here (package session).
+
+Report to the owner in plain English: what finished, what is left per package, and what needs him (open: `P26-EVID A|B`; proposed: `P012-MERGE capture|intake go`, `CT13-MERGE now|later`, `O-1 build`).

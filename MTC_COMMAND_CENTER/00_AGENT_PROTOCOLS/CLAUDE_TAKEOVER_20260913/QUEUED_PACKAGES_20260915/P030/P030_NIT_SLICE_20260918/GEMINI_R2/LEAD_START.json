@@ -1,0 +1,22 @@
+{
+  "window": "P012-S16-G5-P030_R2_GEMINI",
+  "record_written_at": "2026-09-19T06:49:28.970054+00:00",
+  "model": "gemini-3.8-flash-high",
+  "native_read_file_enabled": true,
+  "provider_timeout_seconds": 1500,
+  "runner": "C:\\tmp\\P012_S16_LAUNCH_PREP_20260913\\run_p030_r2_g38.ps1",
+  "pins": {
+    "PACKET_MANIFEST.json": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+    "COMPANION_VIEWS/MANIFEST_ADDENDUM.json": "880019cd44b3e072006b11ce25de3c9c0879f4310d04787b5a54cea93dc1e075",
+    "PROMPT.md": "1e029816a00dd9ab2353db987a6152e68dd9e16b45df82eb7a8facb72696bbe2",
+    "Invoke-GeminiProReadOnly.ps1": "eff6a7273a6b94e27dee84f06f6aa7956dd7b9b7e9057a2bbcb24103398a4dda",
+    "run_1500.ps1": "396b25acb90e9c0f1ef6b1cf30997539c7a16e328ef60784574400fc77edc0b5",
+    "runner_override": "5fe7395f1fbc94f161fc8eb9d256f32796d37dea35a485d0eb2b773d107c7b78"
+  },
+  "canonical_head": "108ea066a710ff7ef5c09246903fe3d523da1d56",
+  "canonical_branch": "root/current-20260829",
+  "candidate_head": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_count": 0,
+  "agy_helpers_before": 0,
+  "coordinator": "Claude Fable Lead (Mentor parked); chain runner gemini_chain.py"
+}

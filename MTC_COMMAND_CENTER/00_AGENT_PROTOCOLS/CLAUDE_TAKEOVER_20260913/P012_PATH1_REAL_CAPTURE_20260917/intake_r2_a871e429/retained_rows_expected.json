@@ -1,0 +1,47 @@
+{
+  "label": "NONACCEPTING_INTAKE_DRAFT",
+  "rows": [
+    {
+      "attribution": "0x1E26…AC49",
+      "event_id": "hl-funding:0x1E26…AC49:BTC:1789632000011",
+      "ledger_effective_ts": "2026-09-17T08:00:00.011Z",
+      "payload": {
+        "coin": "BTC",
+        "fundingRate": "0.0000081083",
+        "szi": "0.0006",
+        "usdc": "-0.000371"
+      },
+      "payload_digest": "UNAVAILABLE:BRIDGE_OBSERVATION_REQUIRED",
+      "payload_reason": "FUNDING_PAYLOAD_RETAINED",
+      "symbol": "BTC"
+    },
+    {
+      "attribution": "0x1E26…AC49",
+      "event_id": "hl-funding:0x1E26…AC49:BTC:1789635600001",
+      "ledger_effective_ts": "2026-09-17T09:00:00.001Z",
+      "payload": {
+        "coin": "BTC",
+        "fundingRate": "0.0000095561",
+        "szi": "0.0006",
+        "usdc": "-0.000439"
+      },
+      "payload_digest": "UNAVAILABLE:BRIDGE_OBSERVATION_REQUIRED",
+      "payload_reason": "FUNDING_PAYLOAD_RETAINED",
+      "symbol": "BTC"
+    },
+    {
+      "attribution": "0x1E26…AC49",
+      "event_id": "hl-funding:0x1E26…AC49:BTC:1789639200041",
+      "ledger_effective_ts": "2026-09-17T10:00:00.041Z",
+      "payload": {
+        "coin": "BTC",
+        "fundingRate": "0.0000124143",
+        "szi": "0.0006",
+        "usdc": "-0.000569"
+      },
+      "payload_digest": "UNAVAILABLE:BRIDGE_OBSERVATION_REQUIRED",
+      "payload_reason": "FUNDING_PAYLOAD_RETAINED",
+      "symbol": "BTC"
+    }
+  ]
+}

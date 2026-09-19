@@ -1,0 +1,6 @@
+=== pre-fix ledger (HEAD 96af3eb6; scratch tree with the OLD ledger + NEW tests) ===
+state before probe: SHADOW
+RESULT: APPENDED (fail-open) state=FROZEN
+=== P31FIX candidate (bd0d56d0) ===
+state before probe: SHADOW
+RESULT: REFUSED CATALOG_BACKED_WITHOUT_EVALUATION_HASH

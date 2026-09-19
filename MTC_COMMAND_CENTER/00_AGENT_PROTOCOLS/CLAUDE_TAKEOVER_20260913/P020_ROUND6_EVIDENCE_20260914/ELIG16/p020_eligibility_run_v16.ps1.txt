@@ -1,0 +1,60 @@
+# WP-P0-20 preselection V1.6: the ONE-SHOT transaction (calibration + in-memory matching + locked 15-trial eligibility)
+# = PRESELECT_RUNBOOK.md step (g). PREPARED 2026-09-14 16:25Z; runs only when the Lead starts it after the round-6 roster accepts (V1.5 shot archived per OD-20260914-P020-RECORD-V3-1 / D9-A).
+# Preconditions enforced here: Opus round 6 + Sol round 6 accepting (PASS / PASS-WITH-NITS), Gemini 3.7 corroboration SATISFIED for V1.6,
+# Lead reproduction REPRODUCED, exact identities, no prior outputs, no agy.exe. Grok pre-screen: route on weekly cap (Sep 18) - supplemental slot vacant, recorded.
+# Launcher fix vs V14: native call runs under EAP=Continue with 2>&1 capture so a traceback is never lost.
+# Owner authorization: D1 Option A ("Re-freeze and complete the required review before execution") + OD-20260913-P020-BENCH-1.
+# Writes only PRESELECTION_CALIBRATION.json and PRESELECTION_ELIGIBILITY.json inside the package dir, plus logs under $OUT.
+$ErrorActionPreference = 'Stop'
+$PKG = 'C:\tmp\P020_PRESELECT_20260913'
+$PY = 'C:/tmp/P020_IMPL_20260912/01a0924d-2c4b-7da1-99e1-24e2a7c7685c/.venv/Scripts/python.exe'
+$OUT = 'C:\tmp\CLAUDE_P0_RUN_20260913\P020_ELIGIBILITY_RUN_V16'
+$R4 = 'C:\tmp\P020_PRESELECT_T0_R6_20260914'
+$TOKEN = 'cb75602080850873e28dc3aa268ad1072a0f1d50148d91ad75c9896cf37fb126'
+$PROC_SHA = 'c82693d492268944a7b3ed42aebe57a03ce033c3e9e23b4ccc24a60d6931c8d5'
+$TEST_SHA = '25d53fe47b0340825070de2938e4855aa4bb457de9ff63d0b5f41bbc641a057b'
+$TEST2_SHA = '00efdc0fb76deff9f4f7debe1743f0cde3649d018cb60c8980fe621b9c1e629d'
+New-Item -ItemType Directory -Force $OUT | Out-Null
+$log = "$OUT\run.log"
+function Log($m) { $line = "$((Get-Date).ToUniversalTime().ToString('o')) $m"; $line | Out-File $log -Append -Encoding utf8; Write-Output $line }
+if (Get-Process agy -ErrorAction SilentlyContinue) { throw 'agy.exe running (Gemini guard): refuse' }
+# roster gate (round 6 on V1.6)
+$sol = Get-Content "$R4\sol\SOL_T0_REPORT.md" -Raw -Encoding utf8
+if ($sol -notmatch 'VERDICT: PASS(-WITH-NITS)?\s*$') { throw 'Sol round-6 verdict is not PASS/PASS-WITH-NITS: refuse' }
+$opus = Get-Content "$R4\opus\OPUS_T0_REPORT.md" -Raw -Encoding utf8
+if ($opus -notmatch 'VERDICT: PASS(-WITH-NITS)?\s*$') { throw 'Opus round-6 verdict is not PASS/PASS-WITH-NITS: refuse' }
+$gem = Get-Content 'C:\tmp\P012_S16_REVIEWS_20260913\P020_PRESEL_G37_V16\LEAD_ADJUDICATION.md' -Raw -Encoding utf8
+if ($gem -notmatch 'corroboration slot SATISFIED for V1\.6') { throw 'Gemini V1.6 corroboration not SATISFIED: refuse' }
+$lead = Get-Content "$R4\LEAD_REPRODUCTION_V16.md" -Raw -Encoding utf8
+if ($lead -notmatch 'Lead reproduction result: REPRODUCED') { throw 'Lead reproduction of V1.6 not REPRODUCED: refuse' }
+Log 'roster gate: Opus R6 + Sol R6 accepting; Gemini SATISFIED for V1.6; Lead REPRODUCED; Grok pre-screen NOT AVAILABLE (SuperGrok weekly cap until 2026-09-18) - supplemental slot vacant'
+# identities (command-local safe.directory for the tool's own git rev-parse; no git config written)
+$env:GIT_CONFIG_COUNT = '1'; $env:GIT_CONFIG_KEY_0 = 'safe.directory'; $env:GIT_CONFIG_VALUE_0 = 'C:/P020_IMPL_20260912'
+$head = (git -C C:\P020_IMPL_20260912 rev-parse HEAD).Trim()
+if ($head -ne 'b9b72f858dc830a9389517f79da5ea3c1fa6122c') { throw "HEAD $head != pinned" }
+$fz = (Get-FileHash "$PKG\PRESELECTION_FROZEN.json" -Algorithm SHA256).Hash.ToLower()
+if ($fz -ne $TOKEN) { throw "frozen digest $fz != token" }
+$pp = (Get-FileHash "$PKG\preselect_profile.py" -Algorithm SHA256).Hash.ToLower()
+if ($pp -ne $PROC_SHA) { throw "preselect_profile.py digest $pp drifted (procedure_sha256 check)" }
+$tp = (Get-FileHash "$PKG\tests\test_preselect.py" -Algorithm SHA256).Hash.ToLower()
+if ($tp -ne $TEST_SHA) { throw "tests digest $tp drifted" }
+$tp2 = (Get-FileHash "$PKG\tests\test_sizing_floor.py" -Algorithm SHA256).Hash.ToLower()
+if ($tp2 -ne $TEST2_SHA) { throw "sizing test digest $tp2 drifted" }
+foreach ($f in 'PRESELECTION_CALIBRATION.json', 'PRESELECTION_ELIGIBILITY.json') { if (Test-Path "$PKG\$f") { throw "$f already exists: one-shot refuse" } }
+Log "identities OK: HEAD=$head frozen=$fz preselect_profile=$pp tests=$tp"
+$env:PYTHONUTF8 = '1'; $env:PYTHONDONTWRITEBYTECODE = '1'; $env:TEMP = "$OUT\tmp"; $env:TMP = "$OUT\tmp"; New-Item -ItemType Directory -Force "$OUT\tmp" | Out-Null
+Set-Location $PKG
+Log 'step 1: tests'
+& $PY -m pytest tests -q -p no:cacheprovider *> "$OUT\tests.txt"; Log "tests exit=$LASTEXITCODE $(Get-Content "$OUT\tests.txt" -Tail 1)"
+if ($LASTEXITCODE -ne 0) { throw 'tests failed: refuse' }
+Log 'step (g): --oneshot (single transaction; both outputs reserved before the first simulation)'
+$t0 = Get-Date
+$ErrorActionPreference = 'Continue'
+& $PY .\preselect_profile.py --oneshot --i-have-t0-review-authorization $TOKEN 2>&1 | Out-File "$OUT\oneshot_stdout.txt" -Encoding utf8
+$c = $LASTEXITCODE; $ErrorActionPreference = 'Stop'; Log "oneshot exit=$c elapsed=$([int]((Get-Date)-$t0).TotalSeconds)s"
+foreach ($f in 'PRESELECTION_CALIBRATION.json', 'PRESELECTION_ELIGIBILITY.json') {
+  if (Test-Path "$PKG\$f") { Log "$f sha256=$((Get-FileHash "$PKG\$f" -Algorithm SHA256).Hash.ToLower())" } else { Log "$f ABSENT" }
+}
+if (Test-Path "$PKG\PRESELECTION_ELIGIBILITY.json") { Log ("eligibility status: " + (Get-Content "$PKG\PRESELECTION_ELIGIBILITY.json" -Raw | ConvertFrom-Json).status) }
+if ($c -ne 0) { Log (Get-Content "$OUT\oneshot_stdout.txt" -Tail 5 | Out-String); Log 'oneshot refused/blocked/failed: STOP (no second selection; shot spent if ABORTED records exist)' }
+Log 'done'

@@ -1,0 +1,13 @@
+step1-silent: rc=2
+p030_market_data_collector: state=silent emitted_at=2026-09-14T06:00:00Z age_seconds=301.0 bound_seconds=300.0
+{"overall": "alert", "ids": {"p030_market_data_collector": {"state": "silent", "emitted_at": "2026-09-14T06:00:00Z", "age_seconds": 301.0, "bound_seconds": 300.0}}}
+step2-ok: rc=0
+p030_market_data_collector: state=ok emitted_at=2026-09-14T06:05:02Z age_seconds=1.0
+{"overall": "ok", "ids": {"p030_market_data_collector": {"state": "ok", "emitted_at": "2026-09-14T06:05:02Z", "age_seconds": 1.0}}}
+step3-silent: rc=2
+p030_market_data_collector: state=silent emitted_at=2026-09-14T06:05:02Z age_seconds=898.0 bound_seconds=300.0
+{"overall": "alert", "ids": {"p030_market_data_collector": {"state": "silent", "emitted_at": "2026-09-14T06:05:02Z", "age_seconds": 898.0, "bound_seconds": 300.0}}}
+notifier-entries
+{"age_seconds": 301.0, "bound_seconds": 300.0, "checked_at": "2026-09-14T06:05:01Z", "emitted_at": "2026-09-14T06:00:00Z", "id": "p030_market_data_collector", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "silent"}
+{"age_seconds": 1.0, "checked_at": "2026-09-14T06:05:03Z", "emitted_at": "2026-09-14T06:05:02Z", "id": "p030_market_data_collector", "recovered_from": "silent", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "recovered"}
+{"age_seconds": 898.0, "bound_seconds": 300.0, "checked_at": "2026-09-14T06:20:00Z", "emitted_at": "2026-09-14T06:05:02Z", "id": "p030_market_data_collector", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 300.0, "state": "silent"}

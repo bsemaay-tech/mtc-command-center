@@ -1,0 +1,14 @@
+{
+ "identity": "gemini-3.8-flash-high (Google Antigravity CLI 1.1.27, read-only helper Invoke-GeminiProReadOnly.ps1 sha256 66c749a0…)",
+ "family": "gemini",
+ "independent_of": [
+  {
+   "role": "KERNEL_IMPLEMENTER",
+   "basis": "Codex family (gpt-5.x) authored the kernel; reviewer family is gemini"
+  },
+  {
+   "role": "CONTRACT_TABLES_AUTHOR",
+   "basis": "Claude family authored the contract tables; reviewer family is gemini"
+  }
+ ]
+}

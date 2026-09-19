@@ -1,0 +1,375 @@
+$ (mutant mutC7_adapter_object_parser_clause_removed; cwd C:\tmp\LEAD_P030_SCRATCH_R2\mutC7_adapter_object_parser_clause_removed; interpreter C:/tmp/P020_IMPL_20260912/01a0924d-2c4b-7da1-99e1-24e2a7c7685c/.venv/Scripts/python.exe; TEMP C:\bt_s4\p030_tmp) check_p030_closed_partition_backup_adapter.py
+{"mode": "backup", "run_id": "opsa-20260919T064119.011Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpfns_hjhw\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=495517a1abc0e322… readback=match
+OK    fixture-p030-archive/live.jsonl size=108 sha256=d83245989ffd56ef… readback=match
+{"run_id": "opsa-20260919T064119.011Z", "status": "ok", "files": 2, "bytes": 633, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.059Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp8u57ioe3\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064119.059Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.108Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpehanfu1a\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064119.108Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.150Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpoq5dl5zl\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064119.150Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.194Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpnw5ebjpm\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=495517a1abc0e322… readback=match
+OK    fixture-p030-archive/live.jsonl size=108 sha256=d83245989ffd56ef… readback=match
+{"run_id": "opsa-20260919T064119.194Z", "status": "ok", "files": 2, "bytes": 633, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.237Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpaveia6ut\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064119.237Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.374Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpuiaf5o36\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064119.374Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.642Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpv61c003q\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064119.642Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064119.642Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-eg28fi51\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064119.642Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "restore", "run_id": "opsa-20260919T064119.642Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-eg28fi51\\backup\\manifest.jsonl", "target": "C:\\bt_s4\\p030_tmp\\tmpv61c003q\\restore-target", "records_selected": 2, "manifest_malformed_lines": 0}
+RESTORED fixture-p030-archive/_P030_STABLE_PREFIX.json sha256=7357ae914a4fffee…
+RESTORED fixture-p030-archive/live.jsonl sha256=5ece6f43917414e8…
+{"mode": "restore", "run_id": "opsa-20260919T064119.642Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.745Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpjqw5xux7\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064119.745Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064119.745Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-c191vjqz\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064119.745Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.823Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpj4zak3c7\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064119.823Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064119.823Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-3sojyzcw\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064119.823Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.907Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpscy0qbbh\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064119.907Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064119.907Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-jzt2m8lm\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064119.907Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:19Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064119.994Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpir9tx23n\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:19Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064119.994Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064119.994Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-ol2s_19s\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064119.994Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.087Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpxtg8j2_v\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.087Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064120.087Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-p4y3he9x\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064120.087Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.225Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp1cbpoeah\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.225Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.282Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpbik27w0i\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.282Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.342Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpc8snq1p0\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.342Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.405Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpc2thoc0p\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.405Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.470Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp6tlmd5jv\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.470Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.532Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmplai3xkb2\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.532Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.597Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmprpak8wxv\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.597Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.666Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp7jdqe032\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.666Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.733Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmps0enzfrz\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.733Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.797Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpz7z060lj\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.797Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064120.797Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-cs8ajkiy\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064120.797Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "restore", "run_id": "opsa-20260919T064120.797Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-cs8ajkiy\\backup\\manifest.jsonl", "target": "C:\\bt_s4\\p030_tmp\\tmpz7z060lj\\restore-target", "records_selected": 2, "manifest_malformed_lines": 0}
+RESTORED fixture-p030-archive/_P030_STABLE_PREFIX.json sha256=7357ae914a4fffee…
+RESTORED fixture-p030-archive/live.jsonl sha256=5ece6f43917414e8…
+{"mode": "restore", "run_id": "opsa-20260919T064120.797Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.903Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp1c8bde2e\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.903Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064120.903Z", "manifest": "C:\\bt_s4\\p030_tmp\\tmp1c8bde2e\\backups\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064120.903Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064120.964Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpxzftqoae\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:20Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064120.964Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:20Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064121.146Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpjf8rv9kf\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:21Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064121.146Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064121.146Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-lq6w1wdb\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064121.146Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "restore", "run_id": "opsa-20260919T064121.146Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-lq6w1wdb\\backup\\manifest.jsonl", "target": "C:\\bt_s4\\p030_tmp\\tmpjf8rv9kf\\restore-target", "records_selected": 2, "manifest_malformed_lines": 0}
+RESTORED fixture-p030-archive/_P030_STABLE_PREFIX.json sha256=7357ae914a4fffee…
+RESTORED fixture-p030-archive/live.jsonl sha256=5ece6f43917414e8…
+{"mode": "restore", "run_id": "opsa-20260919T064121.146Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064121.258Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpk5q96if1\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:21Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064121.258Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064121.258Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-zvzttafe\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064121.258Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "restore", "run_id": "opsa-20260919T064121.258Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-zvzttafe\\backup\\manifest.jsonl", "target": "C:\\bt_s4\\p030_tmp\\tmpk5q96if1\\restore-target", "records_selected": 2, "manifest_malformed_lines": 0}
+RESTORED fixture-p030-archive/_P030_STABLE_PREFIX.json sha256=7357ae914a4fffee…
+RESTORED fixture-p030-archive/live.jsonl sha256=5ece6f43917414e8…
+{"mode": "restore", "run_id": "opsa-20260919T064121.258Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064121.385Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpbv2l0f_l\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:21Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064121.385Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064121.440Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp_179rtpl\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:21Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064121.440Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064121.440Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-28twib1p\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064121.440Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "restore", "run_id": "opsa-20260919T064121.440Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-28twib1p\\backup\\manifest.jsonl", "target": "C:\\bt_s4\\p030_tmp\\tmp_179rtpl\\restore-target", "records_selected": 2, "manifest_malformed_lines": 0}
+RESTORED fixture-p030-archive/_P030_STABLE_PREFIX.json sha256=7357ae914a4fffee…
+RESTORED fixture-p030-archive/live.jsonl sha256=5ece6f43917414e8…
+{"mode": "restore", "run_id": "opsa-20260919T064121.440Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064121.566Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp2tj6mvgp\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:21Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064121.566Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064121.566Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-0vxhntyr\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064121.566Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "restore", "run_id": "opsa-20260919T064121.566Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-0vxhntyr\\backup\\manifest.jsonl", "target": "C:\\bt_s4\\p030_tmp\\tmp2tj6mvgp\\restore-target", "records_selected": 2, "manifest_malformed_lines": 0}
+RESTORED fixture-p030-archive/_P030_STABLE_PREFIX.json sha256=7357ae914a4fffee…
+RESTORED fixture-p030-archive/live.jsonl sha256=5ece6f43917414e8…
+{"mode": "restore", "run_id": "opsa-20260919T064121.566Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064121.672Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpzccftqph\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:21Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064121.672Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064121.672Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-bxsnpd_w\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064121.672Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "restore", "run_id": "opsa-20260919T064121.672Z", "manifest": "C:\\bt_s4\\p030_tmp\\p030-isolated-restore-bxsnpd_w\\backup\\manifest.jsonl", "target": "C:\\bt_s4\\p030_tmp\\tmpzccftqph\\restore-target", "records_selected": 2, "manifest_malformed_lines": 0}
+RESTORED fixture-p030-archive/_P030_STABLE_PREFIX.json sha256=7357ae914a4fffee…
+RESTORED fixture-p030-archive/live.jsonl sha256=5ece6f43917414e8…
+{"mode": "restore", "run_id": "opsa-20260919T064121.672Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064121.808Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp1e99_ee2\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:21Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064121.808Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064121.913Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp3zad7to4\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:21Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064121.913Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:21Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064122.010Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpxmhsw3ev\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:22Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064122.010Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064122.109Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmptbuvfkqu\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:22Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064122.109Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064122.196Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp5p4x4oov\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:22Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064122.196Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064122.279Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp20xz7c3x\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:22Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064122.279Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064122.343Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp4095ho2u\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:22Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064122.343Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064122.434Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp5qgf54ek\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:22Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064122.434Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064122.545Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpo76btsxz\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:22Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064122.545Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064122.691Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmpa0sm15d3\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:22Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064122.691Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064122.853Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp400n5ohx\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:22Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064122.853Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "check-only", "run_id": "opsa-20260919T064122.853Z", "manifest": "C:\\bt_s4\\p030_tmp\\tmp400n5ohx\\backups\\manifest.jsonl", "target": null, "records_selected": 2, "manifest_malformed_lines": 0}
+VERIFIED fixture-p030-archive/_P030_STABLE_PREFIX.json
+VERIFIED fixture-p030-archive/live.jsonl
+{"mode": "check-only", "run_id": "opsa-20260919T064122.853Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "restore", "run_id": "opsa-20260919T064122.853Z", "manifest": "C:\\bt_s4\\p030_tmp\\tmp400n5ohx\\backups\\manifest.jsonl", "target": "C:\\bt_s4\\p030_tmp\\tmp400n5ohx\\restore-target", "records_selected": 2, "manifest_malformed_lines": 0}
+RESTORED fixture-p030-archive/_P030_STABLE_PREFIX.json sha256=495517a1abc0e322…
+RESTORED fixture-p030-archive/live.jsonl sha256=d83245989ffd56ef…
+{"mode": "restore", "run_id": "opsa-20260919T064122.853Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-19T06:41:22Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064123.055Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp0jinuxoa\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:23Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=7357ae914a4fffee… readback=match
+OK    fixture-p030-archive/live.jsonl size=216 sha256=5ece6f43917414e8… readback=match
+{"run_id": "opsa-20260919T064123.055Z", "status": "ok", "files": 2, "bytes": 741, "errors": 0, "finished_at": "2026-09-19T06:41:23Z"}
+{"mode": "backup", "run_id": "opsa-20260919T064123.159Z", "backup_root": "C:\\bt_s4\\p030_tmp\\tmp7dbooae5\\backups", "stores": ["fixture-p030-archive"], "started_at": "2026-09-19T06:41:23Z"}
+OK    fixture-p030-archive/_P030_STABLE_PREFIX.json size=525 sha256=495517a1abc0e322… readback=match
+OK    fixture-p030-archive/live.jsonl size=108 sha256=d83245989ffd56ef… readback=match
+{"run_id": "opsa-20260919T064123.159Z", "status": "ok", "files": 2, "bytes": 633, "errors": 0, "finished_at": "2026-09-19T06:41:23Z"}
+test_backup_binds_bytes_from_the_same_read_that_validated_them (__main__.StablePrefixBackupAdapterTests.test_backup_binds_bytes_from_the_same_read_that_validated_them) ... ok
+test_backup_consumes_bound_config_when_original_is_swapped (__main__.StablePrefixBackupAdapterTests.test_backup_consumes_bound_config_when_original_is_swapped) ... ok
+test_backup_rechecks_source_and_snapshot_after_p026_success (__main__.StablePrefixBackupAdapterTests.test_backup_rechecks_source_and_snapshot_after_p026_success) ... ok
+test_backup_refuses_archived_pair_that_differs_from_prevalidated_staging (__main__.StablePrefixBackupAdapterTests.test_backup_refuses_archived_pair_that_differs_from_prevalidated_staging) ... ok
+test_backup_refuses_coordinated_valid_staging_replacement_after_p026 (__main__.StablePrefixBackupAdapterTests.test_backup_refuses_coordinated_valid_staging_replacement_after_p026) ... ok
+test_backup_refuses_prefix_mutation_or_truncation_before_p026 (__main__.StablePrefixBackupAdapterTests.test_backup_refuses_prefix_mutation_or_truncation_before_p026) ... ok
+test_capture_and_prebackup_refuse_real_junction_ancestor (__main__.StablePrefixBackupAdapterTests.test_capture_and_prebackup_refuse_real_junction_ancestor) ... ok
+test_capture_binds_exact_canonical_complete_prefix_and_allows_later_append (__main__.StablePrefixBackupAdapterTests.test_capture_binds_exact_canonical_complete_prefix_and_allows_later_append) ... ok
+test_capture_refuses_caller_supplied_symlink_before_resolution (__main__.StablePrefixBackupAdapterTests.test_capture_refuses_caller_supplied_symlink_before_resolution) ... ok
+test_capture_refuses_intermediate_symlink_or_junction_component (__main__.StablePrefixBackupAdapterTests.test_capture_refuses_intermediate_symlink_or_junction_component) ... ok
+test_capture_refuses_noncontract_dataset_and_observation_identities (__main__.StablePrefixBackupAdapterTests.test_capture_refuses_noncontract_dataset_and_observation_identities) ... ok
+test_capture_refuses_nonfinite_json_constants (__main__.StablePrefixBackupAdapterTests.test_capture_refuses_nonfinite_json_constants) ... ok
+test_capture_refuses_partial_line_and_noncanonical_jsonl (__main__.StablePrefixBackupAdapterTests.test_capture_refuses_partial_line_and_noncanonical_jsonl) ... ok
+test_committed_configuration_is_explicitly_non_runnable (__main__.StablePrefixBackupAdapterTests.test_committed_configuration_is_explicitly_non_runnable) ... ok
+test_config_and_receipt_refuse_nested_overflowed_numbers_before_p026 (__main__.StablePrefixBackupAdapterTests.test_config_and_receipt_refuse_nested_overflowed_numbers_before_p026) ... ok
+test_config_and_receipt_refuse_pathological_nesting_before_p026 (__main__.StablePrefixBackupAdapterTests.test_config_and_receipt_refuse_pathological_nesting_before_p026) ... 
+  test_config_and_receipt_refuse_pathological_nesting_before_p026 (__main__.StablePrefixBackupAdapterTests.test_config_and_receipt_refuse_pathological_nesting_before_p026) (container='config', layer='parser', depth=3044) ... ERROR
+  test_config_and_receipt_refuse_pathological_nesting_before_p026 (__main__.StablePrefixBackupAdapterTests.test_config_and_receipt_refuse_pathological_nesting_before_p026) (container='receipt', layer='parser', depth=3044) ... ERROR
+test_config_refuses_duplicate_keys_and_nonfinite_json_before_p026 (__main__.StablePrefixBackupAdapterTests.test_config_refuses_duplicate_keys_and_nonfinite_json_before_p026) ... ok
+test_file_only_restored_inventory_reversion_is_detected (__main__.StablePrefixBackupAdapterTests.test_file_only_restored_inventory_reversion_is_detected) ... ok
+test_intruder_after_check_only_blocks_actual_restore (__main__.StablePrefixBackupAdapterTests.test_intruder_after_check_only_blocks_actual_restore) ... ok
+test_intruder_after_restore_config_verification_blocks_actual_restore (__main__.StablePrefixBackupAdapterTests.test_intruder_after_restore_config_verification_blocks_actual_restore) ... ok
+test_isolated_config_redirect_after_check_never_reaches_restore (__main__.StablePrefixBackupAdapterTests.test_isolated_config_redirect_after_check_never_reaches_restore) ... ok
+test_manifest_is_rechecked_between_check_only_and_restore (__main__.StablePrefixBackupAdapterTests.test_manifest_is_rechecked_between_check_only_and_restore) ... ok
+test_manifest_refuses_boolean_size_and_byte_totals_before_p026 (__main__.StablePrefixBackupAdapterTests.test_manifest_refuses_boolean_size_and_byte_totals_before_p026) ... ok
+test_manifest_refuses_duplicate_keys_and_nonfinite_json_before_p026 (__main__.StablePrefixBackupAdapterTests.test_manifest_refuses_duplicate_keys_and_nonfinite_json_before_p026) ... ok
+test_manifest_refuses_inconsistent_byte_total_before_p026 (__main__.StablePrefixBackupAdapterTests.test_manifest_refuses_inconsistent_byte_total_before_p026) ... ok
+test_manifest_refuses_overflowed_size_and_byte_totals_before_p026 (__main__.StablePrefixBackupAdapterTests.test_manifest_refuses_overflowed_size_and_byte_totals_before_p026) ... ok
+test_manifest_refuses_pathological_nesting_before_p026 (__main__.StablePrefixBackupAdapterTests.test_manifest_refuses_pathological_nesting_before_p026) ... ok
+test_manifest_swap_immediately_before_restore_never_yields_receipt (__main__.StablePrefixBackupAdapterTests.test_manifest_swap_immediately_before_restore_never_yields_receipt) ... ok
+test_partial_run_that_p026_check_only_accepts_never_reaches_restore (__main__.StablePrefixBackupAdapterTests.test_partial_run_that_p026_check_only_accepts_never_reaches_restore) ... ok
+test_post_backup_verification_refuses_replaced_intermediate_component (__main__.StablePrefixBackupAdapterTests.test_post_backup_verification_refuses_replaced_intermediate_component) ... ok
+test_receipt_always_refuses_absolute_or_noncanonical_source_path (__main__.StablePrefixBackupAdapterTests.test_receipt_always_refuses_absolute_or_noncanonical_source_path) ... ok
+test_receipt_refuses_duplicate_keys_and_nonfinite_json (__main__.StablePrefixBackupAdapterTests.test_receipt_refuses_duplicate_keys_and_nonfinite_json) ... ok
+test_receipt_strictly_validates_types_identities_and_lower_hex (__main__.StablePrefixBackupAdapterTests.test_receipt_strictly_validates_types_identities_and_lower_hex) ... ok
+test_restore_checks_first_and_produces_verified_receipt (__main__.StablePrefixBackupAdapterTests.test_restore_checks_first_and_produces_verified_receipt) ... ok
+test_restore_consumes_isolated_validated_archive_snapshot (__main__.StablePrefixBackupAdapterTests.test_restore_consumes_isolated_validated_archive_snapshot) ... ok
+test_restore_refuses_nonempty_target_before_p026 (__main__.StablePrefixBackupAdapterTests.test_restore_refuses_nonempty_target_before_p026) ... ok
+test_restore_refuses_post_p026_empty_target_directory (__main__.StablePrefixBackupAdapterTests.test_restore_refuses_post_p026_empty_target_directory) ... ok
+test_restore_refuses_post_p026_extra_target_member (__main__.StablePrefixBackupAdapterTests.test_restore_refuses_post_p026_extra_target_member) ... ok
+test_restore_refuses_post_p026_target_substitution (__main__.StablePrefixBackupAdapterTests.test_restore_refuses_post_p026_target_substitution) ... ok
+test_restore_refuses_rehashed_archive_with_dot_source_path (__main__.StablePrefixBackupAdapterTests.test_restore_refuses_rehashed_archive_with_dot_source_path) ... ok
+test_restore_requires_exact_run_envelope_store_and_members (__main__.StablePrefixBackupAdapterTests.test_restore_requires_exact_run_envelope_store_and_members) ... ok
+test_run_envelope_guards_are_independently_load_bearing (__main__.StablePrefixBackupAdapterTests.test_run_envelope_guards_are_independently_load_bearing) ... ok
+test_shared_archive_reversion_mutant_is_detected (__main__.StablePrefixBackupAdapterTests.test_shared_archive_reversion_mutant_is_detected) ... ok
+test_speculative_replay_opening_api_is_absent (__main__.StablePrefixBackupAdapterTests.test_speculative_replay_opening_api_is_absent) ... ok
+test_tampered_backup_never_reaches_p026_restore (__main__.StablePrefixBackupAdapterTests.test_tampered_backup_never_reaches_p026_restore) ... ok
+test_validate_then_reopen_reversion_is_detected (__main__.StablePrefixBackupAdapterTests.test_validate_then_reopen_reversion_is_detected) ... ok
+
+======================================================================
+ERROR: test_config_and_receipt_refuse_pathological_nesting_before_p026 (__main__.StablePrefixBackupAdapterTests.test_config_and_receipt_refuse_pathological_nesting_before_p026) (container='config', layer='parser', depth=3044)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutC7_adapter_object_parser_clause_removed\check_p030_closed_partition_backup_adapter.py", line 547, in test_config_and_receipt_refuse_pathological_nesting_before_p026
+    subject.backup_stable_prefix(
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutC7_adapter_object_parser_clause_removed\p030_closed_partition_backup_adapter.py", line 642, in backup_stable_prefix
+    with _bound_strict_config(
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutC7_adapter_object_parser_clause_removed\p030_closed_partition_backup_adapter.py", line 434, in _bound_strict_config
+    strict_object = _decode_json_object(raw, "backup config")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutC7_adapter_object_parser_clause_removed\p030_closed_partition_backup_adapter.py", line 78, in _decode_json_object
+    payload = json.loads(
+              ^^^^^^^^^^^
+  File "C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\json\__init__.py", line 359, in loads
+    return cls(**kw).decode(s)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\json\decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\json\decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+RecursionError: maximum recursion depth exceeded while decoding a JSON array from a unicode string
+
+======================================================================
+ERROR: test_config_and_receipt_refuse_pathological_nesting_before_p026 (__main__.StablePrefixBackupAdapterTests.test_config_and_receipt_refuse_pathological_nesting_before_p026) (container='receipt', layer='parser', depth=3044)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutC7_adapter_object_parser_clause_removed\check_p030_closed_partition_backup_adapter.py", line 547, in test_config_and_receipt_refuse_pathological_nesting_before_p026
+    subject.backup_stable_prefix(
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutC7_adapter_object_parser_clause_removed\p030_closed_partition_backup_adapter.py", line 645, in backup_stable_prefix
+    _, receipt_before, snapshot_before = _verify_stable_receipt(
+                                         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutC7_adapter_object_parser_clause_removed\p030_closed_partition_backup_adapter.py", line 322, in _verify_stable_receipt
+    receipt = _decode_json_object(receipt_raw, "stable-prefix receipt")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutC7_adapter_object_parser_clause_removed\p030_closed_partition_backup_adapter.py", line 78, in _decode_json_object
+    payload = json.loads(
+              ^^^^^^^^^^^
+  File "C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\json\__init__.py", line 359, in loads
+    return cls(**kw).decode(s)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\json\decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\json\decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+RecursionError: maximum recursion depth exceeded while decoding a JSON array from a unicode string
+
+----------------------------------------------------------------------
+Ran 46 tests in 4.220s
+
+FAILED (errors=2)
+
+[exit 1]
