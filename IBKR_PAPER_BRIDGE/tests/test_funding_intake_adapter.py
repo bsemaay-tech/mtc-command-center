@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -138,6 +139,64 @@ def test_build_fills_only_what_the_bytes_supply_and_labels_the_rest():
         intake["gap_report"]["export_tool_outcome_today"]["refusal_code"]
         == exporter.CANDIDATE_EVIDENCE_KIND_MISMATCH
     )
+
+
+def test_export_tool_outcome_today_computes_the_outcome_by_calling_the_exporter(
+    monkeypatch,
+):
+    """NIT-3 (Sol T0 review of `8cbf4f1a`): the assertion above only checks the
+    resulting code, so a mutant that hardcoded
+    ``CANDIDATE_EVIDENCE_KIND_MISMATCH`` without ever calling
+    ``build_funding_candidate`` still passed it. Monkeypatch the exporter entry
+    point to a sentinel refusal no real packet could produce and assert both
+    the sentinel value and the exact call arguments reach the gap report."""
+    calls: list[dict[str, object]] = []
+
+    def _fake_build_funding_candidate(
+        retained_rows,
+        approved_event_bindings,
+        coverage,
+        schedule_id,
+        start_inclusive,
+        end_exclusive,
+        **kwargs,
+    ):
+        calls.append(
+            {
+                "retained_rows": retained_rows,
+                "approved_event_bindings": approved_event_bindings,
+                "coverage": coverage,
+                "schedule_id": schedule_id,
+                "start_inclusive": start_inclusive,
+                "end_exclusive": end_exclusive,
+                "kwargs": kwargs,
+            }
+        )
+        return SimpleNamespace(
+            accepted=False,
+            reason_code="SENTINEL_NIT3_REFUSAL",
+            report={"reason_detail": "sentinel refusal, never produced by the real tool"},
+        )
+
+    monkeypatch.setattr(
+        adapter.exporter, "build_funding_candidate", _fake_build_funding_candidate
+    )
+
+    intake = adapter.build_intake(_manifest(), _derived())
+
+    assert len(calls) == 1
+    outcome = intake["gap_report"]["export_tool_outcome_today"]
+    assert outcome["refusal_code"] == "SENTINEL_NIT3_REFUSAL"
+    assert outcome["reason"] == "sentinel refusal, never produced by the real tool"
+    call = calls[0]
+    coverage = intake["packet"]["coverage"]
+    assert call["retained_rows"] == []
+    assert call["approved_event_bindings"] == []
+    assert call["coverage"] == coverage
+    assert call["schedule_id"] == "P012_INTAKE_ADAPTER_PROBE"
+    assert call["start_inclusive"] == coverage["interval_start_inclusive"]
+    assert call["end_exclusive"] == coverage["interval_end_exclusive"]
+    assert call["kwargs"] == {}
 
 
 def test_unresolved_fields_are_never_fabricated():

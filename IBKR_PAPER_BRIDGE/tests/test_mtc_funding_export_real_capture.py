@@ -414,6 +414,7 @@ def test_r1_with_a_named_oracle_capture_materializes_a_labelled_candidate():
         "end_exclusive": END,
         "end_tolerance_seconds": 1,
         "start_inclusive": START,
+        "start_tolerance_seconds": 1,
     }
     events = body["bound_events"]
     assert [item["binding"]["funding_event_id"] for item in events] == [ID1, ID2]
@@ -429,7 +430,14 @@ def test_r1_with_a_named_oracle_capture_materializes_a_labelled_candidate():
     assert body["completion_check"]["expected_funding_hours"] == [HOUR1, HOUR2]
     assert result.report["evidence_kind"] == REAL
     assert result.report["synthetic_only"] is False
-    assert result.report["production_mode"] == exporter.PRODUCTION_MODE_UNAVAILABLE
+    # NIT-2 (Sol T0 review of 8cbf4f1a): the real profile's production_mode must not
+    # claim the now-implemented D-1 digest domain is missing; it is refused only by
+    # the standing admission decision named in non_admission below.
+    assert (
+        result.report["production_mode"]
+        == exporter.REAL_CAPTURE_PRODUCTION_MODE_UNAVAILABLE
+    )
+    assert result.report["production_mode"] != exporter.PRODUCTION_MODE_UNAVAILABLE
     assert (
         result.report["non_admission"]["admission_status"]
         == exporter.REAL_CAPTURE_ADMISSION_STATUS
@@ -929,53 +937,22 @@ def test_d6_the_completion_check_names_the_fills_witness_as_the_position_source(
 )
 def test_d6_without_a_fill_for_the_symbol_the_position_source_is_the_payments(fills):
     """D-6 (ii) accepting branch with no fill for the symbol: the position is the
-    constant szi the payments report, every grid hour of a [17:00, 18:00) window
+    constant szi the payments report, every grid hour of a [16:00, 18:00) window
     carries a payment, and the completion check names the payments - not the fills
     witness - as the producer of that position (lane-8 REQUIRED-1: this branch was
     reachable, accepting and unlabelled; three mutants of it survived the suite).
 
-    ID1's stamp is shifted +1.000s (17:00:01.041, still inside the 17:00 hour) so
-    it clears the D6-START B admission band [start+tolerance, end+tolerance): the
-    window here starts exactly on ID1's own hour, and the natural r1 stamp (41 ms
-    past the hour) would otherwise settle the PREVIOUS window under that rule."""
-    start, end = "2026-09-14T17:00:00Z", "2026-09-14T18:00:00Z"
-    shifted_row1 = ROW1.replace(b'"time":1789405200041', b'"time":1789405201041')
-    pass_bytes = FUNDING_PASS.replace(ROW1, shifted_row1)
-    shifted_id1 = f"hl-funding:{SCOPE}:BTC:1789405201041"
+    D6-GRID A (``OD-20260919-P012-D6-GRID-A-1``): the window starts one hour
+    BEFORE ID1's own hour, so the grid (which now excludes the window's own
+    start hour) still expects exactly the two captured payments and the
+    natural r1 stamps (41 ms / 60 ms past the hour) need no fabricated shift
+    to clear the D6-START B admission band [start+tolerance, end+tolerance)."""
+    start, end = "2026-09-14T16:00:00Z", "2026-09-14T18:00:00Z"
     bindings = r1_bindings()
-    bindings[0]["event_timestamp"] = "2026-09-14T17:00:01.041Z"
-    bindings[0]["funding_event_id"] = shifted_id1
-    bindings[0]["source_event_digest"] = (
-        f"{exporter.REAL_SOURCE_EVENT_DIGEST_DOMAIN}:{hashlib.sha256(shifted_row1).hexdigest()}"
-    )
-    for item in bindings:
-        item["provenance"]["source_sha256"] = hashlib.sha256(pass_bytes).hexdigest()
-    rows = [
-        retained_row(
-            event(
-                shifted_id1,
-                datetime(2026, 9, 14, 17, 0, 1, 41000, tzinfo=UTC),
-                -0.000571,
-            )
-        ),
-        retained_row(EVENT2),
-    ]
-    cover = real_coverage(
-        bindings=bindings,
-        rows=[shifted_row1, ROW2],
-        passes=[pass_bytes, pass_bytes],
-        fills=fills,
-        start=start,
-        end=end,
-    )
+    cover = real_coverage(bindings=bindings, fills=fills, start=start, end=end)
 
     result = build(
-        rows=rows,
-        bindings=bindings,
-        cover=cover,
-        start=start,
-        end=end,
-        evidence_kind=REAL,
+        bindings=bindings, cover=cover, start=start, end=end, evidence_kind=REAL
     )
 
     assert result.accepted is True, result.report["reason_detail"]
@@ -992,6 +969,49 @@ def test_d6_without_a_fill_for_the_symbol_the_position_source_is_the_payments(fi
         "position the payments" in item
         for item in result.report["evidence_limitations"]
     )
+
+
+def test_d6_a_position_open_at_the_window_start_hour_is_not_expected_there():
+    """D6-GRID A (``OD-20260919-P012-D6-GRID-A-1``): the completeness grid
+    excludes the window's own start hour, mirroring the D6-START B admission
+    band. The BTC position here is already open before 17:00 and stays open
+    past 18:00, so the venue capture for a [17:00, 18:00) window naturally
+    carries no funding row at 17:00 (that hourly payment belongs to the
+    PREVIOUS window under D6-START B) - only the one at 18:00. Before this
+    fix, the unshifted grid still expected a payment at 17:00 that this
+    window's own capture can never carry, refusing a real single-window
+    capture that opens exactly on an hour with an open position no matter
+    what the raw pass held (the standout NIT-B finding on `8cbf4f1a`)."""
+    start, end = "2026-09-14T17:00:00Z", "2026-09-14T18:00:00Z"
+    single_pass = b"[" + ROW2 + b"]"
+    binding = real_binding(event_id=ID2, stamp=TS2, hour=HOUR2, row=ROW2, index=0)
+    binding["provenance"]["source_sha256"] = hashlib.sha256(single_pass).hexdigest()
+
+    cover = real_coverage(
+        bindings=[binding],
+        rows=[ROW2],
+        passes=[single_pass, single_pass],
+        fills=b"[]",
+        start=start,
+        end=end,
+    )
+
+    result = build(
+        rows=[retained_row(EVENT2)],
+        bindings=[binding],
+        cover=cover,
+        start=start,
+        end=end,
+        evidence_kind=REAL,
+    )
+
+    assert result.accepted is True, result.report["reason_detail"]
+    check = json.loads(result.candidate_bytes)["real_capture_candidate"][
+        "completion_check"
+    ]
+    assert check["expected_funding_hours"] == [HOUR2]
+    assert check["observed_funding_hours"] == [HOUR2]
+    assert HOUR1 not in check["expected_funding_hours"]
 
 
 def test_d6_an_empty_inventory_cannot_be_witnessed():
@@ -1054,7 +1074,14 @@ def test_d6_start_tolerance_excludes_a_stamp_within_one_second_of_the_window_sta
     starting exactly on that hour used to admit ID1 under the old `start <=
     stamp` rule even though that stamp settles the PREVIOUS hour's interval
     (the same payment could be captured and admitted by two adjacent runs).
-    The fix excludes it here, mirroring the end tolerance."""
+
+    D6-GRID A (``OD-20260919-P012-D6-GRID-A-1``) now refuses this window
+    earlier still, at D-6 completeness: the grid excludes the window's own
+    start hour, so the captured 17:00 row (present in this window's raw
+    capture regardless of which window ultimately admits it) can never be
+    inventoried here - still refusal-only, never a false accept, just via a
+    different, earlier check than the binding-admission one this test used
+    to name (the standout NIT-B finding on `8cbf4f1a`)."""
     start, end = HOUR1, "2026-09-14T19:00:00Z"
     bindings = r1_bindings()
     cover = real_coverage(bindings=bindings, start=start, end=end)
@@ -1064,14 +1091,28 @@ def test_d6_start_tolerance_excludes_a_stamp_within_one_second_of_the_window_sta
     )
 
     assert result.accepted is False
-    assert result.reason_code == exporter.CANDIDATE_BINDING_OUT_OF_INTERVAL
-    assert ID1 in result.report["reason_detail"]
+    assert result.reason_code == exporter.CANDIDATE_COVERAGE_INVALID
+    assert "D-6" in result.report["reason_detail"]
+    assert HOUR1 in result.report["reason_detail"]
 
 
-def test_d6_start_tolerance_admits_a_stamp_at_exactly_the_boundary():
-    """D6-START B boundary: a stamp at exactly start+1.000s belongs to THIS
-    window (mirrors the end boundary's +0.999s-admitted / +1.000s-refused
-    split, just on the other side)."""
+def test_d6_start_tolerance_boundary_stamp_still_refuses_under_d6_grid_a():
+    """D6-START B's admission arithmetic is unchanged and still symmetric with
+    the end boundary (`start_limit = start + tolerance`, the same formula as
+    `end_limit`): a stamp at exactly start+1.000s would belong to THIS window
+    if admission were reached. But D6-GRID A (``OD-20260919-P012-D6-GRID-A-1``)
+    means a window starting exactly on an hour with a captured payment can
+    never reach that arithmetic at all - D-6 completeness refuses it first,
+    structurally, regardless of where inside (or outside) the tolerance that
+    payment's own stamp falls. This replaces the previous version of this
+    test, which asserted full acceptance for this exact input; that
+    acceptance was itself the bug the owner's D6-GRID A decision closed (the
+    standout NIT-B finding on `8cbf4f1a`). The symmetric end-side admission
+    behavior remains directly proven by
+    ``test_d6_one_second_end_tolerance_admits_the_venue_late_stamp`` and
+    ``test_d6_a_stamp_more_than_one_second_past_the_end_is_out_of_interval``,
+    neither of which collides with D-6 (the window's END hour stays in the
+    grid)."""
     start, end = HOUR1, "2026-09-14T19:00:00Z"
     admitted_ms = 1789405200000 + 1000
     admitted = ROW1.replace(b'"time":1789405200041', f'"time":{admitted_ms}'.encode())
@@ -1108,14 +1149,20 @@ def test_d6_start_tolerance_admits_a_stamp_at_exactly_the_boundary():
         evidence_kind=REAL,
     )
 
-    assert result.accepted is True, result.report["reason_detail"]
-    body = json.loads(result.candidate_bytes)["real_capture_candidate"]
-    assert body["event_count"] == 2
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_COVERAGE_INVALID
+    assert "D-6" in result.report["reason_detail"]
+    assert HOUR1 in result.report["reason_detail"]
 
 
 def test_d6_start_tolerance_excludes_a_stamp_just_inside_the_boundary():
     """D6-START B boundary: a stamp at start+0.999s still settles the previous
-    window and is excluded here."""
+    window and is excluded here.
+
+    D6-GRID A (``OD-20260919-P012-D6-GRID-A-1``) also refuses this window at
+    D-6 completeness before binding admission is ever evaluated - still
+    refusal-only, just via a different, earlier check than the one this test
+    used to name (the standout NIT-B finding on `8cbf4f1a`)."""
     start, end = HOUR1, "2026-09-14T19:00:00Z"
     excluded_ms = 1789405200000 + 999
     excluded = ROW1.replace(b'"time":1789405200041', f'"time":{excluded_ms}'.encode())
@@ -1153,7 +1200,81 @@ def test_d6_start_tolerance_excludes_a_stamp_just_inside_the_boundary():
     )
 
     assert result.accepted is False
-    assert result.reason_code == exporter.CANDIDATE_BINDING_OUT_OF_INTERVAL
+    assert result.reason_code == exporter.CANDIDATE_COVERAGE_INVALID
+    assert "D-6" in result.report["reason_detail"]
+    assert HOUR1 in result.report["reason_detail"]
+
+
+@pytest.mark.parametrize(
+    "delta_ms, stamp_text, stamp_dt_us, expect_admitted",
+    [
+        (1000, "2026-09-14T17:00:01.000Z", (17, 0, 1, 0), True),
+        (999, "2026-09-14T17:00:00.999Z", (17, 0, 0, 999000), False),
+    ],
+    ids=["admitted-at-exactly-1.000s", "excluded-at-0.999s"],
+)
+def test_d6_start_tolerance_boundary_arithmetic_isolated_from_completion(
+    monkeypatch, delta_ms, stamp_text, stamp_dt_us, expect_admitted
+):
+    """Lead concern (INTAKE_FINISH_DISPATCH.md): the three tests above now
+    refuse earlier at D-6 completeness (D6-GRID A), so they no longer reach
+    `_build`'s start_limit/end_limit admission arithmetic at all - a
+    start_limit=start mutant that deletes the START tolerance shift survives
+    all three of them undetected (demonstrated in
+    `intake/scratch/check_start_limit_mutant.py`, kept as evidence, not part
+    of this suite). This test isolates that arithmetic from D-6 by stubbing
+    the module-private `_real_completion` (test-only seam; production code,
+    the grid it validates, and every other test of it are untouched) so the
+    exact ±1s start-boundary rule - the same `start.seconds +
+    profile.end_tolerance_seconds` formula `end_limit` already uses, proven
+    by ``test_d6_one_second_end_tolerance_admits_the_venue_late_stamp`` and
+    ``test_d6_a_stamp_more_than_one_second_past_the_end_is_out_of_interval``
+    - is exercised end-to-end again, undistracted by the grid collision."""
+    monkeypatch.setattr(exporter, "_real_completion", lambda *a, **k: {"stubbed": True})
+
+    start, end = HOUR1, "2026-09-14T19:00:00Z"
+    stamp_ms = 1789405200000 + delta_ms
+    row = ROW1.replace(b'"time":1789405200041', f'"time":{stamp_ms}'.encode())
+    pass_bytes = FUNDING_PASS.replace(ROW1, row)
+    new_id = f"hl-funding:{SCOPE}:BTC:{stamp_ms}"
+    bindings = r1_bindings()
+    bindings[0]["event_timestamp"] = stamp_text
+    bindings[0]["funding_event_id"] = new_id
+    bindings[0]["source_event_digest"] = (
+        f"{exporter.REAL_SOURCE_EVENT_DIGEST_DOMAIN}:{hashlib.sha256(row).hexdigest()}"
+    )
+    for item in bindings:
+        item["provenance"]["source_sha256"] = hashlib.sha256(pass_bytes).hexdigest()
+    rows = [
+        retained_row(event(new_id, datetime(2026, 9, 14, *stamp_dt_us, tzinfo=UTC), -0.000571)),
+        retained_row(EVENT2),
+    ]
+    cover = real_coverage(
+        bindings=bindings,
+        rows=[row, ROW2],
+        passes=[pass_bytes, pass_bytes],
+        start=start,
+        end=end,
+    )
+
+    result = build(
+        rows=rows,
+        bindings=bindings,
+        cover=cover,
+        start=start,
+        end=end,
+        evidence_kind=REAL,
+    )
+
+    if expect_admitted:
+        assert result.accepted is True, result.report["reason_detail"]
+        body = json.loads(result.candidate_bytes)["real_capture_candidate"]
+        assert body["event_count"] == 2
+        assert body["completion_check"] == {"stubbed": True}
+    else:
+        assert result.accepted is False
+        assert result.reason_code == exporter.CANDIDATE_BINDING_OUT_OF_INTERVAL
+        assert new_id in result.report["reason_detail"]
 
 
 def test_d6_binding_notes_settlement_source_names_the_captured_row_not_synthetic():

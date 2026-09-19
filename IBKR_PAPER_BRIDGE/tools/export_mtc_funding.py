@@ -24,8 +24,11 @@ physically cannot consume: the candidate root carries no ``schedule_id``, no
 gate or magic literal that turns a synthetic candidate into a production
 record: the only accepted completion-evidence kind is
 :data:`SYNTHETIC_EVIDENCE_KIND`, and production mode stays
-:data:`PRODUCTION_MODE_UNAVAILABLE` until the real binding-packet schema and the
-``source_event_digest`` byte domain are approved and implemented elsewhere.
+:data:`PRODUCTION_MODE_UNAVAILABLE` for this default profile until the real
+binding-packet schema and the ``source_event_digest`` byte domain are approved
+and implemented elsewhere; the ``REAL_CAPTURE_READ_ONLY`` profile below
+implements and verifies that byte domain (D-1) but remains equally
+non-admitted (``OD-20260914-P012-ADMISSION-Q3`` "Wait").
 
 Second evidence profile (2026-09-16, ``OD-20260916-P012-INTAKE-D1-D6-R-1``)
 ----------------------------------------------------------------------------
@@ -176,6 +179,12 @@ REAL_SETTLEMENT_SOURCE = (  # D-1/D-3: re-derived from the exact captured venue 
 )
 REAL_CAPTURE_ADMISSION_STATUS = "REFUSED_REAL_CAPTURE_READ_ONLY_NOT_A_PRODUCTION_RECORD"
 REAL_CAPTURE_CANDIDATE_BUILT = "REAL_CAPTURE_CANDIDATE_BUILT"
+# D-1's source_event_digest byte domain (HL_USERFUNDING_ROW_V1) is implemented and
+# verified for this profile, unlike the synthetic default, so the real profile's
+# production_mode must not repeat PRODUCTION_MODE_UNAVAILABLE's stale reason; it is
+# still refused, but only by the standing admission decision, never a missing digest
+# domain (Sol T0 review of 8cbf4f1a, NIT-2).
+REAL_CAPTURE_PRODUCTION_MODE_UNAVAILABLE = "UNAVAILABLE_PRODUCTION_ADMISSION_NOT_GRANTED"
 REAL_CAPTURE_NOT_A_PRODUCTION_RECORD = (
     "Read-only capture evidence bound under the P0-12 intake rules D-1..D-6. "
     "This is not an accepted economic record and not an admitted production "
@@ -366,6 +375,7 @@ class _EvidenceProfile:
     end_tolerance_seconds: int
     report_kind: str
     settlement_source: str
+    production_mode: str
 
 
 _SYNTHETIC_PROFILE = _EvidenceProfile(
@@ -388,6 +398,7 @@ _SYNTHETIC_PROFILE = _EvidenceProfile(
     end_tolerance_seconds=0,
     report_kind=REPORT_KIND,
     settlement_source=SETTLEMENT_SOURCE,
+    production_mode=PRODUCTION_MODE_UNAVAILABLE,
 )
 _REAL_PROFILE = _EvidenceProfile(
     kind=REAL_CAPTURE_EVIDENCE_KIND,
@@ -409,6 +420,7 @@ _REAL_PROFILE = _EvidenceProfile(
     end_tolerance_seconds=REAL_END_TOLERANCE_SECONDS,
     report_kind=REAL_CAPTURE_REPORT_KIND,
     settlement_source=REAL_SETTLEMENT_SOURCE,
+    production_mode=REAL_CAPTURE_PRODUCTION_MODE_UNAVAILABLE,
 )
 _EVIDENCE_PROFILES = {
     SYNTHETIC_EVIDENCE_KIND: _SYNTHETIC_PROFILE,
@@ -1259,11 +1271,13 @@ def _real_completion(
 ) -> dict[str, Any]:
     """D-6 (ii): every whole hour of the window at which the fills-derived
     position is open must carry a payment, and every payment's own ``szi``
-    must be that position. The end hour itself belongs to the grid because the
-    venue stamps its payment inside the 1-second tolerance. This grid is
-    independent of the admission-band shift applied in ``_build`` (D6-START
-    B): it checks the captured pass bytes for completeness, not which bindings
-    are admitted into this candidate."""
+    must be that position. The grid runs ``[start+1h, end]``: the window's own
+    start hour is excluded (D6-GRID A, ``OD-20260919-P012-D6-GRID-A-1``) to
+    mirror the D6-START B admission band, which never admits a payment stamped
+    within the tolerance of `start` into THIS window (it settles the previous
+    one); the end hour itself stays in the grid because the venue stamps its
+    payment inside the 1-second tolerance, which the admission band does
+    admit here."""
     opening, fills = _real_fills(fills_bytes, symbol)
     # No fill for the symbol inside the fills witness: the position cannot change
     # inside the window, so the payments' own szi is the only position on record;
@@ -1288,7 +1302,7 @@ def _real_completion(
             (signed for fill_ms, signed in fills if fill_ms < time_ms), Decimal(0)
         )
 
-    grid = list(range(start.seconds, end.seconds + 1, _HOUR_SECONDS))
+    grid = list(range(start.seconds + _HOUR_SECONDS, end.seconds + 1, _HOUR_SECONDS))
     expected = [_hour_text(hour) for hour in grid if position_at(hour * 1000) != 0]
     observed = sorted(
         {
@@ -1490,9 +1504,13 @@ def build_funding_candidate(
 
     The result is atomic in meaning: either every inventoried event in
     ``[start_inclusive, end_exclusive)`` carries a verified retained payload
-    and an explicit approved binding, or no candidate is produced at all.
-    ``evidence_kind`` names the evidence profile the packet must satisfy; it
-    defaults to the synthetic one and the packet must declare the same kind.
+    and an explicit approved binding, or no candidate is produced at all. For
+    the synthetic profile the admission band is exactly that interval
+    (zero tolerance); for the real-capture profile it is shifted by the same
+    settlement tolerance on both ends, ``[start+tolerance, end+tolerance)``
+    (D6-START B). ``evidence_kind`` names the evidence profile the packet must
+    satisfy; it defaults to the synthetic one and the packet must declare the
+    same kind.
     """
     facts: dict[str, Any] = {}
     profile = _SYNTHETIC_PROFILE
@@ -1746,6 +1764,9 @@ def _build(
         "start_inclusive": start.text,
     }
     if profile is _REAL_PROFILE:
+        # D6-START B: the SAME tolerance shifts both boundaries (Sol T0 review
+        # of 8cbf4f1a, NIT-1: the prior output named only the end shift).
+        effective_interval["start_tolerance_seconds"] = profile.end_tolerance_seconds
         effective_interval["end_tolerance_seconds"] = profile.end_tolerance_seconds
     candidate_body: dict[str, Any] = {
         "account_scope": witness["account_scope"],
@@ -1841,7 +1862,7 @@ def _report(
         },
         "out_of_interval_bindings": facts.get("out_of_interval_bindings", []),
         "out_of_scope_event_ids": facts.get("out_of_scope_event_ids", []),
-        "production_mode": PRODUCTION_MODE_UNAVAILABLE,
+        "production_mode": profile.production_mode,
         "reason_code": reason_code,
         "reason_detail": reason_detail,
         "report_kind": profile.report_kind,
