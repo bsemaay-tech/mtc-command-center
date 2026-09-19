@@ -248,7 +248,7 @@ def test_row_before_requested_start_refuses(tmp_path, monkeypatch):
         cae.run_capture(args(tmp_path))
 
     assert exc.value.code == cae.REFUSED_MALFORMED
-    assert "before requested start" in exc.value.detail
+    assert "before requested cursor" in exc.value.detail
 
 
 def test_row_after_requested_end_refuses(tmp_path, monkeypatch):
@@ -328,7 +328,9 @@ def test_verify_covers_derived_view_and_manifest_sidecars(tmp_path, monkeypatch)
     patch_info(monkeypatch, FakeInfo())
     manifest = cae.run_capture(args(tmp_path))
     derived = tmp_path / "DERIVED_EXTRACTION.json"
-    assert manifest["derived_extraction_sha256"] == cae.sha256_bytes(derived.read_bytes())
+    assert manifest["derived_extraction_sha256"] == cae.sha256_bytes(
+        derived.read_bytes()
+    )
     cae.verify_sidecars(tmp_path)
     good = derived.read_bytes()
     derived.write_bytes(good.replace(b'"0.01"', b'"0.02"', 1))
@@ -387,6 +389,37 @@ def test_malformed_account_state_keeps_its_bytes_before_refusing(tmp_path, monke
     assert (tmp_path / "account_state.json.sha256").exists()
 
 
+def test_second_page_row_before_current_cursor_refuses(tmp_path, monkeypatch):
+    # R-1 (exact-Sol read of 1029d6e9): the row floor was checked against the constant
+    # start_ms, never the advancing cursor. A full page [t0, t1] (limit=2) advances the
+    # cursor to t1; a later short page repeating a row at t0 (still inside the original
+    # window, but before the current cursor) was silently accepted as the terminal page.
+    monkeypatch.setattr(cae, "HL_FILLS_PAGE_LIMIT", 2)
+    t0, t1 = INSIDE_MS, INSIDE_MS + 5000
+    page1 = [fill_row(tid=1, time=t0), fill_row(tid=2, time=t1)]
+    page2 = [fill_row(tid=3, time=t0)]
+    patch_info(monkeypatch, FakeInfo(fills=[page1, page2, page1, page2]))
+    with pytest.raises(cae.CaptureRefused) as exc:
+        cae.run_capture(args(tmp_path))
+    assert exc.value.code == cae.REFUSED_MALFORMED
+    assert "cursor" in exc.value.detail
+
+
+def test_account_state_parse_failure_sentinel_refuses(tmp_path, monkeypatch):
+    # R-2 (exact-Sol read of 1029d6e9): CapturingInfo.post's ValueError fallback for a 2xx
+    # non-JSON response returns {"error": ...} - a dict - which the former isinstance(dict)
+    # check accepted as a valid account state instead of a failed query.
+    patch_info(
+        monkeypatch, FakeInfo(state={"error": "Could not parse JSON: <html>502</html>"})
+    )
+    with pytest.raises(cae.CaptureRefused) as exc:
+        cae.run_capture(args(tmp_path))
+    assert exc.value.code == cae.REFUSED_MALFORMED
+    assert "assetPositions" in exc.value.detail
+    assert (tmp_path / "account_state.json").exists()
+    assert (tmp_path / "account_state.json.sha256").exists()
+
+
 def test_fill_without_tid_is_refused_not_guessed():
     # NIT-5: hash+oid+time could merge two identical partial fills; the shape is refused
     with pytest.raises(cae.CaptureRefused) as exc:
@@ -404,7 +437,9 @@ def test_fill_without_tid_is_refused_not_guessed():
         ("0x" + "11" * 65, "not recoverable"),
     ],
 )
-def test_malformed_signature_is_a_named_refusal(tmp_path, monkeypatch, content, fragment):
+def test_malformed_signature_is_a_named_refusal(
+    tmp_path, monkeypatch, content, fragment
+):
     # NIT-6: a malformed signature file or signature exits 2 with a named refusal, never a raw
     # exception (exit 1)
     patch_info(monkeypatch, FakeInfo())
@@ -417,13 +452,26 @@ def test_malformed_signature_is_a_named_refusal(tmp_path, monkeypatch, content, 
     assert not (tmp_path / "CAPTURE_MANIFEST.json").exists()
 
 
-def test_missing_signature_file_and_bad_verify_dir_exit_two(tmp_path, monkeypatch, capsys):
+def test_missing_signature_file_and_bad_verify_dir_exit_two(
+    tmp_path, monkeypatch, capsys
+):
     patch_info(monkeypatch, FakeInfo())
     rc = cae.main(
         [
-            "--network", "testnet", "--address", ADDRESS, "--start", START, "--end", END,
-            "--out", str(tmp_path / "out"), "--run-id", "run-1",
-            "--ownership-signature", str(tmp_path / "absent.txt"),
+            "--network",
+            "testnet",
+            "--address",
+            ADDRESS,
+            "--start",
+            START,
+            "--end",
+            END,
+            "--out",
+            str(tmp_path / "out"),
+            "--run-id",
+            "run-1",
+            "--ownership-signature",
+            str(tmp_path / "absent.txt"),
         ]
     )
     assert rc == 2
@@ -440,7 +488,9 @@ def test_manifest_carries_the_signed_text_and_signature(tmp_path, monkeypatch):
     patch_info(monkeypatch, FakeInfo())
     path = signed(account, "run-7", tmp_path)
     manifest = cae.run_capture(
-        args(tmp_path, address=account.address, ownership_signature=path, run_id="run-7")
+        args(
+            tmp_path, address=account.address, ownership_signature=path, run_id="run-7"
+        )
     )
     evidence = manifest["ownership_evidence"]
     assert evidence["status"] == "OWNERSHIP_EVIDENCE: VERIFIED"
@@ -463,16 +513,25 @@ def test_real_r2_capture_bytes_replay(tmp_path):
 
     def rows(kind: str, identity):
         digest = next(
-            e["response_sha256"] for e in manifest["responses"] if e["file"] == f"{kind}_pass1_page001.json"
+            e["response_sha256"]
+            for e in manifest["responses"]
+            if e["file"] == f"{kind}_pass1_page001.json"
         )
         page = read_json(FIXTURE_R2 / f"{kind}_pass1_page001.json")
         return [
-            {"identity": identity(row), "row": row, "capture_sha256": digest, "json_pointer": f"/{i}"}
+            {
+                "identity": identity(row),
+                "row": row,
+                "capture_sha256": digest,
+                "json_pointer": f"/{i}",
+            }
             for i, row in enumerate(page)
         ]
 
     assert cae.fill_derived(rows("fills", cae.fill_identity)) == derived["fills"]
-    assert cae.funding_derived(rows("funding", cae.funding_identity)) == derived["funding"]
+    assert (
+        cae.funding_derived(rows("funding", cae.funding_identity)) == derived["funding"]
+    )
     assert len(derived["fills"]) == 2 and len(derived["funding"]) == 3
     # the old manifest (af921d75) has no derived digest; verification tolerates its absence
     assert "derived_extraction_sha256" not in manifest

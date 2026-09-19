@@ -231,7 +231,9 @@ def fill_identity(row: Any) -> str:
     # identical partial fills of one order in one block (an undercount). Every venue fill carries
     # a tid (r1/r2 captures: all rows); a fill without one cannot be counted without ambiguity, so
     # the shape is refused rather than guessed
-    raise CaptureRefused(REFUSED_MALFORMED, "fill without tid (identity would be ambiguous)")
+    raise CaptureRefused(
+        REFUSED_MALFORMED, "fill without tid (identity would be ambiguous)"
+    )
 
 
 def funding_coin(row: dict[str, Any]) -> Any:
@@ -354,14 +356,20 @@ def paged_query(
                 # NIT-2: the cursor arithmetic below assumes ascending pages (the SDK's order);
                 # a descending page would set the next cursor past unread rows - refuse instead
                 raise CaptureRefused(
-                    REFUSED_MALFORMED, f"{kind} page not in ascending time order ({ident})"
+                    REFUSED_MALFORMED,
+                    f"{kind} page not in ascending time order ({ident})",
                 )
             previous_time = t
             # the API is asked for [cursor, end_ms] (endTime inclusive); anything outside
-            # the requested range is a malformed response, never silently admitted
-            if t < start_ms:
+            # the requested range is a malformed response, never silently admitted.
+            # R-1 (exact-Sol read of 1029d6e9): checking only the original start_ms let a
+            # later short page repeat a row from before the CURRENT cursor - a stale or
+            # duplicate-window row that requery could agree on just as easily as a real one.
+            # cursor still holds this page's request floor here (it is only advanced to
+            # page_max after this loop), so it is a strictly tighter, still-correct bound.
+            if t < cursor:
                 raise CaptureRefused(
-                    REFUSED_MALFORMED, f"{kind} row before requested start ({ident})"
+                    REFUSED_MALFORMED, f"{kind} row before requested cursor ({ident})"
                 )
             if t > end_ms:
                 raise CaptureRefused(
@@ -459,7 +467,18 @@ def account_state_query(
     )
     if not isinstance(parsed, dict):
         raise CaptureRefused(
-            REFUSED_MALFORMED, "account state is not an object (bytes kept as account_state.json)"
+            REFUSED_MALFORMED,
+            "account state is not an object (bytes kept as account_state.json)",
+        )
+    # R-2 (exact-Sol read of 1029d6e9): CapturingInfo.post's ValueError fallback for a 2xx
+    # response with a non-JSON body returns {"error": ...} - a dict, which passed the check
+    # above. Every real clearinghouseState response carries assetPositions; requiring it
+    # rejects that parse-failure sentinel (and any other dict that isn't real account state)
+    # while every existing capture and test double already satisfies it.
+    if "assetPositions" not in parsed:
+        raise CaptureRefused(
+            REFUSED_MALFORMED,
+            "account state missing assetPositions (not a clearinghouseState object)",
         )
 
 
@@ -590,7 +609,9 @@ def verify_sidecars(out_dir: Path) -> None:
         raise CaptureRefused(
             REFUSED_BAD_SIDECAR, f"manifest unreadable: {manifest_path}"
         ) from exc
-    if not isinstance(manifest, dict) or not isinstance(manifest.get("responses"), list):
+    if not isinstance(manifest, dict) or not isinstance(
+        manifest.get("responses"), list
+    ):
         raise CaptureRefused(REFUSED_BAD_SIDECAR, "manifest has no responses list")
     for entry in manifest["responses"]:
         path = out_dir / entry["file"]
@@ -619,7 +640,8 @@ def verify_sidecars(out_dir: Path) -> None:
             raise CaptureRefused(REFUSED_BAD_SIDECAR, derived.name) from exc
         if actual != recorded:
             raise CaptureRefused(
-                REFUSED_BAD_SIDECAR, "DERIVED_EXTRACTION.json differs from the manifest digest"
+                REFUSED_BAD_SIDECAR,
+                "DERIVED_EXTRACTION.json differs from the manifest digest",
             )
 
 
@@ -722,7 +744,9 @@ def run_capture(args: argparse.Namespace) -> dict[str, Any]:
         "fills": fill_derived(fills_1),
         "funding": funding_derived(funding_1),
     }
-    derived_digest = write_once(out_dir / "DERIVED_EXTRACTION.json", json_bytes(extraction))
+    derived_digest = write_once(
+        out_dir / "DERIVED_EXTRACTION.json", json_bytes(extraction)
+    )
     manifest = {
         "kind": "P012_PATH1_OWN_ACCOUNT_CAPTURE_MANIFEST_V1",
         "run_id": run_id,
