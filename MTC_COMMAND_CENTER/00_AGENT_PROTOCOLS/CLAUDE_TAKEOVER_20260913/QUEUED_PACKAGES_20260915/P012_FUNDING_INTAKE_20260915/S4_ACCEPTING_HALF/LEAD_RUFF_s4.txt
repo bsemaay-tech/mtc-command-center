@@ -1,0 +1,11 @@
+UP035 [*] Import from `collections.abc` instead: `Mapping`, `Sequence`
+   --> tools\export_mtc_funding.py:106:1
+ISC004 Unparenthesized implicit string concatenation in collection
+   --> tools\export_mtc_funding.py:277:5
+ISC004 Unparenthesized implicit string concatenation in collection
+   --> tools\export_mtc_funding.py:280:5
+ISC004 Unparenthesized implicit string concatenation in collection
+   --> tools\export_mtc_funding.py:282:5
+SIM101 Multiple `isinstance` calls for `value`, merge into a single call
+   --> tools\export_mtc_funding.py:542:8
+Found 5 errors.

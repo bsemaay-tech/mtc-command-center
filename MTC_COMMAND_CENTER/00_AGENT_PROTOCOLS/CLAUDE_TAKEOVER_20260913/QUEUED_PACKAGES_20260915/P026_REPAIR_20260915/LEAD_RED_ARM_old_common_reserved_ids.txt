@@ -1,0 +1,29 @@
+test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes (test_opsa.BackupRestoreTests.test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes)
+A store named like the per-run completion files would occupy their path inside ... 
+  test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes (test_opsa.BackupRestoreTests.test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes) (store_id='RUN_MANIFEST.jsonl')
+A store named like the per-run completion files would occupy their path inside ... FAIL
+  test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes (test_opsa.BackupRestoreTests.test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes) (store_id='COMPLETE.json')
+A store named like the per-run completion files would occupy their path inside ... FAIL
+
+======================================================================
+FAIL: test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes (test_opsa.BackupRestoreTests.test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes) (store_id='RUN_MANIFEST.jsonl')
+A store named like the per-run completion files would occupy their path inside
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\tmp\P026_RED_SLICE2\b\test_opsa.py", line 481, in test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes
+    self.assertEqual(rc, 3)
+AssertionError: 1 != 3
+
+======================================================================
+FAIL: test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes (test_opsa.BackupRestoreTests.test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes) (store_id='COMPLETE.json')
+A store named like the per-run completion files would occupy their path inside
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\tmp\P026_RED_SLICE2\b\test_opsa.py", line 481, in test_backup_rejects_store_ids_reserved_for_completion_evidence_without_writes
+    self.assertEqual(rc, 3)
+AssertionError: 1 != 3
+
+----------------------------------------------------------------------
+Ran 1 test in 0.115s
+
+FAILED (failures=2)

@@ -1,0 +1,32 @@
+status: ERROR ValueError: restore requires one complete successful P026 run
+status: target_written=[]
+errors: ERROR ValueError: restore requires one complete successful P026 run
+errors: target_written=[]
+files: ERROR ValueError: restore requires one complete successful P026 run
+files: target_written=[]
+skipped: ERROR ValueError: restore requires one complete successful P026 run
+skipped: target_written=[]
+third: ERROR ValueError: restore requires one complete successful P026 run
+third: target_written=[]
+malformed: ERROR ValueError: invalid P026 manifest line 5
+malformed: target_written=[]
+{"mode": "backup", "run_id": "opsa-20260915T162002.073Z", "backup_root": "C:\\tmp\\P026_DRILLS_TA_PREVIEW_20260915\\fixtures\\backup_root_d7_interrupted", "stores": ["p030_closed_partition"], "started_at": "2026-09-15T16:20:02Z"}
+OK    p030_closed_partition/_P030_STABLE_PREFIX.json size=524 sha256=b34427fa5b68c05b� readback=match
+{"run_id": "opsa-20260915T162002.073Z", "status": "partial", "files": 1, "bytes": 524, "errors": 1, "completion_marker": "none", "finished_at": "2026-09-15T16:20:02Z"}
+interrupted: backup_stable_prefix=ERROR ValueError: P026 backup failed
+interrupted: run_id=opsa-20260915T162002.073Z global_record_types=['run_start', 'file', 'run_end']
+interrupted: global_run_end={"bytes": 524, "errors": ["store 'p030_closed_partition': copy/verify failed for C:\\tmp\\P026_DRILLS_TA_PREVIEW_20260915\\fixtures\\contract_partition\\stable_prefix\\drill_3\\source.jsonl: simulated interruption during the second file copy"], "files": 1, "finished_at": "2026-09-15T16:20:02Z", "record": "run_end", "run_id": "opsa-20260915T162002.073Z", "status": "partial"}
+interrupted: run_dir_entries=['p030_closed_partition', 'p030_closed_partition\\_P030_STABLE_PREFIX.json']
+interrupted: complete_marker_exists=False run_manifest_exists=False
+interrupted: restore.run_restore check_only=True rc=3 stderr_last={"status": "check_failed", "error": "run_not_complete", "detail": "run opsa-20260915T162002.073Z: no completion marker (COMPLETE.json absent)", "run_id": "opsa-20260915T162002.073Z"} target_exists=False
+interrupted: restore.run_restore check_only=False rc=3 stderr_last={"status": "check_failed", "error": "run_not_complete", "detail": "run opsa-20260915T162002.073Z: no completion marker (COMPLETE.json absent)", "run_id": "opsa-20260915T162002.073Z"} target_exists=False
+interrupted_adapter: ERROR ValueError: restore requires one complete successful P026 run
+interrupted_adapter: target_written=[]
+handmade: pair_written files=1 marker_binds=True
+handmade: restore.run_restore rc=3 stderr_last={"status": "check_failed", "error": "run_not_complete", "detail": "run opsa-20260915T162002.073Z: global manifest run_end is status='partial' with 1 error(s); only a run the backup tool closed successfully may be restored", "run_id": "opsa-20260915T162002.073Z"} target_exists=False
+handmade_adapter: ERROR ValueError: restore requires one complete successful P026 run
+handmade_adapter: target_written=[]
+cli_latest: rc=2 stdout_last= stderr_last=restore.py: error: the following arguments are required: --run
+cli_no_run: rc=2 stdout_last= stderr_last=restore.py: error: the following arguments are required: --run
+cli_latest_with_run: rc=2 stdout_last= stderr_last=restore.py: error: unrecognized arguments: --latest
+cli_explicit_check_only: rc=0 stdout_last={"mode": "check-only", "run_id": "opsa-20260915T161935.245Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09 stderr_last=

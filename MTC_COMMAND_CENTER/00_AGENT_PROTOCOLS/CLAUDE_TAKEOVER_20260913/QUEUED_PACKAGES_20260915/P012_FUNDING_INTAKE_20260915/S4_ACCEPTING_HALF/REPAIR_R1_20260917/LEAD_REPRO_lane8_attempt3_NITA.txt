@@ -1,0 +1,4 @@
+adapter declares export_tool_outcome_today.refusal_code = CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE
+draft coverage keys: ['account_scope', 'complete', 'evidence_kind', 'expected_event_ids', 'interval_end_exclusive', 'interval_start_inclusive', 'source_witnesses', 'symbol', 'unattributed_event_ids', 'witness_identity', 'witness_reasons', 'witness_rule']
+exporter on the DRAFT packet, default (SYNTHETIC) profile: accepted=False CANDIDATE_EVIDENCE_KIND_MISMATCH | coverage declares evidence_kind 'REAL_CAPTURE_READ_ONLY' but the caller admitted only 'SYNTHETIC_FIXTURE'; the evidence 
+exporter on the DRAFT packet, REAL profile: accepted=False CANDIDATE_COVERAGE_INVALID | coverage must carry exactly ['account_scope', 'complete', 'evidence_kind', 'expected_event_ids', 'fills_witness', 'fundi

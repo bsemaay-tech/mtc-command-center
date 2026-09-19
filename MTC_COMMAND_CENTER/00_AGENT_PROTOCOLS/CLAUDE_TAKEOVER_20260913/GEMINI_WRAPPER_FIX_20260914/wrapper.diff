@@ -1,0 +1,52 @@
+742c742,762
+<     Assert-ExactJsonProperties $payload @('conversation_id', 'status', 'response', 'duration_seconds', 'num_turns', 'usage') 'Gemini payload'
+---
+>     # 2026-09-14 owner-authorized repair (OD-20260914-GEMINI-WRAPPER-2): the six required members must all be
+>     # present with exact names; ADDITIONAL members are tolerated and reported on stderr (never silently)
+>     # instead of voiding a completed run. On 2026-09-14 a completed PASS review was discarded because five
+>     # transient backend INTERNAL 500 retries left error steps in the trajectory and print mode added a member
+>     # the pinned six-member schema had no room for. The status / non-empty response / sentinel checks below
+>     # are unchanged, so a run that did not actually succeed still throws.
+>     $requiredMembers = @('conversation_id', 'status', 'response', 'duration_seconds', 'num_turns', 'usage')
+>     if ($null -eq $payload -or $payload -isnot [System.Management.Automation.PSCustomObject]) {
+>         throw 'Gemini payload must be a JSON object.'
+>     }
+>     $actualMembers = @($payload.PSObject.Properties.Name)
+>     foreach ($name in $requiredMembers) {
+>         if ($actualMembers -cnotcontains $name) { throw "Gemini payload is missing the required member: $name" }
+>     }
+>     foreach ($name in $actualMembers) {
+>         if ($requiredMembers -cnotcontains $name) {
+>             $extraValue = ConvertTo-Json -InputObject $payload.$name -Depth 8 -Compress
+>             if ($null -ne $extraValue -and $extraValue.Length -gt 500) { $extraValue = $extraValue.Substring(0, 500) + '...' }
+>             [Console]::Error.WriteLine("GEMINI_RESULT_EXTRA_MEMBER name=$name value=$extraValue")
+>         }
+>     }
+1019,1020c1039,1062
+< $resultJson = ConvertFrom-SingleTurnStream -JsonText $agentResult.Stdout
+< Assert-AgentPayload -JsonText $resultJson
+---
+> $resultJson = $null
+> try {
+>     $resultJson = ConvertFrom-SingleTurnStream -JsonText $agentResult.Stdout
+>     Assert-AgentPayload -JsonText $resultJson
+> }
+> catch {
+>     # 2026-09-14 owner-authorized repair (OD-20260914-GEMINI-WRAPPER-2): when the wrapper refuses a run AFTER
+>     # the model completed (stream or payload assertion), keep the raw stdout/stderr outside the repository so
+>     # the refusal can be diagnosed from bytes instead of guessed at. Nothing is retried; the throw stands.
+>     $refusal = $_
+>     $failureDir = Join-Path ([System.IO.Path]::GetTempPath()) 'gemini_wrapper_failures'
+>     $stamp = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ') + '_' + $PID
+>     $rawPath = $null
+>     try {
+>         New-Item -ItemType Directory -Force -Path $failureDir | Out-Null
+>         $rawPath = Join-Path $failureDir "$stamp.stdout.jsonl"
+>         [System.IO.File]::WriteAllText($rawPath, [string] $agentResult.Stdout, [System.Text.UTF8Encoding]::new($false))
+>         [System.IO.File]::WriteAllText((Join-Path $failureDir "$stamp.stderr.txt"), [string] $agentResult.Stderr, [System.Text.UTF8Encoding]::new($false))
+>     }
+>     catch {
+>         $rawPath = "UNSAVED ($($_.Exception.Message))"
+>     }
+>     throw "$($refusal.Exception.Message)`nRaw stdout/stderr kept at: $rawPath"
+> }

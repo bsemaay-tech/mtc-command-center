@@ -1,0 +1,13 @@
+{
+  "window": "P012-S16-G5-P020_DERIVED_G37",
+  "verified_at": "2026-09-15T05:35:46.291256+00:00",
+  "runner_exit": 0,
+  "elapsed_seconds": 198.7,
+  "launch_exit": "exit=0 actual_exit=0 start=2026-09-15T05:32:27.9262465Z end=2026-09-15T05:35:41.2723386Z",
+  "review_log_bytes": 24595,
+  "review_log_sha256": "c9bdec5735212c02b4ff070eb8b1f38494d983003ab8781e2a7b4d9f805f3407",
+  "agy_helpers_after": 0,
+  "manifest_sha256_after": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+  "candidate_head_after": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_after": 0
+}

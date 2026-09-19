@@ -1,0 +1,7 @@
+# LEAD_ADJUDICATION — P012_RISK_PACKET_GEMINI (gemini-3.8-flash-high detection audit of the Spark-written P012 production-admission packet) — 2026-09-14 10:30Z
+
+Conversation 9b56b127-c1b4-45cc-be7a-3460885dad2b, 220 s (attempt 2; attempt 1 was a GUARD abort caused by the Lead's own packet staging racing the file watcher — fixed by making PRE_STAGE idempotent). 18 native reads, every required file/range complete, 0 mismatches.
+
+Verdict **REQUEST_CHANGES** — 3 BLOCKING, 4 CORRECTION, 2 NIT: F-01 conflates Path D fee choice B3 with the funding effective interval F-13; F-02 invents `03_PRODUCTION_CLOSURE_MATRIX.md:404` (66-line file) and misattributes 24-27; **F-03 upgrades an open owner question into "the owner is confirmed as the qualified human reviewer"** (REVIEW_POLICY:74-75 says "an experienced engineer reviews before the first money-exposed release"; nothing names the owner) — the exact hedge-upgrade class the Lead memory warns about; F-04 cites files outside the packet (real files, verify lines); F-05 path typo; F-06 seventeen wrong-line citations; F-07 paraphrased/truncated table cells; F-08 `≥1` mojibake; F-09 a "Who" question answered "Yes". Row completeness itself: 10 + 27 present.
+
+Disposition: NOT presentable. Correction lane P12FIX (Codex Plus gpt-5.5) queued FIRST on the pool after Sol R5; then a Gemini delta audit; only then presented to the owner. The three BLOCKING items are exactly why this packet is audited before the owner sees it. Adjudicated by Claude Opus 5 Lead (session 2c48d1).

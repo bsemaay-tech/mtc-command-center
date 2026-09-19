@@ -1,0 +1,10 @@
+# P0-12 research/engineering scope complete; production admission pending
+
+Recorded by the Claude Lead, 2026-09-14 03:10Z.
+
+- Owner ratification (verbatim, chat): "I ratify the Section-16 six-item review of G5 6d6a4502 and builder re-seals #36–#39 (chain #5…#39), 2026-09-14." signed_at = 2026-09-14T03:07:20Z (time of receipt). Record: `OWNER_RATIFICATION_RECORD.json`.
+- Applied in the candidate worktree `C:/tmp/P012_PATHD_20260912` (branch `feature/p012-path-d-20260912`) as commit **dac9dba6** on top of G5 `6d6a4502`: the verified schema chain patch (33 -> 37 entries, #36..#39), the Markdown chain text, and the ratified receipt `semantic_coverage_review.json` (sha256 7d7d598b99ffa6bc46e6d94faf0931e5ef8d50c84de763b26adabb92a51351bd; copy here as `semantic_coverage_review_RATIFIED.json`).
+- Full gate on that tree (`FINAL_GATE.json`, sha256 83b1b72e…): claim_label `BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_ACCEPTED`, refusals none, acceptance_blockers [], gate self-tests 656 passed, seal `00e66d9eb3517eb6bf0cb4672a22d19b58715b1b00afb4d91ffe0a4000979cb9` (#39); declared_field_validation REPORT_ONLY (4 report-only findings, unchanged, owner ruling HIST-2026-0030). Contract self-tests: 706 passed, 1 skipped (`selftests_tail.txt`).
+- A-12 preservation: the ten HYPERLIQUID production record files and `.sha256` sidecars hashed before and after — 0 changed.
+- Amendment register (P012_ACCEPTANCE_AMENDMENT_20260913.md) Class A items: A-6 (formal review) done at reviewer level; A-7 applied; A-8 gate green; A-9 self-tests green; A-11 label rendered exactly here; A-12 proven; A-13 downstream reconciliation stands (P012_DOWNSTREAM_RECONCILIATION_20260913.md: no production-dependent work unblocked). A-10 (protected Bridge check on a PR) not run: no PR is authorized.
+- **Production admission is NOT granted.** All 10 Section-19 OPEN rows, the 27 signed risks, the five residual obligations, N=3 fills, funding M, the first-authenticated-fill fee boundary, the forward funding interval and the experienced-human money gate remain open exactly as recorded in the amendment. No push, PR or merge was performed.

@@ -1,0 +1,8 @@
+2026-09-15T08:31:52Z offline ownership check: 
+2026-09-15T08:31:52Z wrapper sha256=717d718e599ac0e2eb60c3fa22d756577edf518e035f04c10c60c8abaffca667; reviewed tool sha256=00b3b8f69f0e48700ea6072e9930ddefcc48f3d28420860843c2cafaa3c62ddd (af921d75); signature sha256=86c0110ffeadfebdac8d422e33630f5bbba2b2f001efca47a9ed3d7af81cf908
+2026-09-15T08:31:52Z command: python capture_own_account_eligibility.py --address 0x1E26…AC49 --run-id p028-eligibility-20260915-r1 --ownership-signature sig_r1.txt --out /c/tmp/CLAUDE_P0_RUN_20260913/P028_ELIGIBILITY_20260915/r1 (mainnet Info: subAccounts, userFees, userRole, clearinghouseState x2; HL_API_WALLET_KEY removed from the child env)
+2026-09-15T08:31:59Z capture exit=2 elapsed=7s stdout= stderr=CAPTURE_REFUSED_REQUERY_MISMATCH
+user_fees
+2026-09-15T08:32:41Z attempt 1 REFUSED by design: userFees pass1/pass2 differed only in dailyUserVlm[2026-09-15].exchange (venue-wide daily volume 1957883672.14 -> 1957932162.61); user fields identical; r1/ kept as evidence (16 files, no manifest). Wrapper amended: re-query comparison masks the venue-wide 'exchange' field; new wrapper sha256=d817b141661ba2bdb5a1b7848a033ea533223794fc08beef83057cadddc2adb1
+2026-09-15T08:32:45Z attempt 2 exit=0 elapsed=4s stdout=CAPTURE_OK stderr=
+CAPTURE_VERIFY_OK

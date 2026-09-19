@@ -1,0 +1,13 @@
+{
+  "window": "P012-S16-G5-P026_CAND_GEMINI",
+  "verified_at": "2026-09-15T11:23:47.335987+00:00",
+  "runner_exit": 0,
+  "elapsed_seconds": 894.3,
+  "launch_exit": "exit=0 actual_exit=0 start=2026-09-15T11:08:53.4220046Z end=2026-09-15T11:23:42.3022934Z",
+  "review_log_bytes": 27180,
+  "review_log_sha256": "18a59299d4c85e6877b2a35daa3ddefcd828ceb16729aa4f2e8d5227dfb02ab8",
+  "agy_helpers_after": 0,
+  "manifest_sha256_after": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+  "candidate_head_after": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_after": 0
+}

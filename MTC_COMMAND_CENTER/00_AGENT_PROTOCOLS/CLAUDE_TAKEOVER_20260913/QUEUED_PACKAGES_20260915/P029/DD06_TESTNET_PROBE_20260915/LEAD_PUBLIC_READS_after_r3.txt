@@ -1,0 +1,9 @@
+public reads at 2026-09-16T09:01:19Z (after r3; before-values: agent spot 14.0 / perp 0.0, master spot 983.987457)
+agent kvm2-bridge 0xfa06...8504: perp accountValue 0.0 | spot [('USDC', '13.0')]
+master 0x1E26...AC49: perp accountValue 0.0 | spot [('USDC', '984.987457')]
+master openOrders: []
+master extraAgents: [('MTC-bridge-test', '0xfe7d...965b'), ('kvm2-bridge', '0xfa06...8504')]
+agent extraAgents: []
+agent ledger updates:
+   08:57:33Z send {'user': '0x1e26...ac49', 'destination': '0xfa06...8504', 'token': 'USDC', 'amount': '14.0', 'fee': '1.0'}
+   09:00:58Z spotTransfer {'token': 'USDC', 'amount': '1.0', 'user': '0xfa06...8504', 'destination': '0x1e26...ac49', 'fee': '0.0'}

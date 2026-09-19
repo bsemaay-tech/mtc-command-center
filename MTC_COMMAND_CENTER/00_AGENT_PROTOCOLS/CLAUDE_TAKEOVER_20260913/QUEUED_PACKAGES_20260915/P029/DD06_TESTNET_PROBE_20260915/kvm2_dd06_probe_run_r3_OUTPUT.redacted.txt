@@ -1,0 +1,124 @@
+UTC_start=2026-09-16T09:00:46Z run_id=dd06-testnet-20260916T090046Z-r3 out=/tmp/dd06_20260916T090046Z
+probe_sha256=96d5052ec6beaaee75e02c35ad2982404834aee33c7bc4c2ef8b52f8d73274ff
+service_before=active nrestarts_before=0 api_before={"state":"DISARMED","mode":"credential_free_disarmed","network":"disabled","exch
+--- probe start 09:00:47Z ---
+DD06_FINDING_NOT_REFUSED record=/tmp/dd06_20260916T090046Z/DD06_PROBE_RECORD.json
+probe_exit=2
+--- probe end 09:00:59Z ---
+service_after=active nrestarts_after=0 api_after={"state":"DISARMED","mode":"credential_free_disarmed","network":"disabled","exch
+record_sha256_on_host=e13b8939de263396c112f46175323684834e361c0f591d813f3d87c0ea01fa03 record_bytes=3688 sidecar=e13b8939de263396c112f46175323684834e361c0f591d813f3d87c0ea01fa03
+=== RECORD (redacted again on the way out) ===
+{
+  "account_address": "[redacted-address]",
+  "agent_address": "[redacted-address]",
+  "finding": "spotSend was NOT refused for an agent wallet",
+  "finished_utc": "2026-09-16T09:00:58.909714Z",
+  "network": "testnet",
+  "probe_version": "dd06-probe/v1",
+  "result": "DD06_FINDING_NOT_REFUSED",
+  "run_id": "dd06-testnet-20260916T090046Z-r3",
+  "started_utc": "2026-09-16T09:00:50.258525Z",
+  "steps": [
+    {
+      "data": {
+        "env_names": [
+          "HL_ACCOUNT_ADDRESS",
+          "HL_API_WALLET_KEY"
+        ],
+        "source": "process_env"
+      },
+      "name": "credential_source",
+      "outcome": "RECORDED",
+      "ts": "2026-09-16T09:00:50.258565Z"
+    },
+    {
+      "data": {
+        "extra_agents": "[{\"address\": \"[redacted-address]\", \"name\": \"MTC-bridge-test\", \"validUntil\": 1791656893517}, {\"address\": \"[redacted-address]\", \"name\": \"kvm2-bridge\", \"validUntil\": 1797169448263}]"
+      },
+      "name": "S0_extra_agents",
+      "outcome": "RECORDED",
+      "ts": "2026-09-16T09:00:52.970296Z"
+    },
+    {
+      "data": {
+        "accountValue": "0.0",
+        "withdrawable": "0.0"
+      },
+      "name": "S0_user_state",
+      "outcome": "RECORDED",
+      "ts": "2026-09-16T09:00:53.237349Z"
+    },
+    {
+      "data": {
+        "usdc_hold": "0.0",
+        "usdc_total": "983.987457"
+      },
+      "name": "S0_spot_user_state",
+      "outcome": "RECORDED",
+      "ts": "2026-09-16T09:00:53.496193Z"
+    },
+    {
+      "data": {
+        "request": "{\"coin\": \"BTC\", \"is_buy\": true, \"limit_px\": 68520.0, \"order_type\": {\"limit\": {\"tif\": \"Gtc\"}}, \"reduce_only\": false, \"sz\": 0.00016}",
+        "response": "{\"response\": {\"data\": {\"statuses\": [{\"resting\": {\"oid\": 60256197751}}]}, \"type\": \"order\"}, \"status\": \"ok\"}"
+      },
+      "name": "S1_control_order",
+      "outcome": "NOT_REFUSED",
+      "ts": "2026-09-16T09:00:55.056598Z"
+    },
+    {
+      "data": {
+        "request": "{\"coin\": \"BTC\", \"oid\": 60256197751}",
+        "response": "{\"response\": {\"data\": {\"statuses\": [\"success\"]}, \"type\": \"cancel\"}, \"status\": \"ok\"}"
+      },
+      "name": "S1_control_cancel",
+      "outcome": "NOT_REFUSED",
+      "ts": "2026-09-16T09:00:56.032903Z"
+    },
+    {
+      "data": {
+        "note": "no --sub-account given; the testnet account has none (P0-28 read: 0 sub-accounts on mainnet; testnet not read)"
+      },
+      "name": "subAccountTransfer",
+      "outcome": "SKIPPED_NO_SUB_ACCOUNT",
+      "ts": "2026-09-16T09:00:56.032944Z"
+    },
+    {
+      "data": {
+        "refusal_class": "UNCLASSIFIED",
+        "request": "{\"amount\": 6.0, \"destination\": \"[account]\"}",
+        "response": "{\"response\": \"Error withdrawing from bridge\", \"status\": \"err\"}"
+      },
+      "name": "withdraw3",
+      "outcome": "REFUSED",
+      "ts": "2026-09-16T09:00:57.034320Z"
+    },
+    {
+      "data": {
+        "refusal_class": "VALIDATION",
+        "request": "{\"amount\": 1.0, \"destination\": \"[account]\"}",
+        "response": "{\"response\": \"Insufficient balance for withdrawal.\", \"status\": \"err\"}"
+      },
+      "name": "usdSend",
+      "outcome": "REFUSED",
+      "ts": "2026-09-16T09:00:57.980287Z"
+    },
+    {
+      "data": {
+        "request": "{\"amount\": 1.0, \"destination\": \"[account]\", \"token\": \"USDC\"}",
+        "response": "{\"response\": {\"type\": \"default\"}, \"status\": \"ok\"}"
+      },
+      "name": "spotSend",
+      "outcome": "NOT_REFUSED",
+      "ts": "2026-09-16T09:00:58.901744Z"
+    },
+    {
+      "data": {},
+      "name": "approveAgent",
+      "outcome": "SKIPPED_AFTER_FINDING",
+      "ts": "2026-09-16T09:00:58.901789Z"
+    }
+  ]
+}
+=== END RECORD ===
+UTC_end=2026-09-16T09:00:59Z

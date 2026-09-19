@@ -1,0 +1,1 @@
+﻿error=System.Management.Automation.RuntimeException: Gemini did not return a successful, non-empty response. {"conversation_id":"6cfd786a-d37c-4a36-b2d2-9696e1214d21","status":"ERROR","response":"# SUPPLEMENTAL READ-ONLY DETECTION AUDIT: WP-P0-12 FUNDING INTAKE ADAPTER\n\n**Reviewer**: `gemin

@@ -1,0 +1,8 @@
+OK  expected=PASS got=PASS :: six members, SUCCESS, sentinel 
+BAD expected=PASS got=THROW :: seven members (extra error object), SUCCESS, sentinel Gemini payload contains missing or unexpected members.
+OK  expected=THROW got=THROW :: seven members, status ERROR Gemini payload contains missing or unexpected members.
+OK  expected=THROW got=THROW :: seven members, SUCCESS, sentinel missing Gemini payload contains missing or unexpected members.
+OK  expected=THROW got=THROW :: usage missing Gemini payload contains missing or unexpected members.
+OK  expected=THROW got=THROW :: usage with an extra member Gemini usage contains missing or unexpected members.
+OK  expected=THROW got=THROW :: member name wrong case (Status) Gemini payload member name/case is invalid: status
+RESULT: 1 CASE(S) DIFFER

@@ -1,0 +1,15 @@
+﻿=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    feature/p026-completion-marker-20260915
+[freshness] local origin/master tip c19538bc6c6c3e394ce6eb19df9989ac8dec4653 age=2 day(s) (commit timestamp; no fetch attempted)
+[freshness] branch merge-base fcac0ac67cf2682693ad28138b1a56e15a0846f2 is 6 commit(s) behind local origin/master (limit 30)
+[dirty]     1 entr(y/ies):
+            M  MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/RESTORE_DRILL_EVIDENCE.md
+[staged]    1 file(s):
+            MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/RESTORE_DRILL_EVIDENCE.md
+[protected] none
+[untracked] no risky files
+[pine-alert] PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
+[unpushed]  1 commit(s) ahead of upstream
+
+RESULT: PASS
+

@@ -1,0 +1,11 @@
+{
+  "backup_root": "C:\\tmp\\P026_DRILLS_TA_PREVIEW_20260915\\fixtures\\backup_root",
+  "schema": "mtc.opsa_backup_config/v1",
+  "stores": [
+    {
+      "class": "protected",
+      "id": "p030_closed_partition",
+      "path": "C:\\tmp\\P026_DRILLS_TA_PREVIEW_20260915\\fixtures\\contract_partition\\stable_prefix\\drill_3"
+    }
+  ]
+}

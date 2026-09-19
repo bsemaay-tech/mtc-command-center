@@ -1,0 +1,9 @@
+# REPRO_F2: mutant M7_refresh_bound_guard_removed (ledger blob e9e37aec lines 814-816 removed; mutant sha256 d83cca760981a084c24934e0f981e02f6955402834acdbf768f37a50f7b7d0d0); focused suite via pinned interpreter; worktree ledger restored to 81eedf03b79289dce92019a16a56e21ed9612be8cca16660d1b79095cb7ab816
+$ C:/tmp/P020_IMPL_20260912/01a0924d-2c4b-7da1-99e1-24e2a7c7685c/.venv/Scripts/python.exe -m pytest MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py -q -p no:cacheprovider
+................s.................... [ 33%]
+....................... [ 54%]
+...................................................           [100%]
+110 passed, 1 skipped, 167 subtests passed in 24.18s
+
+
+exit=0

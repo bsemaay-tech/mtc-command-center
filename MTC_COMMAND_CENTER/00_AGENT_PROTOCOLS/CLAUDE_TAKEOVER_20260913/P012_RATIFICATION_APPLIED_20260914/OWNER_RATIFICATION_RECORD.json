@@ -1,0 +1,8 @@
+{
+  "owner_words_verbatim": "I ratify the Section-16 six-item review of G5 6d6a4502 and builder re-seals #36–#39 (chain #5…#39), 2026-09-14.",
+  "channel": "Claude Code chat (owner message)",
+  "signed_at": "2026-09-14T03:07:20Z",
+  "unratified_receipt_sha256": "eb021465cf12c6ce8860dbef3e64a6b7f7ea7477c1e5fa5b889d9969e8d9db24",
+  "ratified_receipt_sha256": "7d7d598b99ffa6bc46e6d94faf0931e5ef8d50c84de763b26adabb92a51351bd",
+  "note": "signed_at is the UTC time the owner's message was received by the Lead; the owner did not specify a timestamp."
+}

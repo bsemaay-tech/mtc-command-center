@@ -1,0 +1,14 @@
+D6-snapshot: restore_verified_prefix=ERROR ValueError: snapshot prefix hash mismatch
+D6-snapshot: target_written=[]
+D6-receipt: restore_verified_prefix=ERROR ValueError: stable-prefix receipt state does not match contract
+D6-receipt: target_written=[]
+D6-marker-files: restore_verified_prefix=ERROR ValueError: P026 check-only failed; restore withheld
+D6-marker-files: target_written=[]
+D6-run-manifest-bytes: restore_verified_prefix=ERROR ValueError: P026 check-only failed; restore withheld
+D6-run-manifest-bytes: target_written=[]
+D6-forged-second-run-end: restore_verified_prefix=ERROR ValueError: restore requires one complete successful P026 run
+D6-forged-second-run-end: target_written=[]
+D6-marker-deleted: restore_verified_prefix=ERROR ValueError: P026 completion evidence is unavailable
+D6-marker-deleted: target_written=[]
+D6-forged-pair-rehashed: restore_verified_prefix=ERROR ValueError: P026 check-only failed; restore withheld
+D6-forged-pair-rehashed: target_written=[]

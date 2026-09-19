@@ -1,0 +1,1 @@
+﻿error=System.Management.Automation.RuntimeException: Gemini did not return a successful, non-empty response. {"conversation_id":"d6a5271f-682c-413b-8daa-c52ace37b942","status":"ERROR","response":"# Detection Review: WP-P0-12 Funding Intake Adapter (`IBKR_PAPER_BRIDGE/tools/funding_intake_adap

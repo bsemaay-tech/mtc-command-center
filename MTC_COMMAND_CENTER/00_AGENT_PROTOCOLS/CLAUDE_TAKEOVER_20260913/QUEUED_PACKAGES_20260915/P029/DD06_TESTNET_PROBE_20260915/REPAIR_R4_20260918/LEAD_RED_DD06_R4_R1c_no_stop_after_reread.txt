@@ -1,0 +1,70 @@
+$ (scratch C:\tmp\LEAD_DD06_SCRATCH_R4_RED) -m pytest tests/test_dd06_agent_withdraw_probe.py -q -p no:cacheprovider --basetemp=C:/bt_s4/dd06r4d -rf
+..........FF....................                                         [100%]
+================================== FAILURES ===================================
+_____________ test_transport_error_is_inconclusive_not_a_refusal ______________
+
+    def test_transport_error_is_inconclusive_not_a_refusal():
+        class Flaky(FakeExchange):
+            def usd_transfer(self, amount, destination):
+                self.calls.append("usdSend")
+                raise _ServerError(503, "no capacity")
+    
+        exchange = Flaky()
+        record = probe.run_probe(
+            record=_record(),
+            info=FakeInfo(),
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+        )
+        # second exact-Opus read of a46b2a9d, R-2: a fund-moving arm that ends in ERROR may have executed;
+        # both wallets are re-read and the sequence STOPS instead of trying the next arm
+        assert record.result == "DD06_INCONCLUSIVE_FUND_ARM_ERROR"
+        outcomes = {s["name"]: s["outcome"] for s in record.steps}
+        assert outcomes["usdSend"] == "ERROR"
+        assert "post_usdSend_account_balances" in outcomes
+>       assert outcomes["spotSend"] == "SKIPPED_AFTER_ERROR"
+E       AssertionError: assert 'REFUSED' == 'SKIPPED_AFTER_ERROR'
+E         
+E         - SKIPPED_AFTER_ERROR
+E         + REFUSED
+
+tests\test_dd06_agent_withdraw_probe.py:353: AssertionError
+_______ test_unclassifiable_response_on_fund_arm_is_measured_and_stops ________
+
+    def test_unclassifiable_response_on_fund_arm_is_measured_and_stops():
+        # fourth exact-Opus read of acd79b52, R-1: the installed SDK turns a 2xx with a non-JSON body into
+        # {"error": "Could not parse JSON: ..."} without raising; classify_response grades it INCONCLUSIVE and
+        # the loop used to fall through - no re-read, no stop, two more signed fund-moving requests sent
+        class Opaque(FakeExchange):
+            def spot_transfer(self, amount, destination, token):
+                self.calls.append("spotSend")
+                return {"error": "Could not parse JSON: <html>502 Bad Gateway</html>"}
+    
+        exchange = Opaque()
+        record = probe.run_probe(
+            record=_record(),
+            info=FakeInfo(),
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+        )
+        assert (
+            probe.classify_response({"error": "Could not parse JSON: x"}) == "INCONCLUSIVE"
+        )
+        assert record.result == "DD06_INCONCLUSIVE_FUND_ARM_UNCLASSIFIED"
+        outcomes = {s["name"]: s["outcome"] for s in record.steps}
+        assert outcomes["usdSend"] == "REFUSED"
+        assert outcomes["spotSend"] == "INCONCLUSIVE"
+        assert "post_spotSend_account_balances" in outcomes
+>       assert outcomes["withdraw3"] == "SKIPPED_AFTER_UNCLASSIFIED"
+E       AssertionError: assert 'REFUSED' == 'SKIPPED_AFTER_UNCLASSIFIED'
+E         
+E         - SKIPPED_AFTER_UNCLASSIFIED
+E         + REFUSED
+
+tests\test_dd06_agent_withdraw_probe.py:386: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_transport_error_is_inconclusive_not_a_refusal
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_unclassifiable_response_on_fund_arm_is_measured_and_stops
+2 failed, 30 passed in 0.91s

@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "C:\Users\BarýþSemaay\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\3a1bbc80-cc26-4f04-beaa-4c7c26efb500\scratchpad\p021_red\mutant_b01\p021_readiness_rules.py", line 466, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\BarýþSemaay\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\3a1bbc80-cc26-4f04-beaa-4c7c26efb500\scratchpad\p021_red\mutant_b01\p021_readiness_rules.py", line 457, in main
+    record = readiness_record()
+             ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\BarýþSemaay\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\3a1bbc80-cc26-4f04-beaa-4c7c26efb500\scratchpad\p021_red\mutant_b01\p021_readiness_rules.py", line 342, in readiness_record
+    validate_catalog(RULES, OPEN_NUMBERS, CLOSED_NUMBERS)
+  File "C:\Users\BarýþSemaay\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\3a1bbc80-cc26-4f04-beaa-4c7c26efb500\scratchpad\p021_red\mutant_b01\p021_readiness_rules.py", line 338, in validate_catalog
+    raise ValueError(f"{rule.check_id} could be presented as ready")
+ValueError: P021.DATA_QUALITY could be presented as ready

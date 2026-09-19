@@ -1,0 +1,37 @@
+# mutant R3_does_not_exist_back_in_authorization (sha256 68b6e997dded01b1a546bb4db24159471cd2f150c8440aba7ebca2b9db3919f2) on the patched tool; HL_* removed from the env; restored to 8c62dd1b8396ce47737d87ba2679396146db09c5da3f5576a0a6ea9c585fc191
+........F...................                                             [100%]
+================================== FAILURES ===================================
+__________________________ test_refusal_text_classes __________________________
+
+    def test_refusal_text_classes():
+        assert probe.classify_refusal_text("Must be user") == "AUTHORIZATION"
+        assert (
+            probe.classify_refusal_text("User or API Wallet 0xabc does not exist.")
+            == "AUTHORIZATION"
+        )
+        assert (
+            probe.classify_refusal_text("Insufficient balance for withdrawal")
+            == "VALIDATION"
+        )
+        assert (
+            probe.classify_refusal_text("Withdrawal amount below minimum") == "VALIDATION"
+        )
+        assert probe.classify_refusal_text("") == "UNCLASSIFIED"
+        # lane-7 review R-3: a sub-account or destination that "does not exist" is a VALIDATION refusal,
+        # never AUTHORIZATION-class DD-06 evidence; the venue's signer sentence still is
+>       assert (
+            probe.classify_refusal_text("Sub-account 0xabc does not exist") == "VALIDATION"
+        )
+E       AssertionError: assert 'AUTHORIZATION' == 'VALIDATION'
+E         
+E         - VALIDATION
+E         + AUTHORIZATION
+
+tests\test_dd06_agent_withdraw_probe.py:296: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_refusal_text_classes - A...
+1 failed, 27 passed in 0.67s
+
+
+exit=1
+tripwire_hit=False

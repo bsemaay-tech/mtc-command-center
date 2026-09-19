@@ -1,0 +1,9 @@
+worktree HEAD 153edee9
+F1 refusal: target_unwritable | target partition is unwritable
+F1 target exists after refusal: True | bytes: 616 | receipt exists: False
+F1 complete export bytes: 1232 | leftover is a strict prefix ending in LF: True
+F1 adapter on the truncated leftover: ACCEPTED -> C:\bt_s4\p030probe_fue7wjeg\f1\stable\_P030_STABLE_PREFIX.json | receipt record_count: None
+F2a traversal: ACCEPTED, receipt source_path = ../../outside/2026-02.jsonl
+junction created: True | is_junction: True
+F2b junction: ACCEPTED, receipt source_path = link/2026-02.jsonl
+F2b adapter on the same path: REFUSED -> source JSONL must not be a symlink or junction component

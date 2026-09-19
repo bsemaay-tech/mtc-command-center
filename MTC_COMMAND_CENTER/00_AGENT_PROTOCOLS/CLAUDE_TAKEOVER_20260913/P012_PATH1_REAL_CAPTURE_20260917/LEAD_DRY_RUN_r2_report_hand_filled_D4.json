@@ -1,0 +1,47 @@
+{
+  "accepted": true,
+  "candidate_sha256": "5da216b773cae4c590297f8fa7da0ba1c44cefa47563b2f312ce55d127daa173",
+  "event_count": 3,
+  "evidence_kind": "REAL_CAPTURE_READ_ONLY",
+  "evidence_limitations": [
+    "REAL_CAPTURE_READ_ONLY: every binding is re-derived from the exact captured venue bytes carried in the coverage witness (D-1, D-2, D-3).",
+    "The capture manifest and its ownership-signature record are named by digest in the witness identity (D-5); this tool does not re-open them.",
+    "The oracle capture behind each oracle_price is named by digest and JSON pointer (D-4); this tool does not re-open it and does not re-verify the price.",
+    "Whole-interval completeness is witnessed by two byte-identical funding passes, an hour-aligned window with a 1-second end tolerance and the fills-derived position at every hour (D-6) - or, when the fills witness carries no fill for the symbol, the constant position the payments themselves report (completion_check.position_source names which); it is evidence about the captured window only.",
+    "Production admission is NOT granted (OD-20260914-P012-ADMISSION-Q3 \"Wait\"); this artifact is not admitted by any production selection path."
+  ],
+  "inputs": {
+    "account_scope": "0x1E26\u2026AC49",
+    "binding_count": 3,
+    "interval": {
+      "end_exclusive": "2026-09-17T11:00:00Z",
+      "start_inclusive": "2026-09-17T07:00:00Z"
+    },
+    "retained_row_count": 3,
+    "symbol_scope": "BTC",
+    "synthetic_schedule_id": "p012-path1-20260917T0700Z-1100Z-r2",
+    "witness_identity": "capture_own_account_evidence.py tool_sha256=00b3b8f69f0e4870 run p012-path1-20260917T0700Z-1100Z-r2; manifest_sha256=a31b80a1a24f36b43a549ada878e487066ff629fc82c9d6aa0755e82fa93eb82; ownership OWNERSHIP_EVIDENCE: VERIFIED 0x1E26\u2026AC49"
+  },
+  "inventory_missing_event_ids": [],
+  "inventory_unmatched_event_ids": [],
+  "non_admission": {
+    "admission_status": "REFUSED_REAL_CAPTURE_READ_ONLY_NOT_A_PRODUCTION_RECORD",
+    "production_selection_keys_absent": [
+      "events",
+      "schedule_id",
+      "settlement_currency"
+    ],
+    "statement": "Read-only capture evidence bound under the P0-12 intake rules D-1..D-6. This is not an accepted economic record and not an admitted production input: OD-20260914-P012-ADMISSION-Q3 (\"Wait\") stands. It must never be installed as an MTC funding schedule."
+  },
+  "out_of_interval_bindings": [],
+  "out_of_scope_event_ids": [],
+  "production_mode": "UNAVAILABLE_PENDING_SOURCE_EVENT_DIGEST_DOMAIN",
+  "reason_code": "REAL_CAPTURE_CANDIDATE_BUILT",
+  "reason_detail": "real-capture candidate bound under D-1..D-6 from the captured venue bytes; production admission is not granted (Q3 \"Wait\")",
+  "report_kind": "SYNTHETIC_FUNDING_CANDIDATE_REPORT_V1",
+  "store_reason_codes": {},
+  "synthetic_only": false,
+  "unbound_events": [],
+  "uninventoried_event_ids": [],
+  "unknown_binding_event_ids": []
+}

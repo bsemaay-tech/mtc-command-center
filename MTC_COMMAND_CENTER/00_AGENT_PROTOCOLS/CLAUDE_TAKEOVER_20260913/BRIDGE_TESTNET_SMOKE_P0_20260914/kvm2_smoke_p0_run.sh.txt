@@ -1,0 +1,37 @@
+true
+# One-off Hyperliquid TESTNET smoke (tools/smoke_p0.py) on the accepted release, owner "smoke GO" 2026-09-14.
+# Runs from a byte-identical writable copy of the release tree (the tool writes docs/p0_smoke_log.json under its own tree).
+# Credentials: sourced by root from the 0600 env file into the process environment of the mtc-bridge user. Never echoed.
+set -u
+SHA=be007fd802bbfd2eb181d66038c374865d1562ee
+R=/opt/mtc-bridge/releases/$SHA/IBKR_PAPER_BRIDGE
+V=/opt/mtc-bridge/venvs/$SHA/bin/python
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+W=/tmp/smoke_p0_$STAMP
+echo "UTC_start=$(date -u +%Y-%m-%dT%H:%M:%SZ) workdir=$W"
+sudo -n mkdir -p "$W" || { echo "FAIL mkdir"; exit 2; }
+sudo -n cp -a "$R" "$W/" || { echo "FAIL copy"; exit 2; }
+SRC_TREE_SHA=$(cd "$R" && find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c1-64)
+CPY_TREE_SHA=$(cd "$W/IBKR_PAPER_BRIDGE" && sudo -n find . -type f -print0 | sort -z | sudo -n xargs -0 sha256sum | sha256sum | cut -c1-64)
+echo "release_tree_sha=$SRC_TREE_SHA"
+echo "copy_tree_sha=$CPY_TREE_SHA"
+if [ "$SRC_TREE_SHA" != "$CPY_TREE_SHA" ]; then echo "FAIL tree copy not identical"; exit 2; fi
+sudo -n chown -R mtc-bridge:mtc-bridge "$W" || { echo "FAIL chown"; exit 2; }
+sudo -n chmod -R u+w "$W/IBKR_PAPER_BRIDGE/docs" || { echo "FAIL chmod"; exit 2; }
+echo "service_before=$(systemctl is-active mtc-bridge-first-start.service) api_before=$(curl -s --max-time 5 http://127.0.0.1:8790/api/status | tr -d '\n' | cut -c1-80)"
+echo "--- smoke start $(date -u +%H:%M:%SZ) ---"
+# Root sources the env file (values stay in memory), drops to the service user, runs the tool once with a hard timeout.
+sudo -n bash -c "set -a; . /etc/mtc-bridge/mtc-bridge.env; set +a; export PYTHONUTF8=1 PYTHONDONTWRITEBYTECODE=1; cd '$W/IBKR_PAPER_BRIDGE' && exec timeout 300 runuser -u mtc-bridge -- '$V' tools/smoke_p0.py" 2>&1 | sed -E 's/0x[0-9a-fA-F]{64}/0x[REDACTED_64HEX]/g; s/0x[0-9a-fA-F]{40}/0x[REDACTED_ADDRESS]/g'
+echo "smoke_exit=${PIPESTATUS[0]}"
+echo "--- smoke end $(date -u +%H:%M:%SZ) ---"
+echo "service_after=$(systemctl is-active mtc-bridge-first-start.service) nrestarts=$(systemctl show -p NRestarts --value mtc-bridge-first-start.service) api_after=$(curl -s --max-time 5 http://127.0.0.1:8790/api/status | tr -d '\n' | cut -c1-80)"
+LOG="$W/IBKR_PAPER_BRIDGE/docs/p0_smoke_log.json"
+if sudo -n test -f "$LOG"; then
+  echo "log_sha256_unredacted=$(sudo -n sha256sum "$LOG" | cut -c1-64) log_bytes=$(sudo -n stat -c %s "$LOG")"
+  echo "=== LOG (redacted: 0x+40hex addresses, 0x+64hex) ==="
+  sudo -n cat "$LOG" | sed -E 's/0x[0-9a-fA-F]{64}/0x[REDACTED_64HEX]/g; s/0x[0-9a-fA-F]{40}/0x[REDACTED_ADDRESS]/g'
+  echo "=== END LOG ==="
+else
+  echo "log_missing=1"
+fi
+echo "UTC_end=$(date -u +%Y-%m-%dT%H:%M:%SZ)"

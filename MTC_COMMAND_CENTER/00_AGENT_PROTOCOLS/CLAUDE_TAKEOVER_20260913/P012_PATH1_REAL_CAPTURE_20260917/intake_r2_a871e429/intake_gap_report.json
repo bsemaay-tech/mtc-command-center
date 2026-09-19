@@ -1,0 +1,60 @@
+{
+  "account_scope": "0x1E26…AC49",
+  "adapter_version": "p012-funding-intake/v1",
+  "completeness": {
+    "complete": true,
+    "funding_passes": {
+      "funding_pass1_page001.json": "a68ce94be835153897bfab1b47fd95608c928d3437af7578a939fd91542ca434",
+      "funding_pass2_page001.json": "a68ce94be835153897bfab1b47fd95608c928d3437af7578a939fd91542ca434"
+    },
+    "reasons": [],
+    "rule": "hour-aligned window AND two byte-identical funding passes (proposed D-6)",
+    "window_end_utc": "2026-09-17T11:00:00Z",
+    "window_start_utc": "2026-09-17T07:00:00Z"
+  },
+  "decisions": {
+    "D-1": "production source_event_digest byte domain (also the retained payload_digest domain)",
+    "D-2": "funding_event_id rule for venue funding rows (the venue hash is the zero hash)",
+    "D-3": "event timestamp: venue stamp verbatim vs hour boundary",
+    "D-4": "oracle price and its source for a funding instant (not in the funding row)",
+    "D-5": "admitting a real read-only capture evidence kind beside SYNTHETIC_FIXTURE",
+    "D-6": "whole-interval completion witness for read-only captures"
+  },
+  "export_tool_outcome_today": {
+    "reason": "only SYNTHETIC_FIXTURE evidence is accepted; this packet carries a real read-only capture",
+    "refusal_code": "CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE"
+  },
+  "fills": 2,
+  "funding_events": 3,
+  "label": "NONACCEPTING_INTAKE_DRAFT",
+  "real_capture_packet": {
+    "decisions_applied": {
+      "D-1": "source_event_digest = HL_USERFUNDING_ROW_V1:sha256(exact captured row bytes)",
+      "D-2": "funding_event_id = hl-funding:<account-short>:<coin>:<time_ms>",
+      "D-3": "event_timestamp = venue stamp verbatim; interval_hour_utc = its floor",
+      "D-5": "witness_identity names run, manifest_sha256 and the ownership record",
+      "D-6": "coverage carries both funding passes and the fills pass as exact bytes; the export tool re-derives the hour grid, the 1-second end tolerance and the fills-based expected count on read"
+    },
+    "export_tool_invocation": "export_mtc_funding.py --evidence-kind REAL_CAPTURE_READ_ONLY",
+    "export_tool_outcome_expected": "CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE",
+    "file": "binding_packet_real_capture.json",
+    "reason": "built from the captured bytes",
+    "ruling": "OD-20260916-P012-INTAKE-D1-D6-R-1",
+    "statement": "The accepting shape of the intake. It admits NO production evidence: OD-20260914-P012-ADMISSION-Q3 (Wait) and the gate order Q6 stand.",
+    "status": "BUILT",
+    "unresolved": {
+      "bindings[*].oracle_price / oracle_price_source": "D-4: no oracle capture at the funding instants exists in this run"
+    }
+  },
+  "run_id": "p012-path1-20260917T0700Z-1100Z-r2",
+  "statement": "Collected, not incorporated. This draft is not an accepted economic record, not venue evidence for C-10, and not an input to any production selection path.",
+  "unresolved_fields": {
+    "bindings[*].event_timestamp (venue stamp kept verbatim)": "D-3",
+    "bindings[*].funding_event_id (rule proposed, value derived)": "D-2",
+    "bindings[*].oracle_price / oracle_price_source": "D-4",
+    "bindings[*].source_event_digest": "D-1",
+    "coverage.complete (adapter rule, not the tool's approved witness)": "D-6",
+    "coverage.evidence_kind / provenance.evidence_kind": "D-5",
+    "retained_rows[*].payload_digest": "UNAVAILABLE:BRIDGE_OBSERVATION_REQUIRED"
+  }
+}

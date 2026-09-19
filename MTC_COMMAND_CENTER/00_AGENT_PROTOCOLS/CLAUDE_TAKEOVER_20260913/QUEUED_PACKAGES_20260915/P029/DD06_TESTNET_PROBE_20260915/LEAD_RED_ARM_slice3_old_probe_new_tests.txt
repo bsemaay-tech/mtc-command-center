@@ -1,0 +1,4 @@
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_control_price_is_wire_valid_for_a_real_btc_mid
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_ok_envelope_with_a_per_status_error_is_a_refusal
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_control_arm_rejection_aborts_before_any_transfer_arm
+3 failed, 13 passed in 0.20s

@@ -1,0 +1,24 @@
+# GitHub read-only queries by the Lead (session 5), 2026-09-15T13:59:17Z
+
+## gh api repos/bsemaay-tech/mtc-command-center/rulesets/21444962 (selected fields)
+{"bypass_actors":[],"conditions":{"ref_name":{"exclude":[],"include":["~DEFAULT_BRANCH"]}},"created_at":"2026-08-25T18:24:47.194+03:00","enforcement":"active","name":"Protect master – required CI","rules":[{"parameters":null,"type":"deletion"},{"parameters":null,"type":"non_fast_forward"},{"parameters":{"do_not_enforce_on_create":false,"required_status_checks":[{"context":"Bridge suite (Python 3.12)","integration_id":15368},{"context":"pine-alert-guard","integration_id":15368}],"strict_required_status_checks_policy":true},"type":"required_status_checks"}],"target":"branch","updated_at":"2026-08-29T11:25:28.137+03:00"}
+
+## gh run list --workflow ci.yml --branch master --limit 300 (conclusion histogram)
+total 61
+{'success': 60, 'failure': 1}
+oldest 2026-08-25T12:10:43Z newest 2026-09-13T08:10:52Z
+
+## failed runs on master (ci.yml)
+[{"conclusion":"failure","createdAt":"2026-08-25T12:10:43Z","databaseId":32846169952,"displayTitle":"merge: WAL capture-ordering fix + coverage that can actually fail (ow…","headSha":"110305c0790b2451cb13ded914d27e89609c35d5"}]
+
+## gh pr view 193
+{"baseRefName":"master","checks":[{"completedAt":"2026-09-15T11:31:41Z","conclusion":"SUCCESS","name":"Bridge suite (Python 3.12)","startedAt":"2026-09-15T11:30:02Z"},{"completedAt":"2026-09-15T11:30:13Z","conclusion":"SUCCESS","name":"pine-alert-guard","startedAt":"2026-09-15T11:30:01Z"},{"completedAt":"2026-09-15T11:30:12Z","conclusion":"SUCCESS","name":"pine-alert-guard","startedAt":"2026-09-15T11:29:59Z"},{"completedAt":"2026-09-15T11:32:25Z","conclusion":"SUCCESS","name":"Research gate checkers (Python 3.12)","startedAt":"2026-09-15T11:32:12Z"},{"completedAt":"2026-09-15T11:30:42Z","conclusion":"SUCCESS","name":"P0-30 checkers (Python 3.12, Windows)","startedAt":"2026-09-15T11:30:02Z"},{"completedAt":"2026-09-15T11:30:29Z","conclusion":"SUCCESS","name":"Contracts tests and Ruff (Python 3.12)","startedAt":"2026-09-15T11:30:02Z"},{"completedAt":null,"conclusion":"SUCCESS","name":"Vercel","startedAt":"2026-09-15T11:30:45Z"},{"completedAt":"2026-09-15T11:30:46Z","conclusion":"SUCCESS","name":"Vercel Preview Comments","startedAt":"2026-09-15T11:30:46Z"}],"headRefName":"feature/p027-research-gates-additions-20260915","headRefOid":"a33258367739400017c11a7e498030238f9b1564","isDraft":false,"mergeStateStatus":"CLEAN","mergedAt":null,"number":193,"state":"OPEN"}
+
+## gh pr view 192
+{"closedAt":"2026-09-15T08:23:21Z","headRefOid":"179890c5bc664733e15b3019783eae0783471886","mergedAt":null,"number":192,"state":"CLOSED"}
+
+## origin/master
+fcac0ac67cf2682693ad28138b1a56e15a0846f2
+100644 blob 3394d9ffdb53d3da0d94efe4f308f16a8838d1ba	.github/workflows/ci.yml
+100644 blob db5a950b2c9aafd86b6532f257d47b41fae2f6e3	.github/workflows/pine-defang-guard.yml
+100644 blob e8c520f62a35c1588ac84dcc6cfcc18854e2a009	.github/workflows/research-gates.yml

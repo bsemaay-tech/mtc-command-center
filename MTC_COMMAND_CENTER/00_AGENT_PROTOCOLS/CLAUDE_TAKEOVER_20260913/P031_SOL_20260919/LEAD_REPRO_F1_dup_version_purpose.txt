@@ -1,0 +1,7 @@
+$ (cwd C:/tmp; interpreter /c/tmp/P020_IMPL_20260912/01a0924d-2c4b-7da1-99e1-24e2a7c7685c/.venv/Scripts/python.exe = Python 3.12.12; worktree C:/tmp/P031_M1_20260913 @ 61c56148, read-only) python p031_repro_f1.py
+interpreter 3.12.12 | ledger module C:\tmp\P031_M1_20260913\MTC_COMMAND_CENTER\03_QUANTLENS\tools\p031_lifecycle_ledger.py
+state before arms: SHADOW
+control-unique-version-no-purpose: APPENDED (no refusal); state now SHADOW
+dup-version-no-purpose: REFUSED ADMISSION_WITHHELD_TARGET_UNRESOLVED
+dup-version-purpose-paper: APPENDED (no refusal); state now SHADOW
+dup-version-purpose-testnet: APPENDED (no refusal); state now SHADOW

@@ -1,0 +1,24 @@
+.....F......                                                             [100%]
+================================== FAILURES ===================================
+____ test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence _____
+    def test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence():
+        class Leaky(FakeExchange):
+            def usd_transfer(self, amount, destination):
+                self.calls.append("usdSend")
+                return {"status": "ok", "response": {"type": "default"}}
+    
+        exchange = Leaky()
+        record = probe.run_probe(record=_record(), info=FakeInfo(), exchange=exchange, account_address=ACCOUNT, sub_account=None)
+        assert record.result == "DD06_FINDING_NOT_REFUSED"
+        assert record.finding == "usdSend was NOT refused for an agent wallet"
+        outcomes = {s["name"]: s["outcome"] for s in record.steps}
+        assert outcomes["withdraw3"] == "REFUSED" and outcomes["usdSend"] == "NOT_REFUSED"
+>       assert outcomes["spotSend"] == "SKIPPED_AFTER_FINDING" and outcomes["approveAgent"] == "SKIPPED_AFTER_FINDING"
+E       AssertionError: assert ('REFUSED' == 'SKIPPED_AFTER_FINDING'
+E         
+E         - SKIPPED_AFTER_FINDING
+E         + REFUSED)
+tests\test_dd06_agent_withdraw_probe.py:158: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_moving_arm_is_a_finding_and_stops_the_sequence
+1 failed, 11 passed in 0.22s

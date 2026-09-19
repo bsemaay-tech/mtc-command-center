@@ -1,0 +1,73 @@
+$ (mutant mutD1_receipt_appeared_arm_removed; cwd C:\tmp\LEAD_P030_SCRATCH_R2\mutD1_receipt_appeared_arm_removed; interpreter C:/Python314/python.exe; TEMP C:\bt_s4\p030_tmp) check_p030_archive_exporter.py
+D-13 RED RAW REFUSAL: prefix record is not canonical JSONL
+D-13 GREEN EXPORTED CAPTURE: PASS
+test_contract_refused_from_row_identity (__main__.ArchiveExporterRefusalCodeTests.test_contract_refused_from_row_identity) ... ok
+test_contract_refused_from_slice_validation (__main__.ArchiveExporterRefusalCodeTests.test_contract_refused_from_slice_validation) ... ok
+test_dotdot_traversal_is_refused_even_when_lexically_under_root (__main__.ArchiveExporterRefusalCodeTests.test_dotdot_traversal_is_refused_even_when_lexically_under_root)
+Lane-3 T0 review finding 2: `..` components used to pass the lexical relative_to check ... ok
+test_exporter_sha256_is_the_lf_form_on_any_checkout (__main__.ArchiveExporterRefusalCodeTests.test_exporter_sha256_is_the_lf_form_on_any_checkout)
+Lane-3 T0 review finding 5: the receipt's exporter digest must not depend on CRLF checkout. ... ok
+test_invalid_timestamp_refusals_including_sub_second (__main__.ArchiveExporterRefusalCodeTests.test_invalid_timestamp_refusals_including_sub_second) ... ok
+test_junction_component_is_refused_like_the_adapter (__main__.ArchiveExporterRefusalCodeTests.test_junction_component_is_refused_like_the_adapter)
+Lane-3 T0 review finding 2: a junction inside the root that points outside must be refused ... ok
+test_mid_write_failure_publishes_nothing_under_the_target_name (__main__.ArchiveExporterRefusalCodeTests.test_mid_write_failure_publishes_nothing_under_the_target_name)
+Lane-3 T0 review finding 1: an ENOSPC-shaped failure after the file was created must not ... ok
+test_mixed_dataset_descriptor_refusal (__main__.ArchiveExporterRefusalCodeTests.test_mixed_dataset_descriptor_refusal) ... ok
+test_pathologically_nested_line_is_a_refusal_not_a_crash (__main__.ArchiveExporterRefusalCodeTests.test_pathologically_nested_line_is_a_refusal_not_a_crash) ... ok
+test_percent_encoded_segments_are_refused_like_the_adapter (__main__.ArchiveExporterRefusalCodeTests.test_percent_encoded_segments_are_refused_like_the_adapter)
+Gemini delta review of the repair (P030_R1 NIT 2): the adapter refuses percent-escaped ... ok
+test_publication_never_replaces_a_receipt_that_appeared_after_the_check (__main__.ArchiveExporterRefusalCodeTests.test_publication_never_replaces_a_receipt_that_appeared_after_the_check) ... FAIL
+test_publication_never_replaces_a_target_that_appeared_after_the_check (__main__.ArchiveExporterRefusalCodeTests.test_publication_never_replaces_a_target_that_appeared_after_the_check) ... ok
+test_publish_failure_of_the_target_leaves_receipt_without_partition (__main__.ArchiveExporterRefusalCodeTests.test_publish_failure_of_the_target_leaves_receipt_without_partition)
+The documented residual window: the receipt is published first (inert alone); if taking the ... ok
+test_receipt_exists_refusal (__main__.ArchiveExporterRefusalCodeTests.test_receipt_exists_refusal) ... ok
+test_short_read_refusals (__main__.ArchiveExporterRefusalCodeTests.test_short_read_refusals) ... ok
+test_source_fields_mismatch_refusal (__main__.ArchiveExporterRefusalCodeTests.test_source_fields_mismatch_refusal) ... ok
+test_source_line_invalid_for_overflow_and_nan_literals (__main__.ArchiveExporterRefusalCodeTests.test_source_line_invalid_for_overflow_and_nan_literals) ... ok
+test_source_line_noncanonical_refusal (__main__.ArchiveExporterRefusalCodeTests.test_source_line_noncanonical_refusal) ... ok
+test_source_outside_root_refusal (__main__.ArchiveExporterRefusalCodeTests.test_source_outside_root_refusal) ... ok
+test_source_unreadable_refusal (__main__.ArchiveExporterRefusalCodeTests.test_source_unreadable_refusal) ... ok
+test_target_and_receipt_unwritable_refusals (__main__.ArchiveExporterRefusalCodeTests.test_target_and_receipt_unwritable_refusals) ... ok
+test_empty_partition_refusal (__main__.ArchiveExporterTests.test_empty_partition_refusal) ... ok
+test_exported_collector_fixture_is_accepted_by_stable_prefix_adapter (__main__.ArchiveExporterTests.test_exported_collector_fixture_is_accepted_by_stable_prefix_adapter) ... ok
+test_malformed_line_refusal (__main__.ArchiveExporterTests.test_malformed_line_refusal) ... ok
+test_prefixed_identity_mismatch_is_refused (__main__.ArchiveExporterTests.test_prefixed_identity_mismatch_is_refused) ... ok
+test_receipt_fields_hashes_and_identity_rewrite_are_correct (__main__.ArchiveExporterTests.test_receipt_fields_hashes_and_identity_rewrite_are_correct) ... ok
+test_target_exists_refusal (__main__.ArchiveExporterTests.test_target_exists_refusal) ... ok
+test_target_reread_byte_identity_refusal (__main__.ArchiveExporterTests.test_target_reread_byte_identity_refusal) ... ok
+test_two_exports_are_byte_identical (__main__.ArchiveExporterTests.test_two_exports_are_byte_identical) ... ok
+
+======================================================================
+FAIL: test_publication_never_replaces_a_receipt_that_appeared_after_the_check (__main__.ArchiveExporterRefusalCodeTests.test_publication_never_replaces_a_receipt_that_appeared_after_the_check)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutD1_receipt_appeared_arm_removed\p030_archive_exporter.py", line 513, in export_partition
+    _publish(staging_receipt, receipt_path)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutD1_receipt_appeared_arm_removed\p030_archive_exporter.py", line 90, in _publish
+    os.rename(staging, final)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^
+FileExistsError: [WinError 183] Halen varolan bir dosya oluşturulamaz: 'C:\\bt_s4\\p030_tmp\\tmpmn8da68n\\out\\partition.jsonl.p030export.json.p030partial' -> 'C:\\bt_s4\\p030_tmp\\tmpmn8da68n\\out\\partition.jsonl.p030export.json'
+
+The above exception was the direct cause of the following exception:
+
+p030_archive_exporter.ExportRefused: export receipt could not be published
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\tmp\LEAD_P030_SCRATCH_R2\mutD1_receipt_appeared_arm_removed\check_p030_archive_exporter.py", line 480, in test_publication_never_replaces_a_receipt_that_appeared_after_the_check
+    self.assertRaisesRegex(
+    ~~~~~~~~~~~~~~~~~~~~~~^
+        subject.ExportRefused, "receipt appeared before publication"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as caught,
+    ^
+AssertionError: "receipt appeared before publication" does not match "export receipt could not be published"
+
+----------------------------------------------------------------------
+Ran 29 tests in 0.415s
+
+FAILED (failures=1)
+
+[exit 1]
