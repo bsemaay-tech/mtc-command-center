@@ -30,6 +30,7 @@ from typing import Any
 
 from eth_account import Account
 from eth_account.messages import encode_defunct
+from eth_utils.exceptions import ValidationError
 from hyperliquid.info import Info
 from hyperliquid.utils import constants
 
@@ -226,18 +227,11 @@ def fill_identity(row: Any) -> str:
         if isinstance(tid, bool) or not isinstance(tid, int):
             raise CaptureRefused(REFUSED_MALFORMED, "fill tid is malformed")
         return f"tid:{tid}"
-    oid = row.get("oid")
-    h = row.get("hash")
-    t = row.get("time")
-    if (
-        not isinstance(h, str)
-        or isinstance(oid, bool)
-        or not isinstance(oid, int)
-        or isinstance(t, bool)
-        or not isinstance(t, int)
-    ):
-        raise CaptureRefused(REFUSED_MALFORMED, "fill identity is malformed")
-    return f"hash-oid-time:{h}:{oid}:{t}"
+    # NIT-5 (exact-Opus read of af921d75): the former hash+oid+time fallback could merge two
+    # identical partial fills of one order in one block (an undercount). Every venue fill carries
+    # a tid (r1/r2 captures: all rows); a fill without one cannot be counted without ambiguity, so
+    # the shape is refused rather than guessed
+    raise CaptureRefused(REFUSED_MALFORMED, "fill without tid (identity would be ambiguous)")
 
 
 def funding_coin(row: dict[str, Any]) -> Any:
@@ -352,9 +346,17 @@ def paged_query(
         if not isinstance(parsed, list):
             raise CaptureRefused(REFUSED_MALFORMED, f"{kind} response is not a list")
         page_max = cursor
+        previous_time: int | None = None
         for index, row in enumerate(parsed):
             ident = identity(row)
             t = row_time(row)
+            if previous_time is not None and t < previous_time:
+                # NIT-2: the cursor arithmetic below assumes ascending pages (the SDK's order);
+                # a descending page would set the next cursor past unread rows - refuse instead
+                raise CaptureRefused(
+                    REFUSED_MALFORMED, f"{kind} page not in ascending time order ({ident})"
+                )
+            previous_time = t
             # the API is asked for [cursor, end_ms] (endTime inclusive); anything outside
             # the requested range is a malformed response, never silently admitted
             if t < start_ms:
@@ -445,8 +447,7 @@ def account_state_query(
         started=started,
     )
     ended = datetime.now(UTC)
-    if not isinstance(parsed, dict):
-        raise CaptureRefused(REFUSED_MALFORMED, "account state is not an object")
+    # NIT-3: the bytes are kept before the shape is judged, as paged_query does
     record_response(
         out_dir,
         manifest,
@@ -456,6 +457,10 @@ def account_state_query(
         started=started,
         ended=ended,
     )
+    if not isinstance(parsed, dict):
+        raise CaptureRefused(
+            REFUSED_MALFORMED, "account state is not an object (bytes kept as account_state.json)"
+        )
 
 
 def fill_derived(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -508,9 +513,21 @@ def funding_derived(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def read_signature(path: Path) -> str:
-    raw = path.read_text(encoding="utf-8").strip()
+    # NIT-6: an unreadable or malformed signature file is a named refusal (exit 2), not a
+    # raw exception (exit 1)
+    try:
+        raw = path.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise CaptureRefused(
+            REFUSED_BAD_SIGNATURE, f"signature file unreadable: {path.name}"
+        ) from exc
     if raw.startswith("{"):
-        value = json.loads(raw).get("signature")
+        try:
+            value = json.loads(raw).get("signature")
+        except (json.JSONDecodeError, AttributeError) as exc:
+            raise CaptureRefused(
+                REFUSED_BAD_SIGNATURE, "signature file is not a JSON object"
+            ) from exc
         if not isinstance(value, str):
             raise CaptureRefused(REFUSED_BAD_SIGNATURE, "JSON missing signature")
         return value.strip()
@@ -523,28 +540,87 @@ def ownership_result(
     if signature_path is None:
         return {"status": "OWNERSHIP_EVIDENCE: NOT_PROVIDED"}
     signature = read_signature(signature_path)
-    recovered = Account.recover_message(
-        encode_defunct(text=ownership_message(address, run_id)),
-        signature=signature,
-    )
+    message = ownership_message(address, run_id)
+    try:
+        recovered = Account.recover_message(
+            encode_defunct(text=message), signature=signature
+        )
+    except (ValueError, TypeError, ValidationError) as exc:
+        # NIT-6: a signature that cannot be parsed or recovered is a named refusal
+        raise CaptureRefused(
+            REFUSED_BAD_SIGNATURE, f"signature not recoverable: {type(exc).__name__}"
+        ) from exc
     ok = recovered.lower() == address.lower()
     if not ok:
         raise CaptureRefused(REFUSED_BAD_SIGNATURE, "recovered address mismatch")
-    return {"status": "OWNERSHIP_EVIDENCE: VERIFIED", "recovered_address": recovered}
+    # NIT-7: the exact signed text and the signature travel with the manifest, so the record is
+    # complete without a file kept beside the tool. The message binds address + run_id only
+    # (start / end / network are NOT signed) - a design change to the signed text would
+    # invalidate the owner's earlier signatures and is the owner's call, not this slice's.
+    return {
+        "status": "OWNERSHIP_EVIDENCE: VERIFIED",
+        "recovered_address": recovered,
+        "message": message,
+        "signature": signature,
+        "binds": "address+run_id",
+    }
+
+
+def _sidecar_digest(path: Path) -> str:
+    sidecar = path.with_name(path.name + ".sha256")
+    try:
+        return sidecar.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise CaptureRefused(
+            REFUSED_BAD_SIDECAR, f"sidecar unreadable: {sidecar.name}"
+        ) from exc
 
 
 def verify_sidecars(out_dir: Path) -> None:
-    manifest = json.loads(
-        (out_dir / "CAPTURE_MANIFEST.json").read_text(encoding="utf-8")
-    )
+    """``CAPTURE_VERIFY_OK`` means: every recorded response matches its sidecar AND the
+    manifest's digest; every ``*.sha256`` in the directory (the derived view and the manifest
+    included) names an existing file that hashes to it; and, when the manifest records
+    ``derived_extraction_sha256`` (written from this version on), the derived view matches it.
+    NIT-1 of the exact-Opus read of af921d75: the former check covered the responses only."""
+    manifest_path = out_dir / "CAPTURE_MANIFEST.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        # NIT-6: a missing directory or manifest is a named refusal, not a raw exception
+        raise CaptureRefused(
+            REFUSED_BAD_SIDECAR, f"manifest unreadable: {manifest_path}"
+        ) from exc
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("responses"), list):
+        raise CaptureRefused(REFUSED_BAD_SIDECAR, "manifest has no responses list")
     for entry in manifest["responses"]:
         path = out_dir / entry["file"]
-        actual = sha256_bytes(path.read_bytes())
-        sidecar = (
-            path.with_name(path.name + ".sha256").read_text(encoding="utf-8").strip()
-        )
-        if actual != sidecar or actual != entry["response_sha256"]:
+        try:
+            actual = sha256_bytes(path.read_bytes())
+        except OSError as exc:
+            raise CaptureRefused(REFUSED_BAD_SIDECAR, entry["file"]) from exc
+        if actual != _sidecar_digest(path) or actual != entry["response_sha256"]:
             raise CaptureRefused(REFUSED_BAD_SIDECAR, entry["file"])
+    for sidecar in sorted(out_dir.glob("*.sha256")):
+        target = sidecar.with_name(sidecar.name[: -len(".sha256")])
+        try:
+            actual = sha256_bytes(target.read_bytes())
+        except OSError as exc:
+            raise CaptureRefused(
+                REFUSED_BAD_SIDECAR, f"{sidecar.name} names a missing file"
+            ) from exc
+        if actual != _sidecar_digest(target):
+            raise CaptureRefused(REFUSED_BAD_SIDECAR, target.name)
+    recorded = manifest.get("derived_extraction_sha256")
+    if recorded is not None:
+        derived = out_dir / "DERIVED_EXTRACTION.json"
+        try:
+            actual = sha256_bytes(derived.read_bytes())
+        except OSError as exc:
+            raise CaptureRefused(REFUSED_BAD_SIDECAR, derived.name) from exc
+        if actual != recorded:
+            raise CaptureRefused(
+                REFUSED_BAD_SIDECAR, "DERIVED_EXTRACTION.json differs from the manifest digest"
+            )
 
 
 def requery_check(
@@ -646,10 +722,12 @@ def run_capture(args: argparse.Namespace) -> dict[str, Any]:
         "fills": fill_derived(fills_1),
         "funding": funding_derived(funding_1),
     }
-    write_once(out_dir / "DERIVED_EXTRACTION.json", json_bytes(extraction))
+    derived_digest = write_once(out_dir / "DERIVED_EXTRACTION.json", json_bytes(extraction))
     manifest = {
         "kind": "P012_PATH1_OWN_ACCOUNT_CAPTURE_MANIFEST_V1",
         "run_id": run_id,
+        # NIT-1: the derived view's digest is part of the manifest, so verify_sidecars binds it
+        "derived_extraction_sha256": derived_digest,
         "network": args.network,
         "address": args.address,
         "coin": args.coin,

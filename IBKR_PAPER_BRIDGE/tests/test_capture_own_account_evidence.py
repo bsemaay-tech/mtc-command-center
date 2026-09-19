@@ -319,6 +319,165 @@ def test_funding_identity_includes_coin(tmp_path, monkeypatch):
     assert "no coin" in exc.value.detail
 
 
+FIXTURE_R2 = Path(__file__).parent / "fixtures" / "p012_path1_r2_capture"
+
+
+def test_verify_covers_derived_view_and_manifest_sidecars(tmp_path, monkeypatch):
+    # NIT-1: CAPTURE_VERIFY_OK used to cover the responses only; the derived view and the manifest
+    # have sidecars too, and the manifest records the derived digest
+    patch_info(monkeypatch, FakeInfo())
+    manifest = cae.run_capture(args(tmp_path))
+    derived = tmp_path / "DERIVED_EXTRACTION.json"
+    assert manifest["derived_extraction_sha256"] == cae.sha256_bytes(derived.read_bytes())
+    cae.verify_sidecars(tmp_path)
+    good = derived.read_bytes()
+    derived.write_bytes(good.replace(b'"0.01"', b'"0.02"', 1))
+    with pytest.raises(cae.CaptureRefused) as exc:
+        cae.verify_sidecars(tmp_path)
+    assert exc.value.code == cae.REFUSED_BAD_SIDECAR
+    assert "DERIVED_EXTRACTION.json" in exc.value.detail
+    # a re-hashed sidecar does not help: the manifest carries the digest
+    (tmp_path / "DERIVED_EXTRACTION.json.sha256").write_text(
+        cae.sha256_bytes(derived.read_bytes()) + "\n", encoding="utf-8"
+    )
+    with pytest.raises(cae.CaptureRefused) as exc:
+        cae.verify_sidecars(tmp_path)
+    assert "differs from the manifest digest" in exc.value.detail
+    derived.write_bytes(good)
+    (tmp_path / "DERIVED_EXTRACTION.json.sha256").write_text(
+        cae.sha256_bytes(good) + "\n", encoding="utf-8"
+    )
+    cae.verify_sidecars(tmp_path)
+    manifest_path = tmp_path / "CAPTURE_MANIFEST.json"
+    manifest_path.write_bytes(manifest_path.read_bytes() + b"\n")
+    with pytest.raises(cae.CaptureRefused) as exc:
+        cae.verify_sidecars(tmp_path)
+    assert exc.value.detail == "CAPTURE_MANIFEST.json"
+
+
+def test_stray_sidecar_without_its_file_refuses(tmp_path, monkeypatch):
+    patch_info(monkeypatch, FakeInfo())
+    cae.run_capture(args(tmp_path))
+    (tmp_path / "ghost.json.sha256").write_text("00" * 32 + "\n", encoding="utf-8")
+    with pytest.raises(cae.CaptureRefused) as exc:
+        cae.verify_sidecars(tmp_path)
+    assert exc.value.code == cae.REFUSED_BAD_SIDECAR
+    assert "ghost.json.sha256 names a missing file" == exc.value.detail
+
+
+def test_descending_page_refuses_instead_of_truncating(tmp_path, monkeypatch):
+    # NIT-2: the cursor arithmetic assumes ascending pages; a descending page is refused
+    later = fill_row(tid=2, time=INSIDE_MS + 1000)
+    earlier = fill_row(tid=1, time=INSIDE_MS)
+    patch_info(monkeypatch, FakeInfo(fills=[[later, earlier], [later, earlier]]))
+    with pytest.raises(cae.CaptureRefused) as exc:
+        cae.run_capture(args(tmp_path))
+    assert exc.value.code == cae.REFUSED_MALFORMED
+    assert "not in ascending time order" in exc.value.detail
+
+
+def test_malformed_account_state_keeps_its_bytes_before_refusing(tmp_path, monkeypatch):
+    # NIT-3: account_state bytes are recorded before the shape check, like the paged queries
+    patch_info(monkeypatch, FakeInfo(state=["not", "an", "object"]))
+    with pytest.raises(cae.CaptureRefused) as exc:
+        cae.run_capture(args(tmp_path))
+    assert exc.value.code == cae.REFUSED_MALFORMED
+    assert "account state is not an object" in exc.value.detail
+    assert (tmp_path / "account_state.json").exists()
+    assert (tmp_path / "account_state.json.sha256").exists()
+
+
+def test_fill_without_tid_is_refused_not_guessed():
+    # NIT-5: hash+oid+time could merge two identical partial fills; the shape is refused
+    with pytest.raises(cae.CaptureRefused) as exc:
+        cae.fill_identity(fill_row(tid=None))
+    assert exc.value.code == cae.REFUSED_MALFORMED
+    assert "without tid" in exc.value.detail
+    assert cae.fill_identity(fill_row(tid=7)) == "tid:7"
+
+
+@pytest.mark.parametrize(
+    ("content", "fragment"),
+    [
+        ("{not json", "not a JSON object"),
+        ("0xzz", "not recoverable"),
+        ("0x" + "11" * 65, "not recoverable"),
+    ],
+)
+def test_malformed_signature_is_a_named_refusal(tmp_path, monkeypatch, content, fragment):
+    # NIT-6: a malformed signature file or signature exits 2 with a named refusal, never a raw
+    # exception (exit 1)
+    patch_info(monkeypatch, FakeInfo())
+    path = tmp_path / "sig.txt"
+    path.write_text(content, encoding="utf-8")
+    with pytest.raises(cae.CaptureRefused) as exc:
+        cae.run_capture(args(tmp_path, ownership_signature=path))
+    assert exc.value.code == cae.REFUSED_BAD_SIGNATURE
+    assert fragment in exc.value.detail
+    assert not (tmp_path / "CAPTURE_MANIFEST.json").exists()
+
+
+def test_missing_signature_file_and_bad_verify_dir_exit_two(tmp_path, monkeypatch, capsys):
+    patch_info(monkeypatch, FakeInfo())
+    rc = cae.main(
+        [
+            "--network", "testnet", "--address", ADDRESS, "--start", START, "--end", END,
+            "--out", str(tmp_path / "out"), "--run-id", "run-1",
+            "--ownership-signature", str(tmp_path / "absent.txt"),
+        ]
+    )
+    assert rc == 2
+    assert cae.REFUSED_BAD_SIGNATURE in capsys.readouterr().err
+    rc = cae.main(["--verify-existing", str(tmp_path / "no-such-dir")])
+    assert rc == 2
+    assert cae.REFUSED_BAD_SIDECAR in capsys.readouterr().err
+
+
+def test_manifest_carries_the_signed_text_and_signature(tmp_path, monkeypatch):
+    # NIT-7: the exact signed text and the signature are stored in the manifest (the message
+    # still binds address + run_id only - changing it is the owner's call)
+    account = Account.create()
+    patch_info(monkeypatch, FakeInfo())
+    path = signed(account, "run-7", tmp_path)
+    manifest = cae.run_capture(
+        args(tmp_path, address=account.address, ownership_signature=path, run_id="run-7")
+    )
+    evidence = manifest["ownership_evidence"]
+    assert evidence["status"] == "OWNERSHIP_EVIDENCE: VERIFIED"
+    assert evidence["message"] == cae.ownership_message(account.address, "run-7")
+    assert evidence["signature"] == path.read_text(encoding="utf-8").strip()
+    assert evidence["binds"] == "address+run_id"
+    stored = read_json(tmp_path / "CAPTURE_MANIFEST.json")["ownership_evidence"]
+    assert stored == evidence
+
+
+def test_real_r2_capture_bytes_replay(tmp_path):
+    # NIT-4: the stored bytes of the real r2 capture (mainnet, 2026-09-17) verify, and the derived
+    # view is reproducible from the stored page bytes with the current identity/derivation code
+    cae.verify_sidecars(FIXTURE_R2)
+    manifest = read_json(FIXTURE_R2 / "CAPTURE_MANIFEST.json")
+    assert manifest["run_id"] == "p012-path1-20260917T0700Z-1100Z-r2"
+    assert manifest["network"] == "mainnet"
+    assert len(manifest["responses"]) == 5
+    derived = read_json(FIXTURE_R2 / "DERIVED_EXTRACTION.json")
+
+    def rows(kind: str, identity):
+        digest = next(
+            e["response_sha256"] for e in manifest["responses"] if e["file"] == f"{kind}_pass1_page001.json"
+        )
+        page = read_json(FIXTURE_R2 / f"{kind}_pass1_page001.json")
+        return [
+            {"identity": identity(row), "row": row, "capture_sha256": digest, "json_pointer": f"/{i}"}
+            for i, row in enumerate(page)
+        ]
+
+    assert cae.fill_derived(rows("fills", cae.fill_identity)) == derived["fills"]
+    assert cae.funding_derived(rows("funding", cae.funding_identity)) == derived["funding"]
+    assert len(derived["fills"]) == 2 and len(derived["funding"]) == 3
+    # the old manifest (af921d75) has no derived digest; verification tolerates its absence
+    assert "derived_extraction_sha256" not in manifest
+
+
 def test_tampered_stored_bytes_vs_sidecar_refuses(tmp_path, monkeypatch):
     fake = FakeInfo()
     patch_info(monkeypatch, fake)
