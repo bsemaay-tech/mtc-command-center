@@ -1,0 +1,208 @@
+{
+  "census_kind": "P031_M2_SOURCE_CENSUS_V0",
+  "fold_counts_vs_measured": {
+    "TRIAGE candidates": "fold 172 -> measured 172",
+    "producer_spec filled": "fold 44/63 -> measured 44/63"
+  },
+  "identity_vocabularies": {
+    "AI_QUANTLENS.strategy_id": {
+      "form": "CAND_… / GEN_… / QLR_…",
+      "in_TRIAGE_candidate_ids": 169,
+      "in_registry_ids": 0,
+      "orphans": [
+        "GEN_ATR_PULLBACK_TREND",
+        "GEN_DONCHIAN_BREAKOUT",
+        "GEN_GOLDEN_CROSS_PULLBACK",
+        "GEN_KELTNER_BREAKOUT",
+        "GEN_MACD_BULL_CROSS",
+        "GEN_RSI_OVERSOLD_REVERSAL",
+        "GEN_STOCH_OVERSOLD_CROSS",
+        "GEN_ZSCORE_MEAN_REVERSION",
+        "QLR_C9Pvd9UD0jM",
+        "QLR_SMWMraeRDXs",
+        "QLR_Tm0dkf8_giA",
+        "QLR_VKNEJA5r8zw",
+        "QLR_esDKpwi1b2M",
+        "QL_2026-05-01_SP500_5M_TWO_CANDLE_SENTIMENT_SR",
+        "QL_2026-05-01_US_EQUITIES_INTRADAY_8EMA_EXIT_TRAIL",
+        "QL_ANTI_CHASE_CRABEL_v1",
+        "QL_AVWAP_BRIAN_INTRADAY_OR_5M",
+        "QL_AVWAP_BRIAN_STAGE2_EMERGING_1D",
+        "QL_BIGBELUGA_RSI_v1",
+        "QL_CRABEL_RANGE_EXP_v1",
+        "QL_DEEPAK_153_FILTER_1D",
+        "QL_DEEPAK_259_RISK_OVERLAY",
+        "QL_DEEPAK_SNAPBACK_50SMA_INTRADAY",
+        "QL_EMA_RETEST_v1",
+        "QL_FAM_CONSOLIDATION_BREAKOUT",
+        "QL_FAM_MOMENTUM_CONTINUATION",
+        "QL_FAM_PULLBACK_TO_MA",
+        "QL_HARRIS_50DMA_v1",
+        "QL_HIGHEST_VOLUME_EDGE_PROSWING_1D",
+        "QL_KELL_BATCH_v1",
+        "QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION",
+        "QL_LINDA_5SMA_v1",
+        "QL_OLIVER_KELL_PRICE_CYCLE",
+        "QL_OPEN_RANGE_5PCT_STOP_CHRISTIAN_5M",
+        "QL_QTREND_V1_ALL_SIGNALS",
+        "QL_QTREND_V1_SHORT",
+        "QL_QTREND_V2_STRONG_ADX",
+        "QL_RS_PHASE_DAYS_PROSWING_OVERLAY",
+        "QL_SELL_RULES_MARKET_WIZARDS_OVERLAY",
+        "QL_SLINGSHOT_v1",
+        "QL_VCP_RICHARD_1D",
+        "QL_VWAP_TREND_CONT_v1",
+        "UNKNOWN"
+      ],
+      "unique": 212
+    },
+    "STRATEGY_RESEARCH_REGISTRY.strategy_id": {
+      "form": "STG### (upper)",
+      "sample": [
+        "STG001",
+        "STG002",
+        "STG003"
+      ],
+      "unique": 63
+    },
+    "TRIAGE.candidate_id": {
+      "form": "QLR_<youtube id>",
+      "unique": 172
+    },
+    "TRIAGE.stg_code": {
+      "form": "Stg### (mixed case) — a TRIAGE numbering, NOT the registry's STG### strategies",
+      "in_registry_ids_casefold": 62,
+      "in_registry_ids_exact": 0,
+      "unique": 172
+    },
+    "VARIANT_LOG.variant_id": {
+      "form": "NEW_… archetype names; no strategy/family identity field",
+      "unique": 20
+    },
+    "producer_spec.candidate_id": {
+      "folder_stg_in_registry": 63,
+      "form": "QL_… / free text (NOT the STG code)",
+      "in_registry_ids": 0,
+      "unique": 63
+    }
+  },
+  "labels_4b_outside_the_five_stores": {
+    "json_files_carrying_a_4b_label": 251,
+    "note": "table 4b labels live in evaluation artifacts (scorecards/classifications), not in the five stores; a host identity join is undefined",
+    "per_label_file_counts": {
+      "INSUFFICIENT_TRADES": 245,
+      "NO_DATA": 218,
+      "REJECTED": 6
+    }
+  },
+  "measured_at_canonical": {
+    "branch": "root/current-20260829",
+    "head": "108ea066a710ff7ef5c09246903fe3d523da1d56"
+  },
+  "rows": {
+    "AI_QUANTLENS_VERDICT_REGISTRY.json": 212,
+    "STRATEGY_RESEARCH_REGISTRY.json": 63,
+    "TRIAGE_CANDIDATE_REGISTRY.json": 172,
+    "VARIANT_LOG_REGISTRY.json": 20,
+    "producer_spec.json": 63
+  },
+  "scratch_copies": {
+    "AI_QUANTLENS_VERDICT_REGISTRY.json": {
+      "blob_oid_at_head": "88c2aa370a7ba80f19c502a883450203ec4e8754",
+      "generated_at": "2026-06-08T00:00:00+00:00",
+      "model": "Codex GPT-5",
+      "sha256": "ca6bea7eae2715aedaf72aa9a378b5e285d4f89b31142bf034fe8c2fa34ff095"
+    },
+    "STRATEGY_RESEARCH_REGISTRY.json": {
+      "blob_oid_at_head": "e01ce84df3ce3826108e92be9e08b90a82da1b2c",
+      "generated_at": "2026-06-06T20:48:34.445707+00:00",
+      "generator": "build_strategy_research_registry.py",
+      "sha256": "0024cd4f82d948633bcacbd31c49c5cfc197dd518eea197cc53e48edc13a39d2"
+    },
+    "TRIAGE_CANDIDATE_REGISTRY.json": {
+      "blob_oid_at_head": "bd2571de750549c03191d7ec1a3fd4bbdaab5f7d",
+      "generated_at": "2026-06-04T09:23:36.653560+00:00",
+      "generator": "build_triage_registry.py",
+      "sha256": "f9fe8aabe78afc9767304f4000d54135c2a768943a35bc28e3f747c8451cd575",
+      "source_worklist": "11_TRIAGE/2026-05-30_rejected_worklist.xlsx"
+    },
+    "VARIANT_LOG_REGISTRY.json": {
+      "blob_oid_at_head": "49eacba06846fd100c2c16d7b18fd991651592cc",
+      "generated_at": "2026-07-13T08:25:46.193943+00:00",
+      "sha256": "b85307c9b09e37c931076db5d0e0dee6339d59c41a351e7025f5f5685ea3d552"
+    },
+    "producer_spec.json": {
+      "files": 63,
+      "sha256_of_sorted_sha256s": "be069995583b0997b9491bfd14fa916ef072b2591aea1924b5186a442c618d2b"
+    }
+  },
+  "two_writer_pairs_registry_vs_producer_spec": {
+    "PROMOTE_TO_FORWARD_PAPER_TRADE <> PROMOTE_TO_FORWARD_PAPER_TRADE": 1,
+    "PROMOTE_TO_FORWARD_PAPER_TRADE|PROMOTE_TO_PARITY_CANDIDATE <> PROMOTE_TO_FORWARD_PAPER_TRADE|PROMOTE_TO_PARITY_CANDIDATE": 2,
+    "READY_FOR_DETERMINISTIC_REVIEW <> FORWARD_PAPER_CANDIDATE": 2,
+    "READY_FOR_DETERMINISTIC_REVIEW <> RESEARCH_GRADE": 12,
+    "READY_FOR_PYTHON_PROTOTYPE <> FORWARD_PAPER_CANDIDATE": 6,
+    "READY_FOR_PYTHON_PROTOTYPE <> RESEARCH_GRADE": 1,
+    "RESEARCH_BATCH <> FORWARD_PAPER_CANDIDATE": 5,
+    "RESEARCH_BATCH <> None": 19,
+    "RESEARCH_BATCH <> RESEARCH_GRADE": 8,
+    "TRIAGED <> FORWARD_PAPER_CANDIDATE": 4,
+    "TRIAGED <> RESEARCH_GRADE": 3
+  },
+  "values": {
+    "AI_QUANTLENS.decision": {
+      "NEEDS_CLARIFICATION": 141,
+      "RESEARCH_ONLY": 46,
+      "SALVAGE": 25
+    },
+    "STRATEGY_RESEARCH_REGISTRY.current_status": {
+      "PROMOTE_TO_FORWARD_PAPER_TRADE": 1,
+      "PROMOTE_TO_FORWARD_PAPER_TRADE|PROMOTE_TO_PARITY_CANDIDATE": 2,
+      "READY_FOR_DETERMINISTIC_REVIEW": 14,
+      "READY_FOR_PYTHON_PROTOTYPE": 7,
+      "RESEARCH_BATCH": 32,
+      "TRIAGED": 7
+    },
+    "STRATEGY_RESEARCH_REGISTRY.maturity_level": {
+      "promoted_candidate": 3,
+      "research_batch_only": 32,
+      "triaged_candidate": 28
+    },
+    "TRIAGE.blocked_reason": {
+      "'needs indicator split'": 1,
+      "'rejected source classification'": 20,
+      "'salvage only'": 2,
+      "'wiki-only source'": 41,
+      "None": 108
+    },
+    "TRIAGE.eligible_for_retriage": {
+      "False": 82,
+      "True": 90
+    },
+    "TRIAGE.recommended_next_step": {
+      "Build promotion packet": 9,
+      "Resolve source/formula audit": 2,
+      "Review": 96,
+      "Run PineTS parity": 2,
+      "Source audit / park": 61,
+      "Split into indicator cases": 1,
+      "Start forward paper-trade": 1
+    },
+    "TRIAGE.source_quality": {
+      "HIGH": 89,
+      "LOW": 4,
+      "MEDIUM": 9,
+      "REJECTED": 70
+    },
+    "VARIANT_LOG_REGISTRY.promotable": {
+      "False": 20
+    },
+    "producer_spec.promotion_status": {
+      "'FORWARD_PAPER_CANDIDATE'": 17,
+      "'PROMOTE_TO_FORWARD_PAPER_TRADE'": 1,
+      "'PROMOTE_TO_FORWARD_PAPER_TRADE|PROMOTE_TO_PARITY_CANDIDATE'": 2,
+      "'RESEARCH_GRADE'": 24,
+      "None": 19
+    }
+  }
+}

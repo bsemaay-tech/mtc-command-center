@@ -1,0 +1,6 @@
+TESTNET public reads at 2026-09-17T16:05:10+00:00 for the master (short form 0x1E26...AC49)
+openOrders: []
+perp accountValue 0.0 positions []
+spot: [('USDC', '984.987457', '0.0')]
+agents: [('MTC-bridge-test', '0xfe7d...965b'), ('kvm2-bridge', '0xfa06...8504')]
+fills since 15:00Z: 0

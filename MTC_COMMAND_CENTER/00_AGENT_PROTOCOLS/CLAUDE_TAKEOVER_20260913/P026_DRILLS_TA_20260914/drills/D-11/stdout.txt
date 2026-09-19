@@ -1,0 +1,7 @@
+D11
+case-i-first: status=APPENDED lines=1
+case-i-replay: status=IDENTICAL_REPLAY_NOOP lines=1 cursor={('BTC', '1h'): 3600000}
+D11: payload correction refusal case
+case-ii: ERROR CollectionRefused: differing same-producer bar requires an approved correction contract
+case-iii-base: lines=4
+case-iii: ERROR CollectionRefused: persisted WS_LIVE sequence has a gap at 1970-01-01T01:00:00Z

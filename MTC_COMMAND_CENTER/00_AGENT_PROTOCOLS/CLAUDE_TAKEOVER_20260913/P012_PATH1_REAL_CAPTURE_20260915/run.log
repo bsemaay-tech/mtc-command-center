@@ -1,0 +1,6 @@
+2026-09-15T07:15:51Z tool sha256=00b3b8f69f0e48700ea6072e9930ddefcc48f3d28420860843c2cafaa3c62ddd (expected 00b3b8f6… = af921d75); html sha256=b43dbe39aaa9536fbc8f3e05d29ddc851ad3d2e3e271e1bee38b53fddc54e01f
+2026-09-15T07:15:51Z signature file sha256=2b7a9eb46ccf8b245f1e868efe7c972bcec0f38f21f420f37d2dacd72cf9445f (132 bytes); offline verification: OWNERSHIP_EVIDENCE: VERIFIED, recovered 0x1E26…AC49
+2026-09-15T07:15:51Z child environment: HL_API_WALLET_KEY REMOVED for the tool process (the tool refuses if it is visible); no other credential involved
+2026-09-15T07:15:51Z command: python tools/capture_own_account_evidence.py --network mainnet --address 0x1E26…AC49 --coin BTC --start 2026-09-14T15:00:00Z --end 2026-09-14T19:00:00Z --run-id p012-path1-20260914T1500Z-1900Z-r1 --ownership-signature sig_r1.txt --out /c/tmp/CLAUDE_P0_RUN_20260913/P012_PATH1_REAL_CAPTURE_20260915/r1 (read-only Info API; half-open window)
+2026-09-15T07:15:54Z capture exit=0 elapsed=3s stdout=CAPTURE_OK stderr=
+CAPTURE_VERIFY_OK

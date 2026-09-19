@@ -1,0 +1,50 @@
+# mutant M3_master_key_call_removed (sha256 39afb5bf00a03e08a2a7369036aefae748efd107680ece7477df8f9644bfbd5c) on the patched tool; HL_* removed from the env; restored to 47c70e6882e674e2d22d2b2fc8337731402c691387c5651432d827db6a6df84b
+..................F......                                                [100%]
+================================== FAILURES ===================================
+__ test_main_refuses_a_master_key_after_the_gates_and_before_any_sdk_object ___
+
+offline = <_pytest.monkeypatch.MonkeyPatch object at 0x0000000004DA22A0>
+capsys = <_pytest.capture.CaptureFixture object at 0x0000000004CE24B0>
+
+    def test_main_refuses_a_master_key_after_the_gates_and_before_any_sdk_object(
+        offline, capsys
+    ):
+        # lane-7 review R-1 (M3): the refuse_master_key call in main is fenced - a key that derives to the
+        # account address exits 3 with the SDK constructors (tripwires) never reached.
+        from eth_account import Account
+    
+        from bridge import settings
+    
+        key = "0x" + "11" * 32
+        address = Account.from_key(key).address
+        offline.setenv(probe.RUN_TOKEN_ENV, "x")
+        offline.setattr(
+            settings, "resolve_hyperliquid_credentials", lambda: (address, key, "test")
+        )
+>       assert probe.main(["--run-id", "x", "--out", "unused", "--network", "testnet"]) == 3
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_dd06_agent_withdraw_probe.py:507: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\dd06_agent_withdraw_probe.py:727: in main
+    info = Info(TESTNET_URL, skip_ws=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <test_dd06_agent_withdraw_probe._NeverDial object at 0x0000000004CE3920>
+args = ('https://api.hyperliquid-testnet.xyz',), kwargs = {'skip_ws': True}
+
+    def __call__(self, *args, **kwargs):
+>       raise AssertionError(
+            f"{self.what} must never be reached from the fixture suite"
+        )
+E       AssertionError: Info must never be reached from the fixture suite
+
+tests\test_dd06_agent_withdraw_probe.py:431: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_main_refuses_a_master_key_after_the_gates_and_before_any_sdk_object
+1 failed, 24 passed in 0.68s
+
+
+exit=1
+tripwire_hit=True

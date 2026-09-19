@@ -1,0 +1,19 @@
+﻿=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    feature/p012-path1-capture-20260914
+[freshness] local origin/master tip fcac0ac67cf2682693ad28138b1a56e15a0846f2 age=1 day(s) (commit timestamp; no fetch attempted)
+[freshness] branch merge-base fcac0ac67cf2682693ad28138b1a56e15a0846f2 is 0 commit(s) behind local origin/master (limit 30)
+[dirty]     6 entr(y/ies):
+             M IBKR_PAPER_BRIDGE/tests/test_capture_own_account_evidence.py
+             M IBKR_PAPER_BRIDGE/tools/capture_own_account_evidence.py
+            ?? REPORT.md
+            ?? SHA256SUMS.txt
+            ?? TASK_P1CAP.md
+            ?? TASK_P1FIX.md
+[staged]    none
+[protected] none
+[untracked] no risky files
+[pine-alert] PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
+[unpushed]  in sync with upstream
+
+RESULT: PASS
+

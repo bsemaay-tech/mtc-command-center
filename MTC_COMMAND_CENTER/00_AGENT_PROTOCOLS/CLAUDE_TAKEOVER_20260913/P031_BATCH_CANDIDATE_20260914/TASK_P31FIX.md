@@ -1,0 +1,20 @@
+# TASK P31FIX - close the Gemini detection findings J-01..J-05 on the WP-P0-31 batch candidate 96af3eb6 -> ONE local commit + DISPOSITION
+
+You are a BUILDER (gpt-5.5 high, Codex Plus). Not a reviewer, not the Lead. Worktree `C:/tmp/P031_M1_20260913` (branch `feature/p031-m1-20260913-refresh`, HEAD `96af3eb61bfdf23f3315ca1d984f19407c02b9d5`). Read first: `C:/tmp/CLAUDE_P0_RUN_20260913/laneP31FIX_build/GEMINI_REPORT.md` (the review; findings J-01..J-05 with file:line), `MTC_COMMAND_CENTER/03_QUANTLENS/tools/p031_lifecycle_ledger.py`, `MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py`, and the lane REPORT of the batch `C:/tmp/CLAUDE_P0_RUN_20260913/laneP31B_cont/REPORT.md`. Cite `absolute/path:line` for every claim; read the line before citing it.
+
+## Fix exactly these (nothing broader; no new lifecycle semantics beyond the owner's recorded answers)
+- **J-01 (CORRECTION):** add RED tests for both `ACCEPTED_EVALUATION_CATALOG_INVALID` branches of `LifecycleLedger._normalize_accepted_catalog` (catalog given as str/bytes/bytearray; a hash element that is not a 64-hex lowercase string), plus one GREEN (a valid tuple of hashes is accepted and normalized).
+- **J-02 (CORRECTION):** add RED tests for `CATALOG_BACKED_INVALID` (non-bool `catalog_backed`: `1`, `"true"`, `1.0`, `None` if the signature admits it) in `LifecycleLedger.append(...)`.
+- **J-03 (treated as REQUIRED by the Lead):** in `_validate_transition` (around `:738-745`), when a catalog is configured and `catalog_backed` is True, an `evaluation_run_hash` of `None` must REFUSE with a new explicit code `CATALOG_BACKED_WITHOUT_EVALUATION_HASH` (fail closed — a claim of catalog backing needs a hash to check). Add the RED test and confirm the existing GREEN path (hash present and in the catalog) still passes. Keep the narrowest reading recorded for OD-11; document the code in the ledger's refusal list/docstring where the other codes are listed.
+- **J-05 (NIT, do it — same test file):** add RED arms for `DEPLOYMENT_REFRESH_IDENTITY_INVALID` when `deployment_hash is None` and when `package_hash` differs from the incumbent's, alongside the existing same-identity arm.
+- **J-04 (NIT, documentation):** correct the OD-2 citation in the batch lane report copy you write as `DISPOSITION_P31FIX.md` (do not edit the previous lane's REPORT.md): unchanged deployment identity for DEMOTED is enforced at the `DEPLOYMENT_IDENTITY_MISMATCH` lines, not at `:803`.
+
+## Deliverables
+1. Code + tests as above; `python -m pytest MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py -q -p no:cacheprovider` GREEN (state the interpreter you used; the pinned one is Python 3.12 — if your sandbox only has 3.14, say so, the Lead re-runs on 3.12); `py_compile` both files; Ruff `--select E9,F821,F811` if available (say so if not).
+2. `C:/tmp/CLAUDE_P0_RUN_20260913/laneP31FIX_build/DISPOSITION_P31FIX.md`: table J-01..J-05 -> FIXED / NOT FIXED with file:line and test names; verbatim test output; `SHA256SUMS.txt` (LF) of the two changed files.
+3. ONE local commit on the branch (message: `p031: close Gemini J-01..J-05 (catalog refusal tests, catalog-backed-without-hash refusal, refresh identity arms)`, trailer `Co-Authored-By: Codex gpt-5.5 <noreply@openai.com>`) with `git -c safe.directory=* add <exact two paths>` and `git -c safe.directory=* commit`; if the sandbox cannot take the index lock, say so — the Lead commits. Print HEAD.
+
+## Boundaries (binding)
+- Writable: the worktree and the lane dir `C:/tmp/CLAUDE_P0_RUN_20260913/laneP31FIX_build`. Never touch `C:/LAB/Tradingview_LAB_CLEAN` itself, other worktrees, protected scopes, `G1_SCOPE_AND_CONTRACT.md`, `DECISIONS.md`, or the brief.
+- Git only inside the worktree, only `add <paths>` / `commit` / `rev-parse` / `diff` / `status`, always with `-c safe.directory=*`, never while `agy.exe` runs (check `tasklist 2>NUL | findstr /i agy.exe` first).
+- Codex Plus only; no delegation. If the repository disagrees with this brief, the repository wins — record the discrepancy and stop on that item.

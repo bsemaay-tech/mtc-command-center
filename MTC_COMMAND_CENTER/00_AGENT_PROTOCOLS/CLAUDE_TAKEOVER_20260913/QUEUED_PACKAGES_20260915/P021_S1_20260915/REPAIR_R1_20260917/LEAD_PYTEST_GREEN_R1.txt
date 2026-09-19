@@ -1,0 +1,14 @@
+$ PYTHONPATH=MTC_COMMAND_CENTER/contracts;MTC_COMMAND_CENTER/03_QUANTLENS/tools python -m pytest <three modules> -q -p no:cacheprovider --basetemp C:/bt_s4/p021 (patched bytes)
+...........................................................                                                  [100%]
+59 passed, 108 subtests passed in 0.25s
+exit=0
+
+$ python p021_readiness_rules.py --self-check (cwd tools)
+SELF-CHECK PASS: 7 checks all refuse readiness
+CLOSED NUMBERS: 13 (profile balanced, provisional)
+OPEN NUMBERS: 4
+MODIFIED COPY DETECTED: divergence tolerance refusal wiring removed
+S2 CLOSED (catalogue only): gap_ratio_max=0.0001 on m2_missing_bar_ratio; B-17 formula pin 'm2_missing_bar_ratio@data_gap_ratio.py v1 (fixed-step 24/7, half-open span, leading/trailing absence excluded)'; B-13 ds-v1 pin; B-05 metric M-C
+MODIFIED COPY DETECTED: swing_forward_period closure removed
+READY=False
+exit=0

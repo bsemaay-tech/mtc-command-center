@@ -1,0 +1,40 @@
+# mutant M5_token_gate_removed_from_main (sha256 fb77b9886fd5114de3f5721b641e992a29d788b648a018dba45436ce10617f3f) on the patched tool; HL_* removed from the env; restored to 8c62dd1b8396ce47737d87ba2679396146db09c5da3f5576a0a6ea9c585fc191
+................F...........                                             [100%]
+================================== FAILURES ===================================
+_ test_main_refuses_without_the_execution_token_before_reading_any_credential _
+
+offline = <_pytest.monkeypatch.MonkeyPatch object at 0x0000000004D42EA0>
+capsys = <_pytest.capture.CaptureFixture object at 0x0000000004E079E0>
+
+    def test_main_refuses_without_the_execution_token_before_reading_any_credential(
+        offline, capsys
+    ):
+        # lane-7 review R-2: testnet, no HL_LIVE_ACK - the shape that dialled the venue when one refusal was
+        # removed. The second gate refuses before the resolver (a tripwire here) is ever called.
+>       assert probe.main(["--run-id", "x", "--out", "unused", "--network", "testnet"]) == 3
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_dd06_agent_withdraw_probe.py:480: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\dd06_agent_withdraw_probe.py:795: in main
+    account_address, api_key, source = resolve_hyperliquid_credentials()
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <test_dd06_agent_withdraw_probe._NeverDial object at 0x0000000004E07D70>
+args = (), kwargs = {}
+
+    def __call__(self, *args, **kwargs):
+>       raise AssertionError(
+            f"{self.what} must never be reached from the fixture suite"
+        )
+E       AssertionError: resolve_hyperliquid_credentials must never be reached from the fixture suite
+
+tests\test_dd06_agent_withdraw_probe.py:439: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_main_refuses_without_the_execution_token_before_reading_any_credential
+1 failed, 27 passed in 0.70s
+
+
+exit=1
+tripwire_hit=True

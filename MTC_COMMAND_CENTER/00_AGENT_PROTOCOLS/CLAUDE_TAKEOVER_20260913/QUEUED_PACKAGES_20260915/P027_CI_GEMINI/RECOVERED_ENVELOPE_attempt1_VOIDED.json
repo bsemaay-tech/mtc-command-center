@@ -1,0 +1,14 @@
+{
+  "conversation_id": "9971f2c0-7a5a-4b20-b613-1e1d265ddb4a",
+  "status": "ERROR",
+  "error": "API error (attempt 1): UNAVAILABLE (code 503): No capacity available for model gemini-3.8-flash-high on the server",
+  "duration_seconds": 663.1565318,
+  "num_turns": 1,
+  "usage": {
+    "input_tokens": 427482,
+    "output_tokens": 28972,
+    "thinking_tokens": 15961,
+    "cache_read_tokens": 929563,
+    "total_tokens": 456454
+  }
+}

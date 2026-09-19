@@ -1,0 +1,1 @@
+﻿{"status": "MEASUREMENT_COMPLETE_NO_ACCEPTANCE", "output_root": "C:\\tmp\\CLAUDE_P0_RUN_20260913\\P020_MEASUREMENT_20260915\\output", "semantic_equal": true}

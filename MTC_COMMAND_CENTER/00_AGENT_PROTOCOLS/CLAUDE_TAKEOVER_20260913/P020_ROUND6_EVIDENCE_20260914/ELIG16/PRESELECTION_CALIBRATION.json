@@ -1,0 +1,76 @@
+{
+  "eligibility_matrix_binary_only": {
+    "GEN_ATR_PULLBACK_TREND": {
+      "15m": true,
+      "1D": true,
+      "1h": true,
+      "2h": true,
+      "4h": true
+    },
+    "GEN_DONCHIAN_BREAKOUT": {
+      "15m": true,
+      "1D": true,
+      "1h": true,
+      "2h": true,
+      "4h": true
+    },
+    "GEN_GOLDEN_CROSS_PULLBACK": {
+      "15m": true,
+      "1D": true,
+      "1h": true,
+      "2h": true,
+      "4h": true
+    },
+    "GEN_KELTNER_BREAKOUT": {
+      "15m": true,
+      "1D": false,
+      "1h": true,
+      "2h": true,
+      "4h": true
+    },
+    "GEN_MACD_BULL_CROSS": {
+      "15m": true,
+      "1D": false,
+      "1h": true,
+      "2h": true,
+      "4h": true
+    },
+    "GEN_RSI_OVERSOLD_REVERSAL": {
+      "15m": true,
+      "1D": false,
+      "1h": true,
+      "2h": true,
+      "4h": true
+    },
+    "GEN_STOCH_OVERSOLD_CROSS": {
+      "15m": true,
+      "1D": false,
+      "1h": true,
+      "2h": true,
+      "4h": true
+    },
+    "GEN_TRIPLE_EMA_STACK": {
+      "15m": true,
+      "1D": false,
+      "1h": true,
+      "2h": true,
+      "4h": true
+    },
+    "GEN_ZSCORE_MEAN_REVERSION": {
+      "15m": false,
+      "1D": false,
+      "1h": false,
+      "2h": false,
+      "4h": false
+    }
+  },
+  "frozen_sha256": "cb75602080850873e28dc3aa268ad1072a0f1d50148d91ad75c9896cf37fb126",
+  "kind": "calibration",
+  "selection": {
+    "15m": "GEN_TRIPLE_EMA_STACK",
+    "1D": "GEN_DONCHIAN_BREAKOUT",
+    "1h": "GEN_STOCH_OVERSOLD_CROSS",
+    "2h": "GEN_KELTNER_BREAKOUT",
+    "4h": "GEN_MACD_BULL_CROSS"
+  }
+}

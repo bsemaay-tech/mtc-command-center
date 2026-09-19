@@ -1,0 +1,9 @@
+# RED arm for Gemini NIT-01 (2026-09-15 16:51Z): mutant adapter stamps a wall-clock ISO timestamp ("generated_at": 2026-09-15T17:00:00+00:00)
+# into binding_packet_draft.json inside write_outputs(). Old assertion exempted binding_packet_draft.json (vacuous disjunction) -> the mutant
+# would have PASSED. New assertion: every YYYY-MM-DDT prefix in every output must be the capture window's day (2026-09-14T).
+# Command: pytest tests/test_funding_intake_adapter.py -q --basetemp C:/bt_intake_red2 -p no:cacheprovider (pinned Bridge 3.12, scratch copy)
+>           assert set(re.findall(rb"\d{4}-\d{2}-\d{2}T", raw)) <= {b"2026-09-14T"}, name
+E           AssertionError: binding_packet_draft.json
+tests\test_funding_intake_adapter.py:203: AssertionError
+1 failed, 6 passed in 0.17s
+# GREEN on the real branch (same command, C:/bt_intake_nit1): 7 passed in 0.25s

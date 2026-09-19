@@ -1,0 +1,63 @@
+UTC_start=2026-09-15T18:33:21Z run_id=dd06-testnet-20260915T183321Z-r1 out=/tmp/dd06_20260915T183321Z
+probe_sha256=54aafd09f8f3b9bb5376c881345450f8c5d7e946435bc78f5c596990025baf5b
+service_before=active nrestarts_before=0 api_before={"state":"DISARMED","mode":"credential_free_disarmed","network":"disabled","exch
+--- probe start 18:33:21Z ---
+ABORTED_CONTROL_ARM_NOT_ACCEPTED record=/tmp/dd06_20260915T183321Z/DD06_PROBE_RECORD.json
+probe_exit=2
+--- probe end 18:33:27Z ---
+service_after=active nrestarts_after=0 api_after={"state":"DISARMED","mode":"credential_free_disarmed","network":"disabled","exch
+record_sha256_on_host=537444e8d38ec904c087d35c64b74b8de984706b6d8eeb974b9689b9c8541aa7 record_bytes=1707 sidecar=537444e8d38ec904c087d35c64b74b8de984706b6d8eeb974b9689b9c8541aa7
+=== RECORD (redacted again on the way out) ===
+{
+  "account_address": "[redacted-address]",
+  "agent_address": "[redacted-address]",
+  "finding": null,
+  "finished_utc": "2026-09-15T18:33:26.974264Z",
+  "network": "testnet",
+  "probe_version": "dd06-probe/v1",
+  "result": "ABORTED_CONTROL_ARM_NOT_ACCEPTED",
+  "run_id": "dd06-testnet-20260915T183321Z-r1",
+  "started_utc": "2026-09-15T18:33:22.586170Z",
+  "steps": [
+    {
+      "data": {
+        "env_names": [
+          "HL_ACCOUNT_ADDRESS",
+          "HL_API_WALLET_KEY"
+        ],
+        "source": "process_env"
+      },
+      "name": "credential_source",
+      "outcome": "RECORDED",
+      "ts": "2026-09-15T18:33:22.586210Z"
+    },
+    {
+      "data": {
+        "extra_agents": "[{\"address\": \"[redacted-address]\", \"name\": \"MTC-bridge-test\", \"validUntil\": 1791656893517}, {\"address\": \"[redacted-address]\", \"name\": \"kvm2-bridge\", \"validUntil\": 1797169448263}]"
+      },
+      "name": "S0_extra_agents",
+      "outcome": "RECORDED",
+      "ts": "2026-09-15T18:33:25.094104Z"
+    },
+    {
+      "data": {
+        "accountValue": "0.0",
+        "withdrawable": "0.0"
+      },
+      "name": "S0_user_state",
+      "outcome": "RECORDED",
+      "ts": "2026-09-15T18:33:25.339909Z"
+    },
+    {
+      "data": {
+        "request": "{\"coin\": \"BTC\", \"is_buy\": true, \"limit_px\": 69276.6, \"order_type\": {\"limit\": {\"tif\": \"Gtc\"}}, \"reduce_only\": false, \"sz\": 0.00016}",
+        "response": "{\"response\": {\"data\": {\"statuses\": [{\"error\": \"Price must be divisible by tick size. asset=3\"}]}, \"type\": \"order\"}, \"status\": \"ok\"}"
+      },
+      "name": "S1_control_order",
+      "outcome": "NOT_REFUSED",
+      "ts": "2026-09-15T18:33:26.973568Z"
+    }
+  ]
+}
+=== END RECORD ===
+UTC_end=2026-09-15T18:33:27Z

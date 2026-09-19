@@ -1,0 +1,13 @@
+{
+  "window": "P012-S16-G5-C:/tmp/P012_S16_REVIEWS_20260913/DD06_R3_GEMINI",
+  "verified_at": "2026-09-18T05:24:15.347398+00:00",
+  "runner_exit": 0,
+  "elapsed_seconds": 122.3,
+  "launch_exit": "exit=0 actual_exit=0 start=2026-09-18T05:22:13.3944831Z end=2026-09-18T05:24:10.3270429Z",
+  "review_log_bytes": 16324,
+  "review_log_sha256": "ffe01b79855c748778307f97e41c130294e5c9aa145b11e2bab0bef55d7eef37",
+  "agy_helpers_after": 0,
+  "manifest_sha256_after": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+  "candidate_head_after": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_after": 0
+}

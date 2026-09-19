@@ -1,0 +1,6 @@
+watch start 16:10:50Z fills_seen=3 funding_seen=0
+OPEN_ORDERS 16:10:51Z [(544829071300, '78410.0', '0.00016')]
+NEW_FILL 16:14:34Z B px=78410.0 sz=0.00016 fee=0.001806 taker=False oid=544829071300
+OPEN_ORDERS 16:15:01Z []
+T1_FILLED_AND_NO_OPEN_ORDERS
+watch end

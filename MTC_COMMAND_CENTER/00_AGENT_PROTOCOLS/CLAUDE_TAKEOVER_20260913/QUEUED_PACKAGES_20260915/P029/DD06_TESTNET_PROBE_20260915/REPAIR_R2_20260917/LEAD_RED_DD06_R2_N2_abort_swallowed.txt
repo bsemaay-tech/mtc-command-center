@@ -1,0 +1,23 @@
+# mutant N2_abort_swallowed (sha256 d07453abe4e79036c26e09ed78127456de11230e5cd2f050748c17a63a4483b3) on the patched tool; HL_* removed from the env; restored to 8c62dd1b8396ce47737d87ba2679396146db09c5da3f5576a0a6ea9c585fc191
+...........................F                                             [100%]
+================================== FAILURES ===================================
+___________________ test_operator_abort_stops_the_sequence ____________________
+
+    def test_operator_abort_stops_the_sequence():
+        # lane-7 review N-2: KeyboardInterrupt inside an arm must not be swallowed as ERROR evidence
+        class Aborting(FakeExchange):
+            def withdraw_from_bridge(self, amount, destination):
+                raise KeyboardInterrupt
+    
+>       with pytest.raises(KeyboardInterrupt):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE KeyboardInterrupt
+
+tests\test_dd06_agent_withdraw_probe.py:693: Failed
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_operator_abort_stops_the_sequence
+1 failed, 27 passed in 0.70s
+
+
+exit=1
+tripwire_hit=False

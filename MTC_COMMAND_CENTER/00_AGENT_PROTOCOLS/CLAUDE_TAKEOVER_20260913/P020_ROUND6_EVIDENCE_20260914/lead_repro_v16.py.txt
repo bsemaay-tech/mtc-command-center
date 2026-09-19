@@ -1,0 +1,75 @@
+"""Lead reproduction of P020 preselection V1.6 in a fresh scratch copy (T0 round-6 roster member). Read-only on the package."""
+import shutil, subprocess, hashlib, json, pathlib, os, datetime
+SRC = pathlib.Path("C:/tmp/P020_PRESELECT_20260913")
+DST = pathlib.Path("C:/tmp/P020_PRESELECT_LEAD_REPRO_V16_20260914")
+PY = "C:/tmp/P020_IMPL_20260912/01a0924d-2c4b-7da1-99e1-24e2a7c7685c/.venv/Scripts/python.exe"
+B = pathlib.Path("C:/tmp/P020_LEAD_20260912/benchmark")
+DER = pathlib.Path("C:/tmp/P020_PLAN_DERIVE_20260913")
+H = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+out = []
+def log(s): print(s, flush=True); out.append(s)
+def run(cmd, cwd, env=None):
+    e = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", PYTHONUTF8="1"); e.update(env or {})
+    r = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True, env=e)
+    return r.returncode, (r.stdout + r.stderr)
+log(f"# LEAD_REPRODUCTION_V16 — {datetime.datetime.now(datetime.UTC).isoformat()} — scratch {DST}")
+if DST.exists(): shutil.rmtree(DST)
+shutil.copytree(SRC, DST, ignore=shutil.ignore_patterns("__pycache__", "logs", "stream.jsonl", "PRESELECTION_CALIBRATION.json", "PRESELECTION_ELIGIBILITY.json"))
+# S: SHA256SUMS
+ok = bad = 0
+for line in (DST / "SHA256SUMS.txt").read_text(encoding="utf-8").splitlines():
+    if not line.strip(): continue
+    d, name = line.split(None, 1); name = name.strip()
+    if H(DST / name) == d: ok += 1
+    else: bad += 1; log(f"SHA MISMATCH {name}")
+log(f"S SHA256SUMS: {ok} OK / {bad} bad")
+# 1: tests
+rc, txt = run([PY, "-m", "pytest", "tests", "-q", "-p", "no:cacheprovider"], DST)
+log(f"1 pytest tests: rc={rc} :: {txt.strip().splitlines()[-1]}")
+# 2: freeze twice
+d1 = d2 = None
+for i in (1, 2):
+    rc, txt = run([PY, "preselect_profile.py", "--freeze"], DST, {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "safe.directory", "GIT_CONFIG_VALUE_0": "C:/P020_IMPL_20260912"})
+    dig = H(DST / "PRESELECTION_FROZEN.json")
+    log(f"2.{i} --freeze rc={rc} digest={dig} tail={txt.strip().splitlines()[-1][:160] if txt.strip() else ''}")
+    if i == 1: d1 = dig
+    else: d2 = dig
+log(f"2 freeze deterministic: {d1 == d2}; equals builder cb756020…: {d1 == 'cb75602080850873e28dc3aa268ad1072a0f1d50148d91ad75c9896cf37fb126'}; equals package file: {d1 == H(SRC / 'PRESELECTION_FROZEN.json')}")
+# 3: record V3 vs V2
+v2 = json.loads((B / "SYNTH-P020-BOUNDED-INSTRUMENT-V2.json").read_text(encoding="utf-8"))
+v3 = json.loads((B / "SYNTH-P020-BOUNDED-INSTRUMENT-V3.json").read_text(encoding="utf-8"))
+diff = {k for k in set(v2) | set(v3) if v2.get(k) != v3.get(k)}
+pdiff = {k for k in set(v2["provenance"]) | set(v3["provenance"]) if v2["provenance"].get(k) != v3["provenance"].get(k)}
+log(f"3 V3 vs V2 top-level diffs: {sorted(diff)}; provenance diffs: {sorted(pdiff)}; V3 quantity_step={v3['quantity_step']!r} record_id={v3['record_id']} min_qty={v3['minimum_quantity']} min_notional={v3['minimum_notional']} interval={v3['effective_interval']}")
+log(f"3 V3 sha256={H(B / 'SYNTH-P020-BOUNDED-INSTRUMENT-V3.json')} sidecar={(B / 'SYNTH-P020-BOUNDED-INSTRUMENT-V3.json.sha256').read_text().strip()[:64]}; V2 sha unchanged={H(B / 'SYNTH-P020-BOUNDED-INSTRUMENT-V2.json') == '1a1289641992d004977c274ef63c60e72f84319015d2a838f4574facf6db5a15'}")
+# 4: frozen diff V1.5 -> V1.6 (V1.5 frozen from the R5 repro copy)
+f15p = pathlib.Path("C:/tmp/P020_PRESELECT_LEAD_REPRO_V15_20260913/PRESELECTION_FROZEN.json")
+if f15p.exists():
+    f15 = json.loads(f15p.read_text(encoding="utf-8")); f16 = json.loads((DST / "PRESELECTION_FROZEN.json").read_text(encoding="utf-8"))
+    log(f"4 V1.5 repro frozen sha={H(f15p)} (expect b7548984…)")
+    keys = sorted({k for k in set(f15) | set(f16) if f15.get(k) != f16.get(k)})
+    log(f"4 frozen keys differing V1.5->V1.6: {keys}")
+    for k in ("family_order", "selection_rule", "calibration_windows", "measurement_inputs", "canonical_bytes_sha256", "dataset_pins", "matching_rule"):
+        if k in f15 or k in f16: log(f"4   {k}: {'EQUAL' if f15.get(k) == f16.get(k) else 'DIFFERS'}")
+    if "source_pins" in f15:
+        sp = {k for k in set(f15["source_pins"]) | set(f16["source_pins"]) if f15["source_pins"].get(k) != f16["source_pins"].get(k)}
+        log(f"4   source_pins differing entries: {sorted(sp)}")
+else:
+    log("4 V1.5 frozen not found for diff")
+# 6: benchmark tests + validate-plan
+rc, txt = run([PY, "-m", "pytest", "tests", "-q", "-p", "no:cacheprovider"], B); log(f"6 benchmark tests rc={rc} :: {txt.strip().splitlines()[-1]}")
+rc, txt = run([PY, "run_bounded_benchmark.py", "--validate-plan"], B); log(f"6 --validate-plan rc={rc} :: {txt.strip().splitlines()[-1][:160]}")
+plan = json.loads((B / "BENCHMARK_PLAN.json").read_text(encoding="utf-8"))
+def find(o, key, acc):
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if k == key: acc.append(v)
+            find(v, key, acc)
+    elif isinstance(o, list):
+        for v in o: find(v, key, acc)
+acc = []; find(plan, "path", acc); log(f"6 plan instrument path(s) mentioning INSTRUMENT: {[p for p in acc if 'INSTRUMENT' in str(p)]}")
+# 7: derive tool
+rc, txt = run([PY, "-m", "pytest", "-q", "-p", "no:cacheprovider"], DER); log(f"7 derive tests rc={rc} :: {txt.strip().splitlines()[-1]}")
+src = (DER / "derive_benchmark_plan.py").read_text(encoding="utf-8"); import re
+m = re.search(r"EXPECTED_FROZEN_SHA256\s*=\s*['\"]([0-9a-f]{64})", src); log(f"7 derive EXPECTED_FROZEN_SHA256={m.group(1) if m else None} equals V1.6: {bool(m) and m.group(1) == d1}")
+pathlib.Path("C:/tmp/CLAUDE_P0_RUN_20260913/LEAD_REPRO_V16_OUTPUT.txt").write_text("\n".join(out) + "\n", encoding="utf-8")

@@ -1,0 +1,29 @@
+{
+ "review_disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
+ "disposition": "UNCHANGED",
+ "evidence_paths": [
+  "REVIEWER_PARTS/C56_CORE.md",
+  "REVIEWER_PARTS/C5_BRIDGE.md",
+  "REVIEWER_PARTS/C5_MTCTESTS.md",
+  "REVIEWER_PARTS/C5_MCC_A.md",
+  "REVIEWER_PARTS/C5_MCC_B_R2.md",
+  "REVIEWER_PARTS/ITEM56_COVERAGE_LEDGER.json",
+  "REVIEWER_PARTS/PARTS_ADDENDUM.json",
+  "CONSUMER_CENSUS.json",
+  "AUTHORITY/SECTION16_PACKET_STANDARD.md",
+  "LEAD_REVIEW_CONTRACT.md",
+  "CAND/mtc_v2/core/types.py",
+  "CAND/mtc_v2/core/position_manager.py",
+  "CAND/mtc_v2/core/results.py",
+  "CAND/mtc_v2/core/runner.py",
+  "CAND/mtc_v2/core/economics.py",
+  "CAND/IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py",
+  "CAND/IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export.py",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_position_sizer_corrected.py",
+  "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/validate_export_parity.py",
+  "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_runner_metrics_api.py",
+  "CAND/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/row_arm.py",
+  "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/semantic_coverage_review.json"
+ ],
+ "notes": "[5 ACCEPTED_WITH_RESIDUAL_RISK] Reconciled terminal disposition across all five slice envelopes and Lead coverage ledger. Economic state across core modules is mediated strictly by ExecutionEconomics and atomic EconomicTransition with zero arithmetic performed outside economics.py on the corrected 2.0.0 path. Cash ledger signed deltas exclusively mutate equity, guard realized equity isolates funding cashflows, and transitions enforce strict 1-to-1 joins. Residual risks are accepted for external consumers (runner_metrics_adapter, validate_export_parity, parity_compare, external multi-asset optimizers) binding to legacy TradeRecord.pnl and gross realized PnL without fee/funding adjustments, uninspected monorepo boundaries per design section 17 limits L4/L5, production exporter oracle price exclusion under Path D Decision A, and pre-v10 bridge store payload unavailability."
+}

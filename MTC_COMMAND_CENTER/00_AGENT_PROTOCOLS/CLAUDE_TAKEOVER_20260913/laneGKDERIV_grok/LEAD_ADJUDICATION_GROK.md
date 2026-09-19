@@ -1,0 +1,22 @@
+# LEAD_ADJUDICATION - Grok detection pre-screen of the WP-P0-20 derived plan `d84b043a` + derivation tool `0bfd1891` (lane `laneGKDERIV_grok`, 2026-09-18 08:03-08:12 UTC+3)
+
+**Route:** SuperGrok subscription via `Invoke-GrokSubscription.ps1` (weekly reset landed 2026-09-18; probe "OK" in 25 s at 08:02); launcher `run.ps1` exit 0, 9 min 06 s; report `GROK_DERIVED_REPORT.md` (264 lines) `GROK_DERIVED_VERDICT: NITS` - **0 REQUIRED, 3 NITs**.
+**Owner rows:** `OD-20260914-P020-MEASURE-1` (once, after (a) roster, (b) PROFILE_ELIGIBLE_NOT_ACCEPTED, (c) the derived-plan review = Grok pre-screen + exact Sol + Gemini); `OD-20260915-P020-MEASURE-GROK-1` ("no, wait for Grok (Sep 18)"; the slot is not waivable by the Lead).
+
+## What Grok did (from its report; the Lead re-ran the cheap parts)
+- Computed all nine digests BEFORE reading the subjects: derived plan `d84b043a`, tool `0bfd1891`, tests `185af7b2`, frozen `cb756020`, eligibility `fc5f8895`, calibration `808cbcb4`, driver `3d4453cd`, base plan `c6f07afd` - all EQUAL to the brief pins (the Lead re-hashed the four brief pins at 08:02 before the launch: EQUAL).
+- (1) Trial-by-trial: every requested field of all 15 trials bound to the frozen artifact (datasets, prefixes, fixed parameter records) - conformance table all EQUAL. (2) Base-plan keys preserved; only `trials` differs (the required replacement). (3) The original tool re-derives `d84b043a` byte-identically on scratch inputs. (4) Input binding: `load_json_once` reads one buffer per input; `tool_sha256` is a late self-hash (`derive_benchmark_plan.py:231`) - a comment-only modified tool differs only in that field, and with the digest spoofed it emits `d84b043a` byte-identically. (5) Driver `_validate_plan` (`run_bounded_benchmark.py:154-194`) reads `derivation.family_order` only: a parameter swap (`stop_lookback` 10 -> 99) and a zeroed `input_prefix_sha256` still return PLAN_VALID - closed for THIS measurement by the launcher's whole-file plan assertion (`d84b043a` before validate, immediately before `--run`, after). (6) Plan swap read-only analysis (the swap itself not performed). (7) Boundary: no `--run`, no `--oneshot`, no git, no network, benchmark directory not written. Tool tests 16 passed.
+- Lead corroboration: the three NIT citations grep-verified (`derive_benchmark_plan.py:227` copies `frozen_sha256` from the eligibility object, `:231` `sha256_path(Path(__file__))`; `run_bounded_benchmark.py:185-194` the `family_order` check; `DERIVATION_RULE.md:44,50-51` cite the pre-fix identities `308aa0b8`/`4adb69a0`). Tool tests re-run by the Lead on a scratch copy with the pinned 3.12 interpreter: **16 passed** (`LEAD_TOOL_TESTS_20260918.txt`; copied bytes `0bfd1891` / `185af7b2`).
+
+## Findings triage
+- NIT-1 (driver validation depth: `parameter_record` / `input_prefix_sha256` not checked by `_validate_plan` with a `derivation` block) - real, carried to the P0-20 NIT ledger; inert for this measurement because the launcher asserts the whole installed plan file equals `d84b043a` at three points and `source_identity.plan_sha256` in the run report records which plan ran.
+- NIT-2 (`tool_sha256` is a claim, not a captured-buffer digest) - real, carried; the accepted plan's digest is what the roster reviewed, and the tool that produced it is pinned by the reviewers' own hashing, not by that field.
+- NIT-3 (`DERIVATION_RULE.md` still lists the pre-fix tool/test digests as "V1.6 pins") - documentary drift; fix on the next documentation freeze; no executable byte is touched before the measurement (Grok's own instruction, and the roster's validity condition).
+
+## Verdict
+**Grok pre-screen slot SATISFIED for the derived plan** `d84b043a` and the derivation tool `0bfd1891`: 0 REQUIRED, the pinned bytes unchanged since the Sol PASS-WITH-NITS, Gemini 3.7 SATISFIED and Lead ALL EQUAL reviews. Roster condition (c) of `OD-20260914-P020-MEASURE-1` is met; the once-only measurement `p020_measurement_run.ps1` may run (measurement record only: no acceptance, ranking, profitability or production authority).
+
+## NOT VERIFIED (Lead)
+The Lead did not re-run Grok's driver mutations or the re-derivation (the trial-by-trial equality was the Lead's own earlier check `LEAD_TRIAL_CHECK_S4.txt`, ALL EQUAL, on the same bytes); the CSV prefix bytes were not re-hashed in this lane (Grok says the same).
+
+Recorded by Claude Opus 5 Lead (session 6, `4a8233`), 08:1x UTC+3.

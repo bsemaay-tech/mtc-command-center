@@ -1,0 +1,13 @@
+{
+  "window": "P012-S16-G5-P012_RISK_PACKET_GEMINI_B2",
+  "verified_at": "2026-09-14T12:53:26.444129+00:00",
+  "runner_exit": 0,
+  "elapsed_seconds": 263.4,
+  "launch_exit": "exit=0 actual_exit=0 start=2026-09-14T12:49:03.3657056Z end=2026-09-14T12:53:21.4248851Z",
+  "review_log_bytes": 39882,
+  "review_log_sha256": "3ac5756a6f953c3542c49dcaa1fefca2de57919546d176aaa97274f5436f6719",
+  "agy_helpers_after": 0,
+  "manifest_sha256_after": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+  "candidate_head_after": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_after": 0
+}

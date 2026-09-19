@@ -1,0 +1,40 @@
+        raw = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        if _HEX64.search(raw.decode("utf-8")):
+>           raise ProbeRefused("refusing to write: a 64-hex string survived redaction")
+E           tools.dd06_agent_withdraw_probe.ProbeRefused: refusing to write: a 64-hex string survived redaction
+tools\dd06_agent_withdraw_probe.py:272: ProbeRefused
+_____________________ test_output_directory_is_write_once _____________________
+tmp_path = WindowsPath('C:/Users/BarýþSemaay/AppData/Local/Temp/claude/C--LAB-Tradingview-LAB-CLEAN/3a1bbc80-cc26-4f04-beaa-4c7c26efb500/scratchpad/dd06_red/bt2_m2/test_output_directory_is_write0')
+    def test_output_directory_is_write_once(tmp_path: Path):
+        record = probe.run_probe(record=_record(), info=FakeInfo(), exchange=FakeExchange(), account_address=ACCOUNT, sub_account=None)
+>       probe.write_record(tmp_path / "once", record)
+tests\test_dd06_agent_withdraw_probe.py:198: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+out_dir = WindowsPath('C:/Users/BarýþSemaay/AppData/Local/Temp/claude/C--LAB-Tradingview-LAB-CLEAN/3a1bbc80-cc26-4f04-beaa-4c7c26efb500/scratchpad/dd06_red/bt2_m2/test_output_directory_is_write0/once')
+record = ProbeRecord(run_id='dd06-test', network='testnet', account_address_redacted='0xa1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a...date"}', 'response': '{"response": "Must be user", "status": "err"}'}}], result='DD06_REFUSALS_OBSERVED', finding=None)
+    def write_record(out_dir: Path, record: ProbeRecord) -> Path:
+        out_dir = Path(out_dir)
+        if out_dir.exists():
+            raise ProbeRefused(f"output directory already exists (write-once): {out_dir}")
+        out_dir.mkdir(parents=True)
+        payload = {
+            "probe_version": PROBE_VERSION,
+            "run_id": record.run_id,
+            "network": record.network,
+            "account_address": record.account_address_redacted,
+            "agent_address": record.agent_address_redacted,
+            "started_utc": record.started_utc,
+            "finished_utc": _now(),
+            "result": record.result,
+            "finding": record.finding,
+            "steps": record.steps,
+        }
+        raw = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        if _HEX64.search(raw.decode("utf-8")):
+>           raise ProbeRefused("refusing to write: a 64-hex string survived redaction")
+E           tools.dd06_agent_withdraw_probe.ProbeRefused: refusing to write: a 64-hex string survived redaction
+tools\dd06_agent_withdraw_probe.py:272: ProbeRefused
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_all_arms_refused_gives_refusals_observed_and_redacts_everything
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_output_directory_is_write_once
+2 failed, 10 passed in 0.17s

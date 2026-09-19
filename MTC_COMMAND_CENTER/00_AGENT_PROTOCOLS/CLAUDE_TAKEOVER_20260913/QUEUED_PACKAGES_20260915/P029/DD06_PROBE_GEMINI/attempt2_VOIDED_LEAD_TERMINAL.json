@@ -1,0 +1,13 @@
+{
+  "window": "P012-S16-G5-DD06_PROBE_GEMINI",
+  "verified_at": "2026-09-15T15:59:39.341231+00:00",
+  "runner_exit": 1,
+  "elapsed_seconds": 995.3,
+  "launch_exit": "exit=1 actual_exit=1 start=2026-09-15T15:43:04.3916282Z end=2026-09-15T15:59:34.3136223Z",
+  "review_log_bytes": 298,
+  "review_log_sha256": "3e40e29a6e14494d329ecbcb83908a4628ab9618f3629cebeebeba4031ebf424",
+  "agy_helpers_after": 0,
+  "manifest_sha256_after": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+  "candidate_head_after": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_after": 0
+}

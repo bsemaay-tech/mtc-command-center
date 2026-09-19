@@ -1,0 +1,3 @@
+# Lead note — P012 production-admission packet (Spark lane, 2026-09-14 10:07-10:09Z)
+
+The Codex Pro Spark lane wrote the packet (7 sections, 10 OPEN rows, 24 risk rows = 23 IDs + the grouped 24-27, 6 owner decisions) and then died on Spark's WEEKLY limit ("try again at Sep 19th, 2026 4:04 PM") during its final compaction step, before `SHA256SUMS.txt`. The lane had written the file through PowerShell `Set-Content` in the ANSI code page: the Lead transcoded it cp1254 -> UTF-8 (LF) without changing any character (original bytes kept as `P012_PRODUCTION_ADMISSION_PACKET.spark_cp1254_original.md`). NOT yet audited; NOT presented as final until a document audit (Gemini 3.8 read-only, Grok unavailable) returns.
