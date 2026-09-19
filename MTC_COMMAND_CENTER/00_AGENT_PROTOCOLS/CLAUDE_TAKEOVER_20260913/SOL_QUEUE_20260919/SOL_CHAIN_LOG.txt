@@ -22,3 +22,21 @@
 2026-09-19T09:31:25.0514932Z chain complete
 2026-09-19T10:50:46.2313330Z armed: start at 2026-09-19T13:56:00 local; account free; order P026,P021S1,P030,DD06
 2026-09-19T10:51:07.2679283Z armed: start at 2026-09-19T13:57:30 local; account free; order P031 > P1CAP > P026 > P021S1 > P012INTAKE > P030 > DD06
+2026-09-19T10:57:37.3737637Z start
+2026-09-19T10:57:37.3737637Z P031 already has launch.exit; skip
+2026-09-19T10:57:37.3737637Z P1CAP already has launch.exit; skip
+2026-09-19T10:57:37.8071397Z P026 generate: generated C:\tmp\SOL_QUEUE_20260919\P026\sol (worktree C:\tmp\P026_REPAIR_20260915 @ 2e03a669; account free; effort xhigh) NOTE: --add-dir grants the reviewer WRITE access to the worktree under workspace-write; the brief forbids writes there, and the Lead verifies 'git status --porcelain' in the wor
+2026-09-19T10:57:37.8086452Z P026 launching
+2026-09-19T11:20:20.0860038Z P026 ended after 23 min: exit=0 start=2026-09-19T10:57:38.1809079Z end=2026-09-19T11:20:20.0554704Z
+2026-09-19T11:20:40.6005829Z P021S1 generate: generated C:\tmp\SOL_QUEUE_20260919\P021S1\sol (worktree C:\tmp\P021_S1_20260915 @ eada65ed; account free; effort xhigh) NOTE: --add-dir grants the reviewer WRITE access to the worktree under workspace-write; the brief forbids writes there, and the Lead verifies 'git status --porcelain' in the workt
+2026-09-19T11:20:40.6005829Z P021S1 launching
+2026-09-19T11:34:07.6224714Z P021S1 ended after 13 min: exit=0 start=2026-09-19T11:20:40.9460272Z end=2026-09-19T11:34:07.6016231Z
+2026-09-19T11:34:27.7071785Z P012INTAKE already has launch.exit; skip
+2026-09-19T11:34:28.1114153Z P030 generate: generated C:\tmp\SOL_QUEUE_20260919\P030\sol (worktree C:\tmp\P030_INTEGRATION_20260913 @ b4df1413; account free; effort xhigh) NOTE: --add-dir grants the reviewer WRITE access to the worktree under workspace-write; the brief forbids writes there, and the Lead verifies 'git status --porcelain' in th
+2026-09-19T11:34:28.1114153Z P030 launching
+2026-09-19T11:49:47.5575433Z P030 ended after 15 min: exit=1 start=2026-09-19T11:34:28.4323358Z end=2026-09-19T11:49:47.5337009Z
+2026-09-19T11:50:08.0491297Z DD06 generate: generated C:\tmp\SOL_QUEUE_20260919\DD06\sol (worktree C:\tmp\P029_DD06_20260915 @ a46da0aa; account free; effort xhigh) NOTE: --add-dir grants the reviewer WRITE access to the worktree under workspace-write; the brief forbids writes there, and the Lead verifies 'git status --porcelain' in the workt
+2026-09-19T11:50:08.0525525Z DD06 safety rule appended to the Sol brief
+2026-09-19T11:50:08.0548538Z DD06 launching
+2026-09-19T12:03:54.5745117Z DD06 ended after 14 min: exit=0 start=2026-09-19T11:50:08.3910179Z end=2026-09-19T12:03:54.5530657Z
+2026-09-19T12:04:14.6729039Z chain complete
