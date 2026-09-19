@@ -1,0 +1,55 @@
+# WP-P0-27 progressive activation (2026-09-15, owner "all" on the overnight builder items,
+# OD-20260915-BUILD-ABC-1 item c): the OPS-A local tools under MTC_COMMAND_CENTER/tools/opsa
+# (backup, restore, heartbeat, watchdog) ship a stdlib unittest suite, test_opsa.py, that no
+# workflow executed. This informational job runs it on a GitHub-hosted Windows runner -- the
+# platform the tools are operated on -- against a clean checkout. It installs nothing.
+#
+# It is NOT a required check: ruleset 21444962 requires exactly `Bridge suite (Python 3.12)`
+# and `pine-alert-guard`; a red run here cannot block a merge. Making it required is a later
+# owner step under the CI policy's progressive rule, after WP-P0-26 accepts the tools' repair.
+# No secrets, no schedule, no self-hosted runner, no host or venue contact (WP-P0-27 non-goals).
+name: OPS-A tests
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: opsa-tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  opsa-tests:
+    name: OPS-A tests (Python 3.12, Windows)
+    runs-on: windows-2025
+    timeout-minutes: 10
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      # The repository carries paths longer than Windows' 260-character default; without this
+      # the checkout itself fails with "Filename too long" (seen on PR #193's first run).
+      - name: Enable long paths for the checkout
+        run: git config --system core.longpaths true
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Every module under tools/opsa is stdlib-only; the suite is unittest, not pytest.
+      - name: OPS-A unit tests
+        working-directory: MTC_COMMAND_CENTER/tools/opsa
+        run: python -m unittest test_opsa -v

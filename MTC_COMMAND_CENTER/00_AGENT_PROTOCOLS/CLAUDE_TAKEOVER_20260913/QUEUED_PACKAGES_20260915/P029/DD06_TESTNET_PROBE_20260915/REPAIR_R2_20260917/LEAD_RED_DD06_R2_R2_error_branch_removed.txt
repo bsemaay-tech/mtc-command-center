@@ -1,0 +1,34 @@
+# mutant R2_error_branch_removed (sha256 78ffc5c602ff9c88a6718fb002e5f895d35fcb67e7a2b12a82339e2c37f8f79f) on the patched tool; HL_* removed from the env; restored to 8c62dd1b8396ce47737d87ba2679396146db09c5da3f5576a0a6ea9c585fc191
+..........F.................                                             [100%]
+================================== FAILURES ===================================
+_____________ test_transport_error_is_inconclusive_not_a_refusal ______________
+
+    def test_transport_error_is_inconclusive_not_a_refusal():
+        class Flaky(FakeExchange):
+            def withdraw_from_bridge(self, amount, destination):
+                self.calls.append("withdraw3")
+                raise _ServerError(503, "no capacity")
+    
+        record = probe.run_probe(
+            record=_record(),
+            info=FakeInfo(),
+            exchange=Flaky(),
+            account_address=ACCOUNT,
+            sub_account=None,
+        )
+        # second exact-Opus read of a46b2a9d, R-2: a fund-moving arm that ends in ERROR may have executed;
+        # both wallets are re-read and the sequence STOPS instead of trying the next arm
+>       assert record.result == "DD06_INCONCLUSIVE_FUND_ARM_ERROR"
+E       AssertionError: assert 'DD06_INCONCLUSIVE' == 'DD06_INCONCL...UND_ARM_ERROR'
+E         
+E         - DD06_INCONCLUSIVE_FUND_ARM_ERROR
+E         + DD06_INCONCLUSIVE
+
+tests\test_dd06_agent_withdraw_probe.py:345: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_transport_error_is_inconclusive_not_a_refusal
+1 failed, 27 passed in 0.66s
+
+
+exit=1
+tripwire_hit=False

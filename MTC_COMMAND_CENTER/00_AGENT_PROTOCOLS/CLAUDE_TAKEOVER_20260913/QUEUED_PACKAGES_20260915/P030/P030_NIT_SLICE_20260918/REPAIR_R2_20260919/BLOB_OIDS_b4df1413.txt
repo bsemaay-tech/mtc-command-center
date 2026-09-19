@@ -1,0 +1,5 @@
+100644 blob aad3afc7a8747e20ed3b5a23c23c41174d7ed459	check_p030_archive_exporter.py
+100644 blob 2cdef3838da4d6f55a897400185cf3e4a9bbd3b4	check_p030_closed_partition_backup_adapter.py
+100644 blob b63a32d168176aa8ba29f830788d5d4ced4413b1	p030_archive_exporter.py
+100644 blob 14c02bb13c0c7fd0cb89d6977a718f326e1d0f88	p030_closed_partition_backup_adapter.py
+HEAD b4df14139501e4224e6fcfa96f4226ab90c03cbe (branch feature/p030-integrated-20260913, pushed 2026-09-19 09:45 UTC+3)

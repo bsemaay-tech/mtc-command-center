@@ -1,0 +1,4 @@
+== empty fills witness b'[]' -> accepted: True REAL_CAPTURE_CANDIDATE_BUILT
+   completion_check: {'expected_funding_hours': ['2026-09-14T17:00:00Z', '2026-09-14T18:00:00Z'], 'observed_funding_hours': ['2026-09-14T17:00:00Z', '2026-09-14T18:00:00Z'], 'opening_position': None, 'position_source': 'coverage.fills_witness'}
+== another coin's fill only -> accepted: True REAL_CAPTURE_CANDIDATE_BUILT
+   completion_check: {'expected_funding_hours': ['2026-09-14T17:00:00Z', '2026-09-14T18:00:00Z'], 'observed_funding_hours': ['2026-09-14T17:00:00Z', '2026-09-14T18:00:00Z'], 'opening_position': None, 'position_source': 'coverage.fills_witness'}

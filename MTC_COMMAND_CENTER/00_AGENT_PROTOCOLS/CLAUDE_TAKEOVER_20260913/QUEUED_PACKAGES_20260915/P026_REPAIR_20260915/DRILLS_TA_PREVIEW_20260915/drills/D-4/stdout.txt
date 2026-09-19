@@ -1,0 +1,23 @@
+byte_compare_before receipt_sha256=b34427fa5b68c05bb9b253ec00cb3babce25c1cd95716dee894b0184930628a6 snapshot_sha256=371f9ffc2db7f32bfda73b5e84d19679c667fe02c061d1c6c3c6e8dd9aa1121f
+{"mode": "backup", "run_id": "opsa-20260915T161935.245Z", "backup_root": "C:\\tmp\\P026_DRILLS_TA_PREVIEW_20260915\\fixtures\\backup_root", "stores": ["p030_closed_partition"], "started_at": "2026-09-15T16:19:35Z"}
+OK    p030_closed_partition/_P030_STABLE_PREFIX.json size=524 sha256=b34427fa5b68c05b� readback=match
+OK    p030_closed_partition/source.jsonl size=1860 sha256=371f9ffc2db7f32b� readback=match
+{"run_id": "opsa-20260915T161935.245Z", "status": "ok", "files": 2, "bytes": 2384, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T16:19:35Z"}
+run_id=opsa-20260915T161935.245Z
+byte_compare_after receipt_equal=True snapshot_equal=True
+byte_compare_archived receipt_equal=True snapshot_equal=True
+manifest_exists=True
+manifest_record_types=['run_start', 'file', 'file', 'run_end']
+manifest_file rel=_P030_STABLE_PREFIX.json readback=match size=524 sha256=b34427fa5b68c05bb9b253ec00cb3babce25c1cd95716dee894b0184930628a6
+manifest_file rel=source.jsonl readback=match size=1860 sha256=371f9ffc2db7f32bfda73b5e84d19679c667fe02c061d1c6c3c6e8dd9aa1121f
+manifest_run_end status=ok errors=[] files=2 bytes=2384
+member_set=['_P030_STABLE_PREFIX.json', 'source.jsonl']
+run_dir_entries=['COMPLETE.json', 'RUN_MANIFEST.jsonl', 'p030_closed_partition']
+complete_marker_exists=True run_manifest_exists=True
+complete_marker_keys=['bytes', 'config', 'dirs', 'files', 'finished_at', 'readback', 'run_id', 'run_manifest', 'run_manifest_sha256', 'schema', 'skipped', 'started_at']
+complete_marker schema=mtc.opsa_run_complete/v1 run_id_match=True files=2 bytes=2384 status=None completed_at=None
+run_manifest_sha256_binds=True run_manifest_sha256=5694f5c3db561911379b85656e1eafe7602d70f2dd02965b0a5f6d9b7965dc98
+run_manifest_record_types=['run_manifest_header', 'file', 'file']
+run_manifest_header schema=mtc.opsa_run_manifest/v1 run_id_match=True
+per_run_file_records_equal_global=True count=2
+marker_completed_at=None global_run_end_finished_at=2026-09-15T16:19:35Z

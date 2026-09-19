@@ -1,0 +1,11 @@
+{
+  "worktree_head_commit": "6d6a450232c81c4c13d63c9a4e06ce3b1bf4f889",
+  "core_tree_oid": "4698e71659d678f50e549e328e78d25816fa16fe",
+  "expected_seal_sha": "00e66d9eb3517eb6bf0cb4672a22d19b58715b1b00afb4d91ffe0a4000979cb9",
+  "implementation_anchor_sha256": "11693467efdd516cf17224e02b290094965b7f562a608a4aea003b7fe6fd4719",
+  "baseline_manifest_sha256": "38151f4c704df9bc3f39f50f5ca3200e49f23c2303d46cffba8596ecd9651591",
+  "design_file_sha256": "12943ca7ba1e276188ff332cea8eb87b7ca46e3ab60579437311d951e9b8a195",
+  "design_version": "v1.27",
+  "harness_sha256": "c78ee46776cab1b5fdee56de93d3637085b3942a759b3db5a8d69b9bf2ffc570",
+  "catalog_sha256": "57d6d50715df688280a8f43f5e87b7f520b2e8d4fb05989ea492eb812733e863"
+}

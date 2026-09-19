@@ -1,0 +1,7 @@
+FAILED tests/test_p021_eligibility.py::ReadinessFenceTests::test_refuses_duplicate_open_number_record
+FAILED tests/test_p021_eligibility.py::ReadinessFenceTests::test_refuses_replaced_check_id
+FAILED tests/test_p021_eligibility.py::DsV1CompatibilityTests::test_accepts_exact_envelope_and_refuses_incompatible_shapes
+FAILED tests/test_p021_eligibility.py::DsV1CompatibilityTests::test_refusal_exposes_stable_reason_id
+FAILED tests/test_p021_eligibility.py::DsV1CompatibilityTests::test_refuses_non_builtin_string_envelope_keys
+catalogue in use: BarýþSemaay\AppData\Local\Temp\claude\C--LAB-Tradingview-LAB-CLEAN\3a1bbc80-cc26-4f04-beaa-4c7c26efb500\scratchpad\p021_red\old_catalogue\p021_readiness_rules.py
+47 failed, 5 passed, 3 subtests passed in 1.17s

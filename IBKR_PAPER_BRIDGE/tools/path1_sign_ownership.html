@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>P012 Path 1 Ownership Signature</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 18px;line-height:1.4}
+  label{display:block;margin:14px 0 4px;font-weight:600}
+  input,textarea,button{box-sizing:border-box;width:100%;font:inherit;padding:10px}
+  textarea{min-height:120px}
+  button{margin-top:16px;cursor:pointer}
+  output{display:block;white-space:pre-wrap;word-break:break-all;margin-top:16px;padding:12px;border:1px solid #bbb}
+</style>
+<body>
+<h1>P012 Path 1 Ownership Signature</h1>
+<label>Address</label>
+<input id="address" autocomplete="off" placeholder="0x...">
+<label>Run ID</label>
+<input id="run" autocomplete="off" placeholder="p012-path1-...">
+<label>Message</label>
+<textarea id="message" readonly></textarea>
+<button id="sign">Sign With Wallet</button>
+<output id="result"></output>
+<script>
+const qs = new URLSearchParams(location.search);
+const address = document.getElementById("address");
+const run = document.getElementById("run");
+const message = document.getElementById("message");
+const result = document.getElementById("result");
+address.value = qs.get("address") || "";
+run.value = qs.get("run_id") || "";
+function buildMessage() {
+  message.value = "P012 Path 1 own-account evidence capture\naddress: " +
+    address.value.trim().toLowerCase() + "\nrun_id: " + run.value.trim();
+}
+address.addEventListener("input", buildMessage);
+run.addEventListener("input", buildMessage);
+buildMessage();
+document.getElementById("sign").addEventListener("click", async () => {
+  try {
+    buildMessage();
+    if (!window.ethereum) throw new Error("No wallet extension found.");
+    const accounts = await window.ethereum.request({method: "eth_requestAccounts"});
+    const selected = accounts[0];
+    if (selected.toLowerCase() !== address.value.trim().toLowerCase()) {
+      throw new Error("Wallet account does not match the requested address.");
+    }
+    const signature = await window.ethereum.request({
+      method: "personal_sign",
+      params: [message.value, selected]
+    });
+    result.textContent = signature;
+  } catch (err) {
+    result.textContent = "ERROR: " + (err && err.message ? err.message : String(err));
+  }
+});
+</script>
+</body>
+</html>

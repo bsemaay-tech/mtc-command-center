@@ -1,0 +1,1 @@
+﻿error=System.Management.Automation.RuntimeException: Gemini payload contains missing or unexpected members.

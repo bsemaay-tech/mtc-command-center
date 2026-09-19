@@ -1,0 +1,3 @@
+P012 Path 1 own-account evidence capture
+address: 0x1e265f5e39957e08ed02a120cefa33a9bd46ac49
+run_id: p012-path1-20260914T1500Z-1900Z-r1

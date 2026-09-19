@@ -1,0 +1,55 @@
+Bridge suite (Python 3.12)	Run Bridge test suite	﻿2026-09-15T08:17:21.7193922Z ##[group]Run python -m pytest IBKR_PAPER_BRIDGE/tests -q
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7194343Z ^[[36;1mpython -m pytest IBKR_PAPER_BRIDGE/tests -q^[[0m
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7213753Z shell: /usr/bin/bash -e {0}
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7214089Z env:
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7214326Z   PYTHONUTF8: 1
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7214715Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7215191Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7215589Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7215994Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7216489Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7216878Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:21.7217232Z ##[endgroup]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:37.4131029Z .................F...................................................... [  4%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:42.0902886Z ........................................................................ [  9%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:51.8972070Z ........................................................................ [ 13%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:57.1300095Z ........................................................................ [ 18%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:17:59.9724616Z ........................................................................ [ 22%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:00.8638873Z ........................................................................ [ 27%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:01.8943371Z ........................................................................ [ 31%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:02.2661563Z ........................................................................ [ 36%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:02.3353840Z ........................................................................ [ 40%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:03.7495986Z ........................................................................ [ 45%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:05.6995095Z ........................................................................ [ 49%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:06.0315796Z ........................................................................ [ 54%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:06.6024332Z ........................................................................ [ 58%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:07.6672564Z ........................................................................ [ 63%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:11.8661487Z ........................................................................ [ 67%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:20.8086467Z ........................................................................ [ 72%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:23.3634027Z ........................................................................ [ 76%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:25.3525498Z ........................................................................ [ 81%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:26.7354014Z ........................................................................ [ 85%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:29.7066825Z ........................................................................ [ 90%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:40.6741312Z ........................................................................ [ 94%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:42.9074332Z ........................................................................ [ 99%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4574220Z ................                                                         [100%]
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4575130Z =================================== FAILURES ===================================
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4575677Z ______________________________ test_ci_red_probe _______________________________
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4575957Z 
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4576068Z     def test_ci_red_probe():
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4576616Z >       assert False, "deliberate WP-P0-27 D026 red probe (2026-09-15): the required check must turn RED and block the PR"
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4577332Z E       AssertionError: deliberate WP-P0-27 D026 red probe (2026-09-15): the required check must turn RED and block the PR
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4577816Z E       assert False
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4577984Z 
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4578153Z IBKR_PAPER_BRIDGE/tests/test_ci_red_probe.py:2: AssertionError
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4578770Z =============================== warnings summary ===============================
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4579321Z ../../../../../opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/fastapi/testclient.py:1
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4580195Z   /opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4581328Z     from starlette.testclient import TestClient as TestClient  # noqa
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4581694Z 
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4581931Z -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4582364Z =========================== short test summary info ============================
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4583138Z FAILED IBKR_PAPER_BRIDGE/tests/test_ci_red_probe.py::test_ci_red_probe - AssertionError: deliberate WP-P0-27 D026 red probe (2026-09-15): the required check must turn RED and block the PR
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4583763Z assert False
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.4584089Z 1 failed, 1599 passed, 1 warning in 80.68s (0:01:20)
+Bridge suite (Python 3.12)	Run Bridge test suite	2026-09-15T08:18:43.6067694Z ##[error]Process completed with exit code 1.

@@ -1,0 +1,6 @@
+        ):
+E       AssertionError: ValueError not raised
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p031_lifecycle_ledger.py:2988: AssertionError
+=========================== short test summary info ===========================
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py::LifecycleLedgerTests::test_registrar_refresh_with_catalog_backed_claim_requires_evaluation_hash
+1 failed, 109 deselected in 0.54s

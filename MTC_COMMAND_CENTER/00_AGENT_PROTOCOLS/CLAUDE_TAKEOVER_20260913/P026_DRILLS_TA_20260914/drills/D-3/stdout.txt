@@ -1,0 +1,9 @@
+D3: receipt=C:\tmp\P026_DRILLS_TA_20260914\fixtures\contract_partition\stable_prefix\drill_3\_P030_STABLE_PREFIX.json
+D3: state=stable_prefix high_water_bytes=1860 record_count=3 last_observation_id=p030obs-v1:aa7163ca2ed5c0727a448005c420bca64868c1f947d9fe6cf9ec96436f333929 prefix_sha256=371f9ffc2db7f32bfda73b5e84d19679c667fe02c061d1c6c3c6e8dd9aa1121f captured_at_utc=2026-09-14T05:40:00Z dataset_content_hash=p030ds-v1:dcc1fc2aec45f56b476d6b003a675f01705828858ad4bc92d4d2155869dd706e source=source.jsonl
+D3: snapshot_bytes=1860 snapshot_equals_high_water=True
+D3b-aligned: file_size=1860 high_water_bytes=620 inside_file=True
+D3b: aligned-OK high_water_bytes=620 record_count=1 last_observation_id=p030obs-v1:e3de15b667caa7f38d61abe23f2255ba6d253fc593deef45d6023bc2e20160eb
+D3b-mid: high_water_bytes=309
+D3b: mid-ERROR ValueError: high-water prefix must end with newline
+D3b-truncated: file_size=1860 high_water_bytes=1924
+D3b: truncated-ERROR ValueError: source prefix is truncated below high water

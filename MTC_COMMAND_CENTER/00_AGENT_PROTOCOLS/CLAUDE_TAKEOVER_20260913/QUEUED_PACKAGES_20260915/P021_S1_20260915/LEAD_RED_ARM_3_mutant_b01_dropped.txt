@@ -1,0 +1,2 @@
+mutant self-check python exit=1
+ValueError: P021.DATA_QUALITY could be presented as ready

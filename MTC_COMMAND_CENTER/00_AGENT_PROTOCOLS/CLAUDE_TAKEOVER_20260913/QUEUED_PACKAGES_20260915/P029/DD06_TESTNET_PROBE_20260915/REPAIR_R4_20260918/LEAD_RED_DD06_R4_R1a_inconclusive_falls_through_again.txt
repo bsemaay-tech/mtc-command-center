@@ -1,0 +1,35 @@
+$ (scratch C:\tmp\LEAD_DD06_SCRATCH_R4_RED) -m pytest tests/test_dd06_agent_withdraw_probe.py -q -p no:cacheprovider --basetemp=C:/bt_s4/dd06r4a -rf
+...........F....................                                         [100%]
+================================== FAILURES ===================================
+_______ test_unclassifiable_response_on_fund_arm_is_measured_and_stops ________
+
+    def test_unclassifiable_response_on_fund_arm_is_measured_and_stops():
+        # fourth exact-Opus read of acd79b52, R-1: the installed SDK turns a 2xx with a non-JSON body into
+        # {"error": "Could not parse JSON: ..."} without raising; classify_response grades it INCONCLUSIVE and
+        # the loop used to fall through - no re-read, no stop, two more signed fund-moving requests sent
+        class Opaque(FakeExchange):
+            def spot_transfer(self, amount, destination, token):
+                self.calls.append("spotSend")
+                return {"error": "Could not parse JSON: <html>502 Bad Gateway</html>"}
+    
+        exchange = Opaque()
+        record = probe.run_probe(
+            record=_record(),
+            info=FakeInfo(),
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+        )
+        assert (
+            probe.classify_response({"error": "Could not parse JSON: x"}) == "INCONCLUSIVE"
+        )
+>       assert record.result == "DD06_INCONCLUSIVE_FUND_ARM_UNCLASSIFIED"
+E       AssertionError: assert 'DD06_INCONCLUSIVE' == 'DD06_INCONCL..._UNCLASSIFIED'
+E         
+E         - DD06_INCONCLUSIVE_FUND_ARM_UNCLASSIFIED
+E         + DD06_INCONCLUSIVE
+
+tests\test_dd06_agent_withdraw_probe.py:381: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_unclassifiable_response_on_fund_arm_is_measured_and_stops
+1 failed, 31 passed in 0.92s

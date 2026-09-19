@@ -1,0 +1,28 @@
+"""Lead per-timeframe REAL-cell smoke for V1.6 (disclosed precondition arm; NOT the one-shot, no token, no outputs, no matching).
+For each of the five timeframes, the FIRST family in the frozen family_order is run through the real preflight, real
+plan, real dataset bytes and the real trade_bearing_gate. Reports trade-bearing / blocked (+ clause) per timeframe.
+Purpose: prove the V3 record removed the sizing artefact end-to-end on real data (V1.5 lesson), not to select anything."""
+import importlib.util, json, pathlib, sys, datetime, time
+ROOT = pathlib.Path("C:/tmp/P020_PRESELECT_LEAD_REPRO_V16_20260914")
+sys.path.insert(0, str(ROOT))
+spec = importlib.util.spec_from_file_location("preselect_profile", ROOT / "preselect_profile.py")
+pp = importlib.util.module_from_spec(spec); spec.loader.exec_module(pp)
+frozen = json.loads((ROOT / "PRESELECTION_FROZEN.json").read_text(encoding="utf-8"))
+print("frozen artifact_version:", frozen.get("artifact_version"), "sha256:", pp.sha256_path(ROOT / "PRESELECTION_FROZEN.json")[:16])
+checked, plan, dataset_bytes = pp.verify_frozen_identity(frozen)
+print("preflight verify_frozen_identity: OK;", len(checked), "pins checked; instrument pin:", plan["p020_profile"]["records"]["instrument"]["path"].split("/")[-1])
+driver = pp.load_driver(); modules = driver._load_engine()
+first = frozen["family_order"][0]["strategy_id"]
+print("smoke family (family_order[0]):", first)
+for tf in pp.TIMEFRAMES:
+    lines = pp.dataset_lines(frozen, tf, dataset_bytes[tf])
+    window = frozen["calibration_windows"][tf]
+    trial = pp._trial(frozen, tf, first, window["row_count"], "leadsmoke")
+    frame = pp.calibration_frame(frozen, tf, lines)
+    t0 = time.time()
+    try:
+        pp.trade_bearing_gate(frame, trial, modules, plan, driver)
+        print(f"  {tf:>3}: rows {window['start_row']}-{window['end_row']} -> TRADE-BEARING ({time.time()-t0:.2f}s)")
+    except driver.BenchmarkProfileBlocked as e:
+        print(f"  {tf:>3}: rows {window['start_row']}-{window['end_row']} -> BLOCKED: {str(e)[:110]} ({time.time()-t0:.2f}s)")
+print("done", datetime.datetime.now(datetime.UTC).isoformat())

@@ -1,0 +1,22 @@
+=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    feature/p026-completion-marker-20260915
+[freshness] local origin/master tip c19538bc6c6c3e394ce6eb19df9989ac8dec4653 age=1 day(s) (commit timestamp; no fetch attempted)
+[freshness] branch merge-base fcac0ac67cf2682693ad28138b1a56e15a0846f2 is 6 commit(s) behind local origin/master (limit 30)
+[dirty]     5 entr(y/ies):
+            M  MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/RESTORE_DRILL_EVIDENCE.md
+            M  MTC_COMMAND_CENTER/tools/opsa/README.md
+            M  MTC_COMMAND_CENTER/tools/opsa/backup.py
+            M  MTC_COMMAND_CENTER/tools/opsa/restore.py
+            M  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py
+[staged]    5 file(s):
+            MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/RESTORE_DRILL_EVIDENCE.md
+            MTC_COMMAND_CENTER/tools/opsa/README.md
+            MTC_COMMAND_CENTER/tools/opsa/backup.py
+            MTC_COMMAND_CENTER/tools/opsa/restore.py
+            MTC_COMMAND_CENTER/tools/opsa/test_opsa.py
+[protected] none
+[untracked] no risky files
+[pine-alert] PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
+[unpushed]  in sync with upstream
+
+RESULT: PASS

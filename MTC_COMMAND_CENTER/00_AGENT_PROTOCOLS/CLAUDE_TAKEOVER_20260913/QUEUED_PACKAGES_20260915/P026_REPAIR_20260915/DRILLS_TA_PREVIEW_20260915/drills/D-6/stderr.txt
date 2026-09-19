@@ -1,0 +1,3 @@
+{"status": "check_failed", "error": "run_not_complete", "detail": "run opsa-20260915T161935.245Z: completion marker declares files=3, per-run manifest lists 2", "run_id": "opsa-20260915T161935.245Z"}
+{"status": "check_failed", "error": "run_not_complete", "detail": "run opsa-20260915T161935.245Z: per-run manifest hash mismatch (marker=5694f5c3db561911� actual=fd335242d10f6f8d�)", "run_id": "opsa-20260915T161935.245Z"}
+{"status": "check_failed", "error": "run_not_complete", "detail": "run opsa-20260915T161935.245Z: per-run manifest file records differ from the global manifest", "run_id": "opsa-20260915T161935.245Z"}

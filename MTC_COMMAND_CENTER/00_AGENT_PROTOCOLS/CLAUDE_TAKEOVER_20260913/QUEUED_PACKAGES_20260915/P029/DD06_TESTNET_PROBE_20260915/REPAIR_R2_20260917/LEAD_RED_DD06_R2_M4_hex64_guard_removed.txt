@@ -1,0 +1,28 @@
+# mutant M4_hex64_guard_removed (sha256 198699b7c99fe8172a8466913a337d24ffe3234ddfa14762587dff7fa5524409) on the patched tool; HL_* removed from the env; restored to 8c62dd1b8396ce47737d87ba2679396146db09c5da3f5576a0a6ea9c585fc191
+....................F.......                                             [100%]
+================================== FAILURES ===================================
+___________________ test_write_record_refuses_surviving_hex ___________________
+
+tmp_path = WindowsPath('C:/bt_s4/dd06_mut/test_write_record_refuses_surv0')
+
+    def test_write_record_refuses_surviving_hex(tmp_path: Path):
+        # lane-7 review R-1 (M4): the last-resort guard in write_record is fenced
+        for poison in ("c3" * 32, "0x" + "d4" * 20):
+            record = _record()
+            record.steps.append(
+                {"name": "poison", "outcome": "RECORDED", "data": {"leak": poison}}
+            )
+            record.result = "DD06_INCONCLUSIVE"
+            out = tmp_path / poison[:6]
+>           with pytest.raises(probe.ProbeRefused):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE ProbeRefused
+
+tests\test_dd06_agent_withdraw_probe.py:536: Failed
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_write_record_refuses_surviving_hex
+1 failed, 27 passed in 0.68s
+
+
+exit=1
+tripwire_hit=False

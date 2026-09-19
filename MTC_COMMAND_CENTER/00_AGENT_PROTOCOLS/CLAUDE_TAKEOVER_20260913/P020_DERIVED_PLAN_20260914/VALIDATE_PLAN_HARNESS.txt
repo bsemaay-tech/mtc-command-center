@@ -1,0 +1,4 @@
+run: 2026-09-15T05:03:35+00:00
+driver sha256: 3d4453cd23ad0f56ae0b34f94b21b7b1f3715f180091821b383369aa62fab324
+plan under validation: C:/tmp/CLAUDE_P0_RUN_20260913/P020_DERIVED_PLAN_20260914/BENCHMARK_PLAN_DERIVED.json d84b043a2b262d1c9a3c98f29f538eec169c05a0ecad0a97d801a01d9a7e2580
+PLAN_VALID (derived plan) via run_bounded_benchmark._validate_plan: manifest, record digests, dataset digests, five families x sizes 512/1024/2048, five timeframes verified

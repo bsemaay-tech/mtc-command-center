@@ -1,0 +1,606 @@
+# mutant R1_old_definition_restored (sha256 9f4d7b1bfe4ccde83b4d137e3daf4fa0637a3558e7d0a9f98ed95a3db3ed9467) on the patched module; restored to b8fa0ae82f7ed2ea12072720e46fcdb16426e7eac2fcc52a936ccb6aa0af095b
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF............. [100%]
+================================== FAILURES ===================================
+________ ReadinessFenceTests.test_refuses_duplicate_open_number_record ________
+
+self = <test_p021_eligibility.ReadinessFenceTests testMethod=test_refuses_duplicate_open_number_record>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_____________ ReadinessFenceTests.test_refuses_replaced_check_id ______________
+
+self = <test_p021_eligibility.ReadinessFenceTests testMethod=test_refuses_replaced_check_id>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ DsV1CompatibilityTests.test_accepts_exact_envelope_and_refuses_incompatible_shapes _
+
+self = <test_p021_eligibility.DsV1CompatibilityTests testMethod=test_accepts_exact_envelope_and_refuses_incompatible_shapes>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+________ DsV1CompatibilityTests.test_refusal_exposes_stable_reason_id _________
+
+self = <test_p021_eligibility.DsV1CompatibilityTests testMethod=test_refusal_exposes_stable_reason_id>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+____ DsV1CompatibilityTests.test_refuses_non_builtin_string_envelope_keys _____
+
+self = <test_p021_eligibility.DsV1CompatibilityTests testMethod=test_refuses_non_builtin_string_envelope_keys>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_______ DsV1CompatibilityTests.test_refuses_str_subclass_envelope_keys ________
+
+self = <test_p021_eligibility.DsV1CompatibilityTests testMethod=test_refuses_str_subclass_envelope_keys>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ DsV1CompatibilityTests.test_refuses_string_subclasses_for_contract_and_digest_values _
+
+self = <test_p021_eligibility.DsV1CompatibilityTests testMethod=test_refuses_string_subclasses_for_contract_and_digest_values>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ ControlIdentityTests.test_hashes_versioned_canonical_preimages_to_bare_sha256 _
+
+self = <test_p021_eligibility.ControlIdentityTests testMethod=test_hashes_versioned_canonical_preimages_to_bare_sha256>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ ControlIdentityTests.test_manifest_hash_is_order_stable_and_field_sensitive _
+
+self = <test_p021_eligibility.ControlIdentityTests testMethod=test_manifest_hash_is_order_stable_and_field_sensitive>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+____________ ControlIdentityTests.test_refuses_boolean_type_spoofs ____________
+
+self = <test_p021_eligibility.ControlIdentityTests testMethod=test_refuses_boolean_type_spoofs>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+__ ControlIdentityTests.test_refuses_duplicate_and_malformed_identity_inputs __
+
+self = <test_p021_eligibility.ControlIdentityTests testMethod=test_refuses_duplicate_and_malformed_identity_inputs>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+________ ControlIdentityTests.test_refuses_inventory_record_subclasses ________
+
+self = <test_p021_eligibility.ControlIdentityTests testMethod=test_refuses_inventory_record_subclasses>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ ControlIdentityTests.test_refuses_malformed_inventory_and_manifest_carriers _
+
+self = <test_p021_eligibility.ControlIdentityTests testMethod=test_refuses_malformed_inventory_and_manifest_carriers>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+________ ControlIdentityTests.test_refuses_manifest_record_subclasses _________
+
+self = <test_p021_eligibility.ControlIdentityTests testMethod=test_refuses_manifest_record_subclasses>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+________ ControlIdentityTests.test_refuses_manifest_string_subclasses _________
+
+self = <test_p021_eligibility.ControlIdentityTests testMethod=test_refuses_manifest_string_subclasses>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_____ ControlAllowanceTests.test_materializes_inventory_and_manifest_once _____
+
+self = <test_p021_eligibility.ControlAllowanceTests testMethod=test_materializes_inventory_and_manifest_once>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_____ ControlAllowanceTests.test_refuses_executed_control_id_string_alias _____
+
+self = <test_p021_eligibility.ControlAllowanceTests testMethod=test_refuses_executed_control_id_string_alias>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+___ ControlAllowanceTests.test_refuses_executed_control_id_tuple_subclasses ___
+
+self = <test_p021_eligibility.ControlAllowanceTests testMethod=test_refuses_executed_control_id_tuple_subclasses>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+__ ControlAllowanceTests.test_refuses_malformed_executed_control_id_carriers __
+
+self = <test_p021_eligibility.ControlAllowanceTests testMethod=test_refuses_malformed_executed_control_id_carriers>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ ControlAllowanceTests.test_refuses_mismatched_classification_hashes_and_omitted_inventory _
+
+self = <test_p021_eligibility.ControlAllowanceTests testMethod=test_refuses_mismatched_classification_hashes_and_omitted_inventory>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_________ ControlAllowanceTests.test_refuses_target_state_class_spoof _________
+
+self = <test_p021_eligibility.ControlAllowanceTests testMethod=test_refuses_target_state_class_spoof>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+__ ControlAllowanceTests.test_required_unsimulated_control_caps_above_shadow __
+
+self = <test_p021_eligibility.ControlAllowanceTests testMethod=test_required_unsimulated_control_caps_above_shadow>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+__ ControlAllowanceTests.test_snapshots_inventory_before_manifest_iteration ___
+
+self = <test_p021_eligibility.ControlAllowanceTests testMethod=test_snapshots_inventory_before_manifest_iteration>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ IntentIdentityTests.test_binds_p012_semantics_and_deployment_to_a_bare_digest _
+
+self = <test_p021_eligibility.IntentIdentityTests testMethod=test_binds_p012_semantics_and_deployment_to_a_bare_digest>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+____ IntentIdentityTests.test_refuses_builtin_timezone_with_spoofed_offset ____
+
+self = <test_p021_eligibility.IntentIdentityTests testMethod=test_refuses_builtin_timezone_with_spoofed_offset>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+________ IntentIdentityTests.test_refuses_dataset_identity_subclasses _________
+
+self = <test_p021_eligibility.IntentIdentityTests testMethod=test_refuses_dataset_identity_subclasses>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+___________ IntentIdentityTests.test_refuses_naive_builtin_datetime ___________
+
+self = <test_p021_eligibility.IntentIdentityTests testMethod=test_refuses_naive_builtin_datetime>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ IntentIdentityTests.test_refuses_unsupported_p012_contract_and_string_aliases _
+
+self = <test_p021_eligibility.IntentIdentityTests testMethod=test_refuses_unsupported_p012_contract_and_string_aliases>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_______ IntentIdentityTests.test_refuses_untrusted_utc_offset_carriers ________
+
+self = <test_p021_eligibility.IntentIdentityTests testMethod=test_refuses_untrusted_utc_offset_carriers>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ LookaheadDomainTests.test_digest_collision_cannot_hide_structural_intent_difference _
+
+self = <test_p021_eligibility.LookaheadDomainTests testMethod=test_digest_collision_cannot_hide_structural_intent_difference>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ LookaheadDomainTests.test_distinguishes_causal_match_from_future_reading_on_common_key _
+
+self = <test_p021_eligibility.LookaheadDomainTests testMethod=test_distinguishes_causal_match_from_future_reading_on_common_key>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+__________ LookaheadDomainTests.test_refuses_decision_key_subclasses __________
+
+self = <test_p021_eligibility.LookaheadDomainTests testMethod=test_refuses_decision_key_subclasses>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ LookaheadDomainTests.test_refuses_hostile_class_properties_at_carrier_boundaries _
+
+self = <test_p021_eligibility.LookaheadDomainTests testMethod=test_refuses_hostile_class_properties_at_carrier_boundaries>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+___ LookaheadDomainTests.test_refuses_hostile_intent_fields_before_equality ___
+
+self = <test_p021_eligibility.LookaheadDomainTests testMethod=test_refuses_hostile_intent_fields_before_equality>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ LookaheadDomainTests.test_refuses_intent_subclass_that_suppresses_structural_difference _
+
+self = <test_p021_eligibility.LookaheadDomainTests testMethod=test_refuses_intent_subclass_that_suppresses_structural_difference>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+__ LookaheadDomainTests.test_refuses_malformed_closed_decision_key_carriers ___
+
+self = <test_p021_eligibility.LookaheadDomainTests testMethod=test_refuses_malformed_closed_decision_key_carriers>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ LookaheadDomainTests.test_snapshots_full_records_before_prefix_mapping_mutation _
+
+self = <test_p021_eligibility.LookaheadDomainTests testMethod=test_snapshots_full_records_before_prefix_mapping_mutation>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ LookaheadDomainTests.test_snapshots_nested_dataset_before_mapping_mutation __
+
+self = <test_p021_eligibility.LookaheadDomainTests testMethod=test_snapshots_nested_dataset_before_mapping_mutation>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ LookaheadDomainTests.test_uses_fixed_closed_bar_union_and_counts_one_sided_decisions _
+
+self = <test_p021_eligibility.LookaheadDomainTests testMethod=test_uses_fixed_closed_bar_union_and_counts_one_sided_decisions>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ ClosedBarReceiptTests.test_binds_instrument_timeframe_and_runtime_producer_identity _
+
+self = <test_p021_eligibility.ClosedBarReceiptTests testMethod=test_binds_instrument_timeframe_and_runtime_producer_identity>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_______ ClosedBarReceiptTests.test_refuses_each_wrong_runtime_identity ________
+
+self = <test_p021_eligibility.ClosedBarReceiptTests testMethod=test_refuses_each_wrong_runtime_identity>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ ClosedBarReceiptTests.test_refuses_non_builtin_runtime_identity_strings_actual_and_expected _
+
+self = <test_p021_eligibility.ClosedBarReceiptTests testMethod=test_refuses_non_builtin_runtime_identity_strings_actual_and_expected>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ ClosedBarReceiptTests.test_refuses_receipt_subclasses_and_mutable_attribute_views _
+
+self = <test_p021_eligibility.ClosedBarReceiptTests testMethod=test_refuses_receipt_subclasses_and_mutable_attribute_views>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+___ ClosedBarReceiptTests.test_refuses_stateful_timezone_before_chronology ____
+
+self = <test_p021_eligibility.ClosedBarReceiptTests testMethod=test_refuses_stateful_timezone_before_chronology>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ ClosedBarReceiptTests.test_refuses_string_subclasses_across_runtime_identity_boundary _
+
+self = <test_p021_eligibility.ClosedBarReceiptTests testMethod=test_refuses_string_subclasses_across_runtime_identity_boundary>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+_ ClosedBarReceiptTests.test_requires_runtime_source_and_closed_bar_chronology _
+
+self = <test_p021_eligibility.ClosedBarReceiptTests testMethod=test_requires_runtime_source_and_closed_bar_chronology>
+
+    def setUp(self) -> None:
+>       self.assert_readiness_fence()
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p021_eligibility.py:112: in assert_readiness_fence
+    self.assertIn(
+E   AssertionError: 'per-pair signed difference of realized trade return (forward - backtest), aggregated as the mean over the aligned window, reported with the count and the standard deviation' not found in 'M-C: per aligned pair (instrument, entry-bar timestamp, intent id) record BOTH (a) the decision-level divergence = share of backtest intents with no forward counterpart or a different side/size class, and (b) the outcome-level divergence = mean absolute difference of realised R-multiples over matched pairs; a check consumes both numbers against their own tolerances (B-06, open)'
+=========================== short test summary info ===========================
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ReadinessFenceTests::test_refuses_duplicate_open_number_record
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ReadinessFenceTests::test_refuses_replaced_check_id
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::DsV1CompatibilityTests::test_accepts_exact_envelope_and_refuses_incompatible_shapes
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::DsV1CompatibilityTests::test_refusal_exposes_stable_reason_id
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::DsV1CompatibilityTests::test_refuses_non_builtin_string_envelope_keys
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::DsV1CompatibilityTests::test_refuses_str_subclass_envelope_keys
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::DsV1CompatibilityTests::test_refuses_string_subclasses_for_contract_and_digest_values
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlIdentityTests::test_hashes_versioned_canonical_preimages_to_bare_sha256
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlIdentityTests::test_manifest_hash_is_order_stable_and_field_sensitive
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlIdentityTests::test_refuses_boolean_type_spoofs
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlIdentityTests::test_refuses_duplicate_and_malformed_identity_inputs
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlIdentityTests::test_refuses_inventory_record_subclasses
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlIdentityTests::test_refuses_malformed_inventory_and_manifest_carriers
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlIdentityTests::test_refuses_manifest_record_subclasses
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlIdentityTests::test_refuses_manifest_string_subclasses
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlAllowanceTests::test_materializes_inventory_and_manifest_once
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlAllowanceTests::test_refuses_executed_control_id_string_alias
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlAllowanceTests::test_refuses_executed_control_id_tuple_subclasses
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlAllowanceTests::test_refuses_malformed_executed_control_id_carriers
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlAllowanceTests::test_refuses_mismatched_classification_hashes_and_omitted_inventory
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlAllowanceTests::test_refuses_target_state_class_spoof
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlAllowanceTests::test_required_unsimulated_control_caps_above_shadow
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ControlAllowanceTests::test_snapshots_inventory_before_manifest_iteration
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::IntentIdentityTests::test_binds_p012_semantics_and_deployment_to_a_bare_digest
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::IntentIdentityTests::test_refuses_builtin_timezone_with_spoofed_offset
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::IntentIdentityTests::test_refuses_dataset_identity_subclasses
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::IntentIdentityTests::test_refuses_naive_builtin_datetime
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::IntentIdentityTests::test_refuses_unsupported_p012_contract_and_string_aliases
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::IntentIdentityTests::test_refuses_untrusted_utc_offset_carriers
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::LookaheadDomainTests::test_digest_collision_cannot_hide_structural_intent_difference
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::LookaheadDomainTests::test_distinguishes_causal_match_from_future_reading_on_common_key
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::LookaheadDomainTests::test_refuses_decision_key_subclasses
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::LookaheadDomainTests::test_refuses_hostile_class_properties_at_carrier_boundaries
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::LookaheadDomainTests::test_refuses_hostile_intent_fields_before_equality
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::LookaheadDomainTests::test_refuses_intent_subclass_that_suppresses_structural_difference
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::LookaheadDomainTests::test_refuses_malformed_closed_decision_key_carriers
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::LookaheadDomainTests::test_snapshots_full_records_before_prefix_mapping_mutation
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::LookaheadDomainTests::test_snapshots_nested_dataset_before_mapping_mutation
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::LookaheadDomainTests::test_uses_fixed_closed_bar_union_and_counts_one_sided_decisions
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ClosedBarReceiptTests::test_binds_instrument_timeframe_and_runtime_producer_identity
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ClosedBarReceiptTests::test_refuses_each_wrong_runtime_identity
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ClosedBarReceiptTests::test_refuses_non_builtin_runtime_identity_strings_actual_and_expected
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ClosedBarReceiptTests::test_refuses_receipt_subclasses_and_mutable_attribute_views
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ClosedBarReceiptTests::test_refuses_stateful_timezone_before_chronology
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ClosedBarReceiptTests::test_refuses_string_subclasses_across_runtime_identity_boundary
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p021_eligibility.py::ClosedBarReceiptTests::test_requires_runtime_source_and_closed_bar_chronology
+46 failed, 13 passed, 15 subtests passed in 1.21s
+
+
+exit=1

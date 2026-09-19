@@ -1,0 +1,43 @@
+feat(p012-path1): read-only own-account evidence capture tool + offline ownership-signature page
+
+Adds IBKR_PAPER_BRIDGE/tools/capture_own_account_evidence.py: a source-only,
+read-only Hyperliquid Info capture for the P012 Path 1 own-account evidence
+packet. It imports only hyperliquid.info.Info (no Exchange, no key, no signing),
+refuses when HL_API_WALLET_KEY is present, pages userFillsByTime (cap 2000) and
+userFunding (cap 500) with cursor-stall/truncation refusal, re-queries fills and
+funding and refuses on identity mismatch, records clearinghouseState, keeps the
+original HTTP response bytes write-once with sha256 sidecars and a manifest
+(request body, byte length, wall clock, base URL, SDK version, tool digest),
+writes a separately labelled DERIVED_EXTRACTION view, and verifies an optional
+personal_sign ownership signature over a fixed message (address + run_id).
+
+Adds IBKR_PAPER_BRIDGE/tools/path1_sign_ownership.html: self-contained offline
+page (no external scripts, no transaction) that builds the same message and asks
+the wallet for personal_sign only.
+
+Adds IBKR_PAPER_BRIDGE/tests/test_capture_own_account_evidence.py (10 tests):
+manifest/sidecar/extraction/re-query identities, truncation refusal, re-query
+mismatch refusal, tampered bytes vs sidecar refusal, SDK exception refusal,
+malformed address and wallet-key refusals before any SDK call, network constant
+recorded, ownership signature recovery, and a no-Exchange import assertion.
+
+Built by Codex Plus (gpt-5.5 high) lane P1CAP on 2026-09-14 (report and
+checksum manifest kept in the run root, not committed). Lead verification on
+Python 3.12: focused tests 10 passed; full Bridge suite 1608 passed + 30 passed
+(tools_v2 modules), 1 skipped, with pytest --basetemp outside C:/tmp. The 33
+tests/test_mtc_funding_export.py failures seen when basetemp lies under C:/tmp
+were reproduced identically on an untouched detached worktree at fcac0ac6 and
+traced to a stray, repository-less C:/tmp/.git directory that
+export_mtc_funding.py's _git_ancestor treats as a Git checkout
+(CANDIDATE_STAGING_UNSAFE): environmental, not caused by these files.
+
+Status: candidate, NONACCEPTING, no network call made, no real capture
+produced, no review yet (Gemini detection + exact Sol next; exact Opus after
+the weekly reset). Known Lead findings carried to the correction brief: Ruff
+F401 (tests: unused os), RUF100 + F841 (tool: unused noqa, unused raw in
+call_info), ruff-format drift, no RED test for a wrong ownership signature,
+funding identity omits coin (hash+time only), ownership signature verified
+after the network passes rather than before.
+
+Co-Authored-By: Codex GPT-5.5 <noreply@openai.com>
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>

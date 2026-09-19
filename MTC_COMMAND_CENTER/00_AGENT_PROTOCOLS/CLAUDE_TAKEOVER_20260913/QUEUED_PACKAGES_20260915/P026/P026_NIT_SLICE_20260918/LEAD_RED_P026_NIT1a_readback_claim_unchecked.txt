@@ -1,0 +1,80 @@
+$ (scratch C:\tmp\LEAD_P026_SCRATCH_NIT) python test_opsa.py
+{"mode": "backup", "run_id": "opsa-20260918T085106.570Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_3fh2c7ms\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:06Z"}
+{"run_id": "opsa-20260918T085106.570Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085106.632Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_7utg56xj\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:06Z"}
+{"run_id": "opsa-20260918T085106.632Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "restore", "run_id": "opsa-20260918T085106.632Z", "manifest": "C:\\bt_s4\\p026_tmp\\opsa_test_7utg56xj\\copied_backups\\manifest.jsonl", "target": "C:\\bt_s4\\p026_tmp\\opsa_test_7utg56xj\\restored_from_copy", "records_selected": 3, "completion_marker": "verified", "run_manifest_sha256": "bcf9c73d9479ee54d78efd6e8c893628b2de2a7c94bd050453dfa9698dd695c6", "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=d720a54e5d3aeff8…
+RESTORED ledger_store/sub/blob.bin sha256=785b0751fc2c53dc…
+{"mode": "restore", "run_id": "opsa-20260918T085106.632Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 1, "errors": 0, "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "dry-run", "run_id": "opsa-20260918T085106.713Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_zw6obvo0\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:06Z"}
+PLAN  ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8…
+PLAN  ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc…
+{"run_id": "opsa-20260918T085106.713Z", "status": "ok", "files": 0, "bytes": 0, "errors": 0, "completion_marker": "none", "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085106.724Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_92fxob1x\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:06Z"}
+{"run_id": "opsa-20260918T085106.724Z", "status": "partial", "files": 1, "bytes": 51, "errors": 1, "completion_marker": "none", "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085106.794Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_flvxx46y\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:06Z"}
+{"run_id": "opsa-20260918T085106.794Z", "status": "partial", "files": 1, "bytes": 51, "errors": 1, "completion_marker": "none", "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085106.833Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_eb8btztq\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:06Z"}
+{"run_id": "opsa-20260918T085106.833Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085106.881Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_eb8btztq\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:06Z"}
+{"run_id": "opsa-20260918T085106.881Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085106.925Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_a9hle1co\\backups", "stores": ["ghost"], "started_at": "2026-09-18T08:51:06Z"}
+{"run_id": "opsa-20260918T085106.925Z", "status": "partial", "files": 0, "bytes": 0, "errors": 1, "completion_marker": "none", "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085106.943Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_d4tu8nni\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:06Z"}
+{"run_id": "opsa-20260918T085106.943Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085106.982Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_d4tu8nni\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:06Z"}
+{"run_id": "opsa-20260918T085106.982Z", "status": "ok", "files": 2, "bytes": 1052, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:06Z"}
+{"mode": "restore", "run_id": "opsa-20260918T085106.982Z", "manifest": "C:\\bt_s4\\p026_tmp\\opsa_test_d4tu8nni\\backups\\manifest.jsonl", "target": "C:\\bt_s4\\p026_tmp\\opsa_test_d4tu8nni\\restored", "records_selected": 3, "completion_marker": "verified", "run_manifest_sha256": "0b3a41fc4e840959f9a60b3b9a00ce9fab983e230221469a643039608296a07d", "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=ca5f3b5695556696…
+RESTORED ledger_store/sub/blob.bin sha256=785b0751fc2c53dc…
+{"mode": "restore", "run_id": "opsa-20260918T085106.982Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 1, "errors": 0, "finished_at": "2026-09-18T08:51:07Z"}
+{"mode": "restore", "run_id": "opsa-20260918T085106.943Z", "manifest": "C:\\bt_s4\\p026_tmp\\opsa_test_d4tu8nni\\backups\\manifest.jsonl", "target": "C:\\bt_s4\\p026_tmp\\opsa_test_d4tu8nni\\restored_first", "records_selected": 3, "completion_marker": "verified", "run_manifest_sha256": "1a40b743a1af624cc7091b78ec112eda9166a5c4b81203de6248828f663b878a", "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=d720a54e5d3aeff8…
+RESTORED ledger_store/sub/blob.bin sha256=785b0751fc2c53dc…
+{"mode": "restore", "run_id": "opsa-20260918T085106.943Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 1, "errors": 0, "finished_at": "2026-09-18T08:51:07Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085107.063Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_np96vo4j\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:07Z"}
+{"run_id": "opsa-20260918T085107.063Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:07Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085107.352Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_eb8vmvgd\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:07Z"}
+{"run_id": "opsa-20260918T085107.352Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:07Z"}
+{"mode": "restore", "run_id": "opsa-20260918T085107.352Z", "manifest": "C:\\bt_s4\\p026_tmp\\opsa_test_eb8vmvgd\\backups\\manifest.jsonl", "target": "C:\\bt_s4\\p026_tmp\\opsa_test_eb8vmvgd\\restored", "records_selected": 3, "completion_marker": "verified", "run_manifest_sha256": "3128fca4a4e022893d2a9e415797b54715d50ff2b92d5e3d9b8975d7e5ffcdc2", "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=d720a54e5d3aeff8…
+{"mode": "restore", "run_id": "opsa-20260918T085107.352Z", "status": "failed", "verified_against_manifest": 1, "restored": 1, "overwritten": 0, "dirs_recreated": 1, "errors": 1, "finished_at": "2026-09-18T08:51:07Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085107.425Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_gbmv4o4l\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:07Z"}
+{"run_id": "opsa-20260918T085107.425Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:07Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085107.568Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_0pjg9jbn\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:07Z"}
+{"run_id": "opsa-20260918T085107.568Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:07Z"}
+{"mode": "restore", "run_id": "opsa-20260918T085107.568Z", "manifest": "C:\\bt_s4\\p026_tmp\\opsa_test_0pjg9jbn\\backups\\manifest.jsonl", "target": "C:\\bt_s4\\p026_tmp\\opsa_test_0pjg9jbn\\restored", "records_selected": 3, "completion_marker": "verified", "run_manifest_sha256": "7ffe864b643fae643f8b43dc65dee07e5ffb92a521d269dc7514163ebfacb4a6", "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=d720a54e5d3aeff8…
+RESTORED ledger_store/sub/blob.bin sha256=785b0751fc2c53dc…
+{"mode": "restore", "run_id": "opsa-20260918T085107.568Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 1, "errors": 0, "finished_at": "2026-09-18T08:51:07Z"}
+{"mode": "backup", "run_id": "opsa-20260918T085107.636Z", "backup_root": "C:\\bt_s4\\p026_tmp\\opsa_test_8gd1t1iu\\backups", "stores": ["ledger_store"], "started_at": "2026-09-18T08:51:07Z"}
+{"run_id": "opsa-20260918T085107.636Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-18T08:51:07Z"}
+..FAIL  ledger_store/ledger.jsonl: sha256 mismatch: manifest=d720a54e5d3aeff8… actual=d121be3103007b41…
+error: ledger_store/ledger.jsonl: sha256 mismatch: manifest=d720a54e5d3aeff8… actual=d121be3103007b41…
+...ERROR store 'ledger_store': copy/verify failed for C:\bt_s4\p026_tmp\opsa_test_92fxob1x\live\ledger_store\sub\blob.bin: simulated interruption during the second file copy
+.ERROR store 'ledger_store': copy/verify failed for C:\bt_s4\p026_tmp\opsa_test_flvxx46y\live\ledger_store\sub\blob.bin: simulated interruption during the second file copy
+..ERROR store 'ghost': source path does not exist: C:\bt_s4\p026_tmp\opsa_test_a9hle1co\nope
+......FAIL  ledger_store/sub/blob.bin: sha256 mismatch: manifest=785b0751fc2c53dc… actual=82327d431835e86d…
+error: ledger_store/sub/blob.bin: sha256 mismatch: manifest=785b0751fc2c53dc… actual=82327d431835e86d…
+....F........error: no heartbeat files found and no --expect ids given (watching nothing cannot be OK)
+...error: invalid --now value: Invalid isoformat string: 'not-a-timestamp'
+....error: state dir does not exist: C:\bt_s4\p026_tmp\opsa_wd_13gbf4ux\gone
+.....
+======================================================================
+FAIL: test_tampered_marker_or_run_manifest_is_refused (__main__.BackupRestoreTests.test_tampered_marker_or_run_manifest_is_refused)
+Falsification 3: a tampered/mismatched marker or per-run manifest is refused; a hash
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\tmp\LEAD_P026_SCRATCH_NIT\test_opsa.py", line 390, in test_tampered_marker_or_run_manifest_is_refused
+    refused("declares readback='partial'")
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\tmp\LEAD_P026_SCRATCH_NIT\test_opsa.py", line 348, in refused
+    self.assertEqual(rc, 3)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 0 != 3
+
+----------------------------------------------------------------------
+Ran 39 tests in 1.342s
+
+FAILED (failures=1)

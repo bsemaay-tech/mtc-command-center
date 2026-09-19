@@ -24,3 +24,25 @@
   the archived session log; none is a code path.
 - NEXT ACTION: none; update the ledger/inventory rows only if a future inventory refresh is authorized.
 - WAITING FOR OWNER: Nothing.
+
+## P0-22 reduced local research tracker — 2026-09-13
+
+- Product candidate `1bdb7f8c958815b74b1635770294b39c6ced1425` adds fixture-only local
+  `register`, `disclose`, and `status` commands under the frozen reduced contract. PR `#190`
+  merged it as `a8aec6568754a119bafb5a4dc6fac6e251f6c865`; no P0-13 integration or shared-schema change
+  occurred, and the reviewed product blobs remained byte-identical through reconciliation.
+- Lead replay: Python 3.14 compile and 27 focused tests PASS; QuantLens discovery 83/83 PASS;
+  pytest 167 tests plus 826 subtests PASS. Synthetic status remains `LOCAL_LOG_ONLY` and
+  `ACCESS_COMPLETENESS_UNVERIFIED`; no `LIVE_CANDIDATE` or clean-window claim is produced.
+- Exact independent reviews on the same candidate: `gpt-5.6-sol` xhigh PASS;
+  `claude-opus-5` xhigh PASS-WITH-NITS; `gemini-3.7-flash-high` supplemental PASS. Three allowed
+  T0 repair rounds were consumed; detailed evidence and the repeatable demo are under
+  `C:\tmp\P022_LEAD_20260912`.
+- Exact-head and post-merge `Bridge suite (Python 3.12)`, research-gate and Pine checks passed;
+  the generated triage index was refreshed after its initial deterministic CI mismatch.
+- Limits remain: local SQLite history is mutable, reader coverage and independent clock/access
+  evidence are incomplete, historical unlogged reads cannot be reconstructed, family identity is
+  not canonical, and full-window binding/admission/promotion/live eligibility are unresolved.
+- NEXT ACTION: preserve the merged reduced slice; upgrade to full P0-22 only after full P0-13
+  acceptance and the remaining assurance work receive their own authority.
+- WAITING FOR OWNER: Nothing.

@@ -1,0 +1,28 @@
+{
+ "review_disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
+ "disposition": "UNCHANGED",
+ "evidence_paths": [
+  "AUTHORITY/P012_PRICE_DESIGN_V1_27.md",
+  "AUTHORITY/PATH_D/PATH_D_DECISION_SIGNED_20260912.md",
+  "AUTHORITY/PATH_D/PATH_D_DECISION_PACKET.md",
+  "AUTHORITY/VENUE_FROZEN/api-info-meta.json",
+  "AUTHORITY/VENUE_FROZEN/contract-specifications.html",
+  "AUTHORITY/VENUE_FROZEN/error-responses.html",
+  "AUTHORITY/VENUE_FROZEN/fees.html",
+  "AUTHORITY/VENUE_FROZEN/order-types.html",
+  "AUTHORITY/VENUE_FROZEN/tick-and-lot-size-api.html",
+  "CAND/DECISIONS.md",
+  "CAND/mtc_v2/core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json",
+  "CAND/mtc_v2/core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V2.json",
+  "CAND/mtc_v2/core/economic_records/funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json",
+  "CAND/mtc_v2/core/economic_records/instruments/HYPERLIQUID-BTC-PERP-V1.3.json",
+  "CAND/mtc_v2/core/economic_records/instruments/HYPERLIQUID-BTC-PERP-V1.4.json",
+  "CAND/mtc_v2/core/economics.py",
+  "CAND/mtc_v2/core/instrument.py",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/open_item_applicability.json",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_economic_records.py",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_fees.py",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_quantity_guard.py"
+ ],
+ "notes": "Item 4 numeric lineage and Section 19 resolution evidence rigorously verified. Instrument v1.4, cost schedule v2, and funding rules v1 faithfully implement Owner Decision OD-20260912-P012-PATHD-1. Sizing guard 0.0001 BTC is strictly labelled HL_QTY_OWNER_GUARD_NOT_VENUE_FACT_V1 and OPEN01 remains open. Venue-reported fees are admitted directly while retaining schedule as guarded estimator at 5% relative tolerance; liquidation remains CANNOT_MAP and fixed component is UNRESOLVED_NOT_APPLIED. Production funding record carries null events and refuses evaluation. All residual risks and refusals are intact."
+}

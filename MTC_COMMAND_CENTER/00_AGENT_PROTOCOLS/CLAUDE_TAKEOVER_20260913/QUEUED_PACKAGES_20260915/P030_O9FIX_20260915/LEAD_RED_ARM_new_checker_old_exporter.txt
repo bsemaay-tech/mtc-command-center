@@ -1,0 +1,7 @@
+ERROR: test_contract_refused_from_slice_validation (__main__.ArchiveExporterRefusalCodeTests.test_contract_refused_from_slice_validation)
+ERROR: test_source_line_invalid_for_overflow_and_nan_literals (__main__.ArchiveExporterRefusalCodeTests.test_source_line_invalid_for_overflow_and_nan_literals)
+ValueError: non-finite JSON number
+FAIL: test_invalid_timestamp_refusals_including_sub_second (__main__.ArchiveExporterRefusalCodeTests.test_invalid_timestamp_refusals_including_sub_second)
+AssertionError: ExportRefused not raised
+Ran 20 tests in 0.482s
+FAILED (failures=1, errors=2)

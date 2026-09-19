@@ -1,0 +1,22 @@
+set -u
+# READ-ONLY feasibility check for tools/smoke_p0.py on the deployed release. No network, no env values, no writes.
+R=/opt/mtc-bridge/releases/be007fd802bbfd2eb181d66038c374865d1562ee/IBKR_PAPER_BRIDGE
+V=/opt/mtc-bridge/venvs/be007fd802bbfd2eb181d66038c374865d1562ee/bin/python
+echo "UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+echo "release_tree=$( [ -d "$R" ] && echo present || echo MISSING ) perms=$(stat -c '%a %U:%G' "$R" 2>/dev/null)"
+echo "smoke_sha256=$(sha256sum "$R/tools/smoke_p0.py" 2>/dev/null | cut -c1-64)"
+echo "smoke_fill_sha256=$(sha256sum "$R/tools/smoke_fill.py" 2>/dev/null | cut -c1-64)"
+echo "docs_dir_perms=$(stat -c '%a %U:%G' "$R/docs" 2>/dev/null)"
+echo "venv_python=$( [ -x "$V" ] && "$V" --version 2>&1 || echo MISSING )"
+cd /tmp && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$R" "$V" - <<'PY' 2>&1 | tail -5
+import importlib, sys
+mods = ["hyperliquid", "hyperliquid.info", "hyperliquid.exchange", "eth_account", "bridge.settings", "bridge.broker.hyperliquid", "bridge.engine.types"]
+for m in mods:
+    try:
+        mod = importlib.import_module(m)
+        print("import_ok", m, getattr(mod, "__version__", ""))
+    except Exception as e:
+        print("import_FAIL", m, type(e).__name__, str(e)[:120])
+PY
+echo "outbound_dns_testnet=$(getent hosts api.hyperliquid-testnet.xyz | awk '{print $1}' | head -1)"
+echo "tmp_free=$(df -h /tmp | awk 'NR==2{print $4}')"

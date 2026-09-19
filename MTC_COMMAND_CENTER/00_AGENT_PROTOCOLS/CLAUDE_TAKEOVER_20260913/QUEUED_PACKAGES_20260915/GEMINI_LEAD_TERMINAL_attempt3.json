@@ -1,0 +1,13 @@
+{
+  "window": "P012-S16-G5-QUEUED_PKGS_GEMINI",
+  "verified_at": "2026-09-15T10:17:23.255855+00:00",
+  "runner_exit": 0,
+  "elapsed_seconds": 763.6,
+  "launch_exit": "exit=0 actual_exit=0 start=2026-09-15T10:04:39.9760437Z end=2026-09-15T10:17:18.2297068Z",
+  "review_log_bytes": 30629,
+  "review_log_sha256": "d64affd8716ab8b85d7cfb94bf28beba9c624fa3a6f66c65710f348ee12c1ac8",
+  "agy_helpers_after": 0,
+  "manifest_sha256_after": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+  "candidate_head_after": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_after": 0
+}

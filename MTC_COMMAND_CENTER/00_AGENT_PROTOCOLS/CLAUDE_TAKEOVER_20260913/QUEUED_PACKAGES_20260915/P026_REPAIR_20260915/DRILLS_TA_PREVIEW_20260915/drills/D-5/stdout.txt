@@ -1,0 +1,25 @@
+run_ids_in_manifest=['opsa-20260915T161935.245Z']
+{"mode": "check-only", "run_id": "opsa-20260915T161935.245Z", "manifest": "C:\\tmp\\P026_DRILLS_TA_PREVIEW_20260915\\tmp\\p030-isolated-restore-oywk_yzr\\backup\\manifest.jsonl", "target": null, "records_selected": 2, "completion_marker": "verified", "run_manifest_sha256": "5694f5c3db561911379b85656e1eafe7602d70f2dd02965b0a5f6d9b7965dc98", "manifest_malformed_lines": 0}
+VERIFIED p030_closed_partition/_P030_STABLE_PREFIX.json
+VERIFIED p030_closed_partition/source.jsonl
+{"mode": "check-only", "run_id": "opsa-20260915T161935.245Z", "status": "ok", "verified_against_manifest": 2, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-15T16:19:35Z"}
+{"mode": "restore", "run_id": "opsa-20260915T161935.245Z", "manifest": "C:\\tmp\\P026_DRILLS_TA_PREVIEW_20260915\\tmp\\p030-isolated-restore-oywk_yzr\\backup\\manifest.jsonl", "target": "C:\\tmp\\P026_DRILLS_TA_PREVIEW_20260915\\fixtures\\d5_restore\\target", "records_selected": 2, "completion_marker": "verified", "run_manifest_sha256": "5694f5c3db561911379b85656e1eafe7602d70f2dd02965b0a5f6d9b7965dc98", "manifest_malformed_lines": 0}
+RESTORED p030_closed_partition/_P030_STABLE_PREFIX.json sha256=b34427fa5b68c05b�
+RESTORED p030_closed_partition/source.jsonl sha256=371f9ffc2db7f32b�
+{"mode": "restore", "run_id": "opsa-20260915T161935.245Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 0, "errors": 0, "finished_at": "2026-09-15T16:19:35Z"}
+run_id=opsa-20260915T161935.245Z
+receipt=C:\tmp\P026_DRILLS_TA_PREVIEW_20260915\fixtures\d5_restore\target\_P030_VERIFIED_RESTORE.json
+receipt_exists=True
+target_entries=['_P030_VERIFIED_RESTORE.json', 'p030_closed_partition', 'p030_closed_partition\\_P030_STABLE_PREFIX.json', 'p030_closed_partition\\source.jsonl']
+receipt_identity run_id=opsa-20260915T161935.245Z store_id=p030_closed_partition restored_prefix=C:\tmp\P026_DRILLS_TA_PREVIEW_20260915\fixtures\d5_restore\target\p030_closed_partition
+receipt_field high_water_bytes=1860
+receipt_field record_count=3
+receipt_field last_observation_id=p030obs-v1:aa7163ca2ed5c0727a448005c420bca64868c1f947d9fe6cf9ec96436f333929
+receipt_field prefix_sha256=371f9ffc2db7f32bfda73b5e84d19679c667fe02c061d1c6c3c6e8dd9aa1121f
+receipt_field captured_at_utc=2026-09-14T05:40:00Z
+receipt_field dataset_content_hash=p030ds-v1:dcc1fc2aec45f56b476d6b003a675f01705828858ad4bc92d4d2155869dd706e
+type _P030_STABLE_PREFIX.json is_symlink=False is_junction=False is_file=True is_dir=False
+type source.jsonl is_symlink=False is_junction=False is_file=True is_dir=False
+restored_bytes_equal_archived receipt=True snapshot=True
+real_run_manifest_sha256=5694f5c3db561911379b85656e1eafe7602d70f2dd02965b0a5f6d9b7965dc98
+target_has_no_completion_pair=True

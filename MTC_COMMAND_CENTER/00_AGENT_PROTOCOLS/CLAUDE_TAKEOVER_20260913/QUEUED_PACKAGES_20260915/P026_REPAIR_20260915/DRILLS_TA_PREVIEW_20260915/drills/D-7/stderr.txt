@@ -1,0 +1,1 @@
+ERROR store 'p030_closed_partition': copy/verify failed for C:\tmp\P026_DRILLS_TA_PREVIEW_20260915\fixtures\contract_partition\stable_prefix\drill_3\source.jsonl: simulated interruption during the second file copy

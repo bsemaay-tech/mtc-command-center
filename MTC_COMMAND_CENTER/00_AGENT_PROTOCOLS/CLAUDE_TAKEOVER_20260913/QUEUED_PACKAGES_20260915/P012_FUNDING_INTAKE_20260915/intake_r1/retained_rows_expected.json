@@ -1,0 +1,33 @@
+{
+  "label": "NONACCEPTING_INTAKE_DRAFT",
+  "rows": [
+    {
+      "attribution": "0x1E26…AC49",
+      "event_id": "hl-funding:0x1E26…AC49:BTC:1789405200041",
+      "ledger_effective_ts": "2026-09-14T17:00:00.041Z",
+      "payload": {
+        "coin": "BTC",
+        "fundingRate": "0.0000125",
+        "szi": "0.00058",
+        "usdc": "-0.000571"
+      },
+      "payload_digest": "UNRESOLVED:D-1",
+      "payload_reason": "FUNDING_PAYLOAD_RETAINED",
+      "symbol": "BTC"
+    },
+    {
+      "attribution": "0x1E26…AC49",
+      "event_id": "hl-funding:0x1E26…AC49:BTC:1789408800060",
+      "ledger_effective_ts": "2026-09-14T18:00:00.060Z",
+      "payload": {
+        "coin": "BTC",
+        "fundingRate": "0.0000125",
+        "szi": "0.00058",
+        "usdc": "-0.000572"
+      },
+      "payload_digest": "UNRESOLVED:D-1",
+      "payload_reason": "FUNDING_PAYLOAD_RETAINED",
+      "symbol": "BTC"
+    }
+  ]
+}

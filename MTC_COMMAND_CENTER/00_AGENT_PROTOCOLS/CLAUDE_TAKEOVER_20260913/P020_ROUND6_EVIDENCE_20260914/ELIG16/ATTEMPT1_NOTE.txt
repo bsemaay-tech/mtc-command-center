@@ -1,0 +1,1 @@
+Attempt 1 (20:36Z) failed inside the launcher BEFORE the shot: line 41 of p020_eligibility_run_v16.ps1 contained TAB bytes (heredoc-mangled backslash-t in the tests path) so Get-FileHash returned null. No --oneshot call was made; no package outputs existed. Fixed with the Edit tool; attempt 2 follows.

@@ -1,0 +1,10 @@
+verify-extra: ERROR ValueError: heartbeat fields do not match P026
+verify-fractional: ERROR ValueError: heartbeat emitted_at must use exact emitter UTC-Z grammar
+health-recon: ERROR ValueError: reconciliation_progress must remain null in this slice
+health-late-accepted: ERROR ValueError: last accepted timestamp cannot follow observed_at_utc
+emit: path=C:\tmp\P026_DRILLS_TA_20260914\fixtures\heartbeats\p030_market_data_collector.hb.json
+verify-ok: fields=['emitted_at', 'id', 'pid', 'schema', 'seq']
+health-available: path=C:\tmp\P026_DRILLS_TA_20260914\fixtures\heartbeats\p030_market_data_collector.health.json
+health-available: schema=p030.health_sidecar/v1 availability=available age_seconds=0
+hb-on-disk-fields=['emitted_at', 'id', 'pid', 'schema', 'seq']
+hb-on-disk-emitted_at=2026-09-14T06:19:20Z

@@ -1,0 +1,15 @@
+﻿test_empty_partition_refusal (__main__.ArchiveExporterTests.test_empty_partition_refusal) ... ok
+test_exported_collector_fixture_is_accepted_by_stable_prefix_adapter (__main__.ArchiveExporterTests.test_exported_collector_fixture_is_accepted_by_stable_prefix_adapter) ... ok
+test_malformed_line_refusal (__main__.ArchiveExporterTests.test_malformed_line_refusal) ... ok
+test_prefixed_identity_mismatch_is_refused (__main__.ArchiveExporterTests.test_prefixed_identity_mismatch_is_refused) ... ok
+test_receipt_fields_hashes_and_identity_rewrite_are_correct (__main__.ArchiveExporterTests.test_receipt_fields_hashes_and_identity_rewrite_are_correct) ... ok
+test_target_exists_refusal (__main__.ArchiveExporterTests.test_target_exists_refusal) ... ok
+test_target_reread_byte_identity_refusal (__main__.ArchiveExporterTests.test_target_reread_byte_identity_refusal) ... ok
+test_two_exports_are_byte_identical (__main__.ArchiveExporterTests.test_two_exports_are_byte_identical) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.065s
+
+OK
+D-13 RED RAW REFUSAL: prefix record is not canonical JSONL
+D-13 GREEN EXPORTED CAPTURE: PASS

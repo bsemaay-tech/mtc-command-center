@@ -1,0 +1,3 @@
+# LEAD NOTE (Claude Lead, 2026-09-14 21:09Z)
+
+Preparation-only deliverables produced under the owner authorizations of 2026-09-13 ("C YES" for P0-26, "D YES" for P0-27). Written by grok-4.6 (SuperGrok) after Codex Plus and OpenCode Go routes failed; audited by independent Grok sessions (first audit CORRECTIONS_NEEDED: pin errors and small contradictions, 0 BLOCKING; correction pass; delta re-audit: all prior findings RESOLVED, residual 1-3 pin/attribution items fixed mechanically by the Lead against source bytes and listed in REPORT.md). Nothing here is executed, deployed, installed, sent, accepted or authorized; every host step waits for its own gate and owner authorization. Deployed host state is UNVERIFIED.

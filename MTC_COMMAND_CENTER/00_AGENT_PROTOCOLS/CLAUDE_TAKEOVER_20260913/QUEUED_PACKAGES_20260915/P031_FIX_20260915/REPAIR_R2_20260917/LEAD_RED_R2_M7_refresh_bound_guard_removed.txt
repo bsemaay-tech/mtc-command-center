@@ -1,0 +1,43 @@
+# RED_R2: mutant M7_refresh_bound_guard_removed (ledger blob e9e37aec lines 814-816 removed; mutant sha256 d83cca760981a084c24934e0f981e02f6955402834acdbf768f37a50f7b7d0d0); focused suite via pinned interpreter; worktree ledger restored to 81eedf03b79289dce92019a16a56e21ed9612be8cca16660d1b79095cb7ab816
+$ C:/tmp/P020_IMPL_20260912/01a0924d-2c4b-7da1-99e1-24e2a7c7685c/.venv/Scripts/python.exe -m pytest MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py -q -p no:cacheprovider
+................s.................... [ 32%]
+....................... [ 53%]
+.................F...................................         [100%]
+================================== FAILURES ===================================
+_ LifecycleLedgerTests.test_registrar_refresh_cannot_adopt_another_candidates_identity _
+
+self = <test_p031_lifecycle_ledger.LifecycleLedgerTests testMethod=test_registrar_refresh_cannot_adopt_another_candidates_identity>
+
+    def test_registrar_refresh_cannot_adopt_another_candidates_identity(self) -> None:
+        """OD-7 refresh-path fence for ``DEPLOYMENT_IDENTITY_BOUND_TO_ANOTHER_CANDIDATE``:
+        a registrar refresh that names a deployment identity another candidate already
+        holds must be refused, and both candidates must keep their recorded identities.
+    
+        Second exact-Opus T0 read of ``e9e37aec`` (2026-09-17, finding F-2): removing the
+        refresh-path ownership guard left the whole suite green while two candidates ended
+        up sharing one deployment identity. This test is RED on that mutant and GREEN
+        with the guard.
+        """
+        self.build_to_rung(
+            self.ledger,
+            CANDIDATE_B,
+            "refresh-foreign-holder",
+            "SHADOW_ELIGIBLE",
+            package_hash=PACKAGE_B,
+            deployment_identity_hash=DEPLOYMENT_B,
+        )
+        self.build_to_rung(
+            self.ledger, CANDIDATE_A, "refresh-foreign-claimant", "SHADOW_ELIGIBLE"
+        )
+>       with self.assertRaisesRegex(
+            ValueError, "DEPLOYMENT_IDENTITY_BOUND_TO_ANOTHER_CANDIDATE"
+        ):
+E       AssertionError: ValueError not raised
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p031_lifecycle_ledger.py:2790: AssertionError
+=========================== short test summary info ===========================
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py::LifecycleLedgerTests::test_registrar_refresh_cannot_adopt_another_candidates_identity
+1 failed, 111 passed, 1 skipped, 167 subtests passed in 22.52s
+
+
+exit=1

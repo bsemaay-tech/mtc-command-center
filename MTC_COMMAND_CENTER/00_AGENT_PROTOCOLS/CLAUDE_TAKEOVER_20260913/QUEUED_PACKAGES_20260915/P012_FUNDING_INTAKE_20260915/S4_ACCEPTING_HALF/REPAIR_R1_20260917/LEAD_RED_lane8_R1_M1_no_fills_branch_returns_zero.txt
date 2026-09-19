@@ -1,0 +1,89 @@
+# mutant M1_no_fills_branch_returns_zero applied to the patched exporter (mutant sha256 64eb70dc9eba7c5d4880102936501f7e8b11fc07cd769c5f28d52ea45eda4ac1); focused three modules; restored to b179e306d7729704724e776ac4b78905f401e3297e78c26f11265664e3900698
+......................................................FF................ [ 30%]
+........................................................................ [ 61%]
+........................................................................ [ 92%]
+..s..............                                                        [100%]
+================================== FAILURES ===================================
+_ test_d6_without_a_fill_for_the_symbol_the_position_source_is_the_payments[empty-fills-witness] _
+
+fills = b'[]'
+
+    @pytest.mark.parametrize(
+        "fills",
+        [
+            b"[]",
+            (
+                "["
+                + _fill("1.0", "1", "B", 1789405000000, "0.0", "Open Long", 9).replace(
+                    '"coin":"BTC"', '"coin":"ETH"'
+                )
+                + "]"
+            ).encode("utf-8"),
+        ],
+        ids=["empty-fills-witness", "another-coin-only"],
+    )
+    def test_d6_without_a_fill_for_the_symbol_the_position_source_is_the_payments(fills):
+        """D-6 (ii) accepting branch with no fill for the symbol: the position is the
+        constant szi the payments report, every grid hour of a [17:00, 18:00) window
+        carries a payment, and the completion check names the payments - not the fills
+        witness - as the producer of that position (lane-8 REQUIRED-1: this branch was
+        reachable, accepting and unlabelled; three mutants of it survived the suite)."""
+        start, end = "2026-09-14T17:00:00Z", "2026-09-14T18:00:00Z"
+        bindings = r1_bindings()
+        cover = real_coverage(bindings=bindings, fills=fills, start=start, end=end)
+    
+        result = build(
+            bindings=bindings, cover=cover, start=start, end=end, evidence_kind=REAL
+        )
+    
+>       assert result.accepted is True, result.report["reason_detail"]
+E       AssertionError: D-6: the fills-derived position expects payments at [] but the captured funding passes carry payments at ['2026-09-14T17:00:00Z', '2026-09-14T18:00:00Z']
+E       assert False is True
+E        +  where False = CandidateResult(accepted=False, reason_code='CANDIDATE_COVERAGE_INVALID', report={'accepted': False, 'candidate_sha256... 'unknown_binding_event_ids': []}, candidate_bytes=None, candidate_sha256=None, evidence_kind='REAL_CAPTURE_READ_ONLY').accepted
+
+tests\test_mtc_funding_export_real_capture.py:944: AssertionError
+_ test_d6_without_a_fill_for_the_symbol_the_position_source_is_the_payments[another-coin-only] _
+
+fills = b'[{"coin":"ETH","px":"1.0","sz":"1","side":"B","time":1789405000000,"startPosition":"0.0","dir":"Open Long","closedPn...7bf874d86b","oid":544824403114,"crossed":true,"fee":"0.005423","tid":261929593852414,"feeToken":"USDC","twapId":null}]'
+
+    @pytest.mark.parametrize(
+        "fills",
+        [
+            b"[]",
+            (
+                "["
+                + _fill("1.0", "1", "B", 1789405000000, "0.0", "Open Long", 9).replace(
+                    '"coin":"BTC"', '"coin":"ETH"'
+                )
+                + "]"
+            ).encode("utf-8"),
+        ],
+        ids=["empty-fills-witness", "another-coin-only"],
+    )
+    def test_d6_without_a_fill_for_the_symbol_the_position_source_is_the_payments(fills):
+        """D-6 (ii) accepting branch with no fill for the symbol: the position is the
+        constant szi the payments report, every grid hour of a [17:00, 18:00) window
+        carries a payment, and the completion check names the payments - not the fills
+        witness - as the producer of that position (lane-8 REQUIRED-1: this branch was
+        reachable, accepting and unlabelled; three mutants of it survived the suite)."""
+        start, end = "2026-09-14T17:00:00Z", "2026-09-14T18:00:00Z"
+        bindings = r1_bindings()
+        cover = real_coverage(bindings=bindings, fills=fills, start=start, end=end)
+    
+        result = build(
+            bindings=bindings, cover=cover, start=start, end=end, evidence_kind=REAL
+        )
+    
+>       assert result.accepted is True, result.report["reason_detail"]
+E       AssertionError: D-6: the fills-derived position expects payments at [] but the captured funding passes carry payments at ['2026-09-14T17:00:00Z', '2026-09-14T18:00:00Z']
+E       assert False is True
+E        +  where False = CandidateResult(accepted=False, reason_code='CANDIDATE_COVERAGE_INVALID', report={'accepted': False, 'candidate_sha256... 'unknown_binding_event_ids': []}, candidate_bytes=None, candidate_sha256=None, evidence_kind='REAL_CAPTURE_READ_ONLY').accepted
+
+tests\test_mtc_funding_export_real_capture.py:944: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_mtc_funding_export_real_capture.py::test_d6_without_a_fill_for_the_symbol_the_position_source_is_the_payments[empty-fills-witness]
+FAILED tests/test_mtc_funding_export_real_capture.py::test_d6_without_a_fill_for_the_symbol_the_position_source_is_the_payments[another-coin-only]
+2 failed, 230 passed, 1 skipped in 6.94s
+
+
+exit=1

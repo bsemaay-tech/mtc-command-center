@@ -1,0 +1,5 @@
+shipped CLI: python p031_lifecycle_ledger.py report <path>
+  ledger with catalog_backed=False on every record: exit=0
+    stdout: 5309 bytes of JSON report
+  ledger with ONE catalog_backed=True record: exit=1
+    stderr tail: ValueError: CATALOG_BACKED_EVIDENCE_WITHOUT_ACCEPTED_CATALOG

@@ -1,0 +1,3 @@
+interpreter 3.14.2 recursionlimit 1000
+exporter checker nesting_arms (('walk', 1060), ('parser', 16987))
+adapter checker nesting_arms (('walk', 1060), ('parser', 16987))

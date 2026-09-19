@@ -1,0 +1,7 @@
+{"mode": "dry-run", "run_id": "opsa-20260914T061918.813Z", "backup_root": "C:\\tmp\\P026_DRILLS_TA_20260914\\fixtures\\backup_root_d2", "stores": ["p030_closed_partition"], "started_at": "2026-09-14T06:19:18Z"}
+PLAN  p030_closed_partition/README.txt size=17 sha256=30412a6fc0b2935a…
+PLAN  p030_closed_partition/nested/subdir/sample.bin size=10 sha256=3957a235fae21472…
+{"run_id": "opsa-20260914T061918.813Z", "status": "ok", "files": 0, "bytes": 0, "errors": 0, "finished_at": "2026-09-14T06:19:18Z"}
+backup_root_d2_listing=[]
+backup_root_d2_has_runs=False
+backup_root_d2_has_manifest=False

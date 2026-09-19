@@ -1,0 +1,9 @@
+packet sha256 f3bde0b7a1b008739df927c119fd5a654836b40af9149b58ed6e241fcd0c979b
+FIXTURE retained rows (no schema-v10 store has observed these events): 2
+REAL profile on the r1 packet as emitted: False CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE
+  detail: D-4: binding hl-funding:0x1E26...AC49:BTC:1789405200041 oracle_price_source must name an oracle capture at the funding instant as <sha256>#<json-pointer>; a price
+default (SYNTHETIC) profile on the same packet: False CANDIDATE_EVIDENCE_KIND_MISMATCH
+REAL profile with a FIXTURE oracle locator: True REAL_CAPTURE_CANDIDATE_BUILT candidate sha256 8eb1efe37e0363c8f4be8232da43555f380213bc78eaa9435fed611d4a5651ef
+  artifact_kind REAL_CAPTURE_FUNDING_CANDIDATE_V1 | synthetic_only False | admission REFUSED_REAL_CAPTURE_READ_ONLY_NOT_A_PRODUCTION_RECORD
+  completion_check {'expected_funding_hours': ['2026-09-14T17:00:00Z', '2026-09-14T18:00:00Z'], 'observed_funding_hours': ['2026-09-14T17:00:00Z', '2026-09-14T18:00:00Z'], 'opening_position': '0.0', 'position_source': 'coverage.fills_witness'}
+  root keys ['admission_status', 'artifact_kind', 'bridge_payload_digest_domain', 'evidence_kind', 'not_a_production_record', 'numeric_representation', 'real_capture_candidate', 'source_event_digest_domain', 'synthetic_only']

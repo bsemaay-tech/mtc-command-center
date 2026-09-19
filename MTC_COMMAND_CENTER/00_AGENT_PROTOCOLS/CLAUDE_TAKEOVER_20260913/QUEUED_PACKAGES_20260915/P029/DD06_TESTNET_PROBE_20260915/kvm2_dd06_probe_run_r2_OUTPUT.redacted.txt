@@ -1,0 +1,129 @@
+UTC_start=2026-09-16T05:12:05Z run_id=dd06-testnet-20260916T051205Z-r2 out=/tmp/dd06_20260916T051205Z
+probe_sha256=96d5052ec6beaaee75e02c35ad2982404834aee33c7bc4c2ef8b52f8d73274ff
+service_before=active nrestarts_before=0 api_before={"state":"DISARMED","mode":"credential_free_disarmed","network":"disabled","exch
+--- probe start 05:12:05Z ---
+DD06_INCONCLUSIVE record=/tmp/dd06_20260916T051205Z/DD06_PROBE_RECORD.json
+probe_exit=2
+--- probe end 05:12:15Z ---
+service_after=active nrestarts_after=0 api_after={"state":"DISARMED","mode":"credential_free_disarmed","network":"disabled","exch
+record_sha256_on_host=7f42dda1d0f46bd2bab974e7eb3c8de1736a3a8d0ac854d57071228c81f616f2 record_bytes=4146 sidecar=7f42dda1d0f46bd2bab974e7eb3c8de1736a3a8d0ac854d57071228c81f616f2
+=== RECORD (redacted again on the way out) ===
+{
+  "account_address": "[redacted-address]",
+  "agent_address": "[redacted-address]",
+  "finding": "every arm was refused, but not every refusal names the signer's authority; read the recorded venue texts before drawing any DD-06 conclusion",
+  "finished_utc": "2026-09-16T05:12:15.699619Z",
+  "network": "testnet",
+  "probe_version": "dd06-probe/v1",
+  "result": "DD06_INCONCLUSIVE",
+  "run_id": "dd06-testnet-20260916T051205Z-r2",
+  "started_utc": "2026-09-16T05:12:08.253089Z",
+  "steps": [
+    {
+      "data": {
+        "env_names": [
+          "HL_ACCOUNT_ADDRESS",
+          "HL_API_WALLET_KEY"
+        ],
+        "source": "process_env"
+      },
+      "name": "credential_source",
+      "outcome": "RECORDED",
+      "ts": "2026-09-16T05:12:08.253129Z"
+    },
+    {
+      "data": {
+        "extra_agents": "[{\"address\": \"[redacted-address]\", \"name\": \"MTC-bridge-test\", \"validUntil\": 1791656893517}, {\"address\": \"[redacted-address]\", \"name\": \"kvm2-bridge\", \"validUntil\": 1797169448263}]"
+      },
+      "name": "S0_extra_agents",
+      "outcome": "RECORDED",
+      "ts": "2026-09-16T05:12:11.164896Z"
+    },
+    {
+      "data": {
+        "accountValue": "0.0",
+        "withdrawable": "0.0"
+      },
+      "name": "S0_user_state",
+      "outcome": "RECORDED",
+      "ts": "2026-09-16T05:12:11.404291Z"
+    },
+    {
+      "data": {
+        "usdc_hold": "0.0",
+        "usdc_total": "998.987457"
+      },
+      "name": "S0_spot_user_state",
+      "outcome": "RECORDED",
+      "ts": "2026-09-16T05:12:11.644051Z"
+    },
+    {
+      "data": {
+        "request": "{\"coin\": \"BTC\", \"is_buy\": true, \"limit_px\": 68463.0, \"order_type\": {\"limit\": {\"tif\": \"Gtc\"}}, \"reduce_only\": false, \"sz\": 0.00016}",
+        "response": "{\"response\": {\"data\": {\"statuses\": [{\"resting\": {\"oid\": 60243885325}}]}, \"type\": \"order\"}, \"status\": \"ok\"}"
+      },
+      "name": "S1_control_order",
+      "outcome": "NOT_REFUSED",
+      "ts": "2026-09-16T05:12:13.725955Z"
+    },
+    {
+      "data": {
+        "request": "{\"coin\": \"BTC\", \"oid\": 60243885325}",
+        "response": "{\"response\": {\"data\": {\"statuses\": [\"success\"]}, \"type\": \"cancel\"}, \"status\": \"ok\"}"
+      },
+      "name": "S1_control_cancel",
+      "outcome": "NOT_REFUSED",
+      "ts": "2026-09-16T05:12:14.685941Z"
+    },
+    {
+      "data": {
+        "note": "no --sub-account given; the testnet account has none (P0-28 read: 0 sub-accounts on mainnet; testnet not read)"
+      },
+      "name": "subAccountTransfer",
+      "outcome": "SKIPPED_NO_SUB_ACCOUNT",
+      "ts": "2026-09-16T05:12:14.685979Z"
+    },
+    {
+      "data": {
+        "refusal_class": "UNCLASSIFIED",
+        "request": "{\"amount\": 6.0, \"destination\": \"[account]\"}",
+        "response": "{\"response\": \"Must deposit before performing actions. User: [redacted-address]\", \"status\": \"err\"}"
+      },
+      "name": "withdraw3",
+      "outcome": "REFUSED",
+      "ts": "2026-09-16T05:12:14.941025Z"
+    },
+    {
+      "data": {
+        "refusal_class": "UNCLASSIFIED",
+        "request": "{\"amount\": 1.0, \"destination\": \"[account]\"}",
+        "response": "{\"response\": \"Must deposit before performing actions. User: [redacted-address]\", \"status\": \"err\"}"
+      },
+      "name": "usdSend",
+      "outcome": "REFUSED",
+      "ts": "2026-09-16T05:12:15.187934Z"
+    },
+    {
+      "data": {
+        "refusal_class": "UNCLASSIFIED",
+        "request": "{\"amount\": 1.0, \"destination\": \"[account]\", \"token\": \"USDC\"}",
+        "response": "{\"response\": \"Must deposit before performing actions. User: [redacted-address]\", \"status\": \"err\"}"
+      },
+      "name": "spotSend",
+      "outcome": "REFUSED",
+      "ts": "2026-09-16T05:12:15.436461Z"
+    },
+    {
+      "data": {
+        "refusal_class": "UNCLASSIFIED",
+        "request": "{\"name\": \"dd06-probe-candidate\"}",
+        "response": "{\"response\": \"Must deposit before performing actions. User: [redacted-address]\", \"status\": \"err\"}"
+      },
+      "name": "approveAgent",
+      "outcome": "REFUSED",
+      "ts": "2026-09-16T05:12:15.692609Z"
+    }
+  ]
+}
+=== END RECORD ===
+UTC_end=2026-09-16T05:12:15Z
