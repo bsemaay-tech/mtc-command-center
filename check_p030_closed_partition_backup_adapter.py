@@ -14,6 +14,72 @@ from unittest import mock
 
 import p030_closed_partition_backup_adapter as subject
 
+_STACK_MARGIN = 64  # frames of headroom between the depth search and the code under test
+
+
+def _nesting_layer(depth: int) -> str | None:
+    """Which layer raises RecursionError for a JSON array nested ``depth`` levels: the parser
+    (``json.loads`` with the subject's hooks), the subject's recursive non-finite walk, or neither."""
+    text = "[" * depth + "]" * depth
+    try:
+        value = json.loads(
+            text,
+            parse_constant=subject._reject_nonfinite_json,
+            object_pairs_hook=subject._reject_duplicate_json_keys,
+        )
+    except RecursionError:
+        return "parser"
+    try:
+        subject._reject_nonfinite_numbers(value)
+    except RecursionError:
+        return "walk"
+    return None
+
+
+def _smallest_depth(predicate, start: int = 1, ceiling: int = 1 << 20) -> int | None:
+    """Smallest depth >= ``start`` where the (monotone) predicate holds; None below ``ceiling``."""
+    low = high = start
+    while not predicate(high):
+        low, high = high + 1, high * 2
+        if high > ceiling:
+            return None
+    while low < high:
+        middle = (low + high) // 2
+        if predicate(middle):
+            high = middle
+        else:
+            low = middle + 1
+    return low
+
+
+def nesting_arms() -> tuple[tuple[str, int | None], tuple[str, int | None]]:
+    """One nesting depth per layer that can raise RecursionError, derived on the running
+    interpreter (P0-30 slice read F-1): ``(("walk", depth), ("parser", depth))``.
+
+    ``walk``: just past the smallest depth at which the recursive non-finite walk raises while
+    ``json.loads`` still succeeds (None if the parser raises first here). ``parser``: just past
+    the smallest depth at which ``json.loads`` itself raises (None if it never does below 2**20).
+    The two limits differ between interpreters (the pinned Python 3.12 parser raises near 3000
+    levels, 3.14 far deeper, the walk at the Python recursion limit on both), so a hard-coded
+    depth exercises one layer on one interpreter and the other layer on another.
+    """
+    first_depth = _smallest_depth(lambda depth: _nesting_layer(depth) is not None)
+    if first_depth is None:
+        raise RuntimeError("no nesting below 2**20 levels raises RecursionError here")
+    parser_depth = _smallest_depth(
+        lambda depth: _nesting_layer(depth) == "parser", start=first_depth
+    )
+    # both searches ran through the same frames, so the parser raised first iff its depth is
+    # the first depth at all; the margin covers the few frames by which the code under test sits
+    # deeper or shallower than the search (the walk limit is a Python frame count), and each
+    # arm's exact message still pins which layer refused
+    walk_depth = None if parser_depth == first_depth else first_depth + _STACK_MARGIN
+    if walk_depth is not None and parser_depth is not None and walk_depth >= parser_depth:
+        walk_depth = parser_depth - 1
+    if parser_depth is not None:
+        parser_depth += _STACK_MARGIN
+    return (("walk", walk_depth), ("parser", parser_depth))
+
 
 class StablePrefixBackupAdapterTests(unittest.TestCase):
     STORE_ID = "fixture-p030-archive"
@@ -170,21 +236,26 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                     captured_at_utc=self.CAPTURED_AT,
                     dataset_content_hash=self.DATASET_CONTENT_HASH,
                 )
-            # P0-30 N4 (parity with the exporter): a line nested deeper than the interpreter's
-            # recursion limit is refused as non-canonical JSONL, never surfaced as RecursionError
-            depth = 3000
-            source.write_bytes(
-                ('{"observation_id": "' + self.OBS_1 + '", "deep": ' + "[" * depth + "]" * depth + "}\n").encode()
-            )
-            with self.assertRaisesRegex(ValueError, "prefix record is not canonical JSONL"):
-                subject.capture_stable_prefix(
-                    source,
-                    root / "nested",
-                    source_root=root,
-                    high_water_bytes=source.stat().st_size,
-                    captured_at_utc=self.CAPTURED_AT,
-                    dataset_content_hash=self.DATASET_CONTENT_HASH,
-                )
+            # P0-30 N4 (parity with the exporter; slice read F-1): a line nested deeper than a
+            # recursion limit is refused as non-canonical JSONL, never surfaced as RecursionError -
+            # one arm per layer that can raise (parser, non-finite walk) at depths derived on the
+            # running interpreter, so deleting either guard of _prefix_facts errors its own arm
+            for layer, depth in nesting_arms():
+                with self.subTest(site="_prefix_facts", layer=layer, depth=depth):
+                    if depth is None:
+                        self.skipTest(f"the {layer} never raises RecursionError on this interpreter")
+                    source.write_bytes(
+                        ('{"observation_id": "' + self.OBS_1 + '", "deep": ' + "[" * depth + "]" * depth + "}\n").encode()
+                    )
+                    with self.assertRaisesRegex(ValueError, "prefix record is not canonical JSONL"):
+                        subject.capture_stable_prefix(
+                            source,
+                            root / f"nested-{layer}",
+                            source_root=root,
+                            high_water_bytes=source.stat().st_size,
+                            captured_at_utc=self.CAPTURED_AT,
+                            dataset_content_hash=self.DATASET_CONTENT_HASH,
+                        )
 
     def test_capture_refuses_noncontract_dataset_and_observation_identities(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -448,6 +519,39 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                         )
                 run_backup.assert_not_called()
 
+    def test_config_and_receipt_refuse_pathological_nesting_before_p026(self) -> None:
+        # P0-30 N4 (slice read F-2): the object reader behind the config, receipt and isolated
+        # config reads is the adapter's THIRD parse site; both of its layers (parser, non-finite
+        # walk) refuse a nesting deeper than their recursion limit as an invalid document, never
+        # as RecursionError, at depths derived on the running interpreter
+        for container in ("config", "receipt"):
+            for layer, depth in nesting_arms():
+                with self.subTest(container=container, layer=layer, depth=depth):
+                    if depth is None:
+                        self.skipTest(f"the {layer} never raises RecursionError on this interpreter")
+                    with tempfile.TemporaryDirectory() as temporary:
+                        root = Path(temporary)
+                        _, stable, receipt, _ = self._capture(root)
+                        config_path = self._runnable_config(root, stable)
+                        path = config_path if container == "config" else receipt
+                        raw = path.read_text(encoding="utf-8").rstrip()
+                        raw = raw[:-1] + ', "synthetic_probe": ' + "[" * depth + "]" * depth + "}"
+                        path.write_text(raw, encoding="utf-8")
+                        expected = (
+                            "invalid backup config" if container == "config" else "invalid stable-prefix receipt"
+                        )
+                        with (
+                            mock.patch.object(subject.backup, "run_backup") as run_backup,
+                            self.assertRaisesRegex(ValueError, expected),
+                        ):
+                            subject.backup_stable_prefix(
+                                config_path,
+                                stable_receipt=receipt,
+                                store_id=self.STORE_ID,
+                                source_root=root / "source-root",
+                            )
+                        run_backup.assert_not_called()
+
     def test_backup_consumes_bound_config_when_original_is_swapped(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -631,6 +735,42 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                             target=target,
                         )
                 run_restore.assert_not_called()
+
+    def test_manifest_refuses_pathological_nesting_before_p026(self) -> None:
+        # P0-30 N4 (slice read F-1): the manifest reader's two layers (parser, non-finite walk)
+        # each refuse a record nested deeper than their recursion limit as an invalid manifest
+        # line, never as RecursionError, at depths derived on the running interpreter
+        for layer, depth in nesting_arms():
+            with self.subTest(site="_decode_strict_jsonl", layer=layer, depth=depth):
+                if depth is None:
+                    self.skipTest(f"the {layer} never raises RecursionError on this interpreter")
+                with tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    _, stable, receipt, _ = self._capture(root)
+                    config_path = self._runnable_config(root, stable)
+                    run_id = subject.backup_stable_prefix(
+                        config_path,
+                        stable_receipt=receipt,
+                        store_id=self.STORE_ID,
+                        source_root=root / "source-root",
+                    )
+                    manifest = root / "backups" / "manifest.jsonl"
+                    lines = manifest.read_text(encoding="utf-8").splitlines()
+                    lines[0] = lines[0][:-1] + ', "synthetic_probe": ' + "[" * depth + "]" * depth + "}"
+                    manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                    target = root / "restore-target"
+                    target.mkdir()
+                    with (
+                        mock.patch.object(subject.restore, "run_restore") as run_restore,
+                        self.assertRaisesRegex(ValueError, "invalid P026 manifest line 1"),
+                    ):
+                        subject.restore_verified_prefix(
+                            config_path,
+                            run_id=run_id,
+                            store_id=self.STORE_ID,
+                            target=target,
+                        )
+                    run_restore.assert_not_called()
 
     def test_manifest_refuses_boolean_size_and_byte_totals_before_p026(self) -> None:
         for field in ("file.size", "run_end.bytes"):

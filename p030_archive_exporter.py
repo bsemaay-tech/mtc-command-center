@@ -82,9 +82,10 @@ def _publish(staging: Path, final: Path) -> None:
     ``os.replace`` overwrites; a file created between the caller's exists-check and the move would
     be replaced silently (third T0 read, N1). On Windows ``os.rename`` refuses an existing
     destination with ``FileExistsError`` and keeps the no-delete invariant (nothing is unlinked).
-    On POSIX ``os.rename`` overwrites as well and the no-clobber forms (link + unlink, renameat2)
-    either add a delete path or are not portable, so the exists-check immediately before the move
-    is the guard there and the remaining window is documented, not closed."""
+    On POSIX ``os.rename`` overwrites as well; ``os.link`` would refuse an existing destination
+    without a delete path, at the cost of a permanent second hard link under the staging name and
+    a failure across filesystems, so the exists-check immediately before the move is the guard
+    there and the remaining window is documented, not closed."""
     if os.name == "nt":
         os.rename(staging, final)
     else:
@@ -271,6 +272,9 @@ def _decode_source_line(raw_line: bytes, line_number: int) -> dict[str, Any]:
             f"source line {line_number} carries a non-finite number",
         ) from exc
     except RecursionError as exc:
+        # which layer raises first depends on the interpreter (the parser's C recursion limit
+        # differs between versions; this walk hits the Python recursion limit), so the checker
+        # derives one depth per layer at test time instead of hard-coding one (slice read F-1)
         raise ExportRefused(
             "source_line_invalid", f"source line {line_number} is nested too deeply"
         ) from exc

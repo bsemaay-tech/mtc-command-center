@@ -80,11 +80,17 @@ def _decode_json_object(raw: bytes, description: str) -> dict:
             parse_constant=_reject_nonfinite_json,
             object_pairs_hook=_reject_duplicate_json_keys,
         )
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
+        # RecursionError: nested deeper than the interpreter limit is invalid too (P0-30 N4; this
+        # is the adapter's third parse site, slice read F-2)
         raise ValueError(f"invalid {description}") from exc
     if not isinstance(payload, dict):
         raise ValueError(f"invalid {description}")
-    _reject_nonfinite_numbers(payload)
+    try:
+        _reject_nonfinite_numbers(payload)
+    except RecursionError as exc:
+        # the parser may accept a nesting the (recursive) walk cannot; same refusal (P0-30 N4)
+        raise ValueError(f"invalid {description}") from exc
     return payload
 
 
