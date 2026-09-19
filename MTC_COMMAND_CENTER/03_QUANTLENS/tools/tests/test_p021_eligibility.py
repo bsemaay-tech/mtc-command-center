@@ -31,8 +31,8 @@ from p021_evidence_contracts import (
 
 
 _EXPECTED_OPEN_NUMBERS = {
-    "gap_ratio_max",
-    "divergence_tolerance",
+    "divergence_tolerance_intent",
+    "divergence_tolerance_return",
     "divergence_window_length",
     "divergence_min_paired_observations",
 }
@@ -88,7 +88,57 @@ class P021ContractTestCase(unittest.TestCase):
         self.assertTrue(
             all(check["status"] == "REFUSED" for check in record["checks"])
         )
-        self.assertEqual(len(record["open_numbers"]), 4)
+        self.assertEqual(len(record["open_numbers"]), 4)  # B-06 is two numbers under M-C
+        # S2 (OD-20260915-P021-S2-RECOMMENDED-1): gap_ratio_max is CLOSED in the catalogue and DATA_QUALITY
+        # carries the value and the two pins, yet every check still refuses readiness.
+        data_quality = next(c for c in record["checks"] if c["check_id"] == "P021.DATA_QUALITY")
+        self.assertEqual(data_quality["limits"]["gap_ratio_max"], 0.0001)
+        self.assertEqual(data_quality["limits"]["gap_ratio_metric"], "m2_missing_bar_ratio")
+        self.assertEqual(
+            data_quality["limits"]["gap_ratio_formula_id"],
+            "m2_missing_bar_ratio@data_gap_ratio.py v1 (fixed-step 24/7, half-open span, "
+            "leading/trailing absence excluded)",
+        )
+        self.assertEqual(data_quality["limits"]["dataset_hash_contract"], "ds-v1")
+        self.assertEqual(data_quality["missing_numbers"], [])
+        self.assertEqual(data_quality["missing_rules"], ["accepted_corrected_engine.B01"])
+        divergence = next(c for c in record["checks"] if c["check_id"] == "P021.BACKTEST_FORWARD_DIVERGENCE")
+        self.assertEqual(divergence["limits"]["divergence_metric"], "M-C")
+        self.assertNotIn("divergence_metric.B05", divergence["missing_rules"])
+        # lane-6 exact-Opus review of 7fecf204 (REQUIRED-1/2): the pinned definition is the ratified M-C,
+        # i.e. rows M-A and M-B of packet section 4 verbatim, and B-06 is two open numbers under M-C.
+        definition = divergence["limits"]["divergence_metric_definition"]
+        self.assertEqual(definition, p021_readiness_rules.DIVERGENCE_METRIC_DEFINITION)
+        self.assertIn(
+            "per-pair signed difference of realized trade return (forward - backtest), aggregated as "
+            "the mean over the aligned window, reported with the count and the standard deviation",
+            definition,
+        )
+        self.assertIn("unit: return fraction per trade", definition)
+        self.assertIn(
+            "share of backtest intents that the forward path produced at the same bar (entry/exit "
+            "decisions match), independent of P&L",
+            definition,
+        )
+        self.assertIn("each with its own tolerance", definition)
+        for absent in ("absolute", "R-multiple", "size class"):
+            self.assertNotIn(absent, definition)
+        self.assertEqual(
+            divergence["missing_numbers"][:2],
+            ["divergence_tolerance_intent", "divergence_tolerance_return"],
+        )
+        b06 = {item["name"] for item in record["open_numbers"] if item["blocker"] == "B-06"}
+        self.assertEqual(b06, {"divergence_tolerance_intent", "divergence_tolerance_return"})
+        # NIT-2 of the same review: the S2 provenance is pinned like the S2 values
+        self.assertEqual(record["policy_set"]["s2_decided_at"], "2026-09-15")
+        self.assertIn("OD-20260915-P021-S2-RECOMMENDED-1", record["policy_set"]["s2_source_document"])
+        gap_source = next(n["source"] for n in record["closed_numbers"] if n["name"] == "gap_ratio_max")
+        self.assertIn("OD-20260915-P021-S2-RECOMMENDED-1", gap_source)
+        self.assertEqual(record["policy_set"]["owner_decisions"]["P021_DECISION_3"], "T")
+        self.assertEqual(record["policy_set"]["owner_decisions"]["P021_DIVERGENCE_METRIC"], "M-C")
+        closed = {n["name"]: n["value"] for n in record["closed_numbers"]}
+        self.assertIn("gap_ratio_max", closed)
+        self.assertEqual(closed["gap_ratio_max"], 0.0001)
         self.assertEqual(
             {item["name"] for item in record["open_numbers"]},
             _EXPECTED_OPEN_NUMBERS,
