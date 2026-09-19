@@ -1,4 +1,4 @@
-# WP-P0-12 — what is left to close the package (written Sat 2026-09-19 09:5x UTC+3 by the P0 Claude Lead, session 7)
+# WP-P0-12 — what is left to close the package (written Sat 2026-09-19 09:5x UTC+3 by the P0 Claude Lead, session 7) — **SUPERSEDED 13:53: Layer A CLOSED, see `P012_CLOSEOUT_RECORD_20260919.md`** (T1-T7 done; T8 `CT13-MERGE` still the owner's call)
 
 Plain English for the owner. Times UTC+3. Sources: `HANDOFF_20260919_SESSION7.md`, `OWNER_DECISIONS_PENDING.md`, CT13 `DECISIONS.md` (17 `OD-…-P012-…` rows), `P012_ACCEPTANCE_AMENDMENT_20260913.md`, the lane records in `OPUS_QUEUE_20260916/` and the capture/intake record folders in this run root. Verified this morning: the CT13 records branch is 194 commits ahead of `master` and contains every P0-12 decision; `master` holds none of them yet.
 
