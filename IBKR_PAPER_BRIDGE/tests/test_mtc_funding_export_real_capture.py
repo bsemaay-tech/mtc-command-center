@@ -932,13 +932,50 @@ def test_d6_without_a_fill_for_the_symbol_the_position_source_is_the_payments(fi
     constant szi the payments report, every grid hour of a [17:00, 18:00) window
     carries a payment, and the completion check names the payments - not the fills
     witness - as the producer of that position (lane-8 REQUIRED-1: this branch was
-    reachable, accepting and unlabelled; three mutants of it survived the suite)."""
+    reachable, accepting and unlabelled; three mutants of it survived the suite).
+
+    ID1's stamp is shifted +1.000s (17:00:01.041, still inside the 17:00 hour) so
+    it clears the D6-START B admission band [start+tolerance, end+tolerance): the
+    window here starts exactly on ID1's own hour, and the natural r1 stamp (41 ms
+    past the hour) would otherwise settle the PREVIOUS window under that rule."""
     start, end = "2026-09-14T17:00:00Z", "2026-09-14T18:00:00Z"
+    shifted_row1 = ROW1.replace(b'"time":1789405200041', b'"time":1789405201041')
+    pass_bytes = FUNDING_PASS.replace(ROW1, shifted_row1)
+    shifted_id1 = f"hl-funding:{SCOPE}:BTC:1789405201041"
     bindings = r1_bindings()
-    cover = real_coverage(bindings=bindings, fills=fills, start=start, end=end)
+    bindings[0]["event_timestamp"] = "2026-09-14T17:00:01.041Z"
+    bindings[0]["funding_event_id"] = shifted_id1
+    bindings[0]["source_event_digest"] = (
+        f"{exporter.REAL_SOURCE_EVENT_DIGEST_DOMAIN}:{hashlib.sha256(shifted_row1).hexdigest()}"
+    )
+    for item in bindings:
+        item["provenance"]["source_sha256"] = hashlib.sha256(pass_bytes).hexdigest()
+    rows = [
+        retained_row(
+            event(
+                shifted_id1,
+                datetime(2026, 9, 14, 17, 0, 1, 41000, tzinfo=UTC),
+                -0.000571,
+            )
+        ),
+        retained_row(EVENT2),
+    ]
+    cover = real_coverage(
+        bindings=bindings,
+        rows=[shifted_row1, ROW2],
+        passes=[pass_bytes, pass_bytes],
+        fills=fills,
+        start=start,
+        end=end,
+    )
 
     result = build(
-        bindings=bindings, cover=cover, start=start, end=end, evidence_kind=REAL
+        rows=rows,
+        bindings=bindings,
+        cover=cover,
+        start=start,
+        end=end,
+        evidence_kind=REAL,
     )
 
     assert result.accepted is True, result.report["reason_detail"]
@@ -977,6 +1014,192 @@ def test_the_real_coverage_witness_is_a_closed_shape():
     result = build(bindings=bindings, cover=cover, evidence_kind=REAL)
     assert result.accepted is False
     assert result.reason_code == exporter.CANDIDATE_COVERAGE_INVALID
+
+
+# ---------------------------------------------------------------------------
+# NIT slice 2026-09-19 (lane-8 exact-Opus read of a871e429, NITs 1-9 + NIT-A;
+# D6-START B = OD-20260918-P012-D6START-B-1)
+# ---------------------------------------------------------------------------
+
+
+def test_an_unknown_packet_kind_names_the_callers_own_admitted_profile():
+    """NIT-1: a packet's own coverage.evidence_kind can be a genuinely unknown
+    string (not SYNTHETIC_FIXTURE, not REAL_CAPTURE_READ_ONLY). The refusal
+    must name the profile the CALLER admitted, never always the synthetic
+    default."""
+    cover = real_coverage(bindings=r1_bindings(), evidence_kind="")
+
+    result = build(cover=cover, evidence_kind=REAL)
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE
+    assert REAL in result.report["reason_detail"]
+    assert exporter.SYNTHETIC_EVIDENCE_KIND not in result.report["reason_detail"]
+
+
+def test_the_report_names_a_real_report_kind_and_a_non_synthetic_schedule_key():
+    """NIT-3: report_kind and the schedule-id input key must not claim
+    SYNTHETIC on a real run."""
+    result = build(evidence_kind=REAL)
+
+    assert result.accepted is True, result.report["reason_detail"]
+    assert result.report["report_kind"] == exporter.REAL_CAPTURE_REPORT_KIND
+    assert result.report["report_kind"] != exporter.REPORT_KIND
+    assert result.report["inputs"]["candidate_schedule_id"] == SCHEDULE_ID
+    assert "synthetic_schedule_id" not in result.report["inputs"]
+
+
+def test_d6_start_tolerance_excludes_a_stamp_within_one_second_of_the_window_start():
+    """D6-START B: ID1 is naturally stamped 41 ms past its own hour. A window
+    starting exactly on that hour used to admit ID1 under the old `start <=
+    stamp` rule even though that stamp settles the PREVIOUS hour's interval
+    (the same payment could be captured and admitted by two adjacent runs).
+    The fix excludes it here, mirroring the end tolerance."""
+    start, end = HOUR1, "2026-09-14T19:00:00Z"
+    bindings = r1_bindings()
+    cover = real_coverage(bindings=bindings, start=start, end=end)
+
+    result = build(
+        bindings=bindings, cover=cover, start=start, end=end, evidence_kind=REAL
+    )
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_BINDING_OUT_OF_INTERVAL
+    assert ID1 in result.report["reason_detail"]
+
+
+def test_d6_start_tolerance_admits_a_stamp_at_exactly_the_boundary():
+    """D6-START B boundary: a stamp at exactly start+1.000s belongs to THIS
+    window (mirrors the end boundary's +0.999s-admitted / +1.000s-refused
+    split, just on the other side)."""
+    start, end = HOUR1, "2026-09-14T19:00:00Z"
+    admitted_ms = 1789405200000 + 1000
+    admitted = ROW1.replace(b'"time":1789405200041', f'"time":{admitted_ms}'.encode())
+    pass_bytes = FUNDING_PASS.replace(ROW1, admitted)
+    new_id = f"hl-funding:{SCOPE}:BTC:{admitted_ms}"
+    bindings = r1_bindings()
+    bindings[0]["event_timestamp"] = "2026-09-14T17:00:01.000Z"
+    bindings[0]["funding_event_id"] = new_id
+    bindings[0]["source_event_digest"] = (
+        f"{exporter.REAL_SOURCE_EVENT_DIGEST_DOMAIN}:{hashlib.sha256(admitted).hexdigest()}"
+    )
+    for item in bindings:
+        item["provenance"]["source_sha256"] = hashlib.sha256(pass_bytes).hexdigest()
+    rows = [
+        retained_row(
+            event(new_id, datetime(2026, 9, 14, 17, 0, 1, 0, tzinfo=UTC), -0.000571)
+        ),
+        retained_row(EVENT2),
+    ]
+    cover = real_coverage(
+        bindings=bindings,
+        rows=[admitted, ROW2],
+        passes=[pass_bytes, pass_bytes],
+        start=start,
+        end=end,
+    )
+
+    result = build(
+        rows=rows,
+        bindings=bindings,
+        cover=cover,
+        start=start,
+        end=end,
+        evidence_kind=REAL,
+    )
+
+    assert result.accepted is True, result.report["reason_detail"]
+    body = json.loads(result.candidate_bytes)["real_capture_candidate"]
+    assert body["event_count"] == 2
+
+
+def test_d6_start_tolerance_excludes_a_stamp_just_inside_the_boundary():
+    """D6-START B boundary: a stamp at start+0.999s still settles the previous
+    window and is excluded here."""
+    start, end = HOUR1, "2026-09-14T19:00:00Z"
+    excluded_ms = 1789405200000 + 999
+    excluded = ROW1.replace(b'"time":1789405200041', f'"time":{excluded_ms}'.encode())
+    pass_bytes = FUNDING_PASS.replace(ROW1, excluded)
+    new_id = f"hl-funding:{SCOPE}:BTC:{excluded_ms}"
+    bindings = r1_bindings()
+    bindings[0]["event_timestamp"] = "2026-09-14T17:00:00.999Z"
+    bindings[0]["funding_event_id"] = new_id
+    bindings[0]["source_event_digest"] = (
+        f"{exporter.REAL_SOURCE_EVENT_DIGEST_DOMAIN}:{hashlib.sha256(excluded).hexdigest()}"
+    )
+    for item in bindings:
+        item["provenance"]["source_sha256"] = hashlib.sha256(pass_bytes).hexdigest()
+    rows = [
+        retained_row(
+            event(new_id, datetime(2026, 9, 14, 17, 0, 0, 999000, tzinfo=UTC), -0.000571)
+        ),
+        retained_row(EVENT2),
+    ]
+    cover = real_coverage(
+        bindings=bindings,
+        rows=[excluded, ROW2],
+        passes=[pass_bytes, pass_bytes],
+        start=start,
+        end=end,
+    )
+
+    result = build(
+        rows=rows,
+        bindings=bindings,
+        cover=cover,
+        start=start,
+        end=end,
+        evidence_kind=REAL,
+    )
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_BINDING_OUT_OF_INTERVAL
+
+
+def test_d6_binding_notes_settlement_source_names_the_captured_row_not_synthetic():
+    """NIT-7: binding_notes.settlement_rate_source/time_source must never
+    claim SYNTHETIC_BINDING_ONLY under the real profile — the rate and stamp
+    are re-derived from the exact captured venue row (D-1/D-3)."""
+    result = build(evidence_kind=REAL)
+
+    assert result.accepted is True, result.report["reason_detail"]
+    events = json.loads(result.candidate_bytes)["real_capture_candidate"][
+        "bound_events"
+    ]
+    assert events
+    for item in events:
+        assert (
+            item["binding_notes"]["settlement_rate_source"]
+            == exporter.REAL_SETTLEMENT_SOURCE
+        )
+        assert (
+            item["binding_notes"]["settlement_time_source"]
+            == exporter.REAL_SETTLEMENT_SOURCE
+        )
+        assert item["binding_notes"]["settlement_rate_source"] != exporter.SETTLEMENT_SOURCE
+
+
+def test_the_cli_help_does_not_claim_synthetic_only_unconditionally(capsys):
+    """NIT-8: the --help description sits above --evidence-kind and used to
+    claim the tool always stages a SYNTHETIC_ONLY candidate."""
+    with pytest.raises(SystemExit):
+        exporter._parse_args(["--help"])
+    out = capsys.readouterr().out
+
+    assert "SYNTHETIC_ONLY" not in out
+    assert REAL in out
+
+
+def test_evidence_limitations_disclose_the_payload_values_are_not_cross_checked():
+    """NIT-9: bridge_evidence.payload is carried beside each binding as
+    labelled evidence; only its effective_ts is cross-checked (binding_notes).
+    The limitations must say the payload's other values are not."""
+    result = build(evidence_kind=REAL)
+
+    assert result.accepted is True, result.report["reason_detail"]
+    assert any(
+        "never cross-checked" in item for item in result.report["evidence_limitations"]
+    )
 
 
 # ---------------------------------------------------------------------------

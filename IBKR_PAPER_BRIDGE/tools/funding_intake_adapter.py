@@ -6,8 +6,9 @@ Reads one Path-1 read-only capture run (``CAPTURE_MANIFEST.json`` + ``DERIVED_EX
 * ``binding_packet_draft.json`` — the shape ``export_mtc_funding.py`` consumes, with every field the captured
   bytes can supply filled, and every field they cannot supply set to the literal ``UNRESOLVED:D-n``
   (the decision that would resolve it). Nothing is guessed: no oracle price, no digest domain, no
-  admitted evidence kind. The export tool refuses this packet today by design
-  (``CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE``: only ``SYNTHETIC_FIXTURE`` evidence is accepted).
+  admitted evidence kind. The export tool refuses this packet today by design; the actual refusal
+  code is computed by calling the tool (``gap_report.export_tool_outcome_today``), never declared,
+  so the two tools cannot silently disagree.
 * ``retained_rows_expected.json`` — what a schema-v10 Bridge store would have to retain per event.
 * ``intake_gap_report.json`` — the open decisions D-1..D-6, counts, the completeness-rule result and
   the refusal the export tool raises for this packet.
@@ -37,6 +38,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import export_mtc_funding as exporter
+
 ADAPTER_VERSION = "p012-funding-intake/v1"
 DRAFT_LABEL = "NONACCEPTING_INTAKE_DRAFT"
 PACKET_VERSION_TARGET = "SYNTHETIC_FUNDING_BINDING_PACKET_V1"
@@ -45,7 +52,6 @@ APPROVED_PAYER = (
     "LONG"  # export_mtc_funding.APPROVED_PAYER — the tool's own rule, not a guess
 )
 PAYLOAD_RETAINED = "FUNDING_PAYLOAD_RETAINED"
-EXPECTED_TOOL_REFUSAL = "CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE"
 HOUR_MS = 3_600_000
 # slice 4 — the accepting shape (values ruled by OD-20260916-P012-INTAKE-D1-D6-R-1)
 RULING = "OD-20260916-P012-INTAKE-D1-D6-R-1"
@@ -56,13 +62,20 @@ REAL_EVENT_ID_PREFIX = "hl-funding"
 EXPECTED_REAL_TOOL_REFUSAL = "CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE"
 BRIDGE_DIGEST_UNAVAILABLE = "UNAVAILABLE:BRIDGE_OBSERVATION_REQUIRED"
 DECISIONS = {
-    "D-1": "production source_event_digest byte domain (also the retained payload_digest domain)",
+    "D-1": "production source_event_digest byte domain",
     "D-2": "funding_event_id rule for venue funding rows (the venue hash is the zero hash)",
     "D-3": "event timestamp: venue stamp verbatim vs hour boundary",
     "D-4": "oracle price and its source for a funding instant (not in the funding row)",
     "D-5": "admitting a real read-only capture evidence kind beside SYNTHETIC_FIXTURE",
     "D-6": "whole-interval completion witness for read-only captures",
 }
+# D-5 is RESOLVED (OD-20260916-P012-INTAKE-D1-D6-R-1): export_mtc_funding.py admits
+# REAL_CAPTURE_READ_ONLY under its own evidence profile. The draft packet built by
+# build_intake() below still labels itself SYNTHETIC_FUNDING_BINDING_PACKET_V1 and is
+# never the accepting shape (see build_real_packet()), so its own evidence_kind_status
+# names the resolution and points at the accepting shape rather than claiming D-5 is
+# still open.
+D5_RESOLVED_NOTE = "RESOLVED:D-5 (see binding_packet_real_capture.json for the accepting shape)"
 
 
 def unresolved(decision: str) -> str:
@@ -380,6 +393,24 @@ def completeness(manifest: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _export_tool_outcome_today(packet: dict[str, Any]) -> dict[str, str]:
+    """What export_mtc_funding.py actually does with this draft packet today,
+    computed by calling it directly instead of declaring a guessed code: the
+    two producers (this adapter and the export tool) must never be allowed to
+    silently disagree (lane-8 exact-Opus review of a871e429, NIT-A)."""
+    coverage = packet["coverage"]
+    probe = exporter.build_funding_candidate(
+        [],
+        [],
+        coverage,
+        "P012_INTAKE_ADAPTER_PROBE",
+        coverage["interval_start_inclusive"],
+        coverage["interval_end_exclusive"],
+    )
+    assert not probe.accepted, "the non-accepting draft packet must never be admitted"
+    return {"refusal_code": probe.reason_code, "reason": probe.report["reason_detail"]}
+
+
 def build_intake(
     manifest: dict[str, Any],
     derived: dict[str, Any],
@@ -433,7 +464,7 @@ def build_intake(
                 "positive_rate_payer_basis": "export_mtc_funding.APPROVED_PAYER (tool constant)",
                 "provenance": {
                     "evidence_kind": PROPOSED_EVIDENCE_KIND,
-                    "evidence_kind_status": unresolved("D-5"),
+                    "evidence_kind_status": D5_RESOLVED_NOTE,
                     "extraction_method": f"capture_own_account_evidence.py tool_sha256={tool_sha[:16]} user_funding_history",
                     "source_locator": f"{source_file}#{pointer}",
                     "source_sha256": source_sha,
@@ -504,14 +535,11 @@ def build_intake(
             "bindings[*].funding_event_id (rule proposed, value derived)": "D-2",
             "bindings[*].event_timestamp (venue stamp kept verbatim)": "D-3",
             "bindings[*].oracle_price / oracle_price_source": "D-4",
-            "coverage.evidence_kind / provenance.evidence_kind": "D-5",
+            "coverage.evidence_kind / provenance.evidence_kind": D5_RESOLVED_NOTE,
             "coverage.complete (adapter rule, not the tool's approved witness)": "D-6",
         },
         "decisions": DECISIONS,
-        "export_tool_outcome_today": {
-            "refusal_code": EXPECTED_TOOL_REFUSAL,
-            "reason": "only SYNTHETIC_FIXTURE evidence is accepted; this packet carries a real read-only capture",
-        },
+        "export_tool_outcome_today": _export_tool_outcome_today(packet),
         "statement": (
             "Collected, not incorporated. This draft is not an accepted economic record, not venue "
             "evidence for C-10, and not an input to any production selection path."
@@ -609,7 +637,8 @@ def main(argv: list[str] | None = None) -> int:
     real = report["real_capture_packet"]
     print(
         f"{DRAFT_LABEL} events={report['funding_events']} fills={report['fills']} "
-        f"complete={report['completeness']['complete']} export_tool_would_refuse={EXPECTED_TOOL_REFUSAL} "
+        f"complete={report['completeness']['complete']} "
+        f"export_tool_would_refuse={report['export_tool_outcome_today']['refusal_code']} "
         f"real_packet={real['status']} real_packet_tool_outcome_expected={real['export_tool_outcome_expected']}"
     )
     for name, digest in digests.items():

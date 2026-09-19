@@ -117,7 +117,7 @@ def test_build_fills_only_what_the_bytes_supply_and_labels_the_rest():
     assert first["positive_rate_payer"] == "LONG"
     assert first["provenance"]["source_locator"] == "funding_pass1_page001.json#/0"
     assert first["provenance"]["source_sha256"] == SHA_A
-    assert first["provenance"]["evidence_kind_status"] == "UNRESOLVED:D-5"
+    assert first["provenance"]["evidence_kind_status"] == adapter.D5_RESOLVED_NOTE
     assert ADDRESS not in json.dumps(intake)  # only the short form leaves the adapter
     assert (
         intake["retained_rows"]["rows"][0]["payload_digest"]
@@ -129,9 +129,14 @@ def test_build_fills_only_what_the_bytes_supply_and_labels_the_rest():
         "szi": "0.00058",
         "usdc": "-0.000571",
     }
+    # the draft packet declares evidence_kind REAL_CAPTURE_READ_ONLY inside a
+    # SYNTHETIC_FUNDING_BINDING_PACKET_V1 packet: the export tool's default
+    # (SYNTHETIC) profile actually refuses this as a kind mismatch, not as a
+    # missing production contract; this outcome is computed by calling the
+    # tool, never declared (lane-8 exact-Opus review of a871e429, NIT-A)
     assert (
         intake["gap_report"]["export_tool_outcome_today"]["refusal_code"]
-        == "CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE"
+        == exporter.CANDIDATE_EVIDENCE_KIND_MISMATCH
     )
 
 

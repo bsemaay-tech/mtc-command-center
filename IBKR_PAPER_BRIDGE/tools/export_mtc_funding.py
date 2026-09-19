@@ -37,8 +37,12 @@ read-only venue capture under the six ruled intake rules: D-1 the
 verbatim and ``interval_hour_utc`` is its floor; D-4 an oracle capture at the
 funding instant must be named (a payment-derived price is never admitted);
 D-5 the witness identity names the ownership-signature record; D-6 two
-byte-identical funding passes, an hour-aligned window with a 1-second end
-tolerance, and the fills-derived position at every hour witness completeness.
+byte-identical funding passes, an hour-aligned window whose admission band is
+``[start+tolerance, end+tolerance)`` (half-open, both ends shifted by the same
+1-second settlement tolerance, ``D6-START B`` / ``OD-20260918-P012-D6START-B-1``)
+so a payment stamped within the tolerance of a boundary belongs to exactly one
+of the two adjacent windows, never both, and the fills-derived position at
+every hour witnesses completeness.
 The profile is named by the caller and must be declared by the packet; it is
 not in :data:`ACCEPTED_EVIDENCE_KINDS`, it is not a mode, and its candidate is
 labelled ``REFUSED_REAL_CAPTURE_READ_ONLY_NOT_A_PRODUCTION_RECORD``:
@@ -151,14 +155,24 @@ REAL_CAPTURE_PACKET_VERSION = "REAL_CAPTURE_FUNDING_BINDING_PACKET_V1"
 REAL_CAPTURE_ARTIFACT_KIND = "REAL_CAPTURE_FUNDING_CANDIDATE_V1"
 REAL_CAPTURE_CANDIDATE_FILENAME = "funding_candidate_real_capture.json"
 REAL_CAPTURE_SIDECAR_FILENAME = "funding_candidate_real_capture.json.sha256"
+REAL_CAPTURE_REPORT_KIND = "REAL_CAPTURE_FUNDING_CANDIDATE_REPORT_V1"
 REAL_SOURCE_EVENT_DIGEST_DOMAIN = "HL_USERFUNDING_ROW_V1"  # D-1
 REAL_EVENT_ID_PREFIX = "hl-funding"  # D-2
-REAL_END_TOLERANCE_SECONDS = 1  # D-6 (i): the venue stamps the hour's payment late
+# D-6 (i): the venue stamps the hour's payment up to this many seconds late. The
+# admission band [start+tolerance, end+tolerance) applies the SAME tolerance to
+# both boundaries (D6-START B, OD-20260918-P012-D6START-B-1): a payment stamped
+# within the tolerance of a window's start belongs to the PREVIOUS window (it
+# settles that window's last interval), mirroring how a payment stamped within
+# the tolerance of the end still belongs to THIS window.
+REAL_END_TOLERANCE_SECONDS = 1
 REAL_POSITION_SOURCE_FILLS = "coverage.fills_witness"  # D-6 (ii)
 REAL_POSITION_SOURCE_PAYMENTS = (  # D-6 (ii) when the fills witness has no fill
     "captured funding rows: the fills witness carries no fill for the symbol, so "
     "the position is the constant szi the payments themselves report and the "
     "per-row szi cross-check is vacuous"
+)
+REAL_SETTLEMENT_SOURCE = (  # D-1/D-3: re-derived from the exact captured venue row
+    "HL_USERFUNDING_ROW_V1_CAPTURED"
 )
 REAL_CAPTURE_ADMISSION_STATUS = "REFUSED_REAL_CAPTURE_READ_ONLY_NOT_A_PRODUCTION_RECORD"
 REAL_CAPTURE_CANDIDATE_BUILT = "REAL_CAPTURE_CANDIDATE_BUILT"
@@ -183,11 +197,19 @@ REAL_CAPTURE_EVIDENCE_LIMITATIONS = (
     ),
     (
         "Whole-interval completeness is witnessed by two byte-identical funding "
-        "passes, an hour-aligned window with a 1-second end tolerance and the "
-        "fills-derived position at every hour (D-6) - or, when the fills witness "
-        "carries no fill for the symbol, the constant position the payments "
-        "themselves report (completion_check.position_source names which); it is "
-        "evidence about the captured window only."
+        "passes, an hour-aligned admission band [start+tolerance, end+tolerance) "
+        "half-open with the same 1-second settlement tolerance on both ends "
+        "(D6-START B) and the fills-derived position at every hour (D-6) - or, "
+        "when the fills witness carries no fill for the symbol, the constant "
+        "position the payments themselves report (completion_check.position_source "
+        "names which); it is evidence about the captured window only."
+    ),
+    (
+        "bridge_evidence.payload carries the retained Bridge observation beside "
+        "the binding as labelled evidence only; only its effective_ts is compared "
+        "to the binding's event_timestamp (binding_notes). The payload's other "
+        "values (rate, size) are never cross-checked against the captured venue "
+        "row bytes."
     ),
     (
         "Production admission is NOT granted (OD-20260914-P012-ADMISSION-Q3 "
@@ -342,6 +364,8 @@ class _EvidenceProfile:
     schedule_key: str
     synthetic_only: bool
     end_tolerance_seconds: int
+    report_kind: str
+    settlement_source: str
 
 
 _SYNTHETIC_PROFILE = _EvidenceProfile(
@@ -362,6 +386,8 @@ _SYNTHETIC_PROFILE = _EvidenceProfile(
     schedule_key="synthetic_schedule_id",
     synthetic_only=True,
     end_tolerance_seconds=0,
+    report_kind=REPORT_KIND,
+    settlement_source=SETTLEMENT_SOURCE,
 )
 _REAL_PROFILE = _EvidenceProfile(
     kind=REAL_CAPTURE_EVIDENCE_KIND,
@@ -381,6 +407,8 @@ _REAL_PROFILE = _EvidenceProfile(
     schedule_key="candidate_schedule_id",
     synthetic_only=False,
     end_tolerance_seconds=REAL_END_TOLERANCE_SECONDS,
+    report_kind=REAL_CAPTURE_REPORT_KIND,
+    settlement_source=REAL_SETTLEMENT_SOURCE,
 )
 _EVIDENCE_PROFILES = {
     SYNTHETIC_EVIDENCE_KIND: _SYNTHETIC_PROFILE,
@@ -640,7 +668,7 @@ def _require_evidence_kind(kind: Any, profile: _EvidenceProfile, label: str) -> 
     raise _Refusal(
         CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE,
         "the production completion-evidence contract is not approved or "
-        f"implemented; only {list(ACCEPTED_EVIDENCE_KINDS)} is accepted, got {kind!r}",
+        f"implemented; only {profile.kind!r} is accepted under this run, got {kind!r}",
     )
 
 
@@ -886,7 +914,15 @@ def _millisecond_text(time_ms: int) -> str:
 def _require_real_oracle_source(value: Any, event_id: str) -> str:
     """D-4: production needs an oracle capture at the funding instant, named by
     digest and JSON pointer. A back-derived price, an unresolved marker or a
-    prose label is not that capture."""
+    prose label is not that capture.
+
+    The ``"derived" in value.casefold()`` check below is a naming-convention
+    guard, not a cryptographic one: it catches a locator that says what it is
+    (``DERIVED_FROM_PAYMENT``, ``derived: ...``) but admits any locator that
+    merely matches ``<sha256>#<json-pointer>`` without saying so. Real
+    verification that the pointer resolves to an actual oracle capture is
+    O-1 (oracle capture tool), not built here.
+    """
     if (
         not isinstance(value, str)
         or value.startswith("UNRESOLVED")
@@ -1224,7 +1260,10 @@ def _real_completion(
     """D-6 (ii): every whole hour of the window at which the fills-derived
     position is open must carry a payment, and every payment's own ``szi``
     must be that position. The end hour itself belongs to the grid because the
-    venue stamps its payment inside the 1-second tolerance."""
+    venue stamps its payment inside the 1-second tolerance. This grid is
+    independent of the admission-band shift applied in ``_build`` (D6-START
+    B): it checks the captured pass bytes for completeness, not which bindings
+    are admitted into this candidate."""
     opening, fills = _real_fills(fills_bytes, symbol)
     # No fill for the symbol inside the fills witness: the position cannot change
     # inside the window, so the payments' own szi is the only position on record;
@@ -1508,7 +1547,7 @@ def _build(
             CANDIDATE_INTERVAL_INVALID, "start_inclusive must precede end_exclusive"
         )
     facts["interval"] = {"start_inclusive": start.text, "end_exclusive": end.text}
-    facts["synthetic_schedule_id"] = schedule
+    facts["schedule_id"] = schedule
 
     witness, extras = _validate_coverage(coverage, start, end, profile)
     facts["symbol_scope"] = witness["symbol"]
@@ -1623,6 +1662,14 @@ def _build(
             pass_rows, extras["fills_bytes"], witness["symbol"], start, end
         )
 
+    # D6-START B (OD-20260918-P012-D6START-B-1): the SAME settlement tolerance
+    # shifts BOTH boundaries, so the admission band is [start+tol, end+tol),
+    # half-open. A payment stamped within the tolerance of `start` settles the
+    # PREVIOUS window's last interval (mirror of the end rule) and is excluded
+    # here; the previous window's own shifted band ends exactly where this one
+    # begins, so the payment is attributed to exactly one window, never both,
+    # and never dropped between them.
+    start_limit = (start.seconds + profile.end_tolerance_seconds, start.fraction)
     end_limit = (end.seconds + profile.end_tolerance_seconds, end.fraction)
     events: list[dict[str, Any]] = []
     out_of_interval: list[str] = []
@@ -1630,7 +1677,7 @@ def _build(
         row = folded_rows[event_id]
         binding = folded_bindings[event_id]
         payload = _verify_retained_payload(row)
-        if not (start.sort_key <= binding["instant"].sort_key < end_limit):
+        if not (start_limit <= binding["instant"].sort_key < end_limit):
             out_of_interval.append(event_id)
             continue
         if binding["digest_hex"] == row["payload_digest"]:
@@ -1658,8 +1705,8 @@ def _build(
                         "bridge_effective_ts_equals_binding_event_timestamp": (
                             ledger_instant.sort_key == binding["instant"].sort_key
                         ),
-                        "settlement_rate_source": SETTLEMENT_SOURCE,
-                        "settlement_time_source": SETTLEMENT_SOURCE,
+                        "settlement_rate_source": profile.settlement_source,
+                        "settlement_time_source": profile.settlement_source,
                     },
                     "bridge_evidence": {
                         "attribution": row["attribution"],
@@ -1778,7 +1825,7 @@ def _report(
             "interval": facts.get("interval"),
             "retained_row_count": facts.get("retained_row_count"),
             "symbol_scope": facts.get("symbol_scope"),
-            "synthetic_schedule_id": facts.get("synthetic_schedule_id"),
+            profile.schedule_key: facts.get("schedule_id"),
             "witness_identity": facts.get("witness_identity"),
         },
         "inventory_missing_event_ids": facts.get("inventory_missing_event_ids", []),
@@ -1797,7 +1844,7 @@ def _report(
         "production_mode": PRODUCTION_MODE_UNAVAILABLE,
         "reason_code": reason_code,
         "reason_detail": reason_detail,
-        "report_kind": REPORT_KIND,
+        "report_kind": profile.report_kind,
         "store_reason_codes": facts.get("store_reason_codes", {}),
         "synthetic_only": profile.synthetic_only,
         "unbound_events": facts.get("unbound_events", []),
@@ -2123,8 +2170,10 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog=TOOL_NAME,
         description=(
-            "Stage a SYNTHETIC_ONLY MTC funding candidate from a quiescent "
-            "offline Bridge snapshot and a separately verified binding packet. "
+            "Stage an MTC funding candidate from a quiescent offline Bridge "
+            "snapshot and a separately verified binding packet, under the "
+            "evidence profile named by --evidence-kind (SYNTHETIC_FIXTURE by "
+            "default, or REAL_CAPTURE_READ_ONLY when named). "
             "The result is never an accepted economic record."
         ),
     )
@@ -2194,7 +2243,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                         "end_exclusive": args.end,
                     },
                     "symbol_scope": args.symbol,
-                    "synthetic_schedule_id": args.schedule_id,
+                    "schedule_id": args.schedule_id,
                     **refusal.facts,
                 },
                 profile=profile,
