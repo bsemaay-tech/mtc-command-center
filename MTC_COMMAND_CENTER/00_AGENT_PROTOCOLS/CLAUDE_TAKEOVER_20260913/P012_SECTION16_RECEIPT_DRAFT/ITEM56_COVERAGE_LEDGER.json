@@ -1,0 +1,601 @@
+{
+ "schema": "P012_ITEM56_COVERAGE_LEDGER_V1",
+ "computed_by": "Lead (mechanical union of slice envelopes' files_inspected)",
+ "census_included_count": 65,
+ "slices": {
+  "C56_CORE": [
+   "AUTHORITY/P012_PRICE_DESIGN_V1_27.md",
+   "AUTHORITY/SECTION16_PACKET_STANDARD.md",
+   "BASELINE_CURRENT_F5/out/RULE2-01-GREEN/event_surface.json",
+   "CAND/AGENTS.md",
+   "CAND/MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AGENTS.md",
+   "CAND/mtc_v2/core/economics.py",
+   "CAND/mtc_v2/core/position_manager.py",
+   "CAND/mtc_v2/core/results.py",
+   "CAND/mtc_v2/core/runner.py",
+   "CAND/mtc_v2/core/semantics.py",
+   "CAND/mtc_v2/core/types.py",
+   "CAND/mtc_v2/golden/corrected_vnext/RULE2-01-GREEN.json",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/declared_field_registry.json",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/semantic_coverage_review.schema.json",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/semantic_coverage_review.schema.md",
+   "CONSUMER_CENSUS.json",
+   "LEAD_REVIEW_CONTRACT.md",
+   "PATH_MAP.md",
+   "PRIOR/mtc_v2/core/results.py",
+   "PRIOR/mtc_v2/core/types.py"
+  ],
+  "C5_BRIDGE": [
+   "CAND/IBKR_PAPER_BRIDGE/bridge/engine/reconcile.py",
+   "CAND/IBKR_PAPER_BRIDGE/bridge/engine/types.py",
+   "CAND/IBKR_PAPER_BRIDGE/bridge/store/db.py",
+   "CAND/IBKR_PAPER_BRIDGE/tests/test_funding_payload_retention.py",
+   "CAND/IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export.py",
+   "CAND/IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export_production.py",
+   "CAND/IBKR_PAPER_BRIDGE/tests/test_reconciliation.py",
+   "CAND/IBKR_PAPER_BRIDGE/tests/test_store.py",
+   "CAND/IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py",
+   "CAND/IBKR_PAPER_BRIDGE/tools/smoke_fill.py"
+  ],
+  "C5_MTCTESTS": [
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_corrected_config.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_economic_records.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_economics.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_exits_corrected.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_open06_exit_migrations.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_fees.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_quantity_guard.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_position_manager_corrected.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_position_sizer_corrected.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_price_alignment_policy.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_results_corrected.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_runner_corrected.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_semantics.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_transition_records.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_verify_bceg.py",
+   "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_w285_kernel_remaining.py",
+   "CAND/mtc_v2/tests/corrected_vnext/verify_bceg.py"
+  ],
+  "C5_MCC_A": [
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/signals/range_filter.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/signals/supertrend.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_advanced_confirm.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_capital_block_fix.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_htf_infrastructure.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_l12_ma_filters.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_l12_new_filters.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_l18b_scaffold.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_level_retest.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_plan_b_gates.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_producer_selection_range_filter.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_range_filter.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_runner_debug_metadata.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_runner_metrics_api.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_supertrend_smoke.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/test_band_calculation.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/test_parity.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/generate_tw_export_case_suite_v2.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/validate_export_parity.py"
+  ],
+  "C5_MCC_B_R2": [
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/parity_oracles/engines/python_engine_runner.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/parity_oracles/run_feature_parity.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/tests/test_optimizer_post_run_patches.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/build_feature_factory_v1.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_12h_backtesting_session.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_big_overnight_multiasset_optimization.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_mtc_multidataset_walkforward_optimization.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_mtc_overnight_optimization.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_worker_scaling_benchmark.py",
+   "CAND/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/runner_metrics_adapter.py",
+   "CAND/MTC_COMMAND_CENTER/02_MTC_BACKTEST/parity_compare.py",
+   "CAND/MTC_COMMAND_CENTER/02_MTC_BACKTEST/run_2025_audit.py",
+   "CAND/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/p011_gate.py",
+   "CAND/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/row_arm.py",
+   "CAND/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/stage1_freeze.py",
+   "CAND/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/test_scenario_binding.py",
+   "CAND/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/test_stage3_oracles.py",
+   "CAND/MTC_COMMAND_CENTER/12_PARITY_PINETS/generate_tw_export_case_suite_v2.py",
+   "CAND/MTC_COMMAND_CENTER/12_PARITY_PINETS/validate_export_parity.py"
+  ]
+ },
+ "union_count": 85,
+ "census_files_missing_from_union": [],
+ "inspected_outside_census": [
+  "AGENTS.md",
+  "AUTHORITY/P012_PRICE_DESIGN_V1_27.md",
+  "AUTHORITY/SECTION16_PACKET_STANDARD.md",
+  "BASELINE_CURRENT_F5/out/RULE2-01-GREEN/event_surface.json",
+  "CONSUMER_CENSUS.json",
+  "LEAD_REVIEW_CONTRACT.md",
+  "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AGENTS.md",
+  "PATH_MAP.md",
+  "PRIOR/mtc_v2/core/results.py",
+  "PRIOR/mtc_v2/core/types.py",
+  "mtc_v2/core/economics.py",
+  "mtc_v2/core/position_manager.py",
+  "mtc_v2/core/results.py",
+  "mtc_v2/core/runner.py",
+  "mtc_v2/core/semantics.py",
+  "mtc_v2/core/types.py",
+  "mtc_v2/golden/corrected_vnext/RULE2-01-GREEN.json",
+  "mtc_v2/tests/corrected_vnext/contracts/declared_field_registry.json",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_corrected_config.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_economic_records.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_economics.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_exits_corrected.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_open06_exit_migrations.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_fees.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_quantity_guard.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_position_manager_corrected.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_position_sizer_corrected.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_price_alignment_policy.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_results_corrected.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_runner_corrected.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_semantics.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_transition_records.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_verify_bceg.py",
+  "mtc_v2/tests/corrected_vnext/contracts/selftests/test_w285_kernel_remaining.py",
+  "mtc_v2/tests/corrected_vnext/contracts/semantic_coverage_review.schema.json",
+  "mtc_v2/tests/corrected_vnext/contracts/semantic_coverage_review.schema.md",
+  "mtc_v2/tests/corrected_vnext/verify_bceg.py"
+ ],
+ "census_rows": [
+  {
+   "sourcepath": "IBKR_PAPER_BRIDGE/bridge/engine/reconcile.py",
+   "packetpath": "CONSUMER_SOURCE/IBKR_PAPER_BRIDGE/bridge/engine/reconcile.py",
+   "covered_by": [
+    "C5_BRIDGE"
+   ]
+  },
+  {
+   "sourcepath": "IBKR_PAPER_BRIDGE/bridge/engine/types.py",
+   "packetpath": "CONSUMER_SOURCE/IBKR_PAPER_BRIDGE/bridge/engine/types.py",
+   "covered_by": [
+    "C5_BRIDGE"
+   ]
+  },
+  {
+   "sourcepath": "IBKR_PAPER_BRIDGE/bridge/store/db.py",
+   "packetpath": "CONSUMER_SOURCE/IBKR_PAPER_BRIDGE/bridge/store/db.py",
+   "covered_by": [
+    "C5_BRIDGE"
+   ]
+  },
+  {
+   "sourcepath": "IBKR_PAPER_BRIDGE/tests/test_funding_payload_retention.py",
+   "packetpath": "CONSUMER_SOURCE/IBKR_PAPER_BRIDGE/tests/test_funding_payload_retention.py",
+   "covered_by": [
+    "C5_BRIDGE"
+   ]
+  },
+  {
+   "sourcepath": "IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export.py",
+   "packetpath": "CONSUMER_SOURCE/IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export.py",
+   "covered_by": [
+    "C5_BRIDGE"
+   ]
+  },
+  {
+   "sourcepath": "IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export_production.py",
+   "packetpath": "CONSUMER_SOURCE/IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export_production.py",
+   "covered_by": [
+    "C5_BRIDGE"
+   ]
+  },
+  {
+   "sourcepath": "IBKR_PAPER_BRIDGE/tests/test_reconciliation.py",
+   "packetpath": "CONSUMER_SOURCE/IBKR_PAPER_BRIDGE/tests/test_reconciliation.py",
+   "covered_by": [
+    "C5_BRIDGE"
+   ]
+  },
+  {
+   "sourcepath": "IBKR_PAPER_BRIDGE/tests/test_store.py",
+   "packetpath": "CONSUMER_SOURCE/IBKR_PAPER_BRIDGE/tests/test_store.py",
+   "covered_by": [
+    "C5_BRIDGE"
+   ]
+  },
+  {
+   "sourcepath": "IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py",
+   "packetpath": "CONSUMER_SOURCE/IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py",
+   "covered_by": [
+    "C5_BRIDGE"
+   ]
+  },
+  {
+   "sourcepath": "IBKR_PAPER_BRIDGE/tools/smoke_fill.py",
+   "packetpath": "CONSUMER_SOURCE/IBKR_PAPER_BRIDGE/tools/smoke_fill.py",
+   "covered_by": [
+    "C5_BRIDGE"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/signals/range_filter.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/signals/range_filter.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/signals/supertrend.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/signals/supertrend.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_corrected_config.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_corrected_config.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_economic_records.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_economic_records.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_economics.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_economics.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_exits_corrected.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_exits_corrected.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_open06_exit_migrations.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_open06_exit_migrations.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_fees.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_fees.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_quantity_guard.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_quantity_guard.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_position_manager_corrected.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_position_manager_corrected.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_position_sizer_corrected.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_position_sizer_corrected.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_price_alignment_policy.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_price_alignment_policy.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_results_corrected.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_results_corrected.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_runner_corrected.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_runner_corrected.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_semantics.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_semantics.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_transition_records.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_transition_records.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_verify_bceg.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_verify_bceg.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_w285_kernel_remaining.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/contracts/selftests/test_w285_kernel_remaining.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/verify_bceg.py",
+   "packetpath": "CURRENT_SUPPORT/mtc_v2/tests/corrected_vnext/verify_bceg.py",
+   "covered_by": [
+    "C5_MTCTESTS"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_advanced_confirm.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_advanced_confirm.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_capital_block_fix.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_capital_block_fix.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_htf_infrastructure.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_htf_infrastructure.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_l12_ma_filters.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_l12_ma_filters.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_l12_new_filters.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_l12_new_filters.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_l18b_scaffold.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_l18b_scaffold.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_level_retest.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_level_retest.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_plan_b_gates.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_plan_b_gates.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_producer_selection_range_filter.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_producer_selection_range_filter.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_range_filter.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_range_filter.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_runner_debug_metadata.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_runner_debug_metadata.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_runner_metrics_api.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_runner_metrics_api.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_supertrend_smoke.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/test_supertrend_smoke.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/test_band_calculation.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/test_band_calculation.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/test_parity.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/test_parity.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/generate_tw_export_case_suite_v2.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/generate_tw_export_case_suite_v2.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/validate_export_parity.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/05_PARITY/validate_export_parity.py",
+   "covered_by": [
+    "C5_MCC_A"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/parity_oracles/engines/python_engine_runner.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/parity_oracles/engines/python_engine_runner.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/parity_oracles/run_feature_parity.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/parity_oracles/run_feature_parity.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/tests/test_optimizer_post_run_patches.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/tests/test_optimizer_post_run_patches.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/build_feature_factory_v1.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/build_feature_factory_v1.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_12h_backtesting_session.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_12h_backtesting_session.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_big_overnight_multiasset_optimization.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_big_overnight_multiasset_optimization.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_mtc_multidataset_walkforward_optimization.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_mtc_multidataset_walkforward_optimization.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_mtc_overnight_optimization.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_mtc_overnight_optimization.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_worker_scaling_benchmark.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/run_worker_scaling_benchmark.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/runner_metrics_adapter.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/runner_metrics_adapter.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/02_MTC_BACKTEST/parity_compare.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/02_MTC_BACKTEST/parity_compare.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/02_MTC_BACKTEST/run_2025_audit.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/02_MTC_BACKTEST/run_2025_audit.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/p011_gate.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/p011_gate.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/row_arm.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/row_arm.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/stage1_freeze.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/stage1_freeze.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/test_scenario_binding.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/test_scenario_binding.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/test_stage3_oracles.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/test_stage3_oracles.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/12_PARITY_PINETS/generate_tw_export_case_suite_v2.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/12_PARITY_PINETS/generate_tw_export_case_suite_v2.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  },
+  {
+   "sourcepath": "MTC_COMMAND_CENTER/12_PARITY_PINETS/validate_export_parity.py",
+   "packetpath": "CONSUMER_SOURCE/MTC_COMMAND_CENTER/12_PARITY_PINETS/validate_export_parity.py",
+   "covered_by": [
+    "C5_MCC_B_R2"
+   ]
+  }
+ ],
+ "note": "paths normalized by the mtc_v2/ suffix because CAND/ mirrors the core under CAND/mtc_v2/ while the census records the repository sourcepath"
+}

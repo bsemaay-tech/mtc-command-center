@@ -1,0 +1,21 @@
+# DISPOSITION_FIX1 — audit findings 1–13
+
+Subject: `C:/tmp/P026_DRILLS_TA_20260914/`. Audit: `C:/tmp/CLAUDE_P0_RUN_20260913/laneGKDRILL_grok_audit/GROK_DRILL_REPORT.md`. Corrector: grok-4.6. No git. No network. T-A fence unchanged.
+
+| # | severity | disposition | evidence |
+| --- | --- | --- | --- |
+| 1 | CORRECTION | FIXED | `DRILL_RESULTS.md` no longer claims `Deviations: None`. The deviations section lists D-6 named-P026-string unreachability, D-13 GREEN not run, D-14 stub, D-11 OR-branch, D-14 cursor Mapping, D-7 `dir` not run, leftover D-4 runs, and D-9 `ok` having no notifier. |
+| 2 | CORRECTION | FIXED / REBUTTED | Receipt-tamper variant now run: `C:/tmp/P026_DRILLS_TA_20260914/drills/D-6/stdout.txt:4` `stable-prefix receipt state does not match contract` (`p030_closed_partition_backup_adapter.py:315`). Snapshot-only tamper still cannot reach `:727-728`: `_verify_stable_receipt` at `:347` fires first (`stdout.txt:1,3`). Rebuttal is the file:line the brief asked for, not a claim of the P026 message. Target not written (`stdout.txt:2,5`). |
+| 3 | CORRECTION | FIXED | Inner field refusal printed: `C:/tmp/P026_DRILLS_TA_20260914/drills/D-1/stdout.txt:2` `backup config field 'backup_root' must be a non-empty string`. Wrap site cited `stdout.txt:3` `p030_closed_partition_backup_adapter.py:388`. |
+| 4 | CORRECTION | FIXED | D-3b aligned is an inside-file record boundary: `stdout.txt:4` `file_size=1860 high_water_bytes=620 inside_file=True`, `stdout.txt:5` `aligned-OK … record_count=1`. Truncated short-read RED: `stdout.txt:9` `source prefix is truncated below high water`. Mid-record RED unchanged: `stdout.txt:7`. |
+| 5 | CORRECTION | FIXED | Each falsification used a fresh dir (`fixtures/heartbeats_extra`, `heartbeats_fractional`, `heartbeats_recon`, `heartbeats_late`). Fractional case hit UTC-Z grammar (`D-8/stdout.txt:2`). GREEN sidecar `availability=available age_seconds=0` (`stdout.txt:8`). Leftover `fixtures/heartbeats/p030_market_data_collector.hb.json` is P026-shaped (`stdout.txt:9-10`; keys `emitted_at,id,pid,schema,seq`). |
+| 6 | CORRECTION | FIXED | Collector checks at `market_data_collector.py:462-479` all fired: empty page `stdout.txt:3` `snapshot did not fill gap starting at 3600000`; non-advancing `stdout.txt:4` `snapshot cursor made no progress`; residual `stdout.txt:5` `snapshot left 1 bar(s) missing`. GREEN `lines=4` remains `stdout.txt:2`. |
+| 7 | CORRECTION | FIXED | Malformed JSONL variant: `C:/tmp/P026_DRILLS_TA_20260914/drills/D-7/stdout.txt:6` `invalid P026 manifest line 13` (`_decode_strict_jsonl` `:115`). |
+| 8 | CORRECTION | FIXED | EVIDENCE tables rewritten against UTF-8 stdout (no UTF-16). D-4 `run_id` is `stdout.txt:6`; `manifest_exists` is `:10`; record types `:11`; three byte comparisons `:1,:7,:8`; member-set `:15`. D-5 receipt path is `stdout.txt:10`; six identity fields `:14-19`; symlink/type `:21-22`; byte equality `:23`. |
+| 9 | CORRECTION | FIXED | One state dir per case under `fixtures/watchdog_state/{ok,silent,missing_expect,unreadable,bad_timestamp,clock_skew,empty,absent,invalid_now}`. Notifier rows in `D-9/EVIDENCE.md` and stdout, including `_watchdog_check` at `stdout.txt:7,56,63`. Later cases no longer share leftover `bad.hb.json`. |
+| 10 | CORRECTION | FIXED | `SHA256SUMS.txt` regenerated LF over every deliverable including `fixtures/**` and `wt/**` (excluding `tmp/` runtime TEMP and the sums file itself). |
+| 11 | NIT | FIXED | Trailing EVIDENCE rows now include the `observed` column (D-3, D-4, D-8, D-11, D-12, D-14 and the rest). |
+| 12 | NIT | FIXED | Every `drills/D-*/run.py` sets `os.environ["TEMP"]` and `os.environ["TMP"]` to `C:/tmp/P026_DRILLS_TA_20260914/tmp` before any work. D-5 isolated restore path is under that dir: `C:\tmp\P026_DRILLS_TA_20260914\tmp\p030-isolated-restore-_s9sdp8j\…` (`D-5/stdout.txt:1`). |
+| 13 | NIT | FIXED | `DRILL_RESULTS.md` uses per-case outcomes instead of a single GREEN for mixed packets. |
+
+T-A fence: scratch fixtures only; no host; no network; no credential; no schedule; no real evidence store; no send; D-13 RED half only; interpreter `C:/tmp/P020_IMPL_20260912/01a0924d-2c4b-7da1-99e1-24e2a7c7685c/.venv/Scripts/python.exe`; runs from `wt/` copies.

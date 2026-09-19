@@ -1,0 +1,13 @@
+{
+  "window": "P012-S16-G5-C:/tmp/P012_S16_REVIEWS_20260913/P012_INTAKE_S4_GEMINI",
+  "verified_at": "2026-09-16T08:07:31.556563+00:00",
+  "runner_exit": 0,
+  "elapsed_seconds": 296.3,
+  "launch_exit": "exit=0 actual_exit=0 start=2026-09-16T08:02:35.5165644Z end=2026-09-16T08:07:26.5178176Z",
+  "review_log_bytes": 28061,
+  "review_log_sha256": "d21225354a9d3e1373fd3cb4dfbe3c007729e5df8550393372926ee93b6b2d78",
+  "agy_helpers_after": 0,
+  "manifest_sha256_after": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+  "candidate_head_after": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_after": 0
+}

@@ -1,0 +1,6 @@
+a: ERROR ValueError: backup config is not runnable
+a: inner RequiredFieldError: backup config field 'backup_root' must be a non-empty string
+a: wrapped_at p030_closed_partition_backup_adapter.py:388
+b: ERROR ValueError: P030 backup store class must be protected
+c: ERROR ValueError: P030 backup store path must equal the stable prefix
+d: OK p030_closed_partition protected C:\tmp\P026_DRILLS_TA_20260914\fixtures\contract_partition\stable_prefix

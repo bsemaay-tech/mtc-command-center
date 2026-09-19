@@ -1,0 +1,78 @@
+# mutant R1b_unreadable_reads_as_did_not_pay (sha256 5f468e24611ec4f1f9319fb96fac16895fbd8adccd30308c2782a924d4b92596) on the patched tool; HL_* removed from the env; restored to 8c62dd1b8396ce47737d87ba2679396146db09c5da3f5576a0a6ea9c585fc191
+.........................F..                                             [100%]
+================================== FAILURES ===================================
+_ test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-unreadable] _
+
+effect = <function _agent_pays_master_unreadable at 0x0000000004AD2C00>
+result = 'DD06_FINDING_OWN_FUNDS_MOVED', phrase = 'account UNREADABLE'
+absent = 'unchanged'
+
+    @pytest.mark.parametrize(
+        ("effect", "result", "phrase", "absent"),
+        [
+            (
+                _r3_replay,
+                "DD06_FINDING_OWN_FUNDS_MOVED",
+                "the agent moved its own funds",
+                "falsified",
+            ),
+            (
+                _master_pays,
+                "DD06_FINDING_MASTER_FUNDS_MOVED",
+                "DD-06 falsified on testnet",
+                "own funds",
+            ),
+            (
+                _tick_only,
+                "DD06_FINDING_NOT_REFUSED",
+                "no readable balance decreased",
+                "falsified",
+            ),
+            (
+                _nothing,
+                "DD06_FINDING_NOT_REFUSED",
+                "account did not pay, agent wallet did not pay",
+                "falsified",
+            ),
+            (
+                _agent_pays_master_unreadable,
+                "DD06_FINDING_OWN_FUNDS_MOVED",
+                "account UNREADABLE",
+                "unchanged",
+            ),
+        ],
+        ids=[
+            "r3-replay",
+            "master-pays",
+            "mark-to-market-tick",
+            "nothing-moves",
+            "agent-pays-master-unreadable",
+        ],
+    )
+    def test_not_refused_fund_arm_names_whose_funds_left(effect, result, phrase, absent):
+        # second exact-Opus read of a46b2a9d, R-1: attribution is directional (a DECREASE) and amount-aware;
+        # replaying r3's real readings must NOT print the breach sentence, and an unreadable side is named as
+        # unreadable, never as unchanged
+        info = _BalancesInfo()
+        exchange = _leaky_exchange(info, effect)
+        record = probe.run_probe(
+            record=_record(),
+            info=info,
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+            agent_address=AGENT,
+        )
+        assert record.result == result
+>       assert phrase in record.finding
+E       assert 'account UNREADABLE' in "spotSend was NOT refused and the AGENT wallet's own balance DECREASED while the account's readable balances did not: the agent moved its own funds (r3 shape; not the DD-06 breach) [account did not pay, agent wallet paid]"
+E        +  where "spotSend was NOT refused and the AGENT wallet's own balance DECREASED while the account's readable balances did not: the agent moved its own funds (r3 shape; not the DD-06 breach) [account did not pay, agent wallet paid]" = ProbeRecord(run_id='dd06-test', network='testnet', account_address_redacted='[redacted-address]', agent_address_redact...nces did not: the agent moved its own funds (r3 shape; not the DD-06 breach) [account did not pay, agent wallet paid]").finding
+
+tests\test_dd06_agent_withdraw_probe.py:658: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[agent-pays-master-unreadable]
+1 failed, 27 passed in 0.68s
+
+
+exit=1
+tripwire_hit=False

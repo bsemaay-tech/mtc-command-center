@@ -1,0 +1,24 @@
+﻿node.exe : Reading additional input from stdin...
+At C:\Users\BarışSemaay\AppData\Roaming\npm\codex.ps1:24 char:5
++     & "node$exe"  "$basedir/node_modules/@openai/codex/bin/codex.js"  ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Reading additional input from stdin...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+OpenAI Codex v0.145.0
+--------
+workdir: C:\tmp\CODEX_PROBE_20260915
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 01a0a3b3-e1a0-7591-85ce-ec21cb3baa2e
+--------
+user
+Reply with exactly the single word OK and nothing else. Do not read files or run commands.
+ERROR: You've hit your usage limit. Upgrade to Plus to continue using Codex (https://chatgpt.com/explore/plus), or try 
+again at Oct 6th, 2026 2:29 PM.
+ERROR: You've hit your usage limit. Upgrade to Plus to continue using Codex (https://chatgpt.com/explore/plus), or try 
+again at Oct 6th, 2026 2:29 PM.

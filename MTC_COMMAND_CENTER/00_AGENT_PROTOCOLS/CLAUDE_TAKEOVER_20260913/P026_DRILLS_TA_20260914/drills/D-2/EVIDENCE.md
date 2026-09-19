@@ -1,0 +1,6 @@
+| evidence item from the packet | observed | file:line or artefact path | GREEN / RED-as-expected / NOT OBSERVED |
+| --- | --- | --- | --- |
+| JSON header (`mode: dry-run`) | `{"mode": "dry-run", "run_id": "opsa-20260914T061918.813Z", ...}` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-2/stdout.txt:1` | GREEN |
+| PLAN line per file with size and SHA-256 prefix | `PLAN  p030_closed_partition/README.txt size=17 sha256=30412a6fc0b2935a…` and `PLAN  p030_closed_partition/nested/subdir/sample.bin size=10 sha256=3957a235fae21472…` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-2/stdout.txt:2` `C:/tmp/P026_DRILLS_TA_20260914/drills/D-2/stdout.txt:3` | GREEN |
+| JSON footer `status: ok, files: 0, bytes: 0` | `{"run_id": "opsa-20260914T061918.813Z", "status": "ok", "files": 0, "bytes": 0, "errors": 0, ...}` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-2/stdout.txt:4` | GREEN |
+| no run directory and no manifest record | independent listing of `fixtures/backup_root_d2`: `listing=[]`, `has_runs=False`, `has_manifest=False` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-2/stdout.txt:5` `C:/tmp/P026_DRILLS_TA_20260914/drills/D-2/stdout.txt:6` `C:/tmp/P026_DRILLS_TA_20260914/drills/D-2/stdout.txt:7` `C:/tmp/P026_DRILLS_TA_20260914/fixtures/backup_root_d2` | GREEN |

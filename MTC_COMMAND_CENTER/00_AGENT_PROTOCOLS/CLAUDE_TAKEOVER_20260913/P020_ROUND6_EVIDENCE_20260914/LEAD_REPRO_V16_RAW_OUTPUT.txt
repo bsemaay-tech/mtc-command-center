@@ -1,0 +1,31 @@
+# LEAD_REPRODUCTION_V16 — 2026-09-14T16:13:22.940527+00:00 — scratch C:\tmp\P020_PRESELECT_LEAD_REPRO_V16_20260914
+S SHA256SUMS: 13 OK / 0 bad
+1 pytest tests: rc=0 :: 106 passed in 4.05s
+2.1 --freeze rc=0 digest=cb75602080850873e28dc3aa268ad1072a0f1d50148d91ad75c9896cf37fb126 tail=LIMITATION SHORT_CALIBRATION_WINDOW_1D 1D rows 2049-2409 (361 rows, 161 usable after 200-bar warmup) -- accepted by owner decision D1 Option A, 2026-09-13
+2.2 --freeze rc=0 digest=cb75602080850873e28dc3aa268ad1072a0f1d50148d91ad75c9896cf37fb126 tail=LIMITATION SHORT_CALIBRATION_WINDOW_1D 1D rows 2049-2409 (361 rows, 161 usable after 200-bar warmup) -- accepted by owner decision D1 Option A, 2026-09-13
+2 freeze deterministic: True; equals builder cb756020…: True; equals package file: True
+3 V3 vs V2 top-level diffs: ['provenance', 'quantity_step', 'record_id']; provenance diffs: ['quantity_step_correction']; V3 quantity_step=1e-05 record_id=SYNTH-P020-BOUNDED-INSTRUMENT-V3 min_qty=0 min_notional=0 interval={'end_exclusive': '2026-05-01T00:00:00Z', 'start_inclusive': '2019-09-08T00:00:00Z'}
+3 V3 sha256=69b6f246ad721ccfde23f87c0b21b6470b8fb75b88552bfad004ef8c69d557f9 sidecar=69b6f246ad721ccfde23f87c0b21b6470b8fb75b88552bfad004ef8c69d557f9; V2 sha unchanged=True
+4 V1.5 repro frozen sha=b75489841a096f6f7271b12880c10cc318cfc25c8f19f7dedc8711baaefdc17b (expect b7548984…)
+4 frozen keys differing V1.5->V1.6: ['artifact_version', 'instrument_record_interval', 'prereg_sha256', 'procedure_code_sha256', 'runbook_sha256', 'source_pins', 'supersedes']
+4   family_order: EQUAL
+4   selection_rule: EQUAL
+4   calibration_windows: EQUAL
+4   measurement_inputs: EQUAL
+4   source_pins differing entries: ['BENCHMARK_PLAN.json', 'run_bounded_benchmark.py']
+6 benchmark tests rc=0 :: 5 passed in 0.07s
+6 --validate-plan rc=0 :: PLAN_VALID: frozen manifest, selections, hashes, and 15-trial shape verified
+6 plan instrument path(s) mentioning INSTRUMENT: ['C:/tmp/P020_LEAD_20260912/benchmark/SYNTH-P020-BOUNDED-INSTRUMENT-V3.json']
+7 derive tests rc=2 :: 1 error in 0.23s
+7 derive EXPECTED_FROZEN_SHA256=cb75602080850873e28dc3aa268ad1072a0f1d50148d91ad75c9896cf37fb126 equals V1.6: True
+7 (rerun with the builder's exact command 'pytest tests'): 15 passed in 0.25s
+7 note: bare 'pytest -q' (no path) hit a PermissionError collecting a sandbox-owned tmp/pytest-of-* dir left by the Codex lane; not a package defect
+frozen artifact_version: p020-preselection-frozen-v1.6 sha256: cb75602080850873
+preflight verify_frozen_identity: OK; 19 pins checked; instrument pin: SYNTH-P020-BOUNDED-INSTRUMENT-V3.json
+smoke family (family_order[0]): GEN_TRIPLE_EMA_STACK
+  15m: rows 2049-4096 -> TRADE-BEARING (0.03s)
+   1h: rows 2049-4096 -> TRADE-BEARING (0.02s)
+   2h: rows 2049-4096 -> TRADE-BEARING (0.03s)
+   4h: rows 2049-4096 -> TRADE-BEARING (0.07s)
+   1D: rows 2049-2409 -> BLOCKED: BENCHMARK_PROFILE_BLOCKED: no actual trade-bearing 2.1.0 successor result for leadsmoke-GEN_TRIPLE_EMA_STACK-1 (0.01s)
+done 2026-09-14T16:15:44.157246+00:00

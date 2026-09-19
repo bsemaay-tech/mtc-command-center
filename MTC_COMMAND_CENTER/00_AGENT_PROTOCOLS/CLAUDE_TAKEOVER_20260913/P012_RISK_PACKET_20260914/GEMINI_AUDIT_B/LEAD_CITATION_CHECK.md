@@ -1,0 +1,303 @@
+# LEAD_CITATION_CHECK — corrected P012 packet (sha256 50a6cbbc939016eba54f559da51c63e6940c2c5b858306862ac4bb27c178f4c4), mechanical, read-only
+
+Citations found: 235; distinct path:line: 115
+
+Status counts: EQUAL=177, LINE_EXISTS=57, QUOTE_NOT_FOUND=1
+
+## Non-EQUAL rows (packet line | source file | cited line | status | quote head)
+- 17 | TASK.md | 11 | QUOTE_NOT_FOUND | The owner said "TESTNET GO" today; KVM2 status at 08:40Z: service active, `DISARMED`, `mod
+- 80 | 03_PRODUCTION_CLOSURE_MATRIX.md | 11 | LINE_EXISTS(no quote to compare) | 
+- 81 | 03_PRODUCTION_CLOSURE_MATRIX.md | 12 | LINE_EXISTS(no quote to compare) | 
+- 82 | 03_PRODUCTION_CLOSURE_MATRIX.md | 13 | LINE_EXISTS(no quote to compare) | 
+- 83 | 03_PRODUCTION_CLOSURE_MATRIX.md | 14 | LINE_EXISTS(no quote to compare) | 
+- 84 | 03_PRODUCTION_CLOSURE_MATRIX.md | 15 | LINE_EXISTS(no quote to compare) | 
+- 85 | 03_PRODUCTION_CLOSURE_MATRIX.md | 16 | LINE_EXISTS(no quote to compare) | 
+- 86 | 03_PRODUCTION_CLOSURE_MATRIX.md | 17 | LINE_EXISTS(no quote to compare) | 
+- 87 | 03_PRODUCTION_CLOSURE_MATRIX.md | 18 | LINE_EXISTS(no quote to compare) | 
+- 88 | 03_PRODUCTION_CLOSURE_MATRIX.md | 19 | LINE_EXISTS(no quote to compare) | 
+- 89 | 03_PRODUCTION_CLOSURE_MATRIX.md | 20 | LINE_EXISTS(no quote to compare) | 
+- 114 | 03_PRODUCTION_CLOSURE_MATRIX.md | 30 | LINE_EXISTS(no quote to compare) | 
+- 115 | 03_PRODUCTION_CLOSURE_MATRIX.md | 31 | LINE_EXISTS(no quote to compare) | 
+- 116 | 03_PRODUCTION_CLOSURE_MATRIX.md | 32 | LINE_EXISTS(no quote to compare) | 
+- 117 | 03_PRODUCTION_CLOSURE_MATRIX.md | 33 | LINE_EXISTS(no quote to compare) | 
+- 118 | 03_PRODUCTION_CLOSURE_MATRIX.md | 34 | LINE_EXISTS(no quote to compare) | 
+- 119 | 03_PRODUCTION_CLOSURE_MATRIX.md | 35 | LINE_EXISTS(no quote to compare) | 
+- 120 | 03_PRODUCTION_CLOSURE_MATRIX.md | 36 | LINE_EXISTS(no quote to compare) | 
+- 121 | 03_PRODUCTION_CLOSURE_MATRIX.md | 37 | LINE_EXISTS(no quote to compare) | 
+- 122 | 03_PRODUCTION_CLOSURE_MATRIX.md | 38 | LINE_EXISTS(no quote to compare) | 
+- 123 | 03_PRODUCTION_CLOSURE_MATRIX.md | 39 | LINE_EXISTS(no quote to compare) | 
+- 124 | 03_PRODUCTION_CLOSURE_MATRIX.md | 40 | LINE_EXISTS(no quote to compare) | 
+- 125 | 03_PRODUCTION_CLOSURE_MATRIX.md | 41 | LINE_EXISTS(no quote to compare) | 
+- 126 | 03_PRODUCTION_CLOSURE_MATRIX.md | 42 | LINE_EXISTS(no quote to compare) | 
+- 127 | 03_PRODUCTION_CLOSURE_MATRIX.md | 43 | LINE_EXISTS(no quote to compare) | 
+- 128 | 03_PRODUCTION_CLOSURE_MATRIX.md | 44 | LINE_EXISTS(no quote to compare) | 
+- 129 | 03_PRODUCTION_CLOSURE_MATRIX.md | 45 | LINE_EXISTS(no quote to compare) | 
+- 130 | 03_PRODUCTION_CLOSURE_MATRIX.md | 46 | LINE_EXISTS(no quote to compare) | 
+- 131 | 03_PRODUCTION_CLOSURE_MATRIX.md | 47 | LINE_EXISTS(no quote to compare) | 
+- 132 | 03_PRODUCTION_CLOSURE_MATRIX.md | 48 | LINE_EXISTS(no quote to compare) | 
+- 133 | 03_PRODUCTION_CLOSURE_MATRIX.md | 49 | LINE_EXISTS(no quote to compare) | 
+- 134 | 03_PRODUCTION_CLOSURE_MATRIX.md | 50 | LINE_EXISTS(no quote to compare) | 
+- 135 | 03_PRODUCTION_CLOSURE_MATRIX.md | 51 | LINE_EXISTS(no quote to compare) | 
+- 136 | 03_PRODUCTION_CLOSURE_MATRIX.md | 52 | LINE_EXISTS(no quote to compare) | 
+- 137 | 03_PRODUCTION_CLOSURE_MATRIX.md | 53 | LINE_EXISTS(no quote to compare) | 
+- 174 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 375 | LINE_EXISTS(no quote to compare) | 
+- 174 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 403 | LINE_EXISTS(no quote to compare) | 
+- 174 | LEAD_NOTE.md | 10 | LINE_EXISTS(no quote to compare) | 
+- 175 | PATH_D_DECISION_SIGNED_20260912.md | 7 | LINE_EXISTS(no quote to compare) | 
+- 175 | PATH_D_DECISION_PACKET.md | 94 | LINE_EXISTS(no quote to compare) | 
+- 175 | LEAD_NOTE.md | 10 | LINE_EXISTS(no quote to compare) | 
+- 176 | PATH_D_DECISION_SIGNED_20260912.md | 6 | LINE_EXISTS(no quote to compare) | 
+- 176 | PATH_D_DECISION_PACKET.md | 71 | LINE_EXISTS(no quote to compare) | 
+- 176 | LEAD_NOTE.md | 10 | LINE_EXISTS(no quote to compare) | 
+- 177 | PATH_D_DECISION_SIGNED_20260912.md | 7 | LINE_EXISTS(no quote to compare) | 
+- 177 | PATH_D_DECISION_PACKET.md | 103 | LINE_EXISTS(no quote to compare) | 
+- 177 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 202 | LINE_EXISTS(no quote to compare) | 
+- 177 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 203 | LINE_EXISTS(no quote to compare) | 
+- 178 | PATH_D_DECISION_SIGNED_20260912.md | 6 | LINE_EXISTS(no quote to compare) | 
+- 178 | PATH_D_DECISION_PACKET.md | 70 | LINE_EXISTS(no quote to compare) | 
+- 178 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 211 | LINE_EXISTS(no quote to compare) | 
+- 178 | PATH_D_DECISION_PACKET.md | 63 | LINE_EXISTS(no quote to compare) | 
+- 179 | REVIEW_POLICY.md | 73 | LINE_EXISTS(no quote to compare) | 
+- 179 | REVIEW_POLICY.md | 74 | LINE_EXISTS(no quote to compare) | 
+- 179 | REVIEW_POLICY.md | 75 | LINE_EXISTS(no quote to compare) | 
+- 179 | PATH_D_DECISION_PACKET.md | 164 | LINE_EXISTS(no quote to compare) | 
+- 179 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 144 | LINE_EXISTS(no quote to compare) | 
+- 179 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 212 | LINE_EXISTS(no quote to compare) | 
+
+## All rows
+
+- 5 | LEAD_NOTE.md | 10 | EQUAL | - **Production admission is NOT granted.** All 10 Section-19 OPEN rows, the 27 signed risk
+- 6 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 28 | EQUAL | - **Class B — explicitly open production-admission follow-up.** Class B rows are *not* clo
+- 7 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 29 | EQUAL |   waived, weakened or reinterpreted by this amendment. Each carries its evidence requireme
+- 8 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 32 | EQUAL | A row being Class B never means "resolved
+- 9 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 33 | EQUAL | still open
+- 10 | REVIEW_POLICY.md | 73 | EQUAL | Add a bounded specialist review for the first kernel, first live release, major security c
+- 11 | REVIEW_POLICY.md | 74 | EQUAL | or serious unresolved disagreement; name the question and stop condition. An experienced e
+- 12 | REVIEW_POLICY.md | 75 | EQUAL | reviews before the first money-exposed release, not every package. These checks do not con
+- 13 | REVIEW_POLICY.md | 76 | EQUAL | live-trading authority or replace exact protected acceptance contracts.
+- 17 | TASK.md | 11 | QUOTE_NOT_FOUND | The owner said "TESTNET GO" today; KVM2 status at 08:40Z: service active, `DISARMED`, `mod
+- 18 | 06_HYPERLIQUID_SETUP.md | 1 | EQUAL | # 06 — Hyperliquid Setup Checklist (testnet = paper)
+- 19 | 06_HYPERLIQUID_SETUP.md | 14 | EQUAL | | | Testnet (paper) | Mainnet (real money) |
+- 20 | 06_HYPERLIQUID_SETUP.md | 16 | EQUAL | | Money | Fake (faucet USDC) | Real |
+- 21 | 06_HYPERLIQUID_SETUP.md | 19 | EQUAL | | Use for | ALL of v1 (P0-P3) | never in v1 |
+- 22 | 06_HYPERLIQUID_SETUP.md | 21 | EQUAL | Do everything below on **testnet**.
+- 24 | 06_HYPERLIQUID_SETUP.md | 37 | EQUAL | Do NOT put your main wallet private key in the bridge. Hyperliquid supports **API wallets*
+- 25 | 06_HYPERLIQUID_SETUP.md | 38 | EQUAL | (a.k.a. agent wallets): a delegated key that can place/cancel orders **but cannot withdraw
+- 26 | 06_HYPERLIQUID_SETUP.md | 45 | EQUAL | 4. The bridge signs orders with the API wallet key and references the main account address
+- 27 | 06_HYPERLIQUID_SETUP.md | 46 | EQUAL |    the API wallet cannot withdraw, even a fully compromised bridge cannot move your funds.
+- 28 | 06_HYPERLIQUID_SETUP.md | 47 | EQUAL |    the single most important safety property — never use the main wallet key.**
+- 30 | README.md | 137 | EQUAL | ## Gate order (none of which this directory grants)
+- 31 | README.md | 141 | EQUAL | 3. KVM2-P4-03 — owner separately authorizes TESTNET-only secret provisioning.
+- 32 | README.md | 145 | EQUAL | 5. KVM2-P4-06 — owner authorizes exactly one first DISARMED start;
+- 33 | README.md | 146 | EQUAL |    KVM2-P4-07 executes it once (`systemctl unmask` then `systemctl start`).
+- 34 | README.md | 147 | EQUAL | 6. KVM2-P4-08 — rollback proof. KVM2-P4-08A/B — any recovery start.
+- 35 | README.md | 148 | EQUAL | 7. KVM2-P5-05/P5-05A — ARM, separately, once, never implied by any of the above.
+- 36 | COMMANDS.md | 98 | EQUAL | Gate: **KVM2-P4-03** — owner-only, separate from P4-01/P4-02, TESTNET only.
+- 37 | COMMANDS.md | 100 | EQUAL | Not scripted here on purpose. The values are typed by the owner into
+- 38 | COMMANDS.md | 101 | EQUAL | `/etc/mtc-bridge/mtc-bridge.env` (already `0600 root:root`) through an editor on
+- 39 | COMMANDS.md | 102 | EQUAL | a trusted session. Names are listed in `env/mtc-bridge.env.template`.
+- 40 | COMMANDS.md | 263 | EQUAL | ARM (KVM2-P5-05/P5-05A), monitoring and backup provider provisioning
+- 41 | COMMANDS.md | 265 | EQUAL | mainnet action. Each needs its own owner sentence, and none of them is implied
+- 42 | COMMANDS.md | 266 | EQUAL | by completing every stage above.
+- 44 | PATH_D_DECISION_PACKET.md | 25 | EQUAL | "Path 1" (self-observation on the owner's own account) is the complement: it supplies real
+- 45 | PATH_D_DECISION_SIGNED_20260912.md | 11 | EQUAL | no deploy/live/TESTNET/mainnet/ARM/order/spend authority; T0 reviews, R29 redo, ratificati
+- 46 | PATH_D_DECISION_PACKET.md | 191 | EQUAL | Standing exclusions, unchanged by this signature
+- 47 | PATH_D_DECISION_PACKET.md | 192 | EQUAL |  - No deploy, live trading, TESTNET/mainnet contact, ARM, order placement, wallet or trans
+- 48 | PATH_D_DECISION_PACKET.md | 193 | EQUAL |    authority arises from this document. Path 1 needs its own separate explicit authorizati
+- 50 | PATH_D_DECISION_SIGNED_20260912.md | 6 | EQUAL | A. Funding   APPROVE   A1=A  A2=B (M PENDING, separate decision after N observations)  A3=
+- 51 | PATH_D_DECISION_SIGNED_20260912.md | 7 | EQUAL | B. Fees      APPROVE   B1=C  B2=C (5% rel; alt max(5%, 1e-6 USDC))  B3=B  B4=A   N=3 (make
+- 52 | PATH_D_DECISION_PACKET.md | 70 | EQUAL | | **A1** | Admission window | Forward-only: only settlements captured live on the owner's 
+- 53 | PATH_D_DECISION_PACKET.md | 71 | EQUAL | | **A2** | Magnitude guard | No cap | Cap at M × the largest own-account observed rate (M 
+- 54 | PATH_D_DECISION_PACKET.md | 103 | EQUAL | | **B3** | Effective interval start | Keep `2026-09-06T14:00:30Z` and accept unevidenced b
+- 55 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 211 | EQUAL | | **PD-FUND-START** | `CONTROL_RECONCILIATION.md:29`; `REAL_OBSERVATION_INTAKE.md:31`; `…S
+- 57 | PATH_D_DECISION_SIGNED_20260912.md | 7 | EQUAL | B. Fees      APPROVE   B1=C  B2=C (5% rel; alt max(5%, 1e-6 USDC))  B3=B  B4=A   N=3 (make
+- 58 | PATH_D_DECISION_PACKET.md | 94 | EQUAL | - **Evidence still required before admission:** N authenticated own-account native-BTC fil
+- 60 | PATH_D_DECISION_PACKET.md | 47 | EQUAL | **Current status.** Control-table row *Funding F13–22 / OPEN05,07* — `BLOCKED: production 
+- 61 | PATH_D_DECISION_PACKET.md | 61 | EQUAL | - **Refusals kept:** no oracle value is admitted, derived or back-calculated [FF:80]; the 
+- 62 | PATH_D_DECISION_PACKET.md | 63 | EQUAL | - **Evidence still required before admission:** authenticated capture bytes with a digest 
+- 63 | PATH_D_DECISION_PACKET.md | 64 | EQUAL | - **Residual risk:** the Bridge accepts the venue's arithmetic without any independent rev
+- 65 | TASK.md | 17 | EQUAL | 2. **The evidence pipeline in plain steps**: what TESTNET GO starts; what a testnet captur
+- 66 | PATH_D_DECISION_PACKET.md | 64 | EQUAL | - **Residual risk:** the Bridge accepts the venue's arithmetic without any independent rev
+- 67 | PATH_D_DECISION_PACKET.md | 250 | EQUAL | **Where sources are silent** (not filled in anywhere above): the funding settlement formul
+- 68 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 367 | EQUAL |     position value
+- 70 | MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md | 400 | EQUAL | ### WP-P0-12 · Kernel `CORRECTED_VNEXT` (M7b)
+- 71 | MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md | 405 | EQUAL | - **Protected surfaces:** **the strategy kernel.** · **Audit tier:** **T0**.
+- 72 | MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md | 406 | EQUAL | - **Acceptance gate:** **no undocumented behavioural difference exists between P0-11 and P
+- 73 | MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md | 407 | EQUAL | - **Non-goals:** no new features; no optimization; no runtime wiring.
+- 74 | MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md | 1069 | EQUAL | | **G3-K — Kernel, canonical simulator, and the T0 evidence gates that bless them** | **WP
+- 80 | 03_PRODUCTION_CLOSURE_MATRIX.md | 11 | LINE_EXISTS(no quote to compare) | 
+- 81 | 03_PRODUCTION_CLOSURE_MATRIX.md | 12 | LINE_EXISTS(no quote to compare) | 
+- 82 | 03_PRODUCTION_CLOSURE_MATRIX.md | 13 | LINE_EXISTS(no quote to compare) | 
+- 83 | 03_PRODUCTION_CLOSURE_MATRIX.md | 14 | LINE_EXISTS(no quote to compare) | 
+- 84 | 03_PRODUCTION_CLOSURE_MATRIX.md | 15 | LINE_EXISTS(no quote to compare) | 
+- 85 | 03_PRODUCTION_CLOSURE_MATRIX.md | 16 | LINE_EXISTS(no quote to compare) | 
+- 86 | 03_PRODUCTION_CLOSURE_MATRIX.md | 17 | LINE_EXISTS(no quote to compare) | 
+- 87 | 03_PRODUCTION_CLOSURE_MATRIX.md | 18 | LINE_EXISTS(no quote to compare) | 
+- 88 | 03_PRODUCTION_CLOSURE_MATRIX.md | 19 | LINE_EXISTS(no quote to compare) | 
+- 89 | 03_PRODUCTION_CLOSURE_MATRIX.md | 20 | LINE_EXISTS(no quote to compare) | 
+- 92 | 03_PRODUCTION_CLOSURE_MATRIX.md | 11 | EQUAL | | OPEN-01 | Hyperliquid perp BTC from frozen doc set; record APPROVED (add. 16 row 42) | m
+- 93 | 03_PRODUCTION_CLOSURE_MATRIX.md | 12 | EQUAL | | OPEN-02 | STOP_FIRST mandatory same-bar policy (add. 15 row 32) | Reuse existing bounded
+- 94 | 03_PRODUCTION_CLOSURE_MATRIX.md | 13 | EQUAL | | OPEN-03 | fee table v1.1 + ADOPTED CLASS MAPPING (add. 16 row 43) | margin-call/liquidat
+- 95 | 03_PRODUCTION_CLOSURE_MATRIX.md | 14 | EQUAL | | OPEN-04 | `BPS_OF_REFERENCE_V1`, `slippage_bps = 0` explicit zero (add. 15 row 38) | non
+- 96 | 03_PRODUCTION_CLOSURE_MATRIX.md | 15 | EQUAL | | OPEN-05 | funding rules APPROVED + same-timestamp snapshot INCLUDE (add. 16 row 42, 17 r
+- 97 | 03_PRODUCTION_CLOSURE_MATRIX.md | 16 | EQUAL | | OPEN-06 | RETAIN ALL P01-P03/P05-P18/P24-P26; P04 RETIRE, P19 RETIRE, P20 RETAIN, P21 RE
+- 98 | 03_PRODUCTION_CLOSURE_MATRIX.md | 17 | EQUAL | | OPEN-07 | mapping APPROVED as closure evidence; unmapped fields + deployed-v4 non-materi
+- 99 | 03_PRODUCTION_CLOSURE_MATRIX.md | 18 | EQUAL | | OPEN-08 | no additional bounds (add. 15 row 33) | Reuse existing bounded fixture evidenc
+- 100 | 03_PRODUCTION_CLOSURE_MATRIX.md | 19 | EQUAL | | OPEN-09 | additive result/event schema (add. 15 row 34); build authorization = add. 16 T
+- 101 | 03_PRODUCTION_CLOSURE_MATRIX.md | 20 | EQUAL | | OPEN-10 | guards keep GROSS-MINUS-FEES (add. 15 row 35) | Reuse existing bounded fixture
+- 102 | 03_PRODUCTION_CLOSURE_MATRIX.md | 7 | EQUAL | All ten are disposition `APPLICABLE` and **formally OPEN for production** even though each
+- 103 | 03_PRODUCTION_CLOSURE_MATRIX.md | 59 | EQUAL | - **Human review contract preserved exactly.** OPEN-01 expressly references section-16 hum
+- 104 | 03_PRODUCTION_CLOSURE_MATRIX.md | 62 | EQUAL | - **Overlap** (27 risks vs 10 OPEN rows) is mapped, not counted as closure: OPEN-01→I-1..I
+- 109 | 03_PRODUCTION_CLOSURE_MATRIX.md | 26 | EQUAL | Numbering preserved. Source: `PRIOR_CHECKLIST.md:23-48`; residual inventory `semantic_cove
+- 110 | 03_PRODUCTION_CLOSURE_MATRIX.md | 53 | EQUAL | | 24–27 | run-manifest digests + effective intervals | **four retained shared requirements
+- 114 | 03_PRODUCTION_CLOSURE_MATRIX.md | 30 | LINE_EXISTS(no quote to compare) | 
+- 115 | 03_PRODUCTION_CLOSURE_MATRIX.md | 31 | LINE_EXISTS(no quote to compare) | 
+- 116 | 03_PRODUCTION_CLOSURE_MATRIX.md | 32 | LINE_EXISTS(no quote to compare) | 
+- 117 | 03_PRODUCTION_CLOSURE_MATRIX.md | 33 | LINE_EXISTS(no quote to compare) | 
+- 118 | 03_PRODUCTION_CLOSURE_MATRIX.md | 34 | LINE_EXISTS(no quote to compare) | 
+- 119 | 03_PRODUCTION_CLOSURE_MATRIX.md | 35 | LINE_EXISTS(no quote to compare) | 
+- 120 | 03_PRODUCTION_CLOSURE_MATRIX.md | 36 | LINE_EXISTS(no quote to compare) | 
+- 121 | 03_PRODUCTION_CLOSURE_MATRIX.md | 37 | LINE_EXISTS(no quote to compare) | 
+- 122 | 03_PRODUCTION_CLOSURE_MATRIX.md | 38 | LINE_EXISTS(no quote to compare) | 
+- 123 | 03_PRODUCTION_CLOSURE_MATRIX.md | 39 | LINE_EXISTS(no quote to compare) | 
+- 124 | 03_PRODUCTION_CLOSURE_MATRIX.md | 40 | LINE_EXISTS(no quote to compare) | 
+- 125 | 03_PRODUCTION_CLOSURE_MATRIX.md | 41 | LINE_EXISTS(no quote to compare) | 
+- 126 | 03_PRODUCTION_CLOSURE_MATRIX.md | 42 | LINE_EXISTS(no quote to compare) | 
+- 127 | 03_PRODUCTION_CLOSURE_MATRIX.md | 43 | LINE_EXISTS(no quote to compare) | 
+- 128 | 03_PRODUCTION_CLOSURE_MATRIX.md | 44 | LINE_EXISTS(no quote to compare) | 
+- 129 | 03_PRODUCTION_CLOSURE_MATRIX.md | 45 | LINE_EXISTS(no quote to compare) | 
+- 130 | 03_PRODUCTION_CLOSURE_MATRIX.md | 46 | LINE_EXISTS(no quote to compare) | 
+- 131 | 03_PRODUCTION_CLOSURE_MATRIX.md | 47 | LINE_EXISTS(no quote to compare) | 
+- 132 | 03_PRODUCTION_CLOSURE_MATRIX.md | 48 | LINE_EXISTS(no quote to compare) | 
+- 133 | 03_PRODUCTION_CLOSURE_MATRIX.md | 49 | LINE_EXISTS(no quote to compare) | 
+- 134 | 03_PRODUCTION_CLOSURE_MATRIX.md | 50 | LINE_EXISTS(no quote to compare) | 
+- 135 | 03_PRODUCTION_CLOSURE_MATRIX.md | 51 | LINE_EXISTS(no quote to compare) | 
+- 136 | 03_PRODUCTION_CLOSURE_MATRIX.md | 52 | LINE_EXISTS(no quote to compare) | 
+- 137 | 03_PRODUCTION_CLOSURE_MATRIX.md | 53 | LINE_EXISTS(no quote to compare) | 
+- 140 | 03_PRODUCTION_CLOSURE_MATRIX.md | 30 | EQUAL | | I-1 | instrument `/status` | addendum-16 selection applied; admission still refused | re
+- 141 | 03_PRODUCTION_CLOSURE_MATRIX.md | 31 | EQUAL | | I-2 | `/price_tick` | scalar `null`; typed policy `HYPERLIQUID_PX_V1` implemented | Scal
+- 142 | 03_PRODUCTION_CLOSURE_MATRIX.md | 32 | EQUAL | | I-3 | `/minimum_quantity` | `null`; `minimum_notional: 10`, `quantity_step: 0.00001`; no
+- 143 | 03_PRODUCTION_CLOSURE_MATRIX.md | 33 | EQUAL | | I-4 | instrument human reviewer | `human_reviewer: null` (key present) | real **qualifie
+- 144 | 03_PRODUCTION_CLOSURE_MATRIX.md | 34 | EQUAL | | I-5 | aggregate source fingerprint | implemented + verified (`source_sha256 = da2bf1fe…`
+- 145 | 03_PRODUCTION_CLOSURE_MATRIX.md | 35 | EQUAL | | C-6 | cost effective interval | start implemented (`2026-09-06T14:00:30Z`) | historical 
+- 146 | 03_PRODUCTION_CLOSURE_MATRIX.md | 36 | EQUAL | | C-7 | fee rounding rule | KEEP_REFUSED; absence proof attached | authoritative precision
+- 147 | 03_PRODUCTION_CLOSURE_MATRIX.md | 37 | EQUAL | | C-8 | fixed component | KEEP_REFUSED; absence proof | authoritative applicability/absenc
+- 148 | 03_PRODUCTION_CLOSURE_MATRIX.md | 38 | EQUAL | | C-9 | minimum fee | KEEP_REFUSED; absence proof | authoritative minimum/application gran
+- 149 | 03_PRODUCTION_CLOSURE_MATRIX.md | 39 | EQUAL | | C-10 | account tier evidence | collected, not incorporated | historical coverage + actua
+- 150 | 03_PRODUCTION_CLOSURE_MATRIX.md | 40 | EQUAL | | C-11 | liquidation class | CANNOT_MAP refusal (`MARGIN_CALL_LIQUIDATION`) | complete app
+- 151 | 03_PRODUCTION_CLOSURE_MATRIX.md | 41 | EQUAL | | C-12 | cost human reviewer | key absent (not null) | real **qualified** human review | r
+- 152 | 03_PRODUCTION_CLOSURE_MATRIX.md | 42 | EQUAL | | F-13 | funding effective interval | `null` | complete period + interval semantics | venu
+- 153 | 03_PRODUCTION_CLOSURE_MATRIX.md | 43 | EQUAL | | F-14 | funding events | `null`; `REFUSED_MISSING_PRODUCTION_FUNDING_EVENTS` | complete a
+- 154 | 03_PRODUCTION_CLOSURE_MATRIX.md | 44 | EQUAL | | F-15 | event timestamp | 4 raw stamps (+31–53 ms) collected, not admitted | payment/inte
+- 155 | 03_PRODUCTION_CLOSURE_MATRIX.md | 45 | EQUAL | | F-16 | funding event ID | none admitted | source-bound unique identity + dedup/exact-onc
+- 156 | 03_PRODUCTION_CLOSURE_MATRIX.md | 46 | EQUAL | | F-17 | raw rate | 4 rows `0.0000125`, not admitted | bind authoritative rates to admitte
+- 157 | 03_PRODUCTION_CLOSURE_MATRIX.md | 47 | EQUAL | | F-18 | positive-rate payer | `LONG` rule implemented; no per-event objects | proven conv
+- 158 | 03_PRODUCTION_CLOSURE_MATRIX.md | 48 | EQUAL | | F-19 | oracle price | 3 samples; no settlement valuation | authoritative source + defens
+- 159 | 03_PRODUCTION_CLOSURE_MATRIX.md | 49 | EQUAL | | F-20 | oracle price source | `SPOT_ORACLE` rule; per-event provenance missing | true val
+- 160 | 03_PRODUCTION_CLOSURE_MATRIX.md | 50 | EQUAL | | F-21 | event provenance | raw capture metadata only | bind request/source/bytes/time/eve
+- 161 | 03_PRODUCTION_CLOSURE_MATRIX.md | 51 | EQUAL | | F-22 | source event digest | none admitted | deterministic raw→event digest, source-boun
+- 162 | 03_PRODUCTION_CLOSURE_MATRIX.md | 52 | EQUAL | | F-23 | funding human reviewer | key absent (not null) | real **qualified** human review 
+- 163 | 03_PRODUCTION_CLOSURE_MATRIX.md | 53 | EQUAL | | 24–27 | run-manifest digests + effective intervals | **four retained shared requirements
+- 164 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 144 | EQUAL | | **SPECIALIST** | `CT13/…/REVIEW_POLICY.md:73-76`; `P/AUTHORITY/PATH_D/PATH_D_DECISION_PA
+- 165 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 202 | EQUAL | | **PD-B3** | `…SIGNED_20260912.md:7`; `PATH_D_DECISION_PACKET.md:103` | Choice B3 = B — "
+- 166 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 203 | EQUAL | | **PD-B3-FILL** | `P/RATIFICATION_DRAFTS_UNEXECUTED/REAL_OBSERVATION_INTAKE.md:17`; `…BAS
+- 167 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 211 | EQUAL | | **PD-FUND-START** | `CONTROL_RECONCILIATION.md:29`; `REAL_OBSERVATION_INTAKE.md:31`; `…S
+- 168 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 212 | EQUAL | | **PD-MONEY-GATE** | `CONTROL_RECONCILIATION.md:39`; `CT13/…/REVIEW_POLICY.md:73-76`; `LE
+- 174 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 375 | LINE_EXISTS(no quote to compare) | 
+- 174 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 403 | LINE_EXISTS(no quote to compare) | 
+- 174 | LEAD_NOTE.md | 10 | LINE_EXISTS(no quote to compare) | 
+- 175 | PATH_D_DECISION_SIGNED_20260912.md | 7 | LINE_EXISTS(no quote to compare) | 
+- 175 | PATH_D_DECISION_PACKET.md | 94 | LINE_EXISTS(no quote to compare) | 
+- 175 | LEAD_NOTE.md | 10 | LINE_EXISTS(no quote to compare) | 
+- 176 | PATH_D_DECISION_SIGNED_20260912.md | 6 | LINE_EXISTS(no quote to compare) | 
+- 176 | PATH_D_DECISION_PACKET.md | 71 | LINE_EXISTS(no quote to compare) | 
+- 176 | LEAD_NOTE.md | 10 | LINE_EXISTS(no quote to compare) | 
+- 177 | PATH_D_DECISION_SIGNED_20260912.md | 7 | LINE_EXISTS(no quote to compare) | 
+- 177 | PATH_D_DECISION_PACKET.md | 103 | LINE_EXISTS(no quote to compare) | 
+- 177 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 202 | LINE_EXISTS(no quote to compare) | 
+- 177 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 203 | LINE_EXISTS(no quote to compare) | 
+- 178 | PATH_D_DECISION_SIGNED_20260912.md | 6 | LINE_EXISTS(no quote to compare) | 
+- 178 | PATH_D_DECISION_PACKET.md | 70 | LINE_EXISTS(no quote to compare) | 
+- 178 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 211 | LINE_EXISTS(no quote to compare) | 
+- 178 | PATH_D_DECISION_PACKET.md | 63 | LINE_EXISTS(no quote to compare) | 
+- 179 | REVIEW_POLICY.md | 73 | LINE_EXISTS(no quote to compare) | 
+- 179 | REVIEW_POLICY.md | 74 | LINE_EXISTS(no quote to compare) | 
+- 179 | REVIEW_POLICY.md | 75 | LINE_EXISTS(no quote to compare) | 
+- 179 | PATH_D_DECISION_PACKET.md | 164 | LINE_EXISTS(no quote to compare) | 
+- 179 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 144 | LINE_EXISTS(no quote to compare) | 
+- 179 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 212 | LINE_EXISTS(no quote to compare) | 
+- 182 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 375 | EQUAL | 17. **ASSUMPTION — counts quoted, not recomputed.** "27 signed risks
+- 183 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 403 | EQUAL | 5. **The five residual obligations are nowhere enumerated under that name.** Sources give 
+- 184 | LEAD_NOTE.md | 10 | EQUAL | - **Production admission is NOT granted.** All 10 Section-19 OPEN rows, the 27 signed risk
+- 185 | PATH_D_DECISION_SIGNED_20260912.md | 7 | EQUAL | B. Fees      APPROVE   B1=C  B2=C (5% rel; alt max(5%, 1e-6 USDC))  B3=B  B4=A   N=3 (make
+- 186 | PATH_D_DECISION_PACKET.md | 94 | EQUAL | - **Evidence still required before admission:** N authenticated own-account native-BTC fil
+- 187 | PATH_D_DECISION_SIGNED_20260912.md | 6 | EQUAL | A. Funding   APPROVE   A1=A  A2=B (M PENDING, separate decision after N observations)  A3=
+- 188 | PATH_D_DECISION_PACKET.md | 71 | EQUAL | | **A2** | Magnitude guard | No cap | Cap at M × the largest own-account observed rate (M 
+- 189 | PATH_D_DECISION_PACKET.md | 103 | EQUAL | | **B3** | Effective interval start | Keep `2026-09-06T14:00:30Z` and accept unevidenced b
+- 190 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 202 | EQUAL | | **PD-B3** | `…SIGNED_20260912.md:7`; `PATH_D_DECISION_PACKET.md:103` | Choice B3 = B — "
+- 191 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 203 | EQUAL | | **PD-B3-FILL** | `P/RATIFICATION_DRAFTS_UNEXECUTED/REAL_OBSERVATION_INTAKE.md:17`; `…BAS
+- 192 | PATH_D_DECISION_PACKET.md | 70 | EQUAL | | **A1** | Admission window | Forward-only: only settlements captured live on the owner's 
+- 193 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 211 | EQUAL | | **PD-FUND-START** | `CONTROL_RECONCILIATION.md:29`; `REAL_OBSERVATION_INTAKE.md:31`; `…S
+- 194 | PATH_D_DECISION_PACKET.md | 63 | EQUAL | - **Evidence still required before admission:** authenticated capture bytes with a digest 
+- 195 | REVIEW_POLICY.md | 73 | EQUAL | Add a bounded specialist review for the first kernel, first live release, major security c
+- 196 | REVIEW_POLICY.md | 74 | EQUAL | or serious unresolved disagreement; name the question and stop condition. An experienced e
+- 197 | REVIEW_POLICY.md | 75 | EQUAL | reviews before the first money-exposed release, not every package. These checks do not con
+- 198 | PATH_D_DECISION_PACKET.md | 164 | EQUAL | **Exact review roster (T0).** Fresh exact `claude-opus-5` **and** `gpt-5.6-sol`, both `xhi
+- 199 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 144 | EQUAL | | **SPECIALIST** | `CT13/…/REVIEW_POLICY.md:73-76`; `P/AUTHORITY/PATH_D/PATH_D_DECISION_PA
+- 200 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 212 | EQUAL | | **PD-MONEY-GATE** | `CONTROL_RECONCILIATION.md:39`; `CT13/…/REVIEW_POLICY.md:73-76`; `LE
+- 207 | 03_PRODUCTION_CLOSURE_MATRIX.md | 33 | EQUAL | | I-4 | instrument human reviewer | `human_reviewer: null` (key present) | real **qualifie
+- 208 | 03_PRODUCTION_CLOSURE_MATRIX.md | 41 | EQUAL | | C-12 | cost human reviewer | key absent (not null) | real **qualified** human review | r
+- 209 | 03_PRODUCTION_CLOSURE_MATRIX.md | 52 | EQUAL | | F-23 | funding human reviewer | key absent (not null) | real **qualified** human review 
+- 210 | REVIEW_POLICY.md | 74 | EQUAL | or serious unresolved disagreement; name the question and stop condition. An experienced e
+- 211 | REVIEW_POLICY.md | 75 | EQUAL | reviews before the first money-exposed release, not every package. These checks do not con
+- 212 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 144 | EQUAL | | **SPECIALIST** | `CT13/…/REVIEW_POLICY.md:73-76`; `P/AUTHORITY/PATH_D/PATH_D_DECISION_PA
+- 216 | 06_HYPERLIQUID_SETUP.md | 16 | EQUAL | | Money | Fake (faucet USDC) | Real |
+- 217 | 06_HYPERLIQUID_SETUP.md | 19 | EQUAL | | Use for | ALL of v1 (P0-P3) | never in v1 |
+- 218 | PATH_D_DECISION_PACKET.md | 25 | EQUAL | "Path 1" (self-observation on the owner's own account) is the complement: it supplies real
+- 219 | PATH_D_DECISION_SIGNED_20260912.md | 11 | EQUAL | no deploy/live/TESTNET/mainnet/ARM/order/spend authority; T0 reviews, R29 redo, ratificati
+- 223 | 03_PRODUCTION_CLOSURE_MATRIX.md | 39 | EQUAL | | C-10 | account tier evidence | collected, not incorporated | historical coverage + actua
+- 224 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 337 | EQUAL | 4. **ASSUMPTION — base tier-0 selection.** `tier_selection_basis` is
+- 225 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 338 | EQUAL |    `OWNER_APPROVED_BASE_TIER_0_WITH_ACCOUNT_EVIDENCE_RESIDUAL`; account-tier evidence is c
+- 226 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 339 | EQUAL |    but not incorporated (`…BASE-TIER0-V2.json:93`; C-10).
+- 230 | 03_PRODUCTION_CLOSURE_MATRIX.md | 42 | EQUAL | | F-13 | funding effective interval | `null` | complete period + interval semantics | venu
+- 231 | PATH_D_DECISION_SIGNED_20260912.md | 6 | EQUAL | A. Funding   APPROVE   A1=A  A2=B (M PENDING, separate decision after N observations)  A3=
+- 232 | PATH_D_DECISION_PACKET.md | 70 | EQUAL | | **A1** | Admission window | Forward-only: only settlements captured live on the owner's 
+- 233 | PATH_D_DECISION_PACKET.md | 71 | EQUAL | | **A2** | Magnitude guard | No cap | Cap at M × the largest own-account observed rate (M 
+- 234 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 211 | EQUAL | | **PD-FUND-START** | `CONTROL_RECONCILIATION.md:29`; `REAL_OBSERVATION_INTAKE.md:31`; `…S
+- 238 | PATH_D_DECISION_SIGNED_20260912.md | 7 | EQUAL | B. Fees      APPROVE   B1=C  B2=C (5% rel; alt max(5%, 1e-6 USDC))  B3=B  B4=A   N=3 (make
+- 239 | PATH_D_DECISION_PACKET.md | 103 | EQUAL | | **B3** | Effective interval start | Keep `2026-09-06T14:00:30Z` and accept unevidenced b
+- 240 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 202 | EQUAL | | **PD-B3** | `…SIGNED_20260912.md:7`; `PATH_D_DECISION_PACKET.md:103` | Choice B3 = B — "
+- 241 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 203 | EQUAL | | **PD-B3-FILL** | `P/RATIFICATION_DRAFTS_UNEXECUTED/REAL_OBSERVATION_INTAKE.md:17`; `…BAS
+- 245 | README.md | 141 | EQUAL | 3. KVM2-P4-03 — owner separately authorizes TESTNET-only secret provisioning.
+- 246 | README.md | 145 | EQUAL | 5. KVM2-P4-06 — owner authorizes exactly one first DISARMED start;
+- 247 | README.md | 147 | EQUAL | 6. KVM2-P4-08 — rollback proof. KVM2-P4-08A/B — any recovery start.
+- 248 | README.md | 148 | EQUAL | 7. KVM2-P5-05/P5-05A — ARM, separately, once, never implied by any of the above.
+- 249 | COMMANDS.md | 263 | EQUAL | ARM (KVM2-P5-05/P5-05A), monitoring and backup provider provisioning
+- 250 | COMMANDS.md | 265 | EQUAL | mainnet action. Each needs its own owner sentence, and none of them is implied
+- 251 | COMMANDS.md | 266 | EQUAL | by completing every stage above.
+- 255 | PATH_D_DECISION_PACKET.md | 90 | EQUAL | - **Source classes:** `HL_FEE_REPORTED_PER_FILL_V1` (admitted cost) + `HL_FEE_SCHEDULE_EST
+- 256 | PATH_D_DECISION_PACKET.md | 91 | EQUAL | - **Admitted inputs:** the venue's own reported `fee` string on the owner's authenticated 
+- 257 | PATH_D_DECISION_PACKET.md | 92 | EQUAL | - **Refusals kept:** the literal `EXACT_IDENTITY_V1` is **never** written — adding it alon
+- 258 | PATH_D_DECISION_PACKET.md | 93 | EQUAL | - **Guard margins:** the estimator (taker `0.00045` / maker `0.00015` [FEE:61]) is compute
+- 263 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 3 | EQUAL | **Status: RECORDED AMENDMENT / NONACCEPTING.** The owner approved the narrowing in chat on
+- 264 | PATH_D_DECISION_SIGNED_20260912.md | 11 | EQUAL | no deploy/live/TESTNET/mainnet/ARM/order/spend authority; T0 reviews, R29 redo, ratificati
+- 265 | PATH_D_DECISION_PACKET.md | 191 | EQUAL | Standing exclusions, unchanged by this signature
+- 266 | PATH_D_DECISION_PACKET.md | 192 | EQUAL |  - No deploy, live trading, TESTNET/mainnet contact, ARM, order placement, wallet or trans
+- 267 | PATH_D_DECISION_PACKET.md | 193 | EQUAL |    authority arises from this document. Path 1 needs its own separate explicit authorizati
+- 269 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 375 | EQUAL | 17. **ASSUMPTION — counts quoted, not recomputed.** "27 signed risks
+- 270 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 403 | EQUAL | 5. **The five residual obligations are nowhere enumerated under that name.** Sources give 
+- 272 | 03_PRODUCTION_CLOSURE_MATRIX.md | 26 | EQUAL | Numbering preserved. Source: `PRIOR_CHECKLIST.md:23-48`; residual inventory `semantic_cove
+- 273 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 375 | EQUAL | 17. **ASSUMPTION — counts quoted, not recomputed.** "27 signed risks
+- 275 | 03_PRODUCTION_CLOSURE_MATRIX.md | 53 | EQUAL | | 24–27 | run-manifest digests + effective intervals | **four retained shared requirements
+- 276 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 395 | EQUAL | 3. **Risks 24-27 are not individually identified anywhere I read.** The matrix groups them
+- 277 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 396 | EQUAL |    "four retained shared requirements (grouped; per-ID ordering unavailable)" (`:53`). §2 
+- 278 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 397 | EQUAL |    carries four rows `R-24`..`R-27` whose per-ID content is *not* established. Only 23 of 
+- 280 | TASK.md | 17 | EQUAL | 2. **The evidence pipeline in plain steps**: what TESTNET GO starts; what a testnet captur
+- 281 | PATH_D_DECISION_PACKET.md | 64 | EQUAL | - **Residual risk:** the Bridge accepts the venue's arithmetic without any independent rev
+- 282 | PATH_D_DECISION_PACKET.md | 250 | EQUAL | **Where sources are silent** (not filled in anywhere above): the funding settlement formul
+- 283 | P012_ACCEPTANCE_AMENDMENT_20260913.md | 367 | EQUAL |     position value
+- 285 | TASK.md | 13 | EQUAL | - Do NOT read or quote any credential, wallet address, key or `.env` value. Everything her
+- 286 | COMMANDS.md | 104 | EQUAL | Post-conditions to assert afterwards, values never printed:
+- 288 | README.md | 137 | EQUAL | ## Gate order (none of which this directory grants)
+- 289 | MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md | 400 | EQUAL | ### WP-P0-12 · Kernel `CORRECTED_VNEXT` (M7b)
+- 290 | MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md | 406 | EQUAL | - **Acceptance gate:** **no undocumented behavioural difference exists between P0-11 and P

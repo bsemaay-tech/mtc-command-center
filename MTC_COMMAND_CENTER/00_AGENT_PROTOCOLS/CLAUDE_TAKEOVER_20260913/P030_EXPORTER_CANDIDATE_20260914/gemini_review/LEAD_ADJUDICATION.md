@@ -1,0 +1,7 @@
+# LEAD_ADJUDICATION — O9EXP_GEMINI (gemini-3.8-flash-high detection review of the WP-P0-30 Shape-B exporter candidate daf6a43b) — 2026-09-14 17:36Z
+
+Conversation per REVIEW.log envelope, 1042 s, wrapper-validated SUCCESS, sentinel present; required scope fully read (`required_scope_unread: []`).
+
+Verdict **PASS-WITH-NITS** — 0 BLOCKING, 0 CORRECTION, 5 NITs: K-01 float overflow (`1e999`) in a source line raises a raw `ValueError` from `_reject_nonfinite_numbers` outside the guarded block instead of `ExportRefused('source_line_invalid')` (still aborts the export — fail-closed, wrong exception type); K-02 `dataset_content_hash` contract refusals propagate unwrapped instead of `ExportRefused('contract_refused')` (same class); K-03 `_utc_z` accepts sub-second timestamps while the adapter convention is whole seconds; K-04 11 of 16 `ExportRefused` codes have no explicit negative test; K-05 one REPORT citation offset. Design conformance EQUAL for every Shape-B promise; identity re-computation through the contracts module; exclusive-create target + byte re-read; D-13 GREEN half exercises the real adapter; no side effects; scope = the two new files.
+
+Disposition: candidate daf6a43b stays NONACCEPTED (slice review incomplete: Sol pending; Grok out). NITs → one small correction lane (O9FIX: wrap K-01/K-02 into `ExportRefused`, whole-second check, negative tests for the untested codes, citation) queued behind the P031 correction when the Codex Plus pool allows; none blocks further review. Adjudicated by Claude Opus 5 Lead (b9df29).

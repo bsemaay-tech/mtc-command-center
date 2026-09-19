@@ -1,0 +1,36 @@
+"""Path 1 watcher: polls the public Info API for the owner's address; prints one line per NEW fill / funding event /
+open-order change; exits when the resting T1 order has filled (or after MAX_MIN minutes). Read-only; address is public."""
+import json, urllib.request, datetime, time, sys
+ADDR = "<OWNER_MAINNET_ADDRESS_0x1E26...AC49>"
+MAX_MIN = int(sys.argv[1]) if len(sys.argv) > 1 else 180
+def info(body):
+    req = urllib.request.Request("https://api.hyperliquid.xyz/info", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=20) as r: return json.loads(r.read().decode())
+def ts(ms): return datetime.datetime.fromtimestamp(ms/1000, datetime.UTC).strftime("%H:%M:%S")
+seen_fills = {f["tid"] for f in info({"type": "userFills", "user": ADDR})}
+seen_fund = {(e["hash"], e["time"]) for e in info({"type": "userFunding", "user": ADDR, "startTime": 0})}
+t0 = time.time(); last_oo = None
+print(f"watch start {datetime.datetime.now(datetime.UTC).strftime('%H:%M:%S')}Z fills_seen={len(seen_fills)} funding_seen={len(seen_fund)}", flush=True)
+while time.time() - t0 < MAX_MIN * 60:
+    try:
+        fills = info({"type": "userFills", "user": ADDR})
+        for f in fills:
+            if f["tid"] not in seen_fills:
+                seen_fills.add(f["tid"])
+                print(f"NEW_FILL {ts(f['time'])}Z {f['side']} px={f['px']} sz={f['sz']} fee={f['fee']} taker={f.get('crossed')} oid={f['oid']}", flush=True)
+        oo = info({"type": "openOrders", "user": ADDR})
+        cur = [(o["oid"], o["limitPx"], o["sz"]) for o in oo]
+        if cur != last_oo:
+            print(f"OPEN_ORDERS {datetime.datetime.now(datetime.UTC).strftime('%H:%M:%S')}Z {cur}", flush=True); last_oo = cur
+        fund = info({"type": "userFunding", "user": ADDR, "startTime": 0})
+        for e in fund:
+            k = (e["hash"], e["time"])
+            if k not in seen_fund:
+                seen_fund.add(k); d = e["delta"]
+                print(f"NEW_FUNDING {ts(e['time'])}Z coin={d.get('coin')} usdc={d.get('usdc')} szi={d.get('szi')} rate={d.get('fundingRate')}", flush=True)
+        if not oo and len(seen_fills) >= 4:
+            print("T1_FILLED_AND_NO_OPEN_ORDERS", flush=True); break
+    except Exception as e:
+        print(f"poll_error {type(e).__name__}", flush=True)
+    time.sleep(30)
+print("watch end", flush=True)

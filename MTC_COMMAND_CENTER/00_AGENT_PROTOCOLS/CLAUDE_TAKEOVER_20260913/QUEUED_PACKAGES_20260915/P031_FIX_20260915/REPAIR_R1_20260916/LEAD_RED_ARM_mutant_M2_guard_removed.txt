@@ -1,0 +1,4 @@
+C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\unittest\case.py:200: AssertionError: ValueError not raised
+=========================== short test summary info ===========================
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py::LifecycleLedgerTests::test_post_refresh_admission_cannot_reuse_the_revoked_deployment_identity
+1 failed, 109 passed, 1 skipped, 167 subtests passed in 18.88s

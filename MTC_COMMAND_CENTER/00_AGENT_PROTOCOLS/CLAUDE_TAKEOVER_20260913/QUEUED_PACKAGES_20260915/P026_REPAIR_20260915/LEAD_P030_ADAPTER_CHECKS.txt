@@ -1,0 +1,2 @@
+closed_partition_backup_adapter exit=1
+opsa_heartbeat_adapter exit=0

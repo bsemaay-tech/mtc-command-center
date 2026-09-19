@@ -1,0 +1,2 @@
+FAILED tests/test_mtc_funding_export_real_capture.py::test_d6_a_row_position_that_disagrees_with_the_fills_refuses
+1 failed, 56 passed in 0.89s

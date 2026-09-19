@@ -1,0 +1,6 @@
+| evidence item from the packet | observed | file:line or artefact path | GREEN / RED-as-expected / NOT OBSERVED |
+| --- | --- | --- | --- |
+| gap detected and backfilled through `CANDLE_SNAPSHOT`; post-fill completeness passes | `forced_disconn_ok: OK lines=4` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-14/stdout.txt:2` `C:/tmp/P026_DRILLS_TA_20260914/fixtures/d14/forced_disconn_ok/bars/HYPERLIQUID/BTC/1h/1970-01.jsonl` | GREEN |
+| RED empty page (`snapshot did not fill gap starting at …`) at `market_data_collector.py:462-465` | `forced_disconn_no_snapshot: ERROR CollectionRefused: snapshot did not fill gap starting at 3600000` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-14/stdout.txt:3` | RED-as-expected |
+| RED non-advancing cursor (`snapshot cursor made no progress`) at `market_data_collector.py:467-468` | `forced_disconn_no_progress: ERROR CollectionRefused: snapshot cursor made no progress` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-14/stdout.txt:4` | RED-as-expected |
+| RED residual missing bar (`snapshot left N bar(s) missing`) at `market_data_collector.py:478-479` | `forced_disconn_residual: ERROR CollectionRefused: snapshot left 1 bar(s) missing` | `C:/tmp/P026_DRILLS_TA_20260914/drills/D-14/stdout.txt:5` | RED-as-expected |

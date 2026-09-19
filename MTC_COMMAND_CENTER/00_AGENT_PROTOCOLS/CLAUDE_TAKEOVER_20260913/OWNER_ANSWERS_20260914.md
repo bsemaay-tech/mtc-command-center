@@ -1,0 +1,115 @@
+# Owner answers recorded 2026-09-14 (Claude Opus 5 Lead, session 2c48d1)
+
+Owner chat, verbatim: `Q1 - Peer session  you hold the lane / Q2 - D4 yes / Q3 - give recomended answers / Q4 yes / Q5 all recommended`. Received ~05:27Z. Recorded here and as DECISIONS.md rows OD-20260914-*.
+
+**What an answer does and does not do (from the packets themselves):** recording an answer records the owner's semantic choice or authorization exactly as the packet phrased it; it authorizes no engineering, no Git mutation, no integration, no execution beyond what the answered item itself states, and no acceptance — each still needs its own authorization under the existing gates (P031 V4 section 3 closing paragraph; P030/P026 V3 section 5).
+
+## Q1 — lane holder
+This desktop session (`tradingview-lab-clean-10`, id 2c48d1) holds the Claude Lead lane; the peer session `tradingview-lab-clean-9b` does not. Recorded in `C:/tmp/CLAUDE_P0_RUN_20260913/OWNERSHIP_CLAIM.md`.
+
+## Q2 — D4: one exact `claude-opus-5` xhigh T0 review of P020 preselection V1.4 on Claude Pro
+Answer: **YES**. Launched 05:28Z (`C:/tmp/P020_PRESELECT_T0_R4_20260913/opus/`). Sol round 4 on Codex Plus launched 05:20Z. Roster for V1.4: Lead reproduction (REPRODUCED), Grok pre-screen (NITS), Gemini 3.7 (PASS), Sol round 4, Opus round 4. Eligibility one-shot runs only after the full roster accepts and after the launcher is re-pinned to the V1.4 digest.
+
+## Q3 — D3: the WP-P0-14 read-only report scope
+Owner: "give recomended answers" = adopt the Lead's recommended scope. Recorded scope: a small, reproducible, read-only report answering (a) which candidate families currently exist with their lifecycle state and recorded rejection reasons, read from the P031 M1 ledger fixtures, and (b) a summary of the P013 catalog (what it contains, counts, identities), read from the P013 candidate worktree. No product code, no host, no execution beyond reading fixtures and printing; the sequencing amendment (Minimum Explorer deferred behind core Bridge engineering) is preserved.
+
+## Q4 — off-machine backup push
+Answer: **YES**. Push `feature/claude-takeover-20260913` (CT13) and `feature/p012-path-d-20260912` (P012 candidate, head `dac9dba6`) to `origin`; **no PR, no merge, no production admission**. The kit repo TOOLBOX commit is pushed with the same authority.
+
+## Q5 — owner packets: "all recommended"
+
+### P031 lifecycle decisions (V4, section 3) — answer = the recommended option, verbatim
+
+| Ref | Decision | Recommended answer (recorded as the owner's answer) | Cost class as stated |
+|---|---|---|---|
+| OD-1 | Worthiness check-set ratification | **3D** — decouple: keep the guard fail-closed and unratified; move "ratified worthiness version" from an M1 *acceptance* precondition to an *operating* precondition on writing a real `CAPTURED -> TRIAGED` record. Ratify later with **3B**'s content (v0.1's seven criteria + explicit verdict rule + per-criterion D026 fixtures). | Amend `OD-20260912-P031-M1-SEQUENCING` (`C:/tmp/P031_M1_20260913/DECISIONS.md:18`) and the matching paragraph at `brief:298`. **No code change, but not costless:** both files are among the eight reviewed package paths (` |
+| OD-2 | `DEMOTED` target rung and issuing authority | **1B** — the writer supplies `next_state`; the ledger validates strict descent on the ladder order at `ledger:94-98` and an unchanged `deployment_identity_hash`. Assign `DEMOTED` to `MULTI_WORKER_SUPERVISOR`. | Engineering + new candidate + T0 roster. |
+| OD-3 | `CHALLENGE` incumbent-identity carrier | **2A** — add a nullable challenged-incumbent identity field to `LifecycleEvent` under **WP-P0-04**; keep `CHALLENGE` fail-closed until it exists. Also name the issuing writer class (the design points at the challenger's own writer, not the Promotion Authority). | Blocked on WP-P0-04 authority. The envelope stays fail-closed after the answer (§4 item 2). |
+| OD-4 | Atomic two-candidate succession | **3D now** — ratify the current repository-wide refusal as the deliberate interim (stricter than the design because `family_id` is not on `LifecycleEvent`); adopt **3A** (two events, one transaction) when WP-V3-03 is built. | Owner's word only, now. |
+| OD-5 | `REJECTED` failed-gate purpose | **4A** — writer-supplied `check_set_purpose` from the declared set, validated against the candidate's rung, with `check_set_version`, `evaluation_run_hash` and non-empty `failing_checks` all mandatory. Restore `("REJECTED", "RE_ENTRY", "CANDIDATE")` in the same answer. | Engineering + new candidate + T0 roster. |
+| OD-6 | Ambiguous capacity-withholding target | **5C** — take the target from the supplied `check_set_version`'s purpose instead of inferring it from `previous_state`. | Engineering; no shared-contract change. |
+| OD-7 | Deployment-refresh landing state | **6A** — the candidate returns to `FROZEN` under the new composite; revocation stays silent-by-construction. | Engineering + one relaxation of `ledger:657-658`. |
+| OD-8 | Evaluation-run candidate scope | **7A** — ratify as implemented: one `evaluation_run_hash` binds to exactly one `candidate_id` forever. | Owner's word only. No code change. The report keeps printing `"EVALUATION RUN CANDIDATE SCOPE: UNRESOLVED"` (`ledger:1266`) until a separately authorized ledger edit, which is engineering + new candidate + T0 roster. |
+| OD-9 | `RETIRED -> RE_ENTRY` | **5a-C** — keep the transition, gate it on a sixth owner-only trigger class with a mandatory recorded one-sentence external-change reason; keep every existing constraint. | Engineering + one new shared trigger value. |
+| OD-10 | Same-epoch reuse across distinct check-set purposes | **5b-A** — ratify as implemented (allowed within an epoch; refused across epochs and across candidates), conditional on giving `test:2192-2288` real assertions and closing the report's disclosure gap. | Owner's word **plus a change to reviewed test bytes**. The conditioning repair edits `test_p031_lifecycle_ledger.py`, which under `P031_HANDOFF.md:126-131` voids the exact review set: new exact candidate + full T0 roster |
+| OD-11 | What "P0-13 provenance *actually consumed* by P031" means for M1 acceptance | **2C** — optional configured catalog: refuse an `evaluation_run_hash` absent from an accepted catalog when one is supplied, fail closed on catalog-backed claims when none is. **2B** if no further engineering is wanted. | Under 2C: engineering + new candidate + T0 roster, **plus** amending `G1_SCOPE_AND_CONTRACT.md:74` (*"No real TrialRecord bytes are consumed in this slice"*) and the fixed seam at `:20`, **plus** an owner definition of * |
+| OD-12 | Refresh now or preserve `c76043b9` (sequencing and authority, not semantics) | **7-A** — preserve; fold the refresh, the `HANDOFF.md` reconciliation and Item 6's tightening into one new candidate and one T0 roster once OD-1..OD-11 are answered. | None now; watch the 30-commit guard limit (currently 19). |
+
+Note from the packet: OD-4 and OD-8 cost only the owner's word; OD-2/5/6/7/9/10/(11 under 2C) change reviewed executable or test bytes and need one new exact candidate + full T0 roster, implemented as one batch; OD-1 amends two reviewed documentation paths; OD-3 stays fail-closed pending WP-P0-04; OD-12 preserves `c76043b9`. No engineering starts from this record.
+
+### P030/P026 configuration and drill choices (V3, section 5) — answer = the recommended option, verbatim
+
+| Ref | Decision | Recommended answer (recorded as the owner's answer) | Status |
+|---|---|---|---|
+| O-1 | `<ARCHIVE_ROOT>` — the volume and path for the market-data archive, plus a free-space budget | Name the target volume now as a placeholder and bind the concrete path at the same moment the `G9` host step is authorized (C-3). Layout is fixed: `<ARCHIVE_ROOT>/bars/HYPERLIQUID/BTC/<interval>/<YYYY-MM>.jsonl` | OPEN FACT: the concrete volume/path is still to be named by the owner at the `G9` host step; recorded as placeholder per the recommendation |
+| O-2 | `<BACKUP_ROOT>` — the second location, on a **different device or host** from O-1; confirmation of the store shape; **and the capture cadence that shape will run at** | Approve the C-4 shape: one config **generated per capture**, fixed store id `p030_closed_partition`, a store **`path` that is a fresh directory per capture** (`<CAPTURE_LABEL>`; a reused monthly directory refuses on the second capture — C-4 constraint 4), class `protected` (already the shipped value), shared `backup_root`, configs under `<BACKUP_ROOT>/configs/`. On that condition the shape runs at any cadence. **Approve C-5's cadence-conforming capture** — high-water captures at the ratified daily cadence plus a month-end capture, with D-3b run first. **So that the alternatives are stated accurately (corrected in V3):** daily high-water captures *without* the month-end capture (option B run  | recorded |
+| O-3 | The watchdog silence bound `--silence-seconds`, and the check cadence | **Ratify `300` seconds** with a 60 s heartbeat interval and a 5-minute check cadence (C-7, C-8). **Neither `300` nor the 5-minute cadence has any repository basis** — they are this document's proposals; the only sourced number here is the 60 s emission default (`heartbeat.py`:76), and "five missed beats" is reasoning, not a rule any source states. **Ratifying a bound or a cadence authorizes no schedule installation and no host contact** — that stays behind `G9` ([PLAN]:584) and is explicitly not requested below. If you prefer to wait for measured delivery latency, answer "defer" and the checker runs `local_log`-only *(labelling corrected in V2 — Grok 4)* | recorded |
+| O-4 | Is the owner's phone **Android or iOS**? | Answer the OS; no other action follows from this item alone | OPEN FACT: the recommendation column has no answer (Android or iOS is a fact only the owner can give); NOT answered by "all recommended" — still pending |
+| O-5 | Notifier technology | **Public ntfy.sh with a long random topic for the first measured drill, self-hosted ntfy on the owner PC as the steady state** (C-10). Revisit if O-4 says iOS. All Aug-25 external facts to be re-verified at adoption ([NOTIF]:9-11) | recorded |
+| O-6 | Collector backend + permission protocol: lift the coded runtime refusal, or keep waiting? | **Keep the refusal for now**, and note the cost explicitly: every day of delay permanently loses venue candles against the retention window ([PLAN]:632-633). **Revisit the decision timing immediately after O-5/O-8** — but a revisit decides only when to look again: **any actual lift still sits behind P030's declared dependency on WP-P0-26 ([PLAN]:638; [HO]:40) and behind `G9` for anything on the host**, and this answer grants none of that *(dependency stated in V2 — Grok 5)* | recorded |
+| O-7 | Restart-first-message policy beyond identical replay | **Ratify the implemented semantics** (C-12 option A): identical replay is a no-op; a differing same-slot bar refuses and waits for a `CORRECTION` observation under the frozen contract. No new code, no new numbers. **What it does not close (V2 — Grok 6):** the persisted-history check refuses *any* restart whose archive holds a WS_LIVE gap, because it filters to `source_producer == "WS_LIVE"` before scanning ([WT] `market_data_collector.py`:374-413, 378) — so a legitimate outage later backfilled by `CANDLE_SNAPSHOT` still blocks the restart. **D-11 must run before any real restart**, and [HO]:40's "general restart-first-message closure beyond identical replay" is only partly closed by this ans | recorded |
+| O-8 | A bounded **offline execution scope** (T-A) to run drills D-1…D-14 on fixtures, plus a notifier class unit-tested against a **local stub only** | **Approve**, with the explicit fence: scratch fixtures only, no host, no network, no credential, no schedule, no real evidence store, no send. **One carve-out (V2 — Grok 9): D-13's GREEN half is out of scope here.** Its transform is new code, which is O-9; under O-8 alone D-13 runs its **RED half only**, and an approval of O-8 must not be read by a next agent as permission to write the exporter | recorded |
+| O-9 | An **implementation scope** for the producer/exporter bridge of §4.1 (contract-shaped identities + sorted-key serialization between the collector archive and the backup adapter) | **Approve the design step first** (a one-page choice between the two shapes), then implement under the normal review path. Without it, no real-data backup drill can run | recorded |
+| O-10 | Records hygiene: should the P021/P030 owner answers `1 YES, 2 YES, 3 A, 4 YES, 5 YES, 6 A, 7 A` and the substance of decisions 6 and 7 be added to `DECISIONS.md`? | **Yes** — they exist today only in handoff prose ([HO]:16; [GH]:5, 16) and are absent from `DECISIONS.md` (table row 35). One row, no semantic change | recorded |
+
+Notes: O-8 records an APPROVED offline execution scope (T-A) for drills D-1…D-14 on scratch fixtures only — no host, no network, no credential, no schedule, no real evidence store, no send; D-13 RED half only. O-9 records approval of the DESIGN STEP only (a one-page choice), not implementation. O-6 keeps the collector refusal. O-3 ratifies 300 s / 60 s / 5-minute values that have no repository basis (the packet's own proposals) and authorizes no schedule installation. O-10 authorizes one DECISIONS.md row for the P021/P030 answers `1 YES, 2 YES, 3 A, 4 YES, 5 YES, 6 A, 7 A` (recorded below as OD-20260914-P021-P030-RECORD-1).
+
+## Still open after these answers
+- D5 (WP-P0-20 driver hard-codes the original five families; raised 05:30Z) — not yet answered.
+- O-4 phone OS; O-1 concrete archive volume (at G9).
+- P013 plan V5: no decision requested; B-01 stays NOT SATISFIED.
+
+
+## Second batch (~06:47Z) — owner chat, verbatim: `D5 A / O-4 Android`
+- **D5 = A** → row `OD-20260914-P020-DRIVER-FAMILIES-1`: bounded driver change (family-set generalization) under the full T0 roster; folded into the V1.5 re-freeze; no measurement.
+- **O-4 = Android** → row `OD-20260914-P026-PHONE-OS-1`: closes O-4; O-5 path stands (self-hosted ntfy delivers instantly on Android).
+- Still open after this batch: **D6** (record interval / V1.5 / reset of the spent shot — gates D5's engineering and the derivation-tool review), **O-9 shape** (A or B; recommended B), O-1 concrete volume (at G9).
+
+## Third batch (~06:50Z; an earlier draft of this header said ~07:08Z — clock slip corrected) — owner chat, verbatim: `D6 A with end date 2026-05-01 / O-9 B`
+- **D6 = A, end date 2026-05-01** → row `OD-20260914-P020-RECORD-V2-1`: record V2 ratified (end_exclusive `2026-05-01T00:00:00Z`); V1.5 re-freeze authorized (interval check + 6 NITs + D5 driver change + derivation-tool repair); ONE more exact Opus review on Claude Pro (round 5); spent shot reset by archiving the ABORTED files. Builder lane P20R6 launched after this record.
+- **O-9 = B** → row `OD-20260914-P030-BRIDGE-SHAPE-1`: separate exporter; implementation may be scoped as its own reviewed lane later (not started; P020 has priority on the Codex Plus pool).
+- Still open: O-1 concrete volume (at G9). Nothing else pending from the owner.
+
+## Fourth batch (~07:50Z) — owner chat, verbatim: `1. B YES / 2. P031 batch GO / 3. O-9 implement GO / 4. explain this and give recomended answer?`
+- **1. B YES** → row `OD-20260914-P020-MEASURE-1`: bounded measurement may run once after eligibility + derived-plan review (supersedes B NO).
+- **2. P031 batch GO** → row `OD-20260914-P031-BATCH-GO-1`: one new candidate implementing the recorded answers + full T0 roster (one Opus Pro slot). No push/PR/merge/acceptance.
+- **3. O-9 implement GO** → row `OD-20260914-P030-EXPORTER-GO-1`: Shape-B exporter with tests + D-13 GREEN on fixtures, normal review path.
+- **4.** O-1/O-2 explained to the owner in chat with a concrete recommendation (this PC has a single fixed drive C: 930 GB / 68 GB free; no second device is attached, so O-2 needs an external drive or a host).
+
+## Fifth batch (~07:58Z) — owner chat, verbatim: `O-1 ok / O-2 "C:\Users\BarışSemaay\OneDrive - Ertek Group\ARSİV\MTC_DATA\ARCHIVE"`
+- **O-1** = `C:\LAB\MTC_DATA\ARCHIVE` (20 GB reserve); **O-2** = the OneDrive-synced folder above → row `OD-20260914-P030-P026-ROOTS-1`, with the residuals the Lead stated (same physical disk locally; cloud copy only via sync; Files-On-Demand hydration; tenant policy; non-ASCII path must be drilled). Values recorded only; nothing created or run.
+- Open: T-B (real-root) drill execution scope — not yet requested from the owner as a one-line lever.
+
+## Sixth batch (~08:28Z) — owner chat, verbatim: `TESTNET GO and prepare the P012 risk packet`
+- **TESTNET GO** → row `OD-20260914-BRIDGE-TESTNET-GO-1`: KVM2-P4-03 provisioning by the owner's hands (wizard button 5 in the Bridge Toolkit), then Lead-run post-conditions / verify / DISARMED credential-mode restart / testnet smoke; ARM excluded (own sentence).
+- **prepare the P012 risk packet** → row `OD-20260914-P012-RISK-PACKET-1`: Grok documentary lane P12RISK + audit chain; presented for the owner's answers.
+
+## Seventh batch (~10:55Z and ~11:05Z) — owner chat, verbatim: `D7- A` then `D8 A`
+- Two bounded diagnostics authorized and executed (counts only, identities withheld) → row `OD-20260914-P020-DIAG-1`. Result: the block is a sizing/lot-quantization artefact of the synthetic instrument (quantity_step = 1 at BTC prices under risk fraction 0.0001), not strategy behaviour. **D9 open** (record V3 with quantity_step 0.00001 recommended).
+
+## Eighth batch (~12:59Z, session 3 / b9df29) — owner chat, verbatim: `1. D9-A / 2. Last Opus slot this week it goes to the P020 V1.6 roster / 3. D10  Yes / 4. Explain this to me`
+- **1. D9-A** → row `OD-20260914-P020-RECORD-V3-1`: synthetic instrument record V3 with `quantity_step = 0.00001`, nothing else; V1.6 re-freeze + round-6 roster + one new shot. Builder lane `laneP20R7_repair` released from HOLD and queued FIRST on the Codex Plus pool (15:08Z reset), ahead of P31B-CONT and O9EXP.
+- **2.** → row `OD-20260914-P020-OPUS6-1`: the last Claude Pro Opus slot this week goes to the P020 V1.6 roster; P031's Opus review waits for the Sep 16 reset.
+- **3. D10 Yes** → row `OD-20260914-GEMINI-WRAPPER-2`: bounded wrapper repair (raw stdout/stderr persisted on post-run failure; tolerant result envelope with stderr notice) — executed by the Lead, see the row for the new hash once applied.
+- **4. "Explain this to me"** (answering the TESTNET question): the Lead explains Toolkit button 5 in chat; no host action taken; "provisioned" still awaited.
+
+## Ninth batch (~13:45Z) — owner chat, verbatim: `provisioned` (preceded by `terminal nerde?` and `terminal açılıp hemen kapanıyor` — the button launcher had a parse error, fixed 13:25Z)
+- KVM2-P4-03 DONE by the owner's hands → row `OD-20260914-BRIDGE-P403-PROVISIONED-1`; Lead read-only post-conditions all satisfied (record `BRIDGE_TESTNET_P403_PROVISIONED_20260914/`). Next lever put to the owner: one-off testnet smoke (`tools/smoke_p0.py`, fake money) — needs an explicit sentence; no restart exists that would consume the credentials on the accepted release.
+
+## Tenth batch (~14:03Z) — owner chat, verbatim: `smoke GO`
+- One run of `tools/smoke_p0.py` on KVM2 against Hyperliquid TESTNET (fake money) → row `OD-20260914-BRIDGE-SMOKE-GO-1`; **PASS 12/12** at 14:05:28-14:05:40Z; service untouched; record `BRIDGE_TESTNET_SMOKE_P0_20260914/` (log with the account address redacted). Not production evidence; no ARM.
+
+## Eleventh batch (~14:20Z) — owner chat, verbatim (seven lines):
+```
+Q1  me
+Q2 No
+Q3 Wait
+Q4  keep exactly that signed rule
+Q5 keep the signed B3 rule
+Q6 follow the gate order exactly, no shortcuts
+Q7 NO
+```
+- Answers to the P012 production-admission packet (presented 12:59Z; explained again 14:1xZ) → rows `OD-20260914-P012-ADMISSION-Q1`..`Q7`. All seven equal the packet's recommended answers except that Q1 names a person: the owner himself. Lead note on Q1 (stated to the owner in chat): recorded as designation and self-attestation; the Lead cannot certify "experienced engineer"; an additional independent engineer's review before real money remains recommended. Nothing executed.
+
+## Twelfth batch (~15:04Z-18:10Z) — owner chat, verbatim: `P1-1 Go / P1-2 read it from Chrome / P1-3 92.22276131 USDT thats the money I have on Binance global / P1-4 I dont understand this explain / P1-5 now / P1-6 yes`; `hyperliquid 0x1E26…AC49` (full address given); `I have enough money on hyperliquid lets continue`; `I did the binance transfer. it was on binance`; `done`; `isolated`; `T2 done`; `didnt work trying again`; `I clicked again`; `T1 Placed`; `should I wait in front of the pc or can I go? I give you full autorization to place the trades and open and close them as much as necessary for 24 hour. this is not real trading just trial so it ok for me to lose this money if anything goes wrong.`; `I dowloaded hyperliquid app to my android phone …`; `0x1E26…AC49 can you give the full version. I am at home and pc at office`; `Position closed`
+- → row `OD-20260914-P012-PATH1-GO-1`; execution record `P012_PATH1_EXECUTION_20260914/`. The 24-hour trading authorization was declined by the Lead (model rule; real money) and the owner closed the position himself from his phone at 18:08:43Z.

@@ -1,0 +1,23 @@
+﻿UTC=2026-09-14T13:47:13Z host=srv1856225
+env_mode=600 root:root
+env_mtime=2026-09-14 13:44:19.163344631 +0000
+env_lines=
+HL_LIVE_ACK_lines=0
+HL_ACCOUNT_ADDRESS_wellformed_lines=1
+HL_API_WALLET_KEY_wellformed_lines=1
+uncommented_key_names=HL_ACCOUNT_ADDRESS,HL_API_WALLET_KEY
+wizard_tmp_copy=removed
+service_active=active
+service_nrestarts=0
+listen_8790=127.0.0.1:8790
+api_status={"state":"DISARMED","mode":"credential_free_disarmed","network":"disabled","exchange_conn":"disabled","regime":"BOTH","state_version":1,"reconcile_ready":false,"host_identity":"srv1856225","release_sha":"be007fd802bbfd2eb181d66038c374865d1562ee","service_start_ts":"2026-09-12T06:20:44.050725+00:00","window":{"state":"DOWN","started_ts":null,"last_alive_ts":null,"interrupted_ts":null,"reset_ts":null,"stale_after_s":300.0,"error":null},"exchange_enabled":false,"credential_lookup":"disabled","arm_enabled":false,"service_health":"healthy","status_ts":"2026-09-14T13:47:13.791173+00:00"}
+install_manifest_keys=['env_file', 'env_file_populated', 'firewall_modified', 'first_start_unit', 'first_start_unit_sha256', 'first_start_unit_state', 'installed_at_utc', 'log_dir', 'release_manifest_sha256', 'release_path', 'release_sha', 'requirements_lock_sha256', 'schema_version', 'secrets_provisioned', 'service_enabled', 'service_started', 'state_db', 'steady_unit_installed', 'venv_path']
+install_manifest_release=  File "<string>", line 1
+    import json;d=json.load(open("/etc/mtc-bridge/install_manifest.json"));print({k:v for k,v in d.items() if isinstance(v,str) and (\"sha\" in k.lower() or \"release\" in k.lower())})
+                                                                                                                                      ^
+SyntaxError: unexpected character after line continuation character
+--- follow-up 2026-09-14T13:47:40.1975281Z
+env_lines=44
+{'release_sha': 'be007fd802bbfd2eb181d66038c374865d1562ee', 'release_manifest_sha256': 'bde1ff7dcd46a8b104ffdaca7a146ba0eca1958dab577a5a8e926dc24ee0b0a3', 'secrets_provisioned': False, 'env_file_populated': False, 'service_started': False, 'service_enabled': False, 'first_start_unit_state': 'masked', 'installed_at_utc': '2026-08-17T00:21:26Z'}
+env_total_lines=44
+env_comment_lines=42

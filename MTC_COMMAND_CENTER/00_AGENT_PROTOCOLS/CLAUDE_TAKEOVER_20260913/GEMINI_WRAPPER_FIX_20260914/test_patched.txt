@@ -1,0 +1,11 @@
+OK  expected=PASS got=PASS :: six members, SUCCESS, sentinel 
+GEMINI_RESULT_EXTRA_MEMBER name=error value={"attempts":5,"message":"INTERNAL (code 500)"}
+OK  expected=PASS got=PASS :: seven members (extra error object), SUCCESS, sentinel 
+GEMINI_RESULT_EXTRA_MEMBER name=error value="x"
+OK  expected=THROW got=THROW :: seven members, status ERROR Gemini did not return a successful, non-empty response.
+GEMINI_RESULT_EXTRA_MEMBER name=error value="x"
+OK  expected=THROW got=THROW :: seven members, SUCCESS, sentinel missing Gemini response omitted the required read-only sentinel.
+OK  expected=THROW got=THROW :: usage missing Gemini payload is missing the required member: usage
+OK  expected=THROW got=THROW :: usage with an extra member Gemini usage contains missing or unexpected members.
+OK  expected=THROW got=THROW :: member name wrong case (Status) Gemini payload is missing the required member: status
+RESULT: ALL CASES AS EXPECTED

@@ -1,0 +1,24 @@
+2026-09-19T06:54:18.0248342Z armed: start at 2026-09-19T18:47:30 local; order P031 > P1CAP > P026 > P021S1 > P012INTAKE > P030 > DD06
+2026-09-19T07:40:14.8485759Z armed: start at 2026-09-19T11:11:00 local; account free; order P031 > P1CAP > P026 > P021S1 > P012INTAKE > P030 > DD06
+2026-09-19T08:11:15.3277009Z start
+2026-09-19T08:11:15.7925993Z P031 generate: generated C:\tmp\SOL_QUEUE_20260919\P031\sol (worktree C:\tmp\P031_M1_20260913 @ 61c56148; account free; effort xhigh) NOTE: --add-dir grants the reviewer WRITE access to the worktree under workspace-write; the brief forbids writes there, and the Lead verifies 'git status --porcelain' in the worktre
+2026-09-19T08:11:15.7961336Z P031 launching
+2026-09-19T08:37:43.7729870Z P031 ended after 26 min: exit=0 start=2026-09-19T08:11:16.1526237Z end=2026-09-19T08:37:43.7424799Z
+2026-09-19T08:37:43.8796943Z P031 CAPPED (usage text in stream) - chain stops; relaunch by hand after the bucket
+2026-09-19T08:37:43.8812712Z chain complete
+2026-09-19T08:39:52.5593718Z armed: start at 2026-09-19T11:40:00 local; account free; order P031 > P1CAP > P026 > P021S1 > P012INTAKE > P030 > DD06
+2026-09-19T08:40:22.5783763Z start
+2026-09-19T08:40:22.5824917Z P031 already has launch.exit; skip
+2026-09-19T08:40:22.9805513Z P1CAP generate: generated C:\tmp\SOL_QUEUE_20260919\P1CAP\sol (worktree C:\tmp\P1CAP_20260914 @ 1029d6e9; account free; effort xhigh) NOTE: --add-dir grants the reviewer WRITE access to the worktree under workspace-write; the brief forbids writes there, and the Lead verifies 'git status --porcelain' in the worktree
+2026-09-19T08:40:22.9805513Z P1CAP launching
+2026-09-19T09:07:00.5688703Z P1CAP ended after 27 min: exit=0 start=2026-09-19T08:40:23.3063720Z end=2026-09-19T09:07:00.5173819Z
+2026-09-19T09:07:20.7533911Z P026 skipped (SKIP file)
+2026-09-19T09:07:20.7628472Z P021S1 skipped (SKIP file)
+2026-09-19T09:07:21.3425666Z P012INTAKE generate: generated C:\tmp\SOL_QUEUE_20260919\P012INTAKE\sol (worktree C:\tmp\P012_INTAKE_NIT_20260919 @ 8cbf4f1a; account free; effort xhigh) NOTE: --add-dir grants the reviewer WRITE access to the worktree under workspace-write; the brief forbids writes there, and the Lead verifies 'git status --porcelain' 
+2026-09-19T09:07:21.3425666Z P012INTAKE launching
+2026-09-19T09:31:04.8524905Z P012INTAKE ended after 24 min: exit=0 start=2026-09-19T09:07:21.8521970Z end=2026-09-19T09:31:04.8366562Z
+2026-09-19T09:31:25.0433730Z P030 skipped (SKIP file)
+2026-09-19T09:31:25.0433730Z DD06 skipped (SKIP file)
+2026-09-19T09:31:25.0514932Z chain complete
+2026-09-19T10:50:46.2313330Z armed: start at 2026-09-19T13:56:00 local; account free; order P026,P021S1,P030,DD06
+2026-09-19T10:51:07.2679283Z armed: start at 2026-09-19T13:57:30 local; account free; order P031 > P1CAP > P026 > P021S1 > P012INTAKE > P030 > DD06

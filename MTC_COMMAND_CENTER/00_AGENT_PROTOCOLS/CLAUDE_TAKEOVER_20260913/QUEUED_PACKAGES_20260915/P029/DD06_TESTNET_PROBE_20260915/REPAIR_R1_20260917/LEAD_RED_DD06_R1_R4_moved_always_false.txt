@@ -1,0 +1,79 @@
+# mutant R4_moved_always_false (sha256 5c2e3492349c62c7e3844cf7c901de383217ae3818ef0e805c934351a827996b) on the patched tool; HL_* removed from the env; restored to 47c70e6882e674e2d22d2b2fc8337731402c691387c5651432d827db6a6df84b
+.....................FF..                                                [100%]
+================================== FAILURES ===================================
+_ test_not_refused_fund_arm_names_whose_funds_moved[agent-DD06_FINDING_OWN_FUNDS_MOVED-AGENT wallet's own balance changed] _
+
+move = 'agent', result = 'DD06_FINDING_OWN_FUNDS_MOVED'
+phrase = "AGENT wallet's own balance changed"
+
+    @pytest.mark.parametrize(
+        ("move", "result", "phrase"),
+        [
+            ("agent", "DD06_FINDING_OWN_FUNDS_MOVED", "AGENT wallet's own balance changed"),
+            ("master", "DD06_FINDING_MASTER_FUNDS_MOVED", "ACCOUNT's balance changed"),
+            ("none", "DD06_FINDING_NOT_REFUSED", "balances unchanged or unreadable"),
+        ],
+    )
+    def test_not_refused_fund_arm_names_whose_funds_moved(move, result, phrase):
+        # lane-7 review R-4 (the r3 lesson): the record re-reads BOTH wallets after a NOT_REFUSED fund arm
+        # and names whose balance changed instead of asserting a breach it never measured
+        info = _BalancesInfo()
+        exchange = _leaky_exchange(info, move)
+        record = probe.run_probe(
+            record=_record(),
+            info=info,
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+            agent_address=AGENT,
+        )
+>       assert record.result == result
+E       AssertionError: assert 'DD06_FINDING_NOT_REFUSED' == 'DD06_FINDING_OWN_FUNDS_MOVED'
+E         
+E         - DD06_FINDING_OWN_FUNDS_MOVED
+E         ?               ^^   -- ----
+E         + DD06_FINDING_NOT_REFUSED
+E         ?              + ^ ++
+
+tests\test_dd06_agent_withdraw_probe.py:580: AssertionError
+_ test_not_refused_fund_arm_names_whose_funds_moved[master-DD06_FINDING_MASTER_FUNDS_MOVED-ACCOUNT's balance changed] _
+
+move = 'master', result = 'DD06_FINDING_MASTER_FUNDS_MOVED'
+phrase = "ACCOUNT's balance changed"
+
+    @pytest.mark.parametrize(
+        ("move", "result", "phrase"),
+        [
+            ("agent", "DD06_FINDING_OWN_FUNDS_MOVED", "AGENT wallet's own balance changed"),
+            ("master", "DD06_FINDING_MASTER_FUNDS_MOVED", "ACCOUNT's balance changed"),
+            ("none", "DD06_FINDING_NOT_REFUSED", "balances unchanged or unreadable"),
+        ],
+    )
+    def test_not_refused_fund_arm_names_whose_funds_moved(move, result, phrase):
+        # lane-7 review R-4 (the r3 lesson): the record re-reads BOTH wallets after a NOT_REFUSED fund arm
+        # and names whose balance changed instead of asserting a breach it never measured
+        info = _BalancesInfo()
+        exchange = _leaky_exchange(info, move)
+        record = probe.run_probe(
+            record=_record(),
+            info=info,
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+            agent_address=AGENT,
+        )
+>       assert record.result == result
+E       AssertionError: assert 'DD06_FINDING_NOT_REFUSED' == 'DD06_FINDING...R_FUNDS_MOVED'
+E         
+E         - DD06_FINDING_MASTER_FUNDS_MOVED
+E         + DD06_FINDING_NOT_REFUSED
+
+tests\test_dd06_agent_withdraw_probe.py:580: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_moved[agent-DD06_FINDING_OWN_FUNDS_MOVED-AGENT wallet's own balance changed]
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_moved[master-DD06_FINDING_MASTER_FUNDS_MOVED-ACCOUNT's balance changed]
+2 failed, 23 passed in 0.72s
+
+
+exit=1
+tripwire_hit=False

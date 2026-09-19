@@ -1,0 +1,34 @@
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+OK    ledger_store/ledger.jsonl size=28 sha256=ca5f3b5695556696… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+ERROR: test_completed_run_restores_by_explicit_id_including_copied_run_directory (test_opsa.BackupRestoreTests.test_completed_run_restores_by_explicit_id_including_copied_run_directory)
+ERROR: test_partial_run_declaring_files_but_having_no_records_fails_closed (test_opsa.BackupRestoreTests.test_partial_run_declaring_files_but_having_no_records_fails_closed) (check_only=False)
+ERROR: test_partial_run_declaring_files_but_having_no_records_fails_closed (test_opsa.BackupRestoreTests.test_partial_run_declaring_files_but_having_no_records_fails_closed) (check_only=True)
+ERROR: test_tampered_marker_or_run_manifest_is_refused (test_opsa.BackupRestoreTests.test_tampered_marker_or_run_manifest_is_refused)
+FAIL: test_interrupted_run_has_no_completion_marker_and_restore_refuses (test_opsa.BackupRestoreTests.test_interrupted_run_has_no_completion_marker_and_restore_refuses) (check_only=False)
+FAIL: test_interrupted_run_has_no_completion_marker_and_restore_refuses (test_opsa.BackupRestoreTests.test_interrupted_run_has_no_completion_marker_and_restore_refuses) (check_only=True)
+FAIL: test_interrupted_run_has_no_completion_marker_and_restore_refuses (test_opsa.BackupRestoreTests.test_interrupted_run_has_no_completion_marker_and_restore_refuses)
+FAIL: test_restore_without_explicit_run_id_fails_closed (test_opsa.BackupRestoreTests.test_restore_without_explicit_run_id_fails_closed)
+FAIL: test_roundtrip_byte_identical (test_opsa.BackupRestoreTests.test_roundtrip_byte_identical)
+Ran 37 tests in 1.681s
+FAILED (failures=5, errors=4)
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match

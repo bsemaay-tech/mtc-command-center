@@ -1,0 +1,14 @@
+﻿=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    feature/p029-dd06-testnet-probe-20260915
+[freshness] local origin/master tip fcac0ac67cf2682693ad28138b1a56e15a0846f2 age=2 day(s) (commit timestamp; no fetch attempted)
+[freshness] branch merge-base fcac0ac67cf2682693ad28138b1a56e15a0846f2 is 0 commit(s) behind local origin/master (limit 30)
+[dirty]     2 entr(y/ies):
+             M IBKR_PAPER_BRIDGE/tests/test_dd06_agent_withdraw_probe.py
+             M IBKR_PAPER_BRIDGE/tools/dd06_agent_withdraw_probe.py
+[staged]    none
+[protected] none
+[untracked] no risky files
+[pine-alert] PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
+[unpushed]  in sync with upstream
+
+RESULT: PASS

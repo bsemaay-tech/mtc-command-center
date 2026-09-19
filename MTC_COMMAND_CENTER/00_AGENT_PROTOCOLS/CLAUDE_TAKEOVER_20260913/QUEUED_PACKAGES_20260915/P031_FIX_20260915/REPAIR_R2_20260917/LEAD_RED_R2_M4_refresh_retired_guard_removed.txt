@@ -1,0 +1,95 @@
+# RED_R2: mutant M4_refresh_retired_guard_removed (ledger blob e9e37aec lines 812-813 removed; mutant sha256 91c1070bb2d17b9a14b5d221097e8ae8b8a61e5668f288eccea53e156a2723f3); focused suite via pinned interpreter; worktree ledger restored to 81eedf03b79289dce92019a16a56e21ed9612be8cca16660d1b79095cb7ab816
+$ C:/tmp/P020_IMPL_20260912/01a0924d-2c4b-7da1-99e1-24e2a7c7685c/.venv/Scripts/python.exe -m pytest MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py -q -p no:cacheprovider
+................s.................... [ 32%]
+....................... [ 53%]
+..................F..................................         [100%]
+================================== FAILURES ===================================
+_ LifecycleLedgerTests.test_registrar_refresh_cannot_adopt_the_candidates_own_retired_identity _
+
+self = <test_p031_lifecycle_ledger.LifecycleLedgerTests testMethod=test_registrar_refresh_cannot_adopt_the_candidates_own_retired_identity>
+
+    def test_registrar_refresh_cannot_adopt_the_candidates_own_retired_identity(
+        self,
+    ) -> None:
+        """OD-7 refresh-path fence for ``DEPLOYMENT_IDENTITY_RETIRED``: a registrar refresh
+        (SHADOW -> FROZEN under a new composite) that names a deployment identity this
+        candidate already retired must be refused, and the candidate must stay where it
+        was under the identity it currently holds.
+    
+        Second exact-Opus T0 read of ``e9e37aec`` (2026-09-17, finding F-2): removing the
+        refresh-path retired-identity guard left the whole suite green while the ledger
+        accepted the refresh and re-installed the retired identity as current. This test
+        is RED on that mutant and GREEN with the guard.
+        """
+        candidate_id = "QLC-20260917-refresh-retired-identity"
+        self.build_to_rung(
+            self.ledger, candidate_id, "refresh-retired", "SHADOW_ELIGIBLE"
+        )
+        self.append_authority_event(
+            self.ledger,
+            candidate_id=candidate_id,
+            event_id="refresh-retired-retirement",
+            event_type="RETIRED",
+            previous_state="SHADOW",
+            next_state="RETIRED",
+            writer_class="MULTI_WORKER_SUPERVISOR",
+            writer_id="supervisor-1",
+            check_set_version="supervisor.v1",
+            offset=5,
+        )
+        self.registrar.append(
+            event(
+                event_id="refresh-retired-reentry",
+                event_type="RE_ENTRY",
+                previous_state="RETIRED",
+                next_state="CANDIDATE",
+                candidate_id=candidate_id,
+                reason="The venue replaced its matching engine.",
+                trigger="OWNER_EXTERNAL_CHANGE",
+                evidence_references=("fixture://refresh-retired/reentry",),
+                timestamp=BASE_TIME + timedelta(seconds=6),
+            ),
+            evaluation_run_hash=hashlib.sha256(b"refresh-retired-reentry").hexdigest(),
+        )
+        self.registrar.append(
+            event(
+                event_id="refresh-retired-refreeze",
+                event_type="FROZEN",
+                previous_state="CANDIDATE",
+                next_state="FROZEN",
+                candidate_id=candidate_id,
+                package_hash=PACKAGE_B,
+                evidence_references=("fixture://refresh-retired/refreeze",),
+                timestamp=BASE_TIME + timedelta(seconds=7),
+            )
+        )
+        self.append_authority_event(
+            self.ledger,
+            candidate_id=candidate_id,
+            event_id="refresh-retired-readmission",
+            event_type="SHADOW_ELIGIBLE",
+            previous_state="FROZEN",
+            next_state="SHADOW",
+            writer_class="ENVIRONMENT_ADMISSION_AUTHORITY",
+            writer_id="admission-1",
+            check_set_version="shadow-eligibility.v1",
+            package_hash=PACKAGE_B,
+            deployment_identity_hash=DEPLOYMENT_B,
+            offset=8,
+        )
+        state = self.ledger.current_state(candidate_id)
+        self.assertEqual(observed_state(state), "SHADOW")
+        self.assertEqual(state["package_hash"], PACKAGE_B)
+        self.assertEqual(state["deployment_identity_hash"], DEPLOYMENT_B)
+    
+>       with self.assertRaisesRegex(ValueError, "DEPLOYMENT_IDENTITY_RETIRED"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: ValueError not raised
+
+MTC_COMMAND_CENTER\03_QUANTLENS\tools\tests\test_p031_lifecycle_ledger.py:2741: AssertionError
+=========================== short test summary info ===========================
+FAILED MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_p031_lifecycle_ledger.py::LifecycleLedgerTests::test_registrar_refresh_cannot_adopt_the_candidates_own_retired_identity
+1 failed, 111 passed, 1 skipped, 167 subtests passed in 17.35s
+
+
+exit=1

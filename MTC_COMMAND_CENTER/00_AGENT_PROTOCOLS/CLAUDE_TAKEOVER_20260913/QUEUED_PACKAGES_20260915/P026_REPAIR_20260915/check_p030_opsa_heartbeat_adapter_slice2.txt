@@ -1,0 +1,15 @@
+test_emitter_and_verifier_refuse_ambiguous_path_state_dirs (__main__.HeartbeatAdapterTests.test_emitter_and_verifier_refuse_ambiguous_path_state_dirs) ... ok
+test_emitter_refuses_values_its_verifier_would_reject (__main__.HeartbeatAdapterTests.test_emitter_refuses_values_its_verifier_would_reject) ... ok
+test_entry_points_refuse_raw_empty_or_whitespace_state_dir (__main__.HeartbeatAdapterTests.test_entry_points_refuse_raw_empty_or_whitespace_state_dir) ... ok
+test_entry_points_refuse_tilde_alias_of_current_directory (__main__.HeartbeatAdapterTests.test_entry_points_refuse_tilde_alias_of_current_directory) ... ok
+test_exact_p026_heartbeat_round_trip_and_extra_field_refusal (__main__.HeartbeatAdapterTests.test_exact_p026_heartbeat_round_trip_and_extra_field_refusal) ... ok
+test_health_sidecar_binds_observed_time_raw_timestamp_and_derived_age (__main__.HeartbeatAdapterTests.test_health_sidecar_binds_observed_time_raw_timestamp_and_derived_age) ... ok
+test_health_sidecar_declares_unavailable_and_rejects_fabricated_reconciliation (__main__.HeartbeatAdapterTests.test_health_sidecar_declares_unavailable_and_rejects_fabricated_reconciliation) ... ok
+test_permissive_state_directory_reversion_mutant_is_detected (__main__.HeartbeatAdapterTests.test_permissive_state_directory_reversion_mutant_is_detected) ... ok
+test_verifier_derives_path_and_requires_exact_emitter_grammar (__main__.HeartbeatAdapterTests.test_verifier_derives_path_and_requires_exact_emitter_grammar) ... ok
+test_verifier_refuses_duplicate_keys_and_nonfinite_json (__main__.HeartbeatAdapterTests.test_verifier_refuses_duplicate_keys_and_nonfinite_json) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.100s
+
+OK

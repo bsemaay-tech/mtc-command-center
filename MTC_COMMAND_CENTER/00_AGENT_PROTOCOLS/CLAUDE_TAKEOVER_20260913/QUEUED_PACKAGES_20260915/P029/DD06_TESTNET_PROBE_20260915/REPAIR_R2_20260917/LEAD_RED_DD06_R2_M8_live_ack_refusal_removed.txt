@@ -1,0 +1,20 @@
+# mutant M8_live_ack_refusal_removed (sha256 4b0cdb87180bf364997f56049d9267136905a02d33d3c5f18adbb57815a00773) on the patched tool; HL_* removed from the env; restored to 8c62dd1b8396ce47737d87ba2679396146db09c5da3f5576a0a6ea9c585fc191
+F...........................                                             [100%]
+================================== FAILURES ===================================
+______________________ test_refuses_mainnet_and_live_ack ______________________
+
+    def test_refuses_mainnet_and_live_ack():
+        with pytest.raises(probe.ProbeRefused, match="testnet only"):
+            probe.refuse_unless_testnet("mainnet", {})
+>       with pytest.raises(probe.ProbeRefused, match="HL_LIVE_ACK"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ProbeRefused
+
+tests\test_dd06_agent_withdraw_probe.py:127: Failed
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_refuses_mainnet_and_live_ack
+1 failed, 27 passed in 0.66s
+
+
+exit=1
+tripwire_hit=False

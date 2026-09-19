@@ -1,0 +1,5 @@
+D14
+forced_disconn_ok: OK lines=4
+forced_disconn_no_snapshot: ERROR CollectionRefused: snapshot did not fill gap starting at 3600000
+forced_disconn_no_progress: ERROR CollectionRefused: snapshot cursor made no progress
+forced_disconn_residual: ERROR CollectionRefused: snapshot left 1 bar(s) missing

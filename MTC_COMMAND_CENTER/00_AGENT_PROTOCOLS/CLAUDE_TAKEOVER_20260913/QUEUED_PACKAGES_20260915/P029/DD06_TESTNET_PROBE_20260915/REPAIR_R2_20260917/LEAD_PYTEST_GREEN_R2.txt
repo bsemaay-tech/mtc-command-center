@@ -1,0 +1,4 @@
+$ env -u HL_API_WALLET_KEY -u HL_ACCOUNT_ADDRESS python -m pytest tests/test_dd06_agent_withdraw_probe.py -q -p no:cacheprovider --basetemp C:/bt_s4/dd06k (round-2 bytes)
+............................                                             [100%]
+28 passed in 0.53s
+exit=0

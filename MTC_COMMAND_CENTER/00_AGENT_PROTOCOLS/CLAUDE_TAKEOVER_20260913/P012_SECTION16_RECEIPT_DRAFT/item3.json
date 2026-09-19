@@ -1,0 +1,17 @@
+{
+ "review_disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
+ "disposition": "UNCHANGED",
+ "evidence_paths": [
+  "AUTHORITY/P012_PRICE_DESIGN_V1_27.md",
+  "COMPANION_VIEWS/scenario_catalog.pretty.json",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/open_item_applicability.json",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/declared_field_registry.json",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/validate_declared_fields.py",
+  "CAND/mtc_v2/tests/corrected_vnext/verify_bceg.py",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_fees.py",
+  "CAND/mtc_v2/tests/corrected_vnext/contracts/selftests/test_pathd_quantity_guard.py",
+  "CAND/mtc_v2/core/economics.py",
+  "AUTHORITY/PATH_D/PATH_D_DECISION_SIGNED_20260912.md"
+ ],
+ "notes": "Item 3 review of scenario catalog boundaries, cross-version correction interactions, and beyond-finite edge cases confirms complete catalog conservation (9 RED, 8 GREEN, 10 PROBE = 27 rows). The boundary analysis shows robust fail-closed behaviors for non-finite inputs, missing fee payloads, corrupted capture bytes, unmapped liquidation classes, and quantity/notional floors under owner decisions OD-20260912-P012-PATHD-1. Residual risks remain properly bounded and documented under Section 17 Honest Limits (L1 whole-domain finite limits, L9 blocked nodes, L10 unmeasured legacy derivations, L12 unpinned pre-window equity)."
+}

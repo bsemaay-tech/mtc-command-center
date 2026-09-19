@@ -1,0 +1,137 @@
+..FAIL  ledger_store/ledger.jsonl: sha256 mismatch: manifest=d720a54e5d3aeff8… actual=d121be3103007b41…
+error: ledger_store/ledger.jsonl: sha256 mismatch: manifest=d720a54e5d3aeff8… actual=d121be3103007b41…
+...ERROR store 'ledger_store': copy/verify failed for C:\Users\BARSEM~1\AppData\Local\Temp\opsa_test_qin3uy3y\live\ledger_store\sub\blob.bin: simulated interruption during the second file copy
+FFFERROR store 'ledger_store': copy/verify failed for C:\Users\BARSEM~1\AppData\Local\Temp\opsa_test_iziymk85\live\ledger_store\sub\blob.bin: simulated interruption during the second file copy
+..ERROR store 'ghost': source path does not exist: C:\Users\BARSEM~1\AppData\Local\Temp\opsa_test_h_qks7qk\nope
+...E..{"mode": "backup", "run_id": "opsa-20260915T112907.408Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_qkrq3yuw\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:07Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112907.408Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:07Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112907.498Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_iy2kxp7k\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:07Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112907.498Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:07Z"}
+{"mode": "restore", "run_id": "opsa-20260915T112907.498Z", "manifest": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_iy2kxp7k\\copied_backups\\manifest.jsonl", "target": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_iy2kxp7k\\restored_from_copy", "records_selected": 3, "completion_marker": "verified", "run_manifest_sha256": "e86f8beaef3e9c3aa6e2cd251f3ce94d094fcd87c4c56219f99115a3e8b30d5b", "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=d720a54e5d3aeff8…
+RESTORED ledger_store/sub/blob.bin sha256=785b0751fc2c53dc…
+{"mode": "restore", "run_id": "opsa-20260915T112907.498Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 1, "errors": 0, "finished_at": "2026-09-15T11:29:07Z"}
+{"mode": "dry-run", "run_id": "opsa-20260915T112907.637Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_gflx9bxo\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:07Z"}
+PLAN  ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8…
+PLAN  ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc…
+{"run_id": "opsa-20260915T112907.637Z", "status": "ok", "files": 0, "bytes": 0, "errors": 0, "completion_marker": "none", "finished_at": "2026-09-15T11:29:07Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112907.663Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_qin3uy3y\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:07Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+{"run_id": "opsa-20260915T112907.663Z", "status": "partial", "files": 1, "bytes": 51, "errors": 1, "completion_marker": "none", "finished_at": "2026-09-15T11:29:07Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112907.772Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_iziymk85\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:07Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+{"run_id": "opsa-20260915T112907.772Z", "status": "partial", "files": 1, "bytes": 51, "errors": 1, "completion_marker": "none", "finished_at": "2026-09-15T11:29:07Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112907.849Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_82rism45\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:07Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112907.849Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:07Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112907.915Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_82rism45\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:07Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112907.915Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:07Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112907.985Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_h_qks7qk\\backups", "stores": ["ghost"], "started_at": "2026-09-15T11:29:07Z"}
+{"run_id": "opsa-20260915T112907.985Z", "status": "partial", "files": 0, "bytes": 0, "errors": 1, "completion_marker": "none", "finished_at": "2026-09-15T11:29:07Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112908.013Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_xou02ie4\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:08Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112908.013Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:08Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112908.071Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_xou02ie4\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:08Z"}
+OK    ledger_store/ledger.jsonl size=28 sha256=ca5f3b5695556696… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112908.071Z", "status": "ok", "files": 2, "bytes": 1052, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:08Z"}
+{"mode": "restore", "run_id": "opsa-20260915T112908.071Z", "manifest": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_xou02ie4\\backups\\manifest.jsonl", "target": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_xou02ie4\\restored", "records_selected": 3, "completion_marker": "verified", "run_manifest_sha256": "6660441343f2112b2b9af4456bdbd5696462a03a85339e524304bafb5ba3d909", "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=ca5f3b5695556696…
+RESTORED ledger_store/sub/blob.bin sha256=785b0751fc2c53dc…
+{"mode": "restore", "run_id": "opsa-20260915T112908.071Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 1, "errors": 0, "finished_at": "2026-09-15T11:29:08Z"}
+{"mode": "restore", "run_id": "opsa-20260915T112908.013Z", "manifest": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_xou02ie4\\backups\\manifest.jsonl", "target": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_xou02ie4\\restored_first", "records_selected": 3, "completion_marker": "verified", "run_manifest_sha256": "535214eff6afb92d02a87c3200b2c9d56a00ebce3a957ebe95b4c56cf71a8aa5", "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=d720a54e5d3aeff8…
+RESTORED ledger_store/sub/blob.bin sha256=785b0751fc2c53dc…
+{"mode": "restore", "run_id": "opsa-20260915T112908.013Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 1, "errors": 0, "finished_at": "2026-09-15T11:29:08Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112908.240Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_aqnqew8t\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:08Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112908.240Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:08Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112908.714Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_hphb8eqp\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:08Z"}FAIL  ledger_store/sub/blob.bin: sha256 mismatch: manifest=785b0751fc2c53dc… actual=82327d431835e86d…
+error: ledger_store/sub/blob.bin: sha256 mismatch: manifest=785b0751fc2c53dc… actual=82327d431835e86d…
+.............error: no heartbeat files found and no --expect ids given (watching nothing cannot be OK)
+...error: invalid --now value: Invalid isoformat string: 'not-a-timestamp'
+....error: state dir does not exist: C:\Users\BARSEM~1\AppData\Local\Temp\opsa_wd_3qr0saa2\gone
+.....
+======================================================================
+ERROR: test_partial_run_declaring_files_but_having_no_records_fails_closed (test_opsa.BackupRestoreTests.test_partial_run_declaring_files_but_having_no_records_fails_closed)
+D026: a partial manifest cannot turn zero restored records into success.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\tmp\P026_RED_SLICE3\test_opsa.py", line 455, in test_partial_run_declaring_files_but_having_no_records_fails_closed
+    report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\json\decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\json\decoder.py", line 356, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+======================================================================
+FAIL: test_hand_made_completion_evidence_cannot_revive_a_run_the_tool_did_not_close (test_opsa.BackupRestoreTests.test_hand_made_completion_evidence_cannot_revive_a_run_the_tool_did_not_close) (arm='interrupted', check_only=True)
+Gemini detection F-01 (2026-09-15): a COMPLETE.json + RUN_MANIFEST.jsonl pair written by
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\tmp\P026_RED_SLICE3\test_opsa.py", line 281, in assert_refused
+    self.assertEqual(rc, 3)
+AssertionError: 0 != 3
+
+======================================================================
+FAIL: test_hand_made_completion_evidence_cannot_revive_a_run_the_tool_did_not_close (test_opsa.BackupRestoreTests.test_hand_made_completion_evidence_cannot_revive_a_run_the_tool_did_not_close) (arm='interrupted', check_only=False)
+Gemini detection F-01 (2026-09-15): a COMPLETE.json + RUN_MANIFEST.jsonl pair written by
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\tmp\P026_RED_SLICE3\test_opsa.py", line 281, in assert_refused
+    self.assertEqual(rc, 3)
+AssertionError: 0 != 3
+
+======================================================================
+FAIL: test_hand_made_completion_evidence_cannot_revive_a_run_the_tool_did_not_close (test_opsa.BackupRestoreTests.test_hand_made_completion_evidence_cannot_revive_a_run_the_tool_did_not_close)
+Gemini detection F-01 (2026-09-15): a COMPLETE.json + RUN_MANIFEST.jsonl pair written by
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\tmp\P026_RED_SLICE3\test_opsa.py", line 289, in test_hand_made_completion_evidence_cannot_revive_a_run_the_tool_did_not_close
+    assert_refused(self.config, "interrupted")
+  File "C:\tmp\P026_RED_SLICE3\test_opsa.py", line 285, in assert_refused
+    self.assertFalse(target.exists())
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 39 tests in 2.221s
+
+FAILED (failures=3, errors=1)
+
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112908.714Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:08Z"}
+{"mode": "restore", "run_id": "opsa-20260915T112908.714Z", "manifest": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_hphb8eqp\\backups\\manifest.jsonl", "target": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_hphb8eqp\\restored", "records_selected": 3, "completion_marker": "verified", "run_manifest_sha256": "45d278ab493bb761069d63377489fec4c41fde8eb353238291354ad70657d69e", "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=d720a54e5d3aeff8…
+{"mode": "restore", "run_id": "opsa-20260915T112908.714Z", "status": "failed", "verified_against_manifest": 1, "restored": 1, "overwritten": 0, "dirs_recreated": 1, "errors": 1, "finished_at": "2026-09-15T11:29:08Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112908.855Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_is88nkpv\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:08Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112908.855Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:08Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112909.073Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_d_qxj7_t\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:09Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112909.073Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:09Z"}
+{"mode": "restore", "run_id": "opsa-20260915T112909.073Z", "manifest": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_d_qxj7_t\\backups\\manifest.jsonl", "target": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_d_qxj7_t\\restored", "records_selected": 3, "completion_marker": "verified", "run_manifest_sha256": "9f63604431146280b6ad76d466f0ffca0972c14ea895500e8436ec98761808ab", "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=d720a54e5d3aeff8…
+RESTORED ledger_store/sub/blob.bin sha256=785b0751fc2c53dc…
+{"mode": "restore", "run_id": "opsa-20260915T112909.073Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 1, "errors": 0, "finished_at": "2026-09-15T11:29:09Z"}
+{"mode": "backup", "run_id": "opsa-20260915T112909.191Z", "backup_root": "C:\\Users\\BARSEM~1\\AppData\\Local\\Temp\\opsa_test_sohyi36t\\backups", "stores": ["ledger_store"], "started_at": "2026-09-15T11:29:09Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8… readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc… readback=match
+{"run_id": "opsa-20260915T112909.191Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "completion_marker": "written", "finished_at": "2026-09-15T11:29:09Z"}

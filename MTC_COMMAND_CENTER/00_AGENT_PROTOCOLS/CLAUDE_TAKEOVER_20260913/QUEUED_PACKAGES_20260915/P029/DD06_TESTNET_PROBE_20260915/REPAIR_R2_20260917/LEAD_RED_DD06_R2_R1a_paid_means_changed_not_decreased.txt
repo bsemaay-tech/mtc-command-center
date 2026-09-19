@@ -1,0 +1,163 @@
+# mutant R1a_paid_means_changed_not_decreased (sha256 c832aa764d71930d910cca7261dab1126c86a710a02902d8453ca2546ed822ce) on the patched tool; HL_* removed from the env; restored to 8c62dd1b8396ce47737d87ba2679396146db09c5da3f5576a0a6ea9c585fc191
+.....................F.F..F.                                             [100%]
+================================== FAILURES ===================================
+_________ test_not_refused_fund_arm_names_whose_funds_left[r3-replay] _________
+
+effect = <function _r3_replay at 0x0000000004AD2980>
+result = 'DD06_FINDING_OWN_FUNDS_MOVED'
+phrase = 'the agent moved its own funds', absent = 'falsified'
+
+    @pytest.mark.parametrize(
+        ("effect", "result", "phrase", "absent"),
+        [
+            (
+                _r3_replay,
+                "DD06_FINDING_OWN_FUNDS_MOVED",
+                "the agent moved its own funds",
+                "falsified",
+            ),
+            (
+                _master_pays,
+                "DD06_FINDING_MASTER_FUNDS_MOVED",
+                "DD-06 falsified on testnet",
+                "own funds",
+            ),
+            (
+                _tick_only,
+                "DD06_FINDING_NOT_REFUSED",
+                "no readable balance decreased",
+                "falsified",
+            ),
+            (
+                _nothing,
+                "DD06_FINDING_NOT_REFUSED",
+                "account did not pay, agent wallet did not pay",
+                "falsified",
+            ),
+            (
+                _agent_pays_master_unreadable,
+                "DD06_FINDING_OWN_FUNDS_MOVED",
+                "account UNREADABLE",
+                "unchanged",
+            ),
+        ],
+        ids=[
+            "r3-replay",
+            "master-pays",
+            "mark-to-market-tick",
+            "nothing-moves",
+            "agent-pays-master-unreadable",
+        ],
+    )
+    def test_not_refused_fund_arm_names_whose_funds_left(effect, result, phrase, absent):
+        # second exact-Opus read of a46b2a9d, R-1: attribution is directional (a DECREASE) and amount-aware;
+        # replaying r3's real readings must NOT print the breach sentence, and an unreadable side is named as
+        # unreadable, never as unchanged
+        info = _BalancesInfo()
+        exchange = _leaky_exchange(info, effect)
+        record = probe.run_probe(
+            record=_record(),
+            info=info,
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+            agent_address=AGENT,
+        )
+>       assert record.result == result
+E       AssertionError: assert 'DD06_FINDING...R_FUNDS_MOVED' == 'DD06_FINDING_OWN_FUNDS_MOVED'
+E         
+E         - DD06_FINDING_OWN_FUNDS_MOVED
+E         ?              ^^^
+E         + DD06_FINDING_MASTER_FUNDS_MOVED
+E         ?              ^^^^^^
+
+tests\test_dd06_agent_withdraw_probe.py:657: AssertionError
+____ test_not_refused_fund_arm_names_whose_funds_left[mark-to-market-tick] ____
+
+effect = <function _tick_only at 0x0000000004AD2AC0>
+result = 'DD06_FINDING_NOT_REFUSED', phrase = 'no readable balance decreased'
+absent = 'falsified'
+
+    @pytest.mark.parametrize(
+        ("effect", "result", "phrase", "absent"),
+        [
+            (
+                _r3_replay,
+                "DD06_FINDING_OWN_FUNDS_MOVED",
+                "the agent moved its own funds",
+                "falsified",
+            ),
+            (
+                _master_pays,
+                "DD06_FINDING_MASTER_FUNDS_MOVED",
+                "DD-06 falsified on testnet",
+                "own funds",
+            ),
+            (
+                _tick_only,
+                "DD06_FINDING_NOT_REFUSED",
+                "no readable balance decreased",
+                "falsified",
+            ),
+            (
+                _nothing,
+                "DD06_FINDING_NOT_REFUSED",
+                "account did not pay, agent wallet did not pay",
+                "falsified",
+            ),
+            (
+                _agent_pays_master_unreadable,
+                "DD06_FINDING_OWN_FUNDS_MOVED",
+                "account UNREADABLE",
+                "unchanged",
+            ),
+        ],
+        ids=[
+            "r3-replay",
+            "master-pays",
+            "mark-to-market-tick",
+            "nothing-moves",
+            "agent-pays-master-unreadable",
+        ],
+    )
+    def test_not_refused_fund_arm_names_whose_funds_left(effect, result, phrase, absent):
+        # second exact-Opus read of a46b2a9d, R-1: attribution is directional (a DECREASE) and amount-aware;
+        # replaying r3's real readings must NOT print the breach sentence, and an unreadable side is named as
+        # unreadable, never as unchanged
+        info = _BalancesInfo()
+        exchange = _leaky_exchange(info, effect)
+        record = probe.run_probe(
+            record=_record(),
+            info=info,
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+            agent_address=AGENT,
+        )
+>       assert record.result == result
+E       AssertionError: assert 'DD06_FINDING...R_FUNDS_MOVED' == 'DD06_FINDING_NOT_REFUSED'
+E         
+E         - DD06_FINDING_NOT_REFUSED
+E         + DD06_FINDING_MASTER_FUNDS_MOVED
+
+tests\test_dd06_agent_withdraw_probe.py:657: AssertionError
+_________ test_paid_is_directional_amount_aware_and_unreadable_honest _________
+
+    def test_paid_is_directional_amount_aware_and_unreadable_honest():
+        paid = probe._paid
+        both = {"accountValue": "0.0", "usdc_total": "14.0"}
+        assert paid(both, {"accountValue": "0.0", "usdc_total": "13.0"}, 1.0) is True
+>       assert paid(both, {"accountValue": "0.0", "usdc_total": "15.0"}, 1.0) is False
+E       AssertionError: assert True is False
+E        +  where True = <function _paid at 0x0000000004AD09A0>({'accountValue': '0.0', 'usdc_total': '14.0'}, {'accountValue': '0.0', 'usdc_total': '15.0'}, 1.0)
+
+tests\test_dd06_agent_withdraw_probe.py:671: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[r3-replay]
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_not_refused_fund_arm_names_whose_funds_left[mark-to-market-tick]
+FAILED tests/test_dd06_agent_withdraw_probe.py::test_paid_is_directional_amount_aware_and_unreadable_honest
+3 failed, 25 passed in 0.73s
+
+
+exit=1
+tripwire_hit=False

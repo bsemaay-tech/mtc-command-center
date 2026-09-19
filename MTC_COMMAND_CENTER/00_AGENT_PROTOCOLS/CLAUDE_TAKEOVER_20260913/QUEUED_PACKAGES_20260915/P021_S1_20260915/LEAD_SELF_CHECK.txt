@@ -1,0 +1,8 @@
+SELF-CHECK PASS: 7 checks all refuse readiness
+CLOSED NUMBERS: 13 (profile balanced, provisional)
+OPEN NUMBERS: 3
+MODIFIED COPY DETECTED: divergence_tolerance refusal wiring removed
+S2 CLOSED (catalogue only): gap_ratio_max=0.0001 on m2; B-17 formula pin; B-13 ds-v1 pin; B-05 metric M-C
+MODIFIED COPY DETECTED: swing_forward_period closure removed
+READY=False
+self-check exit=0

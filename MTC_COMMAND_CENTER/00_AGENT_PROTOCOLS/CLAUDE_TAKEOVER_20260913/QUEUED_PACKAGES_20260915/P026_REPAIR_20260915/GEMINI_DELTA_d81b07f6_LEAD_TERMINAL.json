@@ -1,0 +1,13 @@
+{
+  "window": "P012-S16-G5-P026_DELTA_GEMINI",
+  "verified_at": "2026-09-15T11:54:54.488468+00:00",
+  "runner_exit": 0,
+  "elapsed_seconds": 516.4,
+  "launch_exit": "exit=0 actual_exit=0 start=2026-09-15T11:46:18.4440783Z end=2026-09-15T11:54:49.4606122Z",
+  "review_log_bytes": 15539,
+  "review_log_sha256": "9723d8f4e8f754dd6b0bb10606b475b6ca0f27f60ced760040144835d8e19bfd",
+  "agy_helpers_after": 0,
+  "manifest_sha256_after": "e8f76ca866a0e9920bf62e61d8fe70f7a379444b7d03bb829b67816effaea37c",
+  "candidate_head_after": "dac9dba67772e911d7c255e60d4b878271d3a42e",
+  "candidate_dirty_after": 0
+}

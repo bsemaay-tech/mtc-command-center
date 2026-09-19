@@ -1,0 +1,14 @@
+# LEAD_ADJUDICATION — GKPD (Grok pre-screen of the WP-P0-20 plan-derivation tool) — 2026-09-14 05:30Z
+
+Verdict `GROK_DERIVE_VERDICT: REQUIRED_FOUND` (05:15-05:26Z; 11 tests reproduced; 7 probes A-G). Lead disposition of each finding, verified against the current bytes:
+
+| # | Grok | Lead check | Disposition |
+|---|---|---|---|
+| 1 REQUIRED | parse/hash are two reads of the same path (frozen, base plan, eligibility, calibration); `derivation.*_sha256` can attest bytes other than those that produced `trials` | CONFIRMED in `derive_benchmark_plan.py:152-160` (`load_json` then `sha256_path`) and `:165-168`; same defect class as Sol's T1 on the preselection tool (single-read rule). Probe D reproduced it on synthetic files. | REQUIRED — repair: read each input once as bytes, hash that buffer, parse that buffer; record the digests of the parsed buffers. |
+| 2 REQUIRED | the existing driver's `_validate_plan` hard-codes the five family names, so a derived plan for any other matching is `PLAN_INVALID`; the tool does not fail closed on that | CONFIRMED at `C:/tmp/P020_LEAD_20260912/benchmark/run_bounded_benchmark.py:181-185`. This is a CONSUMER constraint, not a tool bug alone: the driver is a pinned P020 source (`implementation_sources`, sha 4b293de6…) and changing it is engineering under the P020 protected surface + T0 roster. | REQUIRED, escalated to the owner as decision **D5** (generalize the driver's family check under a reviewed change, or accept that the derived plan is consumable only if the oneshot selection lands on the original five families). Interim tool repair: refuse with an explicit code when the selection set differs from the driver's accepted set, so the mismatch is recorded instead of surfacing as `PLAN_INVALID` at run time. |
+| 3 NIT | whole-document re-dump (`indent=2`) instead of a byte splice of `trials`; non-trial VALUES preserved, whitespace drifts | CONFIRMED (`dump_bytes:44-45`); TASK.md said "byte-for-byte". | NIT — decide at repair: splice or document "value-for-value". |
+| 4 NIT | tests miss malformed-JSON, non-object JSON and frozen-file-vs-pin refusals | CONFIRMED (test names :121-217). | NIT — add tests with the repair. |
+| 5 NIT | `strategy_family` label mixed (base-plan label if present else strategy_id) | CONFIRMED (`family_label:65-69`). | NIT — use one rule; driver checks presence only. |
+| 6 NIT | DERIVATION_RULE.md cites V1.3 line numbers; T0 packet pins V1.3 frozen `2e67f3f4…` and procedure `ac8848c3…` | CONFIRMED (known before launch; `EXPECTED_FROZEN_SHA256` at :12 too). | NIT — re-pin to the roster-accepted digest + refresh citations in the same repair. |
+
+Consequence for sequencing: the derivation tool is NOT ready for the Sol/Gemini review. Repair lane (Codex Spark or gpt-5.5 on the Plus pool; mechanical) after V1.4 reaches roster acceptance and after owner D5; then Grok re-audit, then Sol + Gemini review. Nothing executed; no owner decision answered here.

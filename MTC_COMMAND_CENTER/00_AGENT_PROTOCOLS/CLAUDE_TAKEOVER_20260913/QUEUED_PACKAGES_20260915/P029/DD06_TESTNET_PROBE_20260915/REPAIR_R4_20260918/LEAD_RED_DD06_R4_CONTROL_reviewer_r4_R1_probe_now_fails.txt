@@ -1,0 +1,55 @@
+$ (scratch C:\tmp\LEAD_DD06_SCRATCH_R4_RED) -m pytest tests/test_r4_reviewer.py -q -p no:cacheprovider --basetemp=C:/bt_s4/dd06r4c -rf -k R1_inconclusive
+F                                                                        [100%]
+================================== FAILURES ===================================
+__________ test_R1_inconclusive_fund_arm_neither_stops_nor_measures ___________
+
+capsys = <_pytest.capture.CaptureFixture object at 0x0000000006CD01A0>
+
+    def test_R1_inconclusive_fund_arm_neither_stops_nor_measures(capsys):
+        """A fund-moving arm whose outcome the tool could NOT determine is not stopped on and not measured;
+        two further signed fund-moving requests are sent afterwards."""
+    
+        class Unparseable(FakeExchange):
+            def withdraw_from_bridge(self, amount, destination):
+                self.calls.append("withdraw3")
+                return SDK_UNPARSEABLE_200
+    
+        info = _BalancesInfo()
+        exchange = Unparseable()
+        record = probe.run_probe(
+            record=_record(),
+            info=info,
+            exchange=exchange,
+            account_address=ACCOUNT,
+            sub_account=None,
+            agent_address=AGENT,
+        )
+        outcomes = {s["name"]: s["outcome"] for s in record.steps}
+        names = [s["name"] for s in record.steps]
+    
+        print("OUTCOME(withdraw3) :", outcomes["withdraw3"])
+        print("RESULT             :", record.result)
+        print("FINDING            :", record.finding)
+        print("EXCHANGE CALLS     :", exchange.calls)
+        print("POST-ARM RE-READS  :", [n for n in names if n.startswith("post_")])
+    
+        # the venue was asked to move 6 USDC and the tool does not know what happened
+        assert outcomes["withdraw3"] == "INCONCLUSIVE"
+        assert "withdraw3" in probe.FUND_MOVING_ARMS
+        # ... yet: no balance re-read of either wallet
+>       assert [n for n in names if n.startswith("post_")] == []
+E       AssertionError: assert ['post_withdr...ent_balances'] == []
+E         
+E         Left contains 2 more items, first extra item: 'post_withdraw3_account_balances'
+E         Use -v to get more diff
+
+tests\test_r4_reviewer.py:63: AssertionError
+---------------------------- Captured stdout call -----------------------------
+OUTCOME(withdraw3) : INCONCLUSIVE
+RESULT             : DD06_INCONCLUSIVE_FUND_ARM_UNCLASSIFIED
+FINDING            : withdraw3 returned a response the probe could not classify (neither a refusal nor an acceptance envelope) - the signed request may have executed; balances re-read and the sequence stopped: withdraw3 was NOT refused; no readable balance decreased by half the arm amount on either wallet [account did not pay, agent wallet did not pay] - read the venue response and the ledger before drawing any DD-06 conclusion
+EXCHANGE CALLS     : ['order', 'cancel:60109082440', 'usdSend', 'spotSend', 'withdraw3']
+POST-ARM RE-READS  : ['post_withdraw3_account_balances', 'post_withdraw3_agent_balances']
+=========================== short test summary info ===========================
+FAILED tests/test_r4_reviewer.py::test_R1_inconclusive_fund_arm_neither_stops_nor_measures
+1 failed, 16 deselected in 0.53s
