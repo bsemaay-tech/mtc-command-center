@@ -108,3 +108,4 @@
 2026-09-19T10:53:09Z LEAD: PR #197 (capture tool 9f1aa532 = af921d75 + NIT slice + Sol repair R-1/R-2) MERGED -> master 9edf846b under OD-20260919-P012-MERGE-CAPTURE-GO-1; roster Gemini PASS + Opus[MAX] PASS-WITH-NITS (counted: final write 09:43:25.590Z precedes the 429 at 09:43:26.525Z) + Sol PASS-WITH-NITS (clean) + package reproduction + Lead 34/34; CI 9/9 green. WP-P0-12 Layer A: both candidates merged
 2026-09-19T10:54:15Z P012SESSION: WP-P0-12 Layer A merged to master 9edf846b (PR #197). CAPTURE_SESSION_FINAL_20260919.md written. Session idle, no further work/lanes/git per Lead instruction.
 2026-09-19T10:54:45Z LEAD: WP-P0-12 Layer A CLOSED (record final); handoff/prompt/memory refreshed; CT13 wave 29 staged (20 paths)
+2026-09-19T10:57:35Z OWNER: CT13-MERGE now -> OD-20260919-CT13-MERGE-NOW-1; Lead opens the records PR for feature/claude-takeover-20260913 -> master

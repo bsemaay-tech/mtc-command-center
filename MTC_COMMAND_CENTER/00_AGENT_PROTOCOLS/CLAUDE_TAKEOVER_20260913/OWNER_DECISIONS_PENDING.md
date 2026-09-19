@@ -192,3 +192,5 @@ Proposed, none urgent today (details in `P012_CLOSEOUT_PLAN_20260919.md`):
 **2026-09-19 12:1x UTC+3 - owner: `INTAKE-MERGE slice`** -> `OD-20260919-P012-INTAKE-MERGE-SLICE-1`: the intake merge candidate is `8cbf4f1a` (fix batch), not the as-is `a871e429`. Open one-liners: `D6-GRID A|B` (not urgent). Proposed: `CT13-MERGE now|later`, `O-1 build`.
 
 **2026-09-19 12:4x UTC+3 - owner: `P012-MERGE intake go  D6-GRID A`** -> merge already executed (PR #196, 12:36); `OD-20260919-P012-D6-GRID-A-1` (align the completeness grid to the admission band; next intake slice). Open one-liners: none. Proposed: `CT13-MERGE now|later`, `O-1 build`.
+
+**2026-09-19 14:0x UTC+3 - owner: `CT13-MERGE now`** -> `OD-20260919-CT13-MERGE-NOW-1`; the Lead opens the records PR (CT13 branch -> master) and merges it on green CI. Open one-liners: none. Proposed later: `O-1 build`.
