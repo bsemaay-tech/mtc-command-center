@@ -19,6 +19,16 @@ defeated (RED / falsification) and passing (GREEN), with commands and real outpu
 
 ## Part A — backup → damage → RED (no backup = unrecoverable) → GREEN (restore byte-identical)
 
+> **Note added 2026-09-18 (NIT-4 of the exact-Opus read of `e114ed31`), re-applied 2026-09-19
+> (`OD-20260919-P026-EVID-B-1`, P0-26 repair round 1).** The restore contract changed on this
+> branch after this drill was recorded: `--latest` was REMOVED (a restore names one explicit
+> `--run <id>`), and a run is restorable only when it carries
+> `runs/<run_id>/COMPLETE.json` + `RUN_MANIFEST.jsonl` written by the current `backup.py`.
+> The commands below that pass `--latest` now exit 2, and the 2026-08-24 run has no
+> `COMPLETE.json`, so they cannot be replayed as written. To reproduce the drill: back up with
+> the current tool, then `restore.py --config ... --run <that run id> --check-only` / `--to ...`.
+> The transcript below is kept unchanged as the pre-change record.
+
 ### A0. Fixture store (copies in worktree scratch)
 
 ```bash
@@ -451,6 +461,11 @@ NEW_rc=3
 Check-failed record on stdout, one notifier event, rc 3 — never a traceback.
 
 ## C4. Nit 4 — `--check-only` no longer reports `dirs_recreated` it did not create
+
+> **Note added 2026-09-19 (Opus fifth-read NIT-3, `OD-20260919-P026-EVID-B-1`, P0-26 repair
+> round 1).** The Part-A note above only covers Part A: the GREEN reproduction below also passes
+> `--latest`, which no longer exists on this branch (see the Part-A note for the explicit-run
+> replacement and why this transcript is kept unchanged as the pre-change record).
 
 ### RED — new unit assertion vs pre-fix restore.py (temp copy)
 

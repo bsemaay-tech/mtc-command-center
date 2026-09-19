@@ -35,7 +35,7 @@ text) — otherwise rc 3 would be the only trace and the evidence-store-vanished
 scenario would leave no alert record anywhere.
 
 Usage:
-    python watchdog.py --state-dir D --silence-seconds 900 [--expect id1,id2] \
+    python watchdog.py --state-dir D --silence-seconds 300 [--expect id1,id2] \
                        [--notifier local_log] [--notifier-log PATH] \
                        [--state-file PATH] [--now ISO]
 

@@ -88,7 +88,10 @@ def verify_completion_evidence(run_dir: Path, run_id: str, global_records: list[
                              f"{end.get('status')!r} with {len(end.get('errors') or [])} "
                              "error(s); only a run the backup tool closed successfully "
                              "may be restored")
-    run_records = read_jsonl(run_manifest_path(run_dir))
+    try:
+        run_records = read_jsonl(run_manifest_path(run_dir))
+    except UnicodeDecodeError as exc:
+        raise RunNotComplete(f"run {run_id}: per-run manifest is not valid UTF-8: {exc}") from exc
     if any(r.get("record") == "_malformed" for r in run_records):
         raise RunNotComplete(f"run {run_id}: per-run manifest has malformed lines")
     header = run_records[0] if run_records else {}
@@ -101,6 +104,18 @@ def verify_completion_evidence(run_dir: Path, run_id: str, global_records: list[
                           if r.get("record") == "file" and r.get("run_id") == run_id)
     if per_run_files != global_files:
         raise RunNotComplete(f"run {run_id}: per-run manifest file records differ from the global manifest")
+    # REQUIRED-1 (exact-Sol T0 read of 2e03a669): restore also consumes `dir` records
+    # (select_run selects file AND dir; the loop below creates directories straight from the
+    # GLOBAL manifest after this gate passes), so a dir record can disagree between the two
+    # manifests exactly like a file record could before this check existed. Type-appropriate
+    # canonical key: dirs carry no sha256/size, so (store_id, rel) is the full identity.
+    def _dir_key(r: dict) -> tuple:
+        return (r.get("store_id"), r.get("rel"))
+    per_run_dirs = sorted(_dir_key(r) for r in run_records if r.get("record") == "dir")
+    global_dirs = sorted(_dir_key(r) for r in global_records
+                         if r.get("record") == "dir" and r.get("run_id") == run_id)
+    if per_run_dirs != global_dirs:
+        raise RunNotComplete(f"run {run_id}: per-run manifest dir records differ from the global manifest")
     declared = marker.get("files")
     if not isinstance(declared, int) or isinstance(declared, bool) or declared != len(per_run_files):
         raise RunNotComplete(f"run {run_id}: completion marker declares files={declared!r}, "

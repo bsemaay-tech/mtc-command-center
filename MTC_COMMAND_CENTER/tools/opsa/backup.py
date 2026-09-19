@@ -15,8 +15,10 @@ Guarantees (see opsa_common module docstring):
 - **Completion evidence per run (WP-P0-26 completion-marker repair).** A run that finished
   with every readback hash matching writes, inside its own run directory and exclusively
   (never rewritten), the per-run ``RUN_MANIFEST.jsonl`` (header + every file/dir/skipped
-  record) and then ``COMPLETE.json`` (counts, timestamps, the manifest's SHA-256). A partial
-  or interrupted run leaves neither, and ``restore.py`` refuses it.
+  record) and then ``COMPLETE.json`` (counts, timestamps, the manifest's SHA-256). A run with
+  any error never attempts either write. A crash between the two writes can leave
+  ``RUN_MANIFEST.jsonl`` without ``COMPLETE.json``; ``restore.py`` requires the marker and
+  refuses any run that lacks it either way (P0-26 repair round 1, NIT-1).
 
 Dry-run (``--dry-run``) walks and hashes the sources and prints the plan but writes
 nothing — no run directory, no manifest records.

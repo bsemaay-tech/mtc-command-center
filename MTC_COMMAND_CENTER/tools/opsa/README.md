@@ -71,7 +71,7 @@ python restore.py --config opsa_config.json --run opsa-20260101T000000.000Z --to
 # Dead-man watchdog (NO schedule is installed by this package):
 python heartbeat.py emit --state-dir D:/hb --id my_process
 python heartbeat.py loop --state-dir D:/hb --id my_process --interval 60
-python watchdog.py --state-dir D:/hb --silence-seconds 900 --expect my_process
+python watchdog.py --state-dir D:/hb --silence-seconds 300 --expect my_process
 ```
 
 ## Watchdog states and exit codes

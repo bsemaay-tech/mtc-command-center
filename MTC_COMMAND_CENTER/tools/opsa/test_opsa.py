@@ -403,6 +403,186 @@ class BackupRestoreTests(unittest.TestCase):
         self.assertEqual(rc, 1)
         self.assertFalse((target / "ledger_store" / "ledger.jsonl").exists())
 
+    def test_restore_refuses_when_global_dir_record_is_forged(self):
+        """Falsification 5 (exact-Sol T0 REQUIRED-1, `2e03a669`): restore selects file AND dir
+        records (`select_run`) and creates directories straight from the GLOBAL manifest after
+        the gate passes -- so a `dir` record must be cross-checked exactly like a `file` record.
+        Forging only the global manifest's `dir.rel` (the digest-bound per-run manifest is
+        untouched) must be refused before any restore action -- mirrors the reviewer's
+        `dir_record_mismatch_probe.py` exactly."""
+        self.assertEqual(self._run_backup(), 0)
+        run_id = self._only_run_id()
+        records = [json.loads(line) for line in
+                   self.manifest.read_text(encoding="utf-8").splitlines()]
+        dir_record = next(r for r in records
+                          if r.get("record") == "dir" and r.get("run_id") == run_id)
+        dir_record["rel"] = "forged-empty-dir"
+        self.manifest.write_text(
+            "".join(json.dumps(r, sort_keys=True) + "\n" for r in records), encoding="utf-8")
+        target = self.root / "restored"
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(self.config, run_id=run_id, target=target)
+        self.assertEqual(rc, 3)
+        report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+        self.assertEqual(report["error"], "run_not_complete")
+        self.assertIn("dir records differ", report["detail"])
+        self.assertFalse(target.exists())
+
+    def test_restore_refuses_when_global_manifest_adds_a_dir_record(self):
+        """Falsification 6 (exact-Sol T0 REQUIRED-1 arm 2): a `dir` record present ONLY in the
+        global manifest for the run (never in the digest-bound per-run manifest) must also be
+        refused -- a mismatch by addition, not just by content change."""
+        self.assertEqual(self._run_backup(), 0)
+        run_id = self._only_run_id()
+        records = [json.loads(line) for line in
+                   self.manifest.read_text(encoding="utf-8").splitlines()]
+        insert_at = next(i for i, r in enumerate(records)
+                         if r.get("record") == "run_end" and r.get("run_id") == run_id)
+        records.insert(insert_at, {"record": "dir", "run_id": run_id,
+                                   "store_id": "ledger_store", "class": "protected",
+                                   "rel": "globally-added-dir"})
+        self.manifest.write_text(
+            "".join(json.dumps(r, sort_keys=True) + "\n" for r in records), encoding="utf-8")
+        target = self.root / "restored"
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(self.config, run_id=run_id, target=target)
+        self.assertEqual(rc, 3)
+        report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+        self.assertEqual(report["error"], "run_not_complete")
+        self.assertIn("dir records differ", report["detail"])
+        self.assertFalse(target.exists())
+
+    def test_marker_schema_mismatch_is_refused(self):
+        """Opus fifth-read NIT-1, sole guard 1/4 (`opsa_common.py:213-214`): the completion
+        marker's own `schema` field is checked, not only its pairing with the per-run manifest."""
+        self.assertEqual(self._run_backup(), 0)
+        run_id = self._only_run_id()
+        marker_path = self._run_dir(run_id) / "COMPLETE.json"
+        payload = json.loads(marker_path.read_text(encoding="utf-8"))
+        payload["schema"] = "mtc.opsa_run_complete/v0"
+        marker_path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+        target = self.root / "restored"
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(self.config, run_id=run_id, target=target)
+        self.assertEqual(rc, 3)
+        report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+        self.assertEqual(report["error"], "run_not_complete")
+        self.assertIn("schema mismatch", report["detail"])
+        self.assertFalse(target.exists())
+
+    def test_per_run_manifest_malformed_line_is_refused(self):
+        """Opus fifth-read NIT-1, sole guard 2/4 (`restore.py:92-93`): a malformed per-run
+        manifest line is refused even when the marker's digest matches the tampered bytes
+        exactly (the malformed-line check is independent of the pair-hash check)."""
+        self.assertEqual(self._run_backup(), 0)
+        run_id = self._only_run_id()
+        run_dir = self._run_dir(run_id)
+        manifest_path = run_dir / "RUN_MANIFEST.jsonl"
+        marker_path = run_dir / "COMPLETE.json"
+        lines = manifest_path.read_text(encoding="utf-8").splitlines()
+        lines.append("{not valid json")
+        data = ("\n".join(lines) + "\n").encode("utf-8")
+        manifest_path.write_bytes(data)
+        payload = json.loads(marker_path.read_text(encoding="utf-8"))
+        payload["run_manifest_sha256"] = hashlib.sha256(data).hexdigest()
+        marker_path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+        target = self.root / "restored"
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(self.config, run_id=run_id, target=target)
+        self.assertEqual(rc, 3)
+        report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+        self.assertEqual(report["error"], "run_not_complete")
+        self.assertIn("malformed lines", report["detail"])
+        self.assertFalse(target.exists())
+
+    def test_per_run_manifest_header_naming_another_run_is_refused(self):
+        """Opus fifth-read NIT-1, sole guard 3/4 (`restore.py:94-96`): the per-run manifest's own
+        header record is checked to name this run, independent of the file/dir record
+        comparison."""
+        self.assertEqual(self._run_backup(), 0)
+        run_id = self._only_run_id()
+        run_dir = self._run_dir(run_id)
+        manifest_path = run_dir / "RUN_MANIFEST.jsonl"
+        marker_path = run_dir / "COMPLETE.json"
+        lines = manifest_path.read_text(encoding="utf-8").splitlines()
+        header = json.loads(lines[0])
+        header["run_id"] = "opsa-19000101T000000.000Z"
+        lines[0] = json.dumps(header, sort_keys=True)
+        data = ("\n".join(lines) + "\n").encode("utf-8")
+        manifest_path.write_bytes(data)
+        payload = json.loads(marker_path.read_text(encoding="utf-8"))
+        payload["run_manifest_sha256"] = hashlib.sha256(data).hexdigest()
+        marker_path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+        target = self.root / "restored"
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(self.config, run_id=run_id, target=target)
+        self.assertEqual(rc, 3)
+        report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+        self.assertEqual(report["error"], "run_not_complete")
+        self.assertIn("header missing or names another run", report["detail"])
+        self.assertFalse(target.exists())
+
+    def test_per_run_manifest_file_record_non_matching_readback_is_refused(self):
+        """Opus fifth-read NIT-1, sole guard 4/4 (`restore.py:111-112`): a per-run manifest FILE
+        record's own `readback` field is checked -- distinct from the whole-marker `readback`
+        field already covered by `test_tampered_marker_or_run_manifest_is_refused`."""
+        self.assertEqual(self._run_backup(), 0)
+        run_id = self._only_run_id()
+        run_dir = self._run_dir(run_id)
+        manifest_path = run_dir / "RUN_MANIFEST.jsonl"
+        marker_path = run_dir / "COMPLETE.json"
+        lines = manifest_path.read_text(encoding="utf-8").splitlines()
+        for i, line in enumerate(lines):
+            record = json.loads(line)
+            if record.get("record") == "file":
+                record["readback"] = "MISMATCH"
+                lines[i] = json.dumps(record, sort_keys=True)
+                break
+        else:
+            self.fail("fixture backup produced no file record")
+        data = ("\n".join(lines) + "\n").encode("utf-8")
+        manifest_path.write_bytes(data)
+        payload = json.loads(marker_path.read_text(encoding="utf-8"))
+        payload["run_manifest_sha256"] = hashlib.sha256(data).hexdigest()
+        marker_path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+        target = self.root / "restored"
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(self.config, run_id=run_id, target=target)
+        self.assertEqual(rc, 3)
+        report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+        self.assertEqual(report["error"], "run_not_complete")
+        self.assertIn("non-matching readback record", report["detail"])
+        self.assertFalse(target.exists())
+
+    def test_per_run_manifest_non_utf8_bytes_is_refused_not_uncaught(self):
+        """Opus fifth-read NIT-2: non-UTF-8 bytes in the per-run manifest must be
+        `run_not_complete` (rc 3), never an uncaught `UnicodeDecodeError`."""
+        self.assertEqual(self._run_backup(), 0)
+        run_id = self._only_run_id()
+        run_dir = self._run_dir(run_id)
+        manifest_path = run_dir / "RUN_MANIFEST.jsonl"
+        marker_path = run_dir / "COMPLETE.json"
+        data = manifest_path.read_bytes() + b"\xff\xfe not valid utf-8\n"
+        manifest_path.write_bytes(data)
+        payload = json.loads(marker_path.read_text(encoding="utf-8"))
+        payload["run_manifest_sha256"] = hashlib.sha256(data).hexdigest()
+        marker_path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+        target = self.root / "restored"
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(self.config, run_id=run_id, target=target)
+        self.assertEqual(rc, 3)
+        report = json.loads(stderr.getvalue().strip().splitlines()[-1])
+        self.assertEqual(report["error"], "run_not_complete")
+        self.assertIn("not valid UTF-8", report["detail"])
+        self.assertFalse(target.exists())
+
     def test_nonexistent_run_is_check_failure_not_empty_success(self):
         """D026: an explicit unknown run id must fail closed with rc 3."""
         self.assertEqual(self._run_backup(), 0)

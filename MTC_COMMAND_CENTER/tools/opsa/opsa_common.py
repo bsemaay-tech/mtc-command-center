@@ -40,7 +40,9 @@ WATCHDOG_EVENT_SCHEMA = "mtc.opsa_watchdog_event/v1"
 CONFIG_SCHEMA = "mtc.opsa_backup_config/v1"
 #: Per-run completion evidence (WP-P0-26 completion-marker repair, owner packet 2026-09-07 sections 4-5):
 #: every SUCCESSFUL backup run leaves an immutable per-run manifest plus a completion marker inside
-#: its run directory; a partial or interrupted run leaves neither, and restore refuses such a run.
+#: its run directory; a run with any error leaves neither, a crash between the two writes can leave
+#: the per-run manifest without the completion marker, and restore refuses any run that lacks the
+#: marker either way (P0-26 repair round 1, NIT-1).
 RUN_MANIFEST_SCHEMA = "mtc.opsa_run_manifest/v1"
 RUN_COMPLETE_SCHEMA = "mtc.opsa_run_complete/v1"
 RUN_MANIFEST_NAME = "RUN_MANIFEST.jsonl"
