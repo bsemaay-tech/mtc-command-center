@@ -33,7 +33,7 @@ Thu: `OD-20260917-P031-M2-Q7-Q13-1` (all A), `-P031-M1-N5-N10-N13-1` (B/yes/yes)
 ## 5. What is in flight / armed right now
 - Lane 4 finished and is adjudicated (above); archived `P026/ATTEMPT2_PASS_WITH_NITS_505af399/`.
 - Nothing else runs. No Gemini call. No timed waiter.
-- CT13 last push **wave 24 `a20f9629`**; everything through Sat 09:1x is in it (wave 25 adds lane 4's result).
+- CT13 last push **wave 25 `881702d8`**; everything through Sat 09:2x (incl. lane 4) is in it.
 
 ## 6. Routes (probe, never recall)
 Claude PRO profile (`~/.claude`, `claude --print --model claude-opus-5 --effort xhigh`) for exact-Opus lanes, one at a time, `api_error_status 429` = 5-hour cap; Gemini `gemini-3.8-flash-high` via `Invoke-GeminiProReadOnly.ps1` on the `bsemaay` mailbox (retry chain `gemini_retry_chain_v2.py <root>`; each root needs its own runner clone with the packet boundary — `run_<lane>_g38.ps1`); Grok `Invoke-GrokSubscription.ps1` (weekly reset Fri; used Fri for GKDERIV); Codex/Sol Sat 18:47; `uvx ruff` 0.16.8 for parity checks (per-file counts vs HEAD, by rule text); the pinned Bridge/P020 interpreter is Python **3.12** (`C:/tmp/P020_IMPL_20260912/.../.venv/Scripts/python.exe`), the shell's `python` is 3.14 — name the interpreter in every record.
