@@ -562,8 +562,10 @@ def build_intake(
             "D-5": "witness_identity names run, manifest_sha256 and the ownership record",
             "D-6": (
                 "coverage carries both funding passes and the fills pass as exact bytes; the "
-                "export tool re-derives the hour grid, the 1-second end tolerance and the "
-                "fills-based expected count on read"
+                "export tool re-derives the completeness grid (which excludes the window's own "
+                "start hour, D6-GRID A), the admission band [start+1s, end+1s) (the same "
+                "1-second tolerance on both boundaries, D6-START B) and the fills-based "
+                "expected count on read"
             ),
         },
         "unresolved": {
