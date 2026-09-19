@@ -1,0 +1,555 @@
+commit b4df14139501e4224e6fcfa96f4226ab90c03cbe
+Author: Claude Fable 5.1 <noreply@anthropic.com>
+Date:   Sat Sep 19 09:43:30 2026 +0300
+
+    fix(p030): nesting fences derived per layer on the running interpreter, third adapter parse site guarded, receipt-side race arm (NIT-slice repair round 2)
+    
+    The exact-Opus read of the NIT slice d426e79f (2026-09-18/19) returned
+    REQUEST_CHANGES. F-1: the N4 deep-nesting arms used a hard-coded depth
+    of 3000, where on the pinned Python 3.12 json.loads raises RecursionError
+    FIRST, so the walk guards at all three sites were exercised by nothing
+    there, and the slice's D026 record (made on Python 3.14, where the parser
+    accepts 3000 levels and the walk raises) was inverted on the pinned
+    interpreter. F-2: a third adapter parse site (_decode_json_object - the
+    config, receipt and isolated-config reads) had no RecursionError guard
+    while the record claimed parity for "both" sites. F-3: the receipt-side
+    "appeared before publication" arm was untested. F-4: the exporter's
+    "nested too deeply" message was unreachable at depth 3000 on 3.12. F-5:
+    the _publish docstring over-stated the POSIX alternatives.
+    
+    - F-1/F-4: both checkers gain nesting_arms(), which searches the running
+      interpreter for the smallest depth at which the recursive non-finite
+      walk raises while json.loads still succeeds, and the smallest depth at
+      which json.loads itself raises (a 64-frame margin covers the stack
+      difference between the search and the code under test); each site gets
+      one arm per layer asserting that layer's exact message. Nothing is
+      hard-coded any more. Exporter: walk -> "nested too deeply", parser ->
+      "not parseable JSON". Adapter: _prefix_facts (capture),
+      _decode_strict_jsonl (manifest) and, new, _decode_json_object (config
+      and receipt) each refuse both layers with the site's existing message.
+    - F-2: _decode_json_object catches RecursionError at the parser and
+      around the walk -> ValueError("invalid <description>").
+    - F-3: test_publication_never_replaces_a_receipt_that_appeared_after_the_check
+      (Windows; skipped on POSIX like its target-side twin).
+    - F-5: the docstring names the real cost of os.link (a permanent second
+      hard link, cross-filesystem failure) instead of implying no delete-free
+      form exists.
+    
+    Tests: exporter checker 28 -> 29; adapter checker 44 -> 46. GREEN on the
+    pinned Python 3.12.12 venv (C:/tmp/P020_IMPL_20260912/.../.venv) and on
+    Python 3.14.2, under the ASCII TEMP and the long-form non-ASCII TEMP.
+    Derived depths (search frame): walk 1060 on both; parser 3062 (3.12) /
+    16987 (3.14).
+    
+    D026 on scratch copies, BOTH interpreters, each mutant errors exactly its
+    own arm: exporter walk guard removed -> walk arm RecursionError; exporter
+    parser clause removed -> parser arm RecursionError; adapter _prefix_facts
+    walk guard / parser clause removed -> the capture arm; _decode_strict_jsonl
+    walk guard / parser clause removed -> the manifest arm; _decode_json_object
+    parser clause / walk guard removed -> the config + receipt arms (2 errors);
+    receipt-side arm removed -> the F-3 test fails (receipt_unwritable instead
+    of receipt_exists). Ruff findings per file identical to HEAD (0 / 3 / 8 /
+    42); exporter + checker ruff-formatted, adapter files not reformatted.
+    Records: CLAUDE_P0_RUN_20260913/P030_NIT_SLICE_20260918/REPAIR_R2_20260919/.
+    The mutation claims in the d426e79f commit message are superseded by that
+    record.
+    
+    Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
+ check_p030_archive_exporter.py                | 159 +++++++++++++++++++++---
+ check_p030_closed_partition_backup_adapter.py | 170 +++++++++++++++++++++++---
+ p030_archive_exporter.py                      |  10 +-
+ p030_closed_partition_backup_adapter.py       |  10 +-
+ 4 files changed, 315 insertions(+), 34 deletions(-)
+commit b4df14139501e4224e6fcfa96f4226ab90c03cbe
+Author: Claude Fable 5.1 <noreply@anthropic.com>
+Date:   Sat Sep 19 09:43:30 2026 +0300
+
+    fix(p030): nesting fences derived per layer on the running interpreter, third adapter parse site guarded, receipt-side race arm (NIT-slice repair round 2)
+    
+    The exact-Opus read of the NIT slice d426e79f (2026-09-18/19) returned
+    REQUEST_CHANGES. F-1: the N4 deep-nesting arms used a hard-coded depth
+    of 3000, where on the pinned Python 3.12 json.loads raises RecursionError
+    FIRST, so the walk guards at all three sites were exercised by nothing
+    there, and the slice's D026 record (made on Python 3.14, where the parser
+    accepts 3000 levels and the walk raises) was inverted on the pinned
+    interpreter. F-2: a third adapter parse site (_decode_json_object - the
+    config, receipt and isolated-config reads) had no RecursionError guard
+    while the record claimed parity for "both" sites. F-3: the receipt-side
+    "appeared before publication" arm was untested. F-4: the exporter's
+    "nested too deeply" message was unreachable at depth 3000 on 3.12. F-5:
+    the _publish docstring over-stated the POSIX alternatives.
+    
+    - F-1/F-4: both checkers gain nesting_arms(), which searches the running
+      interpreter for the smallest depth at which the recursive non-finite
+      walk raises while json.loads still succeeds, and the smallest depth at
+      which json.loads itself raises (a 64-frame margin covers the stack
+      difference between the search and the code under test); each site gets
+      one arm per layer asserting that layer's exact message. Nothing is
+      hard-coded any more. Exporter: walk -> "nested too deeply", parser ->
+      "not parseable JSON". Adapter: _prefix_facts (capture),
+      _decode_strict_jsonl (manifest) and, new, _decode_json_object (config
+      and receipt) each refuse both layers with the site's existing message.
+    - F-2: _decode_json_object catches RecursionError at the parser and
+      around the walk -> ValueError("invalid <description>").
+    - F-3: test_publication_never_replaces_a_receipt_that_appeared_after_the_check
+      (Windows; skipped on POSIX like its target-side twin).
+    - F-5: the docstring names the real cost of os.link (a permanent second
+      hard link, cross-filesystem failure) instead of implying no delete-free
+      form exists.
+    
+    Tests: exporter checker 28 -> 29; adapter checker 44 -> 46. GREEN on the
+    pinned Python 3.12.12 venv (C:/tmp/P020_IMPL_20260912/.../.venv) and on
+    Python 3.14.2, under the ASCII TEMP and the long-form non-ASCII TEMP.
+    Derived depths (search frame): walk 1060 on both; parser 3062 (3.12) /
+    16987 (3.14).
+    
+    D026 on scratch copies, BOTH interpreters, each mutant errors exactly its
+    own arm: exporter walk guard removed -> walk arm RecursionError; exporter
+    parser clause removed -> parser arm RecursionError; adapter _prefix_facts
+    walk guard / parser clause removed -> the capture arm; _decode_strict_jsonl
+    walk guard / parser clause removed -> the manifest arm; _decode_json_object
+    parser clause / walk guard removed -> the config + receipt arms (2 errors);
+    receipt-side arm removed -> the F-3 test fails (receipt_unwritable instead
+    of receipt_exists). Ruff findings per file identical to HEAD (0 / 3 / 8 /
+    42); exporter + checker ruff-formatted, adapter files not reformatted.
+    Records: CLAUDE_P0_RUN_20260913/P030_NIT_SLICE_20260918/REPAIR_R2_20260919/.
+    The mutation claims in the d426e79f commit message are superseded by that
+    record.
+    
+    Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
+diff --git a/check_p030_archive_exporter.py b/check_p030_archive_exporter.py
+index ba6089d7..aad3afc7 100644
+--- a/check_p030_archive_exporter.py
++++ b/check_p030_archive_exporter.py
+@@ -21,6 +21,79 @@ EXPORTED_AT = "2026-09-14T00:00:00Z"
+ CAPTURED_AT = "2026-09-14T00:01:00Z"
+ 
+ 
++_STACK_MARGIN = (
++    64  # frames of headroom between the depth search and the code under test
++)
++
++
++def _nesting_layer(depth: int) -> str | None:
++    """Which layer raises RecursionError for a JSON array nested ``depth`` levels: the parser
++    (``json.loads`` with the subject's hooks), the subject's recursive non-finite walk, or neither."""
++    text = "[" * depth + "]" * depth
++    try:
++        value = json.loads(
++            text,
++            parse_constant=subject._reject_nonfinite_json,
++            object_pairs_hook=subject._reject_duplicate_json_keys,
++        )
++    except RecursionError:
++        return "parser"
++    try:
++        subject._reject_nonfinite_numbers(value)
++    except RecursionError:
++        return "walk"
++    return None
++
++
++def _smallest_depth(predicate, start: int = 1, ceiling: int = 1 << 20) -> int | None:
++    """Smallest depth >= ``start`` where the (monotone) predicate holds; None below ``ceiling``."""
++    low = high = start
++    while not predicate(high):
++        low, high = high + 1, high * 2
++        if high > ceiling:
++            return None
++    while low < high:
++        middle = (low + high) // 2
++        if predicate(middle):
++            high = middle
++        else:
++            low = middle + 1
++    return low
++
++
++def nesting_arms() -> tuple[tuple[str, int | None], tuple[str, int | None]]:
++    """One nesting depth per layer that can raise RecursionError, derived on the running
++    interpreter (P0-30 slice read F-1): ``(("walk", depth), ("parser", depth))``.
++
++    ``walk``: just past the smallest depth at which the recursive non-finite walk raises while
++    ``json.loads`` still succeeds (None if the parser raises first here). ``parser``: just past
++    the smallest depth at which ``json.loads`` itself raises (None if it never does below 2**20).
++    The two limits differ between interpreters (the pinned Python 3.12 parser raises near 3000
++    levels, 3.14 far deeper, the walk at the Python recursion limit on both), so a hard-coded
++    depth exercises one layer on one interpreter and the other layer on another.
++    """
++    first_depth = _smallest_depth(lambda depth: _nesting_layer(depth) is not None)
++    if first_depth is None:
++        raise RuntimeError("no nesting below 2**20 levels raises RecursionError here")
++    parser_depth = _smallest_depth(
++        lambda depth: _nesting_layer(depth) == "parser", start=first_depth
++    )
++    # both searches ran through the same frames, so the parser raised first iff its depth is
++    # the first depth at all; the margin covers the few frames by which the code under test sits
++    # deeper or shallower than the search (the walk limit is a Python frame count), and each
++    # arm's exact message still pins which layer refused
++    walk_depth = None if parser_depth == first_depth else first_depth + _STACK_MARGIN
++    if (
++        walk_depth is not None
++        and parser_depth is not None
++        and walk_depth >= parser_depth
++    ):
++        walk_depth = parser_depth - 1
++    if parser_depth is not None:
++        parser_depth += _STACK_MARGIN
++    return (("walk", walk_depth), ("parser", parser_depth))
++
++
+ class ArchiveExporterTests(unittest.TestCase):
+     def _collector_partition(self, root: Path) -> tuple[Path, Path]:
+         source_root = root / "collector-root"
+@@ -377,23 +450,81 @@ class ArchiveExporterRefusalCodeTests(unittest.TestCase):
+             self.assertTrue(Path(str(target) + subject.STAGING_SUFFIX).exists())
+             self.assertTrue(Path(str(target) + ".p030export.json").exists())
+ 
+-    def test_pathologically_nested_line_is_a_refusal_not_a_crash(self) -> None:
+-        # third T0 read, N4: a line nested deeper than the interpreter's recursion limit is refused
+-        # as source_line_invalid (the adapter refuses it the same way); RecursionError never escapes
++    def test_publication_never_replaces_a_receipt_that_appeared_after_the_check(
++        self,
++    ) -> None:
++        # slice read F-3: the receipt-side twin of the arm above - a receipt created between the
++        # exists-check and the move is refused receipt_exists (not receipt_unwritable), nothing is
++        # replaced, and the target name is never taken
++        if os.name != "nt":
++            self.skipTest("documented residual window on POSIX (see _publish)")
+         with tempfile.TemporaryDirectory() as temporary:
+             root = Path(temporary)
+             source_root, source = self._partition(root / "window")
+-            depth = 3000
+-            nested = "[" * depth + "]" * depth
+-            raw = source.read_bytes()
+-            source.write_bytes(raw + f'{{"deep": {nested}}}\n'.encode())
+-            self._refused(
+-                "source_line_invalid",
+-                "source line 3",
+-                source,
+-                root / "out",
+-                source_root=source_root,
+-            )
++            target = root / "out" / "partition.jsonl"
++            target.parent.mkdir(parents=True)
++            receipt = Path(str(target) + ".p030export.json")
++            foreign = b'{"foreign": true}\n'
++            receipt.write_bytes(foreign)
++            unchanged_exists = Path.exists
++
++            def receipt_looks_absent(path):
++                if path == receipt:
++                    return False
++                return unchanged_exists(path)
++
++            with (
++                mock.patch.object(
++                    Path, "exists", autospec=True, side_effect=receipt_looks_absent
++                ),
++                self.assertRaisesRegex(
++                    subject.ExportRefused, "receipt appeared before publication"
++                ) as caught,
++            ):
++                subject.export_partition(
++                    source,
++                    target,
++                    source_root=source_root,
++                    exported_at_utc=EXPORTED_AT,
++                )
++            self.assertEqual(caught.exception.code, "receipt_exists")
++            self.assertEqual(receipt.read_bytes(), foreign)
++            self.assertFalse(target.exists())
++            self.assertTrue(Path(str(receipt) + subject.STAGING_SUFFIX).exists())
++            self.assertTrue(Path(str(target) + subject.STAGING_SUFFIX).exists())
++
++    def test_pathologically_nested_line_is_a_refusal_not_a_crash(self) -> None:
++        # third T0 read, N4; slice read F-1/F-4: a line nested deeper than a recursion limit is
++        # refused as source_line_invalid, never surfaced as RecursionError - one arm per layer that
++        # can raise (the parser, the non-finite walk), each at a depth derived on the running
++        # interpreter and asserting that layer's exact message, so deleting either guard errors its
++        # own arm (the adapter's arms are its own checker's)
++        for (layer, depth), message in zip(
++            nesting_arms(),
++            (
++                "source line 3 is nested too deeply",
++                "source line 3 is not parseable JSON",
++            ),
++            strict=True,
++        ):
++            with self.subTest(layer=layer, depth=depth):
++                if depth is None:
++                    self.skipTest(
++                        f"the {layer} never raises RecursionError on this interpreter"
++                    )
++                with tempfile.TemporaryDirectory() as temporary:
++                    root = Path(temporary)
++                    source_root, source = self._partition(root / "window")
++                    nested = "[" * depth + "]" * depth
++                    raw = source.read_bytes()
++                    source.write_bytes(raw + f'{{"deep": {nested}}}\n'.encode())
++                    self._refused(
++                        "source_line_invalid",
++                        message,
++                        source,
++                        root / "out",
++                        source_root=source_root,
++                    )
+ 
+     def test_invalid_timestamp_refusals_including_sub_second(self) -> None:
+         with tempfile.TemporaryDirectory() as temporary:
+diff --git a/check_p030_closed_partition_backup_adapter.py b/check_p030_closed_partition_backup_adapter.py
+index 2c5685f1..2cdef383 100644
+--- a/check_p030_closed_partition_backup_adapter.py
++++ b/check_p030_closed_partition_backup_adapter.py
+@@ -14,6 +14,72 @@ from unittest import mock
+ 
+ import p030_closed_partition_backup_adapter as subject
+ 
++_STACK_MARGIN = 64  # frames of headroom between the depth search and the code under test
++
++
++def _nesting_layer(depth: int) -> str | None:
++    """Which layer raises RecursionError for a JSON array nested ``depth`` levels: the parser
++    (``json.loads`` with the subject's hooks), the subject's recursive non-finite walk, or neither."""
++    text = "[" * depth + "]" * depth
++    try:
++        value = json.loads(
++            text,
++            parse_constant=subject._reject_nonfinite_json,
++            object_pairs_hook=subject._reject_duplicate_json_keys,
++        )
++    except RecursionError:
++        return "parser"
++    try:
++        subject._reject_nonfinite_numbers(value)
++    except RecursionError:
++        return "walk"
++    return None
++
++
++def _smallest_depth(predicate, start: int = 1, ceiling: int = 1 << 20) -> int | None:
++    """Smallest depth >= ``start`` where the (monotone) predicate holds; None below ``ceiling``."""
++    low = high = start
++    while not predicate(high):
++        low, high = high + 1, high * 2
++        if high > ceiling:
++            return None
++    while low < high:
++        middle = (low + high) // 2
++        if predicate(middle):
++            high = middle
++        else:
++            low = middle + 1
++    return low
++
++
++def nesting_arms() -> tuple[tuple[str, int | None], tuple[str, int | None]]:
++    """One nesting depth per layer that can raise RecursionError, derived on the running
++    interpreter (P0-30 slice read F-1): ``(("walk", depth), ("parser", depth))``.
++
++    ``walk``: just past the smallest depth at which the recursive non-finite walk raises while
++    ``json.loads`` still succeeds (None if the parser raises first here). ``parser``: just past
++    the smallest depth at which ``json.loads`` itself raises (None if it never does below 2**20).
++    The two limits differ between interpreters (the pinned Python 3.12 parser raises near 3000
++    levels, 3.14 far deeper, the walk at the Python recursion limit on both), so a hard-coded
++    depth exercises one layer on one interpreter and the other layer on another.
++    """
++    first_depth = _smallest_depth(lambda depth: _nesting_layer(depth) is not None)
++    if first_depth is None:
++        raise RuntimeError("no nesting below 2**20 levels raises RecursionError here")
++    parser_depth = _smallest_depth(
++        lambda depth: _nesting_layer(depth) == "parser", start=first_depth
++    )
++    # both searches ran through the same frames, so the parser raised first iff its depth is
++    # the first depth at all; the margin covers the few frames by which the code under test sits
++    # deeper or shallower than the search (the walk limit is a Python frame count), and each
++    # arm's exact message still pins which layer refused
++    walk_depth = None if parser_depth == first_depth else first_depth + _STACK_MARGIN
++    if walk_depth is not None and parser_depth is not None and walk_depth >= parser_depth:
++        walk_depth = parser_depth - 1
++    if parser_depth is not None:
++        parser_depth += _STACK_MARGIN
++    return (("walk", walk_depth), ("parser", parser_depth))
++
+ 
+ class StablePrefixBackupAdapterTests(unittest.TestCase):
+     STORE_ID = "fixture-p030-archive"
+@@ -170,21 +236,26 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
+                     captured_at_utc=self.CAPTURED_AT,
+                     dataset_content_hash=self.DATASET_CONTENT_HASH,
+                 )
+-            # P0-30 N4 (parity with the exporter): a line nested deeper than the interpreter's
+-            # recursion limit is refused as non-canonical JSONL, never surfaced as RecursionError
+-            depth = 3000
+-            source.write_bytes(
+-                ('{"observation_id": "' + self.OBS_1 + '", "deep": ' + "[" * depth + "]" * depth + "}\n").encode()
+-            )
+-            with self.assertRaisesRegex(ValueError, "prefix record is not canonical JSONL"):
+-                subject.capture_stable_prefix(
+-                    source,
+-                    root / "nested",
+-                    source_root=root,
+-                    high_water_bytes=source.stat().st_size,
+-                    captured_at_utc=self.CAPTURED_AT,
+-                    dataset_content_hash=self.DATASET_CONTENT_HASH,
+-                )
++            # P0-30 N4 (parity with the exporter; slice read F-1): a line nested deeper than a
++            # recursion limit is refused as non-canonical JSONL, never surfaced as RecursionError -
++            # one arm per layer that can raise (parser, non-finite walk) at depths derived on the
++            # running interpreter, so deleting either guard of _prefix_facts errors its own arm
++            for layer, depth in nesting_arms():
++                with self.subTest(site="_prefix_facts", layer=layer, depth=depth):
++                    if depth is None:
++                        self.skipTest(f"the {layer} never raises RecursionError on this interpreter")
++                    source.write_bytes(
++                        ('{"observation_id": "' + self.OBS_1 + '", "deep": ' + "[" * depth + "]" * depth + "}\n").encode()
++                    )
++                    with self.assertRaisesRegex(ValueError, "prefix record is not canonical JSONL"):
++                        subject.capture_stable_prefix(
++                            source,
++                            root / f"nested-{layer}",
++                            source_root=root,
++                            high_water_bytes=source.stat().st_size,
++                            captured_at_utc=self.CAPTURED_AT,
++                            dataset_content_hash=self.DATASET_CONTENT_HASH,
++                        )
+ 
+     def test_capture_refuses_noncontract_dataset_and_observation_identities(self) -> None:
+         with tempfile.TemporaryDirectory() as temporary:
+@@ -448,6 +519,39 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
+                         )
+                 run_backup.assert_not_called()
+ 
++    def test_config_and_receipt_refuse_pathological_nesting_before_p026(self) -> None:
++        # P0-30 N4 (slice read F-2): the object reader behind the config, receipt and isolated
++        # config reads is the adapter's THIRD parse site; both of its layers (parser, non-finite
++        # walk) refuse a nesting deeper than their recursion limit as an invalid document, never
++        # as RecursionError, at depths derived on the running interpreter
++        for container in ("config", "receipt"):
++            for layer, depth in nesting_arms():
++                with self.subTest(container=container, layer=layer, depth=depth):
++                    if depth is None:
++                        self.skipTest(f"the {layer} never raises RecursionError on this interpreter")
++                    with tempfile.TemporaryDirectory() as temporary:
++                        root = Path(temporary)
++                        _, stable, receipt, _ = self._capture(root)
++                        config_path = self._runnable_config(root, stable)
++                        path = config_path if container == "config" else receipt
++                        raw = path.read_text(encoding="utf-8").rstrip()
++                        raw = raw[:-1] + ', "synthetic_probe": ' + "[" * depth + "]" * depth + "}"
++                        path.write_text(raw, encoding="utf-8")
++                        expected = (
++                            "invalid backup config" if container == "config" else "invalid stable-prefix receipt"
++                        )
++                        with (
++                            mock.patch.object(subject.backup, "run_backup") as run_backup,
++                            self.assertRaisesRegex(ValueError, expected),
++                        ):
++                            subject.backup_stable_prefix(
++                                config_path,
++                                stable_receipt=receipt,
++                                store_id=self.STORE_ID,
++                                source_root=root / "source-root",
++                            )
++                        run_backup.assert_not_called()
++
+     def test_backup_consumes_bound_config_when_original_is_swapped(self) -> None:
+         with tempfile.TemporaryDirectory() as temporary:
+             root = Path(temporary)
+@@ -632,6 +736,42 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
+                         )
+                 run_restore.assert_not_called()
+ 
++    def test_manifest_refuses_pathological_nesting_before_p026(self) -> None:
++        # P0-30 N4 (slice read F-1): the manifest reader's two layers (parser, non-finite walk)
++        # each refuse a record nested deeper than their recursion limit as an invalid manifest
++        # line, never as RecursionError, at depths derived on the running interpreter
++        for layer, depth in nesting_arms():
++            with self.subTest(site="_decode_strict_jsonl", layer=layer, depth=depth):
++                if depth is None:
++                    self.skipTest(f"the {layer} never raises RecursionError on this interpreter")
++                with tempfile.TemporaryDirectory() as temporary:
++                    root = Path(temporary)
++                    _, stable, receipt, _ = self._capture(root)
++                    config_path = self._runnable_config(root, stable)
++                    run_id = subject.backup_stable_prefix(
++                        config_path,
++                        stable_receipt=receipt,
++                        store_id=self.STORE_ID,
++                        source_root=root / "source-root",
++                    )
++                    manifest = root / "backups" / "manifest.jsonl"
++                    lines = manifest.read_text(encoding="utf-8").splitlines()
++                    lines[0] = lines[0][:-1] + ', "synthetic_probe": ' + "[" * depth + "]" * depth + "}"
++                    manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
++                    target = root / "restore-target"
++                    target.mkdir()
++                    with (
++                        mock.patch.object(subject.restore, "run_restore") as run_restore,
++                        self.assertRaisesRegex(ValueError, "invalid P026 manifest line 1"),
++                    ):
++                        subject.restore_verified_prefix(
++                            config_path,
++                            run_id=run_id,
++                            store_id=self.STORE_ID,
++                            target=target,
++                        )
++                    run_restore.assert_not_called()
++
+     def test_manifest_refuses_boolean_size_and_byte_totals_before_p026(self) -> None:
+         for field in ("file.size", "run_end.bytes"):
+             with self.subTest(field=field), tempfile.TemporaryDirectory() as temporary:
+diff --git a/p030_archive_exporter.py b/p030_archive_exporter.py
+index 62779b39..b63a32d1 100644
+--- a/p030_archive_exporter.py
++++ b/p030_archive_exporter.py
+@@ -82,9 +82,10 @@ def _publish(staging: Path, final: Path) -> None:
+     ``os.replace`` overwrites; a file created between the caller's exists-check and the move would
+     be replaced silently (third T0 read, N1). On Windows ``os.rename`` refuses an existing
+     destination with ``FileExistsError`` and keeps the no-delete invariant (nothing is unlinked).
+-    On POSIX ``os.rename`` overwrites as well and the no-clobber forms (link + unlink, renameat2)
+-    either add a delete path or are not portable, so the exists-check immediately before the move
+-    is the guard there and the remaining window is documented, not closed."""
++    On POSIX ``os.rename`` overwrites as well; ``os.link`` would refuse an existing destination
++    without a delete path, at the cost of a permanent second hard link under the staging name and
++    a failure across filesystems, so the exists-check immediately before the move is the guard
++    there and the remaining window is documented, not closed."""
+     if os.name == "nt":
+         os.rename(staging, final)
+     else:
+@@ -271,6 +272,9 @@ def _decode_source_line(raw_line: bytes, line_number: int) -> dict[str, Any]:
+             f"source line {line_number} carries a non-finite number",
+         ) from exc
+     except RecursionError as exc:
++        # which layer raises first depends on the interpreter (the parser's C recursion limit
++        # differs between versions; this walk hits the Python recursion limit), so the checker
++        # derives one depth per layer at test time instead of hard-coding one (slice read F-1)
+         raise ExportRefused(
+             "source_line_invalid", f"source line {line_number} is nested too deeply"
+         ) from exc
+diff --git a/p030_closed_partition_backup_adapter.py b/p030_closed_partition_backup_adapter.py
+index e67e885e..14c02bb1 100644
+--- a/p030_closed_partition_backup_adapter.py
++++ b/p030_closed_partition_backup_adapter.py
+@@ -80,11 +80,17 @@ def _decode_json_object(raw: bytes, description: str) -> dict:
+             parse_constant=_reject_nonfinite_json,
+             object_pairs_hook=_reject_duplicate_json_keys,
+         )
+-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
++    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
++        # RecursionError: nested deeper than the interpreter limit is invalid too (P0-30 N4; this
++        # is the adapter's third parse site, slice read F-2)
+         raise ValueError(f"invalid {description}") from exc
+     if not isinstance(payload, dict):
+         raise ValueError(f"invalid {description}")
+-    _reject_nonfinite_numbers(payload)
++    try:
++        _reject_nonfinite_numbers(payload)
++    except RecursionError as exc:
++        # the parser may accept a nesting the (recursive) walk cannot; same refusal (P0-30 N4)
++        raise ValueError(f"invalid {description}") from exc
+     return payload
+ 
+ 

@@ -48,7 +48,7 @@ Every other test stays green under every mutant (29 - 1 / 46 - n), so each fence
 | adapter checker, WORKTREE, pinned 3.12, ASCII TEMP | Ran 46 OK | `LEAD_GREEN_R2_worktree_adapter_checker_py312_ascii_TEMP.txt` |
 | adapter checker, WORKTREE, pinned 3.12, long-form non-ASCII TEMP (F8 arm) | Ran 46 OK | `LEAD_GREEN_R2_worktree_adapter_checker_py312_nonascii_TEMP.txt` |
 | sibling checkers, pinned 3.12 | contracts PASS; collector PASS | (console) |
-| Ruff (uvx ruff 0.16.8, worktree config) | per file identical to HEAD by rule: exporter 0; checker I001/RUF059/SIM117; adapter E402x3/I001x2/RUF100x3/TRY004x3; adapter checker B023x10/S102x4/SIM117x28; `ruff format --check` clean on the exporter pair; adapter files not reformatted (they "would be reformatted" at HEAD too) | (console) |
+| Ruff (uvx ruff 0.16.8, ruff DEFAULTS - there is no ruff configuration file in the worktree) | per file identical to HEAD by rule: exporter 0; checker I001/RUF059/SIM117 (3); adapter I001x2/RUF100x3/TRY004x3 (8) - CORRECTED after the fifth read's NIT-4: the first version of this row also listed E402x3, which was the rule NAMED inside the three RUF100 messages (`non-enabled: E402`) that my grep over the message text picked up, not a finding; `ruff check --statistics` gives 8; adapter checker B023x10/S102x4/SIM117x28 (42); `ruff format --check` clean on the exporter pair; adapter files not reformatted (they "would be reformatted" at HEAD too) | (console) |
 | Guard (dry-run, worktree, four files staged) | `RESULT: PASS`, protected none | `LEAD_GUARD_P030_NIT_R2.txt` |
 
 ## Not done / carried
