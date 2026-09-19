@@ -1417,3 +1417,79 @@ def test_cli_without_the_profile_refuses_the_same_real_packet(tmp_path):
     assert report["accepted"] is False
     assert report["reason_code"] == exporter.CANDIDATE_PACKET_INVALID
     assert report["evidence_kind"] == exporter.SYNTHETIC_EVIDENCE_KIND
+
+
+# --------------------------------------------------------------------------------------
+# P012 O-1 Phase A — the locator the oracle tool actually produces, checked against the
+# exporter's own D-4 validator. The exporter itself is NOT modified by this slice.
+# --------------------------------------------------------------------------------------
+
+from tools import capture_oracle_at_funding as oracle
+
+ORACLE_FIXTURE = (
+    Path(__file__).resolve().parent / "fixtures" / "p012_oracle_reads_20260919"
+)
+
+
+def _tool_locator() -> str:
+    """The real locator, produced from the vendored reader bytes by the O-1 tool."""
+    resolution = oracle.load_reads(ORACLE_FIXTURE).resolve(
+        "2026-09-19T15:00:00Z",
+        datetime(2026, 9, 19, 15, 0, 0, 41000, tzinfo=UTC),
+    )
+    return resolution.locator
+
+
+def test_the_tool_filled_locator_satisfies_the_d4_validator():
+    locator = _tool_locator()
+
+    assert exporter._require_real_oracle_source(locator, "hl-funding:test") == locator
+    digest, _, pointer = locator.partition("#")
+    assert re.fullmatch(r"[0-9a-f]{64}", digest)
+    assert pointer == "/1/0/oraclePx"
+    # the digest names the exact raw response file the price was read from
+    raw = (ORACLE_FIXTURE / "H20260919T150000Z_pre_metaAndAssetCtxs.json").read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == digest
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "UNRESOLVED:D-4",
+        "DERIVED_FROM_PAYMENT",
+        "derived: |usdc|/(|szi|*|fundingRate|)",
+        "a" * 64 + "#/1/0/oraclePx (derived)",
+    ],
+)
+def test_a_derived_or_unresolved_oracle_source_is_still_refused(value):
+    with pytest.raises(exporter._Refusal) as excinfo:
+        exporter._require_real_oracle_source(value, "hl-funding:test")
+    assert excinfo.value.code == exporter.CANDIDATE_ORACLE_EVIDENCE_UNAVAILABLE
+
+
+def test_the_read_only_fence_is_unchanged_by_the_oracle_slice():
+    """O-1 produces an honest locator; it does not move the production fence."""
+    assert (
+        exporter.REAL_CAPTURE_ADMISSION_STATUS
+        == "REFUSED_REAL_CAPTURE_READ_ONLY_NOT_A_PRODUCTION_RECORD"
+    )
+    assert exporter.REAL_CAPTURE_EVIDENCE_KIND not in exporter.ACCEPTED_EVIDENCE_KINDS
+
+
+def test_the_oracle_tool_never_offers_a_payment_derived_locator():
+    result = oracle.corroborate(
+        oracle.load_reads(ORACLE_FIXTURE)
+        .resolve("2026-09-19T15:00:00Z", datetime(2026, 9, 19, 15, 0, 0, 41000, tzinfo=UTC))
+        .admitted_price,
+        "-0.000612",
+        "0.0006",
+        "0.0000125",
+    )
+
+    assert result["corroborated"] is False
+    assert "locator" not in result
+    # and the diagnostic value, if anyone tried to use it as a source, is refused
+    with pytest.raises(exporter._Refusal):
+        exporter._require_real_oracle_source(
+            "DERIVED_FROM_PAYMENT:" + result["derived_price"], "hl-funding:test"
+        )

@@ -42,6 +42,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools import capture_oracle_at_funding as oracle_tool
 from tools import export_mtc_funding as exporter
 
 ADAPTER_VERSION = "p012-funding-intake/v1"
@@ -241,14 +242,77 @@ def load_capture(
     return manifest, derived, raw, hashlib.sha256(manifest_bytes).hexdigest()
 
 
+def resolve_oracle_binding(
+    oracle: oracle_tool.OracleReads,
+    event_id: str,
+    time_ms: int,
+    delta: dict[str, Any],
+    corroboration_bound: Any | None = None,
+) -> dict[str, Any]:
+    """D-4 for one inventoried funding event, fail-closed at every step.
+
+    The oracle bracket is verified against the reader's raw bytes (§5) and then the
+    payment-derived corroboration is adjudicated (§7). ``oracle_price`` is filled **only** when
+    both succeed. With no supported comparison bound — the state of the evidence today — §7 is
+    ``CORROBORATION_UNAVAILABLE_NO_SUPPORTED_BOUND`` and the instant stays ``UNRESOLVED:D-4``
+    however well the bracket verified. The payment-derived price is recorded as research
+    evidence and is never written into the packet.
+    """
+    record: dict[str, Any] = {
+        "funding_event_id": event_id,
+        "hour_utc": hour_z(time_ms),
+        "event_timestamp": utc_z(time_ms),
+        "admitted": False,
+        "unresolved": unresolved("D-4"),
+        "candidate_price": None,
+        "candidate_locator": None,
+        "corroboration": None,
+        "host_clock_limitation": oracle_tool.HOST_CLOCK_LIMITATION,
+    }
+    try:
+        resolution = oracle.resolve(
+            hour_z(time_ms), datetime.fromtimestamp(time_ms / 1000, tz=UTC)
+        )
+    except oracle_tool.OracleRefused as exc:
+        record["oracle_verification"] = exc.code
+        record["oracle_refusal"] = str(exc)
+        return record
+
+    record["oracle_verification"] = "VERIFIED"
+    record["candidate_price"] = str(resolution.admitted_price)
+    record["candidate_locator"] = resolution.locator
+    record["bracket"] = resolution.evidence()
+    try:
+        corroboration = oracle_tool.corroborate(
+            resolution.admitted_price,
+            _text(delta.get("usdc"), "delta.usdc"),
+            _text(delta.get("szi"), "delta.szi"),
+            _text(delta.get("fundingRate"), "delta.fundingRate"),
+            corroboration_bound=corroboration_bound,
+        )
+    except oracle_tool.OracleRefused as exc:
+        record["corroboration"] = {"status": exc.code, "corroborated": False}
+        return record
+
+    record["corroboration"] = corroboration
+    if corroboration["corroborated"]:
+        record["admitted"] = True
+        record["unresolved"] = None
+    return record
+
+
 def build_real_packet(
     manifest: dict[str, Any],
     derived: dict[str, Any],
     raw: dict[str, bytes],
     manifest_sha256: str,
-) -> tuple[dict[str, Any] | None, str]:
+    oracle: oracle_tool.OracleReads | None = None,
+    corroboration_bound: Any | None = None,
+) -> tuple[dict[str, Any] | None, str, dict[str, Any] | None]:
     """The accepting shape under D-1..D-6, built from the exact captured bytes, or
-    ``(None, reason)`` when the run directory does not carry them."""
+    ``(None, reason, None)`` when the run directory does not carry them.
+
+    With ``oracle`` absent the packet is byte-identical to the one built before O-1 existed."""
     address = short_address(manifest.get("address"))
     run_id = _text(manifest.get("run_id"), "manifest.run_id")
     coin = _text(manifest.get("coin"), "manifest.coin")
@@ -267,12 +331,20 @@ def build_real_packet(
         if str(r.get("file", "")).startswith("fills_pass")
     ]
     if len(funding_files) < 2 or not fills_files:
-        return None, "the manifest names fewer than two funding passes or no fills pass"
+        return (
+            None,
+            "the manifest names fewer than two funding passes or no fills pass",
+            None,
+        )
     missing = [name for name in funding_files + fills_files[:1] if name not in raw]
     if missing:
-        return None, f"raw response bytes absent from the run directory: {missing}"
+        return (
+            None,
+            f"raw response bytes absent from the run directory: {missing}",
+            None,
+        )
     if not isinstance(manifest.get("window"), dict):
-        return None, "the manifest carries no window"
+        return None, "the manifest carries no window", None
     window = manifest["window"]
     pass_bytes = raw[funding_files[0]]
     spans = array_spans(pass_bytes, funding_files[0])
@@ -283,6 +355,7 @@ def build_real_packet(
     }
     bindings: list[dict[str, Any]] = []
     witnesses: dict[str, str] = {}
+    oracle_events: list[dict[str, Any]] = []
     for index, (raw_row, value) in enumerate(spans):
         if not isinstance(value, dict) or not isinstance(value.get("delta"), dict):
             raise IntakeRefused(
@@ -304,13 +377,22 @@ def build_real_packet(
             )
         event_id = f"{REAL_EVENT_ID_PREFIX}:{address}:{row_coin}:{time_ms}"
         witnesses[event_id] = raw_row.hex()
+        oracle_price = oracle_source = unresolved("D-4")
+        if oracle is not None:
+            event = resolve_oracle_binding(
+                oracle, event_id, time_ms, delta, corroboration_bound
+            )
+            oracle_events.append(event)
+            if event["admitted"]:
+                oracle_price = event["candidate_price"]
+                oracle_source = event["candidate_locator"]
         bindings.append(
             {
                 "event_timestamp": utc_z(time_ms),
                 "funding_event_id": event_id,
                 "interval_hour_utc": hour_z(time_ms),
-                "oracle_price": unresolved("D-4"),
-                "oracle_price_source": unresolved("D-4"),
+                "oracle_price": oracle_price,
+                "oracle_price_source": oracle_source,
                 "positive_rate_payer": APPROVED_PAYER,
                 "provenance": {
                     "evidence_kind": PROPOSED_EVIDENCE_KIND,
@@ -336,6 +418,24 @@ def build_real_packet(
             "INTAKE_INPUT_INVALID",
             "the derived view and the captured funding pass disagree on the row count",
         )
+    oracle_report = (
+        None
+        if oracle is None
+        else {
+            "mode": "VERIFY_EXISTING",
+            "reads_dir": str(oracle.reads_dir),
+            "events": oracle_events,
+            "o2_tolerance": str(oracle_tool.O2_RELATIVE_TOLERANCE),
+            "freshness_seconds": int(oracle_tool.FRESHNESS_WINDOW.total_seconds()),
+            "statement": (
+                "Oracle brackets verified against the reader's raw bytes. An instant is filled "
+                "only when §5 verification AND the §7 payment corroboration both succeed; with "
+                "no supported comparison bound the corroboration is unavailable and the instant "
+                "stays UNRESOLVED:D-4. The payment-derived price is research evidence and is "
+                "never an oracle price. Nothing here admits production evidence."
+            ),
+        }
+    )
     ownership = manifest.get("ownership_evidence") or {}
     witness = completeness(manifest)
     packet = {
@@ -361,7 +461,7 @@ def build_real_packet(
             ),
         },
     }
-    return packet, "built from the captured bytes"
+    return packet, "built from the captured bytes", oracle_report
 
 
 def completeness(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -416,6 +516,8 @@ def build_intake(
     derived: dict[str, Any],
     raw: dict[str, bytes] | None = None,
     manifest_sha256: str | None = None,
+    oracle: oracle_tool.OracleReads | None = None,
+    corroboration_bound: Any | None = None,
 ) -> dict[str, Any]:
     address = short_address(manifest.get("address"))
     run_id = _text(manifest.get("run_id"), "manifest.run_id")
@@ -545,10 +647,12 @@ def build_intake(
             "evidence for C-10, and not an input to any production selection path."
         ),
     }
-    real_packet, real_reason = (
-        build_real_packet(manifest, derived, raw, manifest_sha256)
+    real_packet, real_reason, oracle_report = (
+        build_real_packet(
+            manifest, derived, raw, manifest_sha256, oracle, corroboration_bound
+        )
         if raw is not None and manifest_sha256 is not None
-        else (None, "raw response bytes were not supplied")
+        else (None, "raw response bytes were not supplied", None)
     )
     gap_report["real_capture_packet"] = {
         "ruling": RULING,
@@ -580,6 +684,8 @@ def build_intake(
             "OD-20260914-P012-ADMISSION-Q3 (Wait) and the gate order Q6 stand."
         ),
     }
+    if oracle_report is not None:
+        gap_report["real_capture_packet"]["oracle"] = oracle_report
     return {
         "packet": packet,
         "retained_rows": {"label": DRAFT_LABEL, "rows": retained},
@@ -621,27 +727,51 @@ def write_outputs(out_dir: Path, intake: dict[str, Any]) -> dict[str, str]:
     return digests
 
 
-def main(argv: list[str] | None = None) -> int:
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--run-dir", required=True, help="a Path-1 capture run directory (read-only)"
     )
     parser.add_argument("--out", required=True, help="write-once output directory")
-    args = parser.parse_args(argv)
+    parser.add_argument(
+        "--oracle-reads",
+        help=(
+            "an oracle reader directory (read-only). Absent: the packet is exactly what it "
+            "was before O-1 existed. Present: each instant's bracket is verified against the "
+            "raw bytes and still fails closed unless its corroboration can be adjudicated. "
+            "There is no option that relaxes a tolerance, supplies a comparison bound or "
+            "admits evidence."
+        ),
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
     try:
         manifest, derived, raw, manifest_sha256 = load_capture(Path(args.run_dir))
-        intake = build_intake(manifest, derived, raw, manifest_sha256)
+        oracle = (
+            oracle_tool.load_reads(Path(args.oracle_reads))
+            if args.oracle_reads
+            else None
+        )
+        intake = build_intake(manifest, derived, raw, manifest_sha256, oracle)
         digests = write_outputs(Path(args.out), intake)
     except IntakeRefused as exc:
         print(f"INTAKE_REFUSED {exc.code}: {exc}", file=sys.stderr)
         return 3
+    except oracle_tool.OracleRefused as exc:
+        print(f"ORACLE_REFUSED {exc.code}: {exc}", file=sys.stderr)
+        return 3
     report = intake["gap_report"]
     real = report["real_capture_packet"]
+    oracle_mode = (real.get("oracle") or {}).get("mode", "ABSENT")
     print(
         f"{DRAFT_LABEL} events={report['funding_events']} fills={report['fills']} "
         f"complete={report['completeness']['complete']} "
         f"export_tool_would_refuse={report['export_tool_outcome_today']['refusal_code']} "
-        f"real_packet={real['status']} real_packet_tool_outcome_expected={real['export_tool_outcome_expected']}"
+        f"real_packet={real['status']} real_packet_tool_outcome_expected={real['export_tool_outcome_expected']} "
+        f"oracle_reads={oracle_mode}"
     )
     for name, digest in digests.items():
         print(f"{digest}  {name}")

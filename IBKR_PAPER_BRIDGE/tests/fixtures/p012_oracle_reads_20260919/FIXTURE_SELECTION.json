@@ -1,0 +1,142 @@
+{
+  "label": "FIXTURE_SELECTION_NOT_A_REAL_ADMISSION_RECORD",
+  "rows": [
+    {
+      "_fixture_source_line": 1,
+      "bytes": 72350,
+      "clock": "host wall clock (Windows), not the venue's",
+      "coin": "BTC",
+      "ended_utc": "2026-09-19T14:59:58.589+00:00",
+      "file": "H20260919T150000Z_pre_metaAndAssetCtxs.json",
+      "funding": "0.0000125",
+      "http_status": 200,
+      "json_pointer_oraclePx": "/1/0/oraclePx",
+      "kind": "metaAndAssetCtxs",
+      "label": "H20260919T150000Z_pre",
+      "markPx": "81614.0",
+      "oraclePx": "81581.4",
+      "request": {
+        "type": "metaAndAssetCtxs"
+      },
+      "sha256": "cac54ab01162ced997db2be4bdd510071399d074e7cbf8ad4c9376240bdc01d4",
+      "started_utc": "2026-09-19T14:59:58.000+00:00",
+      "tolerance_owner_O2": "0.05%"
+    },
+    {
+      "_fixture_source_line": 2,
+      "bytes": 72266,
+      "clock": "host wall clock (Windows), not the venue's",
+      "coin": "BTC",
+      "ended_utc": "2026-09-19T15:00:02.907+00:00",
+      "file": "H20260919T150000Z_post_metaAndAssetCtxs.json",
+      "funding": "0.0000125",
+      "http_status": 200,
+      "json_pointer_oraclePx": "/1/0/oraclePx",
+      "kind": "metaAndAssetCtxs",
+      "label": "H20260919T150000Z_post",
+      "markPx": "81613.0",
+      "oraclePx": "81581.4",
+      "request": {
+        "type": "metaAndAssetCtxs"
+      },
+      "sha256": "afa49abca2239f5b042b2b01bd55eef09d5b1791b60960e10063e69f9ef7a9c4",
+      "started_utc": "2026-09-19T15:00:02.001+00:00",
+      "tolerance_owner_O2": "0.05%"
+    },
+    {
+      "_fixture_source_line": 3,
+      "assetPositions": [
+        {
+          "coin": "BTC",
+          "szi": "0.0006"
+        }
+      ],
+      "bytes": 710,
+      "clock": "host wall clock (Windows), not the venue's",
+      "ended_utc": "2026-09-19T15:00:03.385+00:00",
+      "file": "H20260919T150000Z_state_clearinghouseState.json",
+      "http_status": 200,
+      "kind": "clearinghouseState",
+      "label": "H20260919T150000Z_state",
+      "request": {
+        "type": "clearinghouseState",
+        "user": "0x1E265F5E39957E08ed02A120ceFA33A9bd46AC49"
+      },
+      "sha256": "8e6ead7ff2aa55f8fd5f51a30791df294e554f95f7bc4491deefe38b6f01508a",
+      "started_utc": "2026-09-19T15:00:03.001+00:00",
+      "tolerance_owner_O2": "0.05%",
+      "venue_time_ms": 1789830002492
+    },
+    {
+      "_fixture_source_line": 4,
+      "bytes": 72460,
+      "clock": "host wall clock (Windows), not the venue's",
+      "coin": "BTC",
+      "ended_utc": "2026-09-19T15:59:58.571+00:00",
+      "file": "H20260919T160000Z_pre_metaAndAssetCtxs.json",
+      "funding": "0.0000125",
+      "http_status": 200,
+      "json_pointer_oraclePx": "/1/0/oraclePx",
+      "kind": "metaAndAssetCtxs",
+      "label": "H20260919T160000Z_pre",
+      "markPx": "81671.0",
+      "oraclePx": "81628.0",
+      "request": {
+        "type": "metaAndAssetCtxs"
+      },
+      "sha256": "b1db9643a05b04e38f6cd90ecb043856a199a6058e856e85117b9dfab954e4fd",
+      "started_utc": "2026-09-19T15:59:58.000+00:00",
+      "tolerance_owner_O2": "0.05%"
+    },
+    {
+      "_fixture_source_line": 5,
+      "bytes": 72293,
+      "clock": "host wall clock (Windows), not the venue's",
+      "coin": "BTC",
+      "ended_utc": "2026-09-19T16:00:02.504+00:00",
+      "file": "H20260919T160000Z_post_metaAndAssetCtxs.json",
+      "funding": "0.0000186609",
+      "http_status": 200,
+      "json_pointer_oraclePx": "/1/0/oraclePx",
+      "kind": "metaAndAssetCtxs",
+      "label": "H20260919T160000Z_post",
+      "markPx": "81680.0",
+      "oraclePx": "81636.0",
+      "request": {
+        "type": "metaAndAssetCtxs"
+      },
+      "sha256": "9cdf68edafa912ec90af339d5a8239b468ff8c8711836834f4953ce3bc722f4b",
+      "started_utc": "2026-09-19T16:00:02.001+00:00",
+      "tolerance_owner_O2": "0.05%"
+    },
+    {
+      "_fixture_source_line": 6,
+      "assetPositions": [
+        {
+          "coin": "BTC",
+          "szi": "0.0006"
+        }
+      ],
+      "bytes": 709,
+      "clock": "host wall clock (Windows), not the venue's",
+      "ended_utc": "2026-09-19T16:00:03.400+00:00",
+      "file": "H20260919T160000Z_state_clearinghouseState.json",
+      "http_status": 200,
+      "kind": "clearinghouseState",
+      "label": "H20260919T160000Z_state",
+      "request": {
+        "type": "clearinghouseState",
+        "user": "0x1E265F5E39957E08ed02A120ceFA33A9bd46AC49"
+      },
+      "sha256": "f04d55884bb7d707541424dc6f89d85c0fac540c4fb2ed267b3a6a4792ae7d19",
+      "started_utc": "2026-09-19T16:00:03.000+00:00",
+      "tolerance_owner_O2": "0.05%",
+      "venue_time_ms": 1789833602569
+    }
+  ],
+  "selected_hours": [
+    "H20260919T150000Z",
+    "H20260919T160000Z"
+  ],
+  "source_manifest": "C:/tmp/CLAUDE_P0_RUN_20260913/P012_ORACLE_CAPTURE_20260919/reads/ORACLE_READS_MANIFEST.jsonl"
+}

@@ -521,3 +521,277 @@ def test_real_packet_outputs_are_written_deterministically(tmp_path: Path, capsy
         .strip()
     )
     assert set(re.findall(rb"\d{4}-\d{2}-\d{2}T", written)) <= {b"2026-09-14T"}
+
+
+# --------------------------------------------------------------------------------------
+# P012 O-1 Phase A — the optional --oracle-reads input.
+#
+# Absent  => byte-identical to today (the regression guarantee).
+# Present => §5 verification + §7 corroboration; with no supported comparison bound the
+#            instant stays UNRESOLVED:D-4 and says exactly why.
+# --------------------------------------------------------------------------------------
+
+from decimal import Decimal
+
+from tools import capture_oracle_at_funding as oracle
+
+ORACLE_FIXTURE = (
+    Path(__file__).resolve().parent / "fixtures" / "p012_oracle_reads_20260919"
+)
+E15_MS, E16_MS = 1789830000041, 1789833600060
+ORACLE_PRE_15 = "H20260919T150000Z_pre_metaAndAssetCtxs.json"
+ORACLE_POST_15 = "H20260919T150000Z_post_metaAndAssetCtxs.json"
+
+
+def _oracle_funding_row(time_ms: int, usdc: str, szi: str = "0.0006") -> str:
+    zeros = "0" * 64
+    return (
+        '{"time":' + str(time_ms) + ',"hash":"0x' + zeros + '","delta":'
+        '{"type":"funding","coin":"BTC","usdc":"' + usdc + '","szi":"' + szi + '",'
+        '"fundingRate":"0.0000125","nSamples":null}}'
+    )
+
+
+ORACLE_FUNDING_PASS = (
+    "["
+    + _oracle_funding_row(E15_MS, "-0.000612")
+    + ","
+    + _oracle_funding_row(E16_MS, "-0.000612")
+    + "]"
+).encode()
+
+
+def _oracle_run(root: Path, funding: bytes = ORACLE_FUNDING_PASS) -> Path:
+    """A capture run whose two funding events fall in the two real oracle-read hours."""
+    manifest = _manifest(window_start=1789826400000, window_end=1789837200000)
+    manifest["window"]["start"] = "2026-09-19T14:00:00Z"
+    manifest["window"]["end"] = "2026-09-19T17:00:00Z"
+    manifest["ownership_evidence"] = {
+        "recovered_address": ADDRESS,
+        "status": "OWNERSHIP_EVIDENCE: VERIFIED",
+    }
+    sha = hashlib.sha256(funding).hexdigest()
+    for response in manifest["responses"]:
+        response["response_sha256"] = (
+            FILLS_SHA if response["file"].startswith("fills") else sha
+        )
+    derived = _derived()
+    for row, time_ms in zip(derived["funding"], (E15_MS, E16_MS)):
+        row.update(time=time_ms, capture_sha256=sha)
+    derived["fills"][0]["capture_sha256"] = FILLS_SHA
+    run = _write_run(root, manifest=manifest, derived=derived)
+    (run / "funding_pass1_page001.json").write_bytes(funding)
+    (run / "funding_pass2_page001.json").write_bytes(funding)
+    (run / "fills_pass1_page001.json").write_bytes(FILLS_PASS)
+    return run
+
+
+def _align_derived(derived: dict, **fields: str) -> dict:
+    for row in derived["funding"]:
+        row.update(fields)
+    return derived
+
+
+def _oracle_intake(tmp_path: Path, reads_dir: Path | None = None, **kwargs):
+    run = _oracle_run(tmp_path)
+    manifest, derived, raw, manifest_sha = adapter.load_capture(run)
+    reads = oracle.load_reads(reads_dir or ORACLE_FIXTURE)
+    return adapter.build_intake(
+        manifest, derived, raw, manifest_sha, oracle=reads, **kwargs
+    )
+
+
+def test_without_the_oracle_option_the_packet_is_byte_identical_to_today(tmp_path: Path):
+    run = _oracle_run(tmp_path)
+    manifest, derived, raw, manifest_sha = adapter.load_capture(run)
+
+    before = adapter.build_intake(manifest, derived, raw, manifest_sha)
+    after = adapter.build_intake(manifest, derived, raw, manifest_sha, oracle=None)
+
+    assert adapter._canonical(before) == adapter._canonical(after)
+    for binding in before["real_packet"]["bindings"]:
+        assert binding["oracle_price"] == "UNRESOLVED:D-4"
+        assert binding["oracle_price_source"] == "UNRESOLVED:D-4"
+    assert "oracle" not in before["gap_report"]["real_capture_packet"]
+
+
+def test_the_cli_exposes_the_option_and_no_bound_or_tolerance_knob():
+    help_text = adapter.build_parser().format_help()
+    assert "--oracle-reads" in help_text
+    for forbidden in (
+        "--corroboration-bound",
+        "--tolerance",
+        "--oracle-price",
+        "--admit",
+    ):
+        assert forbidden not in help_text
+
+
+def test_real_oracle_reads_verify_but_stay_unresolved_without_a_supported_bound(
+    tmp_path: Path,
+):
+    intake = _oracle_intake(tmp_path)
+
+    for binding in intake["real_packet"]["bindings"]:
+        assert binding["oracle_price"] == "UNRESOLVED:D-4"
+        assert binding["oracle_price_source"] == "UNRESOLVED:D-4"
+
+    report = intake["gap_report"]["real_capture_packet"]["oracle"]
+    assert report["mode"] == "VERIFY_EXISTING"
+    assert len(report["events"]) == 2
+    first = report["events"][0]
+    assert first["oracle_verification"] == "VERIFIED"
+    assert first["candidate_price"] == "81581.4"
+    assert first["candidate_locator"].endswith("#/1/0/oraclePx")
+    assert first["admitted"] is False
+    assert (
+        first["corroboration"]["status"]
+        == oracle.CORROBORATION_UNAVAILABLE_NO_SUPPORTED_BOUND
+    )
+    assert first["unresolved"] == "UNRESOLVED:D-4"
+
+
+def test_the_payment_derived_price_is_never_written_into_the_packet(tmp_path: Path):
+    intake = _oracle_intake(tmp_path)
+    report = intake["gap_report"]["real_capture_packet"]["oracle"]
+    derived_price = report["events"][0]["corroboration"]["derived_price"]
+
+    assert derived_price is not None  # the diagnostic arithmetic IS recorded
+    packet = json.dumps(intake["real_packet"])
+    assert derived_price not in packet
+    assert "DERIVED_FROM_PAYMENT" not in packet
+
+
+def test_an_explicit_synthetic_bound_is_the_only_way_the_fields_are_filled(
+    tmp_path: Path,
+):
+    """The seam exists for tests only: no CLI flag, environment variable or configuration
+    file reaches it (see the CLI test above)."""
+    intake = _oracle_intake(tmp_path, corroboration_bound=Decimal("0.01"))
+
+    binding = intake["real_packet"]["bindings"][0]
+    assert binding["oracle_price"] == "81581.4"
+    sidecar = (
+        (ORACLE_FIXTURE / (ORACLE_PRE_15 + ".sha256")).read_text(encoding="ascii").strip()
+    )
+    assert binding["oracle_price_source"] == sidecar + "#/1/0/oraclePx"
+    events = intake["gap_report"]["real_capture_packet"]["oracle"]["events"]
+    assert events[0]["admitted"] is True
+    assert events[0]["corroboration"]["status"] == oracle.CORROBORATED
+
+
+def test_a_corroboration_contradiction_fails_closed(tmp_path: Path):
+    intake = _oracle_intake(tmp_path, corroboration_bound=Decimal("0.0000000001"))
+
+    binding = intake["real_packet"]["bindings"][0]
+    assert binding["oracle_price"] == "UNRESOLVED:D-4"
+    event = intake["gap_report"]["real_capture_packet"]["oracle"]["events"][0]
+    assert event["admitted"] is False
+    assert (
+        event["corroboration"]["status"] == oracle.CORROBORATION_CONTRADICTION_MAGNITUDE
+    )
+
+
+def test_a_zero_denominator_event_fails_closed_and_no_event_is_manufactured(
+    tmp_path: Path,
+):
+    funding = ORACLE_FUNDING_PASS.replace(b'"szi":"0.0006"', b'"szi":"0"')
+    run = _oracle_run(tmp_path, funding=funding)
+    manifest, derived, raw, manifest_sha = adapter.load_capture(run)
+    intake = adapter.build_intake(
+        manifest,
+        _align_derived(derived, szi="0"),
+        raw,
+        manifest_sha,
+        oracle=oracle.load_reads(ORACLE_FIXTURE),
+        corroboration_bound=Decimal("0.01"),
+    )
+
+    binding = intake["real_packet"]["bindings"][0]
+    assert binding["oracle_price"] == "UNRESOLVED:D-4"
+    event = intake["gap_report"]["real_capture_packet"]["oracle"]["events"][0]
+    assert (
+        event["corroboration"]["status"]
+        == oracle.CORROBORATION_UNAVAILABLE_ZERO_DENOMINATOR
+    )
+    # exactly the two inventoried events — the tool never invents an hour
+    assert len(intake["real_packet"]["bindings"]) == 2
+
+
+def test_a_sign_inconsistent_event_fails_closed(tmp_path: Path):
+    funding = ORACLE_FUNDING_PASS.replace(b'"usdc":"-0.000612"', b'"usdc":"0.000612"')
+    run = _oracle_run(tmp_path, funding=funding)
+    manifest, derived, raw, manifest_sha = adapter.load_capture(run)
+    intake = adapter.build_intake(
+        manifest,
+        _align_derived(derived, usdc="0.000612"),
+        raw,
+        manifest_sha,
+        oracle=oracle.load_reads(ORACLE_FIXTURE),
+        corroboration_bound=Decimal("0.01"),
+    )
+
+    assert intake["real_packet"]["bindings"][0]["oracle_price"] == "UNRESOLVED:D-4"
+    event = intake["gap_report"]["real_capture_packet"]["oracle"]["events"][0]
+    assert event["corroboration"]["status"] == oracle.CORROBORATION_CONTRADICTION_SIGN
+
+
+def test_an_event_whose_bracket_is_rejected_stays_unresolved_with_the_reason(
+    tmp_path: Path,
+):
+    reads_dir = tmp_path / "reads"
+    reads_dir.mkdir()
+    for source in ORACLE_FIXTURE.iterdir():
+        if source.is_file():
+            (reads_dir / source.name).write_bytes(source.read_bytes())
+    manifest_path = reads_dir / "ORACLE_READS_MANIFEST.jsonl"
+    rows = [
+        json.loads(line)
+        for line in manifest_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    rows = [row for row in rows if row["file"] != ORACLE_POST_15]
+    manifest_path.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+
+    intake = _oracle_intake(
+        tmp_path, reads_dir=reads_dir, corroboration_bound=Decimal("0.01")
+    )
+
+    events = intake["gap_report"]["real_capture_packet"]["oracle"]["events"]
+    assert events[0]["admitted"] is False
+    assert events[0]["oracle_verification"] == "ORACLE_PAIR_AMBIGUOUS"
+    assert intake["real_packet"]["bindings"][0]["oracle_price"] == "UNRESOLVED:D-4"
+    # the second hour is unaffected — a rejection is per instant
+    assert events[1]["oracle_verification"] == "VERIFIED"
+    assert events[1]["admitted"] is True
+
+
+def test_main_accepts_the_oracle_reads_option_end_to_end(tmp_path: Path, capsys):
+    run = _oracle_run(tmp_path)
+    code = adapter.main(
+        [
+            "--run-dir",
+            str(run),
+            "--out",
+            str(tmp_path / "out"),
+            "--oracle-reads",
+            str(ORACLE_FIXTURE),
+        ]
+    )
+
+    assert code == 0
+    assert "oracle_reads=VERIFY_EXISTING" in capsys.readouterr().out
+    report = json.loads(
+        (tmp_path / "out" / "intake_gap_report.json").read_text(encoding="utf-8")
+    )
+    assert (
+        report["real_capture_packet"]["oracle"]["events"][0]["corroboration"]["status"]
+        == "CORROBORATION_UNAVAILABLE_NO_SUPPORTED_BOUND"
+    )
+    packet = json.loads(
+        (tmp_path / "out" / adapter.REAL_PACKET_FILENAME).read_text(encoding="utf-8")
+    )
+    assert packet["bindings"][0]["oracle_price"] == "UNRESOLVED:D-4"
